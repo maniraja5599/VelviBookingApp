@@ -39,3 +39,5 @@ yarn-error.log*
 # temp artifacts & screenshots
 *.log
 test-scroll-dash.png
+
+.vercel
