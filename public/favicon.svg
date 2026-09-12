@@ -1,0 +1,45 @@
+<svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6B3A1C"/>
+      <stop offset="70%" stop-color="#4A2E18"/>
+      <stop offset="100%" stop-color="#2D170B"/>
+    </radialGradient>
+    <linearGradient id="flameGrad" x1="256" y1="90" x2="256" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDF0"/>
+      <stop offset="30%" stop-color="#FDE047"/>
+      <stop offset="65%" stop-color="#F59E0B"/>
+      <stop offset="95%" stop-color="#DC2626"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="120" y1="280" x2="392" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+    <filter id="flameGlow" x="156" y="50" width="200" height="260" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="10" result="glow"/>
+      <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base Circle with Gold Halo -->
+  <circle cx="256" cy="256" r="236" fill="url(#bgGrad)" stroke="#D4AF37" stroke-width="8"/>
+  <circle cx="256" cy="256" r="218" stroke="#D4AF37" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+
+  <!-- Divine Flame Rays -->
+  <circle cx="256" cy="180" r="90" fill="#F59E0B" opacity="0.18" filter="url(#flameGlow)"/>
+
+  <!-- Sacred Flame -->
+  <path d="M256 90 C280 145, 310 185, 310 230 C310 270, 285 295, 256 295 C227 295, 202 270, 202 230 C202 185, 232 145, 256 90 Z" fill="url(#flameGrad)" filter="url(#flameGlow)"/>
+  <path d="M256 150 C268 180, 282 205, 282 230 C282 252, 270 268, 256 268 C242 268, 230 252, 230 230 C230 205, 244 180, 256 150 Z" fill="#FFFDF0"/>
+
+  <!-- Deepam Brass Lamp Bowl -->
+  <path d="M120 290 C120 290, 150 370, 256 370 C362 370, 392 290, 392 290 C392 290, 320 318, 256 318 C192 318, 120 290, 120 290 Z" fill="url(#goldGrad)" stroke="#FEF08A" stroke-width="4"/>
+
+  <!-- Lamp Stand & Pedestal -->
+  <path d="M226 370 L216 415 L170 435 C170 435, 256 448, 342 435 L296 415 L286 370 Z" fill="url(#goldGrad)" stroke="#D4AF37" stroke-width="3"/>
+  <ellipse cx="256" cy="438" rx="100" ry="16" fill="#78350F" stroke="#FEF08A" stroke-width="3"/>
+
+  <!-- Sacred Om Vignette -->
+  <circle cx="256" cy="40" r="16" fill="#D4AF37" opacity="0.8"/>
+</svg>

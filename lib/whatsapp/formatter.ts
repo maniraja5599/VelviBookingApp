@@ -1,0 +1,68 @@
+import { Booking, Business } from "@/lib/types";
+import { getTamilDate } from "@/lib/calendar/tamil";
+
+/**
+ * Format a WhatsApp message for Pooja Required Items list
+ */
+export function formatPoojaItemsWhatsAppMessage(
+  booking: Booking,
+  business: Business
+): string {
+  const tamilInfo = getTamilDate(booking.date);
+
+  const itemsList = booking.items
+    .map(
+      (item, idx) =>
+        `${idx + 1}. ${item.itemEnglishName || item.itemTamilName} - ${item.quantity} ${item.unit}`
+    )
+    .join("\n");
+
+  return `🙏 *${booking.poojaEnglishName}*
+
+📅 *${tamilInfo.formattedDualDate}*
+🕐 Time: *${booking.startTime}*
+👤 Devotee: *${booking.customerName || "Customer"}*
+📍 Location: *${booking.location}*
+
+📋 *Required Items:*
+${itemsList}
+
+🙏 Please keep all items ready before the ceremony starts.
+
+—
+*${business.name}*
+${business.iyerName ? `Priest: ${business.iyerName}\n` : ""}Contact: ${business.phone}
+${business.showWatermark ? "\n_Powered by Velvi App_" : ""}`;
+}
+
+/**
+ * Format a WhatsApp message for Booking Confirmation
+ */
+export function formatBookingConfirmationWhatsAppMessage(
+  booking: Booking,
+  business: Business
+): string {
+  const tamilInfo = getTamilDate(booking.date);
+
+  return `🙏 *Booking Confirmed*
+
+🪔 *${booking.poojaEnglishName}*
+
+📅 Date: *${tamilInfo.formattedDualDate}* (${tamilInfo.dayOfWeekTa})
+🕐 Time: *${booking.startTime}*
+👤 Customer: *${booking.customerName || "Customer"}*
+📍 Location: *${booking.location}*
+💰 Total Fee: ₹${booking.totalAmount.toLocaleString("en-IN")} ${
+    booking.advanceAmount > 0
+      ? `(Advance: ₹${booking.advanceAmount.toLocaleString("en-IN")}, Balance: ₹${booking.balanceAmount.toLocaleString("en-IN")})`
+      : ""
+  }
+${booking.assignedIyerName ? `🪔 Assigned Priest: *${booking.assignedIyerName}*` : ""}
+
+Thank you!
+
+—
+*${business.name}*
+Contact: ${business.phone}
+${business.showWatermark ? "\n_Powered by Velvi App_" : ""}`;
+}

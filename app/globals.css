@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --velvi-cream-rgb: 250 247 242;
+  --velvi-cream-light-rgb: 255 253 249;
+  --velvi-cream-dark-rgb: 240 233 223;
+  --velvi-brown-rgb: 74 46 24;
+  --velvi-brown-dark-rgb: 44 24 16;
+  --velvi-brown-light-rgb: 110 71 41;
+  --velvi-gold-rgb: 200 146 52;
+  --velvi-gold-light-rgb: 230 184 101;
+  --velvi-gold-dark-rgb: 158 110 27;
+
+  --velvi-cream: #FAF7F2;
+  --velvi-cream-light: #FFFDF9;
+  --velvi-cream-dark: #F0E9DF;
+  --velvi-brown: #4A2E18;
+  --velvi-brown-dark: #2C1810;
+  --velvi-brown-light: #6E4729;
+  --velvi-gold: #C89234;
+  --velvi-gold-light: #E6B865;
+  --velvi-gold-dark: #9E6E1B;
+}
+
+body {
+  background-color: var(--velvi-cream, #FAF7F2);
+  color: var(--velvi-brown-dark, #2C1810);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Custom scrollbar for mobile overflow containers */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(74, 46, 24, 0.2);
+  border-radius: 4px;
+}
