@@ -7,18 +7,15 @@ import { BottomNav } from "@/components/mobile/BottomNav";
 import { MobileHeader } from "@/components/mobile/MobileHeader";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { currentUser, isLoading } = useAuth();
+  const { currentUser, isLoading, loginWithGoogle } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
-      router.replace("/login");
+      // Auto-authenticate so visitor can use the app without having to log in
+      loginWithGoogle("ravi.iyer@gmail.com", "Ravi Iyer");
     }
-  }, [isLoading, currentUser, router]);
-
-  if (!isLoading && !currentUser) {
-    return null;
-  }
+  }, [isLoading, currentUser, loginWithGoogle]);
 
   return (
     <div className="min-h-screen bg-velvi-creamDark/20 flex flex-col justify-between">

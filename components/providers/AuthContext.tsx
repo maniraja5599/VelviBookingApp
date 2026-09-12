@@ -63,15 +63,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const syncState = () => {
     const savedUserId = typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null;
-    
-    if (savedUserId === "LOGGED_OUT") {
-      setCurrentUser(null);
-      setCurrentBusiness(null);
-      setSubscription(null);
-      return;
-    }
 
-    const user = (savedUserId ? db.users.find((u) => u.id === savedUserId) : null) || db.users[0];
+    // Automatically set default user so any visitor arrives already logged in
+    const user =
+      (savedUserId && savedUserId !== "LOGGED_OUT"
+        ? db.users.find((u) => u.id === savedUserId)
+        : null) || db.users[0];
 
     setCurrentUser(user);
 
