@@ -64,8 +64,30 @@ export interface TamilDateInfo {
   isEkadashi?: boolean;
   isMuhurtham?: boolean;
   festivalName?: string;
+  amavasaiTiming?: SacredEventTiming;
+  pournamiTiming?: SacredEventTiming;
   specialDayTag?: string;
   specialDayIcon?: string;
+}
+
+export interface SacredEventTiming {
+  type: "AMAVASAI" | "POURNAMI";
+  typeTa: string; // "அமாவாசை" | "பௌர்ணமி"
+  icon: string; // "🌑" | "🌕"
+  startDateStr: string; // "2026-09-10"
+  endDateStr: string; // "2026-09-11"
+  startTime12: string; // "10:33 AM"
+  endTime12: string; // "08:55 AM"
+  startTimeTa: string; // "காலை 10:33"
+  endTimeTa: string; // "காலை 08:55"
+  startFormattedFull: string; // "10 Sep 2026, 10:33 AM"
+  endFormattedFull: string; // "11 Sep 2026, 08:55 AM"
+  startFormattedTa: string; // "10 செப், காலை 10:33"
+  endFormattedTa: string; // "11 செப், காலை 08:55"
+  displaySummary: string;
+  displaySummaryTa: string;
+  isStartDay: boolean;
+  isEndDay: boolean;
 }
 
 export const TAMIL_MONTHS = [
@@ -496,6 +518,109 @@ function getMoonLongitude(jd: number): number {
 }
 
 /**
+ * Difference in longitude between Moon and Sun (0 to 360 degrees)
+ */
+function getMoonSunDiff(date: Date): number {
+  const jd = getJulianDay(date);
+  const s = getSunLongitude(jd);
+  const m = getMoonLongitude(jd);
+  return (((m - s) % 360) + 360) % 360;
+}
+
+/**
+ * Binary search to find exact crossing of Moon-Sun angle to within 1-second precision
+ */
+function findAngleCrossing(targetDeg: number, startMs: number, endMs: number): Date {
+  let low = startMs;
+  let high = endMs;
+  for (let iter = 0; iter < 32; iter++) {
+    const mid = (low + high) / 2;
+    const diff = getMoonSunDiff(new Date(mid));
+    let err = diff - targetDeg;
+    if (err > 180) err -= 360;
+    if (err < -180) err += 360;
+    if (err < 0) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return new Date((low + high) / 2);
+}
+
+/**
+ * Standardize any Date to Indian Standard Time (IST) date and time parts
+ */
+function toIstParts(date: Date) {
+  const istOffsetMs = 5.5 * 3600 * 1000;
+  const istDate = new Date(date.getTime() + istOffsetMs);
+  const year = istDate.getUTCFullYear();
+  const month = istDate.getUTCMonth();
+  const day = istDate.getUTCDate();
+  const hour = istDate.getUTCHours();
+  const minute = istDate.getUTCMinutes();
+  const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  const isPm = hour >= 12;
+  const ampm = isPm ? "PM" : "AM";
+  let h12 = hour % 12;
+  if (h12 === 0) h12 = 12;
+  const time12 = `${String(h12).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${ampm}`;
+  const periodTa = hour < 12 ? (hour < 5 ? "அதிகாலை" : "காலை") : (hour < 17 ? "பிற்பகல்" : (hour < 20 ? "மாலை" : "இரவு"));
+  const timeTa = `${periodTa} ${String(h12).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  return { year, month, day, hour, minute, dateStr, time12, timeTa };
+}
+
+interface RawSacredEvent {
+  type: "AMAVASAI" | "POURNAMI";
+  startIst: ReturnType<typeof toIstParts>;
+  endIst: ReturnType<typeof toIstParts>;
+}
+
+const sacredEventsYearCache = new Map<number, RawSacredEvent[]>();
+
+export function getYearSacredTimings(year: number): RawSacredEvent[] {
+  if (sacredEventsYearCache.has(year)) {
+    return sacredEventsYearCache.get(year)!;
+  }
+  const events: RawSacredEvent[] = [];
+  const startMs = new Date(Date.UTC(year - 1, 11, 20)).getTime();
+  const endMs = new Date(Date.UTC(year + 1, 0, 10)).getTime();
+  const stepMs = 6 * 3600 * 1000;
+  let prevDiff = getMoonSunDiff(new Date(startMs));
+
+  for (let t = startMs + stepMs; t <= endMs; t += stepMs) {
+    const curDiff = getMoonSunDiff(new Date(t));
+
+    // Pournami (crosses 168 -> 180)
+    if ((prevDiff < 168 && curDiff >= 168) || (prevDiff > 300 && curDiff < 180 && curDiff >= 168)) {
+      const pStart = findAngleCrossing(168, t - stepMs, t);
+      const pEnd = findAngleCrossing(180, pStart.getTime(), pStart.getTime() + 30 * 3600 * 1000);
+      events.push({
+        type: "POURNAMI",
+        startIst: toIstParts(pStart),
+        endIst: toIstParts(pEnd),
+      });
+    }
+
+    // Amavasai (crosses 348 -> 0)
+    if (prevDiff < 348 && curDiff >= 348) {
+      const aStart = findAngleCrossing(348, t - stepMs, t);
+      const aEnd = findAngleCrossing(0, aStart.getTime(), aStart.getTime() + 30 * 3600 * 1000);
+      events.push({
+        type: "AMAVASAI",
+        startIst: toIstParts(aStart),
+        endIst: toIstParts(aEnd),
+      });
+    }
+
+    prevDiff = curDiff;
+  }
+
+  sacredEventsYearCache.set(year, events);
+  return events;
+}
+
+/**
  * Convert any Date or YYYY-MM-DD string into detailed Tamil + English calendar data
  */
 export function getTamilDate(inputDate: Date | string): TamilDateInfo {
@@ -673,9 +798,88 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   // Guaranteed local timezone-safe string YYYY-MM-DD
   const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  // Find Amavasai & Pournami transitions that touch this date (start or end date)
+  const sacredEvents = getYearSacredTimings(year);
+  const matchedAmav = sacredEvents.find(
+    (e) => e.type === "AMAVASAI" && (e.startIst.dateStr === dateStr || e.endIst.dateStr === dateStr)
+  );
+  const matchedPour = sacredEvents.find(
+    (e) => e.type === "POURNAMI" && (e.startIst.dateStr === dateStr || e.endIst.dateStr === dateStr)
+  );
+
+  let amavasaiTiming: SacredEventTiming | undefined;
+  if (matchedAmav) {
+    const isStart = matchedAmav.startIst.dateStr === dateStr;
+    const isEnd = matchedAmav.endIst.dateStr === dateStr;
+    const sMonthEn = englishMonthNames[matchedAmav.startIst.month];
+    const eMonthEn = englishMonthNames[matchedAmav.endIst.month];
+    const sMonthTa = tamilMonthNamesTrans[matchedAmav.startIst.month];
+    const eMonthTa = tamilMonthNamesTrans[matchedAmav.endIst.month];
+
+    const sFull = `${matchedAmav.startIst.day} ${sMonthEn} ${matchedAmav.startIst.year}, ${matchedAmav.startIst.time12}`;
+    const eFull = `${matchedAmav.endIst.day} ${eMonthEn} ${matchedAmav.endIst.year}, ${matchedAmav.endIst.time12}`;
+    const sTa = `${matchedAmav.startIst.day} ${sMonthTa}, ${matchedAmav.startIst.timeTa}`;
+    const eTa = `${matchedAmav.endIst.day} ${eMonthTa}, ${matchedAmav.endIst.timeTa}`;
+
+    amavasaiTiming = {
+      type: "AMAVASAI",
+      typeTa: "அமாவாசை",
+      icon: "🌑",
+      startDateStr: matchedAmav.startIst.dateStr,
+      endDateStr: matchedAmav.endIst.dateStr,
+      startTime12: matchedAmav.startIst.time12,
+      endTime12: matchedAmav.endIst.time12,
+      startTimeTa: matchedAmav.startIst.timeTa,
+      endTimeTa: matchedAmav.endIst.timeTa,
+      startFormattedFull: sFull,
+      endFormattedFull: eFull,
+      startFormattedTa: sTa,
+      endFormattedTa: eTa,
+      displaySummary: `ஆரம்பம்: ${matchedAmav.startIst.day} ${sMonthEn}, ${matchedAmav.startIst.time12} • முடிவு: ${matchedAmav.endIst.day} ${eMonthEn}, ${matchedAmav.endIst.time12}`,
+      displaySummaryTa: `ஆரம்பம்: ${sTa} • முடிவு: ${eTa}`,
+      isStartDay: isStart,
+      isEndDay: isEnd,
+    };
+  }
+
+  let pournamiTiming: SacredEventTiming | undefined;
+  if (matchedPour) {
+    const isStart = matchedPour.startIst.dateStr === dateStr;
+    const isEnd = matchedPour.endIst.dateStr === dateStr;
+    const sMonthEn = englishMonthNames[matchedPour.startIst.month];
+    const eMonthEn = englishMonthNames[matchedPour.endIst.month];
+    const sMonthTa = tamilMonthNamesTrans[matchedPour.startIst.month];
+    const eMonthTa = tamilMonthNamesTrans[matchedPour.endIst.month];
+
+    const sFull = `${matchedPour.startIst.day} ${sMonthEn} ${matchedPour.startIst.year}, ${matchedPour.startIst.time12}`;
+    const eFull = `${matchedPour.endIst.day} ${eMonthEn} ${matchedPour.endIst.year}, ${matchedPour.endIst.time12}`;
+    const sTa = `${matchedPour.startIst.day} ${sMonthTa}, ${matchedPour.startIst.timeTa}`;
+    const eTa = `${matchedPour.endIst.day} ${eMonthTa}, ${matchedPour.endIst.timeTa}`;
+
+    pournamiTiming = {
+      type: "POURNAMI",
+      typeTa: "பௌர்ணமி",
+      icon: "🌕",
+      startDateStr: matchedPour.startIst.dateStr,
+      endDateStr: matchedPour.endIst.dateStr,
+      startTime12: matchedPour.startIst.time12,
+      endTime12: matchedPour.endIst.time12,
+      startTimeTa: matchedPour.startIst.timeTa,
+      endTimeTa: matchedPour.endIst.timeTa,
+      startFormattedFull: sFull,
+      endFormattedFull: eFull,
+      startFormattedTa: sTa,
+      endFormattedTa: eTa,
+      displaySummary: `ஆரம்பம்: ${matchedPour.startIst.day} ${sMonthEn}, ${matchedPour.startIst.time12} • முடிவு: ${matchedPour.endIst.day} ${eMonthEn}, ${matchedPour.endIst.time12}`,
+      displaySummaryTa: `ஆரம்பம்: ${sTa} • முடிவு: ${eTa}`,
+      isStartDay: isStart,
+      isEndDay: isEnd,
+    };
+  }
+
   // Special sacred days calculations
-  const isAmavasai = tithiIndex === 29;
-  const isPournami = tithiIndex === 14;
+  const isAmavasai = !!amavasaiTiming || tithiIndex === 29;
+  const isPournami = !!pournamiTiming || tithiIndex === 14;
   const isPradosham = tithiIndex === 12 || tithiIndex === 27; // Trayodashi
   const isSashti = tithiIndex === 5 || tithiIndex === 20; // Shukla & Krishna Sashti
   const isSankataharaChaturthi = tithiIndex === 18; // Krishna Chaturthi
@@ -711,6 +915,16 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   } else if (isMuhurtham) {
     specialDayTag = "சுப முகூர்த்தம்";
     specialDayIcon = "💍";
+  } else if (amavasaiTiming) {
+    specialDayTag = amavasaiTiming.isStartDay
+      ? `அமாவாசை ஆரம்பம் (${amavasaiTiming.startTimeTa})`
+      : `அமாவாசை முடிவு (${amavasaiTiming.endTimeTa} வரை)`;
+    specialDayIcon = "🌑";
+  } else if (pournamiTiming) {
+    specialDayTag = pournamiTiming.isStartDay
+      ? `பௌர்ணமி ஆரம்பம் (${pournamiTiming.startTimeTa})`
+      : `பௌர்ணமி பூஜை (${pournamiTiming.endTimeTa} வரை)`;
+    specialDayIcon = "🌕";
   } else if (isPournami) {
     specialDayTag = "பௌர்ணமி";
     specialDayIcon = "🌕";
@@ -771,6 +985,8 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
     isEkadashi,
     isMuhurtham,
     festivalName,
+    amavasaiTiming,
+    pournamiTiming,
     specialDayTag,
     specialDayIcon,
   };

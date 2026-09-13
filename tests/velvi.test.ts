@@ -817,17 +817,41 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep28.tamilMonth).toBe("புரட்டாசி");
     expect(sep28.isMuhurtham).toBe(false);
 
-    // Sep 26, 2026 is Pournami (Full Moon)
-    const sep26 = getTamilDate("2026-09-26");
-    expect(sep26.isPournami).toBe(true);
-    expect(sep26.specialDayTag).toBe("பௌர்ணமி");
-    expect(sep26.specialDayIcon).toBe("🌕");
+    // Sep 10 & 11, 2026: Amavasai with precise start & end timings
+    const sep10 = getTamilDate("2026-09-10");
+    expect(sep10.isAmavasai).toBe(true);
+    expect(sep10.amavasaiTiming).toBeDefined();
+    expect(sep10.amavasaiTiming?.startDateStr).toBe("2026-09-10");
+    expect(sep10.amavasaiTiming?.endDateStr).toBe("2026-09-11");
+    expect(sep10.amavasaiTiming?.startTime12).toBe("10:33 AM");
+    expect(sep10.amavasaiTiming?.endTime12).toBe("08:55 AM");
+    expect(sep10.specialDayTag).toContain("அமாவாசை");
+    expect(sep10.specialDayIcon).toBe("🌑");
 
-    // Sep 11, 2026 is Amavasai (New Moon)
     const sep11 = getTamilDate("2026-09-11");
     expect(sep11.isAmavasai).toBe(true);
-    expect(sep11.specialDayTag).toBe("அமாவாசை");
+    expect(sep11.amavasaiTiming).toBeDefined();
+    expect(sep11.amavasaiTiming?.isEndDay).toBe(true);
+    expect(sep11.specialDayTag).toContain("அமாவாசை");
     expect(sep11.specialDayIcon).toBe("🌑");
+
+    // Sep 25 & 26, 2026: Pournami with precise start & end timings
+    const sep25 = getTamilDate("2026-09-25");
+    expect(sep25.isPournami).toBe(true);
+    expect(sep25.pournamiTiming).toBeDefined();
+    expect(sep25.pournamiTiming?.startDateStr).toBe("2026-09-25");
+    expect(sep25.pournamiTiming?.endDateStr).toBe("2026-09-26");
+    expect(sep25.pournamiTiming?.startTime12).toBe("11:10 PM");
+    expect(sep25.pournamiTiming?.endTime12).toBe("10:21 PM");
+    expect(sep25.specialDayTag).toContain("பௌர்ணமி");
+    expect(sep25.specialDayIcon).toBe("🌕");
+
+    const sep26 = getTamilDate("2026-09-26");
+    expect(sep26.isPournami).toBe(true);
+    expect(sep26.pournamiTiming).toBeDefined();
+    expect(sep26.pournamiTiming?.isEndDay).toBe(true);
+    expect(sep26.specialDayTag).toContain("பௌர்ணமி");
+    expect(sep26.specialDayIcon).toBe("🌕");
 
     // Sep 24, 2026 is Shukla Pradosham (Trayodashi)
     const sep24 = getTamilDate("2026-09-24");
