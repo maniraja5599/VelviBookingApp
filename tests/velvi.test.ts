@@ -775,4 +775,31 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(formatTimeRangeTo12H(sep13.rahuKalam)).toBe("04:30 - 06:00");
     expect(formatTimeRangeTo12H("15:15 - 16:15", true)).toBe("03:15 PM - 04:15 PM");
   });
+
+  // TEST CASE 30: Sacred Days and Muhurtham Calculations
+  it("Test 30: Tamil calendar correctly detects Muhurtham, Pournami, Amavasai, Pradosham, and sacred tags", () => {
+    // Sep 13, 2026: Sunday, Hastham nakshatra, Dvitiya tithi => Auspicious Subha Muhurtham
+    const sep13 = getTamilDate("2026-09-13");
+    expect(sep13.isMuhurtham).toBe(true);
+    expect(sep13.specialDayTag).toBe("சுப முகூர்த்தம்");
+    expect(sep13.specialDayIcon).toBe("💍");
+
+    // Sep 26, 2026 is Pournami (Full Moon)
+    const sep26 = getTamilDate("2026-09-26");
+    expect(sep26.isPournami).toBe(true);
+    expect(sep26.specialDayTag).toBe("பௌர்ணமி");
+    expect(sep26.specialDayIcon).toBe("🌕");
+
+    // Sep 11, 2026 is Amavasai (New Moon)
+    const sep11 = getTamilDate("2026-09-11");
+    expect(sep11.isAmavasai).toBe(true);
+    expect(sep11.specialDayTag).toBe("அமாவாசை");
+    expect(sep11.specialDayIcon).toBe("🌑");
+
+    // Sep 24, 2026 is Shukla Pradosham (Trayodashi)
+    const sep24 = getTamilDate("2026-09-24");
+    expect(sep24.isPradosham).toBe(true);
+    expect(sep24.specialDayTag).toBe("பிரதோஷம்");
+    expect(sep24.specialDayIcon).toBe("🐂");
+  });
 });

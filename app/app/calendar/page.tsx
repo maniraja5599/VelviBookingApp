@@ -24,6 +24,7 @@ import {
   Sparkles,
   Info,
   X,
+  Share2,
 } from "lucide-react";
 
 export default function CalendarPage() {
@@ -62,9 +63,63 @@ export default function CalendarPage() {
   const selectedTamilInfo = getTamilDate(selectedDate);
   const selectedDayBookings = filteredBookings.filter((b) => b.date === selectedDate);
 
+  // Sacred Day Filter State
+  const [sacredFilter, setSacredFilter] = useState<
+    "ALL" | "MUHURTHAM" | "POURNAMI_AMAVASAI" | "PRADOSHAM" | "BOOKED"
+  >("ALL");
+
   // Calendar month grid generation
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0-6
+
+  // Calculate monthly statistics and pre-compute day details for fast filtering
+  const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
+  const currentMonthBookings = filteredBookings.filter((b) => b.date.startsWith(currentMonthKey));
+  const currentMonthRevenue = currentMonthBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+  const monthDayDetails = React.useMemo(() => {
+    const map: Record<string, ReturnType<typeof getTamilDate>> = {};
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      map[dateStr] = getTamilDate(dateStr);
+    }
+    return map;
+  }, [currentYear, currentMonth, daysInMonth]);
+
+  const monthMuhurthamDaysCount = Object.values(monthDayDetails).filter((d) => d.isMuhurtham).length;
+
+  const handleShareWhatsApp = () => {
+    const dateTitle = `${selectedTamilInfo.formattedFullDay} (${selectedTamilInfo.tamilYear} வருடம்)`;
+    let text = `🪔 *வேள்வி - பஞ்சாங்கம் & பூஜைகள்* 🪔\n`;
+    text += `📅 *${dateTitle}*\n`;
+    text += `✨ *திதி:* ${selectedTamilInfo.tithiTa}\n`;
+    text += `⭐ *நட்சத்திரம்:* ${selectedTamilInfo.nakshatraNameTa}\n`;
+    if (selectedTamilInfo.specialDayTag) {
+      text += `🌟 *விசேஷம்:* ${selectedTamilInfo.specialDayIcon || ""} ${selectedTamilInfo.specialDayTag}\n`;
+    }
+    text += `\n🟢 *நல்ல நேரம்:*\n`;
+    text += `• காலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning)}\n`;
+    text += `• மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening)}\n`;
+    text += `\n🟡 *கௌரி நல்ல நேரம்:*\n`;
+    text += `• காலை: ${formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning)}\n`;
+    text += `• மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening)}\n`;
+    text += `\n🔴 *ராகு காலம்:* ${formatTimeRangeTo12H(selectedTamilInfo.rahuKalam)}\n`;
+    text += `🟠 *எமகண்டம்:* ${formatTimeRangeTo12H(selectedTamilInfo.yamagandam)}\n`;
+
+    if (selectedDayBookings.length > 0) {
+      text += `\n📋 *இன்றைய பூஜைகள் (${selectedDayBookings.length}):*\n`;
+      selectedDayBookings.forEach((b, idx) => {
+        text += `${idx + 1}. ${b.poojaEnglishName} (${b.startTime}) - ${b.customerName}\n`;
+      });
+    } else {
+      text += `\n📋 *பூஜைகள்:* முன்பதிவு ஏதுமில்லை (Open for Bookings)\n`;
+    }
+
+    text += `\n_Shared via Velvi Priest App_`;
+
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, "_blank");
+  };
 
   const prevMonth = () => {
     if (currentMonth === 0) {
@@ -117,6 +172,31 @@ export default function CalendarPage() {
     { label: "06:00 PM", sub: "Sandhya Kaalam" },
     { label: "07:30 PM", sub: "Night Seva" },
   ];
+
+  const isSlotInNallaNeram = (slotLabel: string) => {
+    const [slotTime, slotPeriod] = slotLabel.split(" ");
+    let [sH] = slotTime.split(":").map(Number);
+    if (slotPeriod === "PM" && sH < 12) sH += 12;
+    if (slotPeriod === "AM" && sH === 12) sH = 0;
+
+    // Morning check against Nalla Neram
+    const mRange = selectedTamilInfo.nallaNeramMorning;
+    if (mRange) {
+      const [mStart] = mRange.split("-").map((s) => s.trim());
+      const [mH] = mStart.split(":").map(Number);
+      if (Math.abs(sH - mH) <= 1) return true;
+    }
+
+    // Evening check against Nalla Neram
+    const eRange = selectedTamilInfo.nallaNeramEvening;
+    if (eRange) {
+      const [eStart] = eRange.split("-").map((s) => s.trim());
+      const [eH] = eStart.split(":").map(Number);
+      if (Math.abs(sH - eH) <= 1) return true;
+    }
+
+    return false;
+  };
 
   // Agenda view grouped by date
   const sortedAgendaDates = Array.from(
@@ -214,6 +294,87 @@ export default function CalendarPage() {
       {/* ========================================================= */}
       {viewMode === "month" && (
         <div className="space-y-3.5">
+          {/* Month Summary Overview Strip */}
+          <div className="grid grid-cols-3 gap-2 bg-gradient-to-r from-velvi-cream to-velvi-creamLight p-2.5 rounded-2xl border border-velvi-gold/30 text-xs shadow-2xs">
+            <div className="text-center p-2 bg-white/85 rounded-xl border border-velvi-gold/20">
+              <span className="text-[10px] text-velvi-brown/70 block font-medium">Month Sevas</span>
+              <span className="font-extrabold text-velvi-brownDark text-xs sm:text-sm">
+                {currentMonthBookings.length} Booked
+              </span>
+            </div>
+            <div className="text-center p-2 bg-white/85 rounded-xl border border-velvi-gold/20">
+              <span className="text-[10px] text-velvi-brown/70 block font-medium">Booked Revenue</span>
+              <span className="font-extrabold text-emerald-800 text-xs sm:text-sm">
+                ₹{currentMonthRevenue.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div className="text-center p-2 bg-white/85 rounded-xl border border-velvi-gold/20">
+              <span className="text-[10px] text-velvi-brown/70 block font-medium">சுப முகூர்த்தம்</span>
+              <span className="font-extrabold text-amber-700 text-xs sm:text-sm flex items-center justify-center gap-1">
+                <span>💍</span>
+                <span>{monthMuhurthamDaysCount} Days</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Sacred Day Filter Chips Bar */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar text-xs">
+            <button
+              onClick={() => setSacredFilter("ALL")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] ${
+                sacredFilter === "ALL"
+                  ? "bg-velvi-brown text-white shadow-xs"
+                  : "bg-white text-velvi-brown/70 border border-velvi-gold/20 hover:bg-velvi-cream"
+              }`}
+            >
+              All Days ({daysInMonth})
+            </button>
+            <button
+              onClick={() => setSacredFilter("MUHURTHAM")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
+                sacredFilter === "MUHURTHAM"
+                  ? "bg-amber-700 text-white shadow-xs"
+                  : "bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100"
+              }`}
+            >
+              <span>💍</span>
+              <span>சுப முகூர்த்தம் ({monthMuhurthamDaysCount})</span>
+            </button>
+            <button
+              onClick={() => setSacredFilter("POURNAMI_AMAVASAI")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
+                sacredFilter === "POURNAMI_AMAVASAI"
+                  ? "bg-indigo-800 text-white shadow-xs"
+                  : "bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100"
+              }`}
+            >
+              <span>🌕</span>
+              <span>பௌர்ணமி / அமாவாசை</span>
+            </button>
+            <button
+              onClick={() => setSacredFilter("PRADOSHAM")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
+                sacredFilter === "PRADOSHAM"
+                  ? "bg-orange-800 text-white shadow-xs"
+                  : "bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100"
+              }`}
+            >
+              <span>🐂</span>
+              <span>பிரதோஷம்</span>
+            </button>
+            <button
+              onClick={() => setSacredFilter("BOOKED")}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
+                sacredFilter === "BOOKED"
+                  ? "bg-emerald-800 text-white shadow-xs"
+                  : "bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100"
+              }`}
+            >
+              <span>🪔</span>
+              <span>Booked ({currentMonthBookings.length})</span>
+            </button>
+          </div>
+
           <div className="bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm">
             {/* Month Navigation Row */}
             <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-velvi-creamDark">
@@ -260,28 +421,41 @@ export default function CalendarPage() {
             <div className="grid grid-cols-7 gap-1 text-center">
               {/* Empty padding cells */}
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-13 p-1 opacity-20" />
+                <div key={`empty-${i}`} className="h-14 p-1 opacity-20" />
               ))}
 
               {/* Actual day cells */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1;
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-                const dayTamil = getTamilDate(dateStr);
+                const dayTamil = monthDayDetails[dateStr] || getTamilDate(dateStr);
                 const dayBookings = filteredBookings.filter((b) => b.date === dateStr);
                 const isSelected = selectedDate === dateStr;
                 const isToday = todayStr === dateStr;
+
+                const matchesFilter = (() => {
+                  if (sacredFilter === "ALL") return true;
+                  if (sacredFilter === "MUHURTHAM") return !!dayTamil.isMuhurtham;
+                  if (sacredFilter === "POURNAMI_AMAVASAI") return !!dayTamil.isPournami || !!dayTamil.isAmavasai;
+                  if (sacredFilter === "PRADOSHAM") return !!dayTamil.isPradosham;
+                  if (sacredFilter === "BOOKED") return dayBookings.length > 0;
+                  return true;
+                })();
 
                 return (
                   <button
                     key={dateStr}
                     onClick={() => setSelectedDate(dateStr)}
-                    className={`h-14 p-1 rounded-xl flex flex-col items-center justify-between transition border relative ${
+                    className={`h-15 p-1 rounded-xl flex flex-col items-center justify-between transition border relative ${
                       isSelected
                         ? "bg-velvi-brown text-white border-velvi-gold font-bold shadow-md scale-105 z-10"
                         : isToday
                         ? "bg-velvi-gold/15 border-velvi-gold/50 text-velvi-brownDark font-bold"
                         : "bg-velvi-cream/30 hover:bg-velvi-cream border-transparent text-velvi-brownDark"
+                    } ${
+                      !matchesFilter ? "opacity-35 hover:opacity-90" : ""
+                    } ${
+                      sacredFilter !== "ALL" && matchesFilter && !isSelected ? "ring-2 ring-amber-500/80 ring-offset-1" : ""
                     }`}
                   >
                     <div className="flex items-center justify-between w-full px-0.5">
@@ -304,10 +478,19 @@ export default function CalendarPage() {
                       </span>
                     </div>
 
-                    {dayBookings.length > 0 && (
+                    {/* Sacred Festival / Special Day Badge */}
+                    {dayTamil.specialDayIcon ? (
+                      <div className="flex items-center justify-center leading-none" title={dayTamil.specialDayTag}>
+                        <span className="text-[11px]">{dayTamil.specialDayIcon}</span>
+                      </div>
+                    ) : (
+                      <div className="h-2.5" />
+                    )}
+
+                    {dayBookings.length > 0 ? (
                       <div className="w-full mt-0.5">
                         <span
-                          className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold inline-block leading-none ${
+                          className={`text-[8px] px-1 py-0.2 rounded-full font-bold inline-block leading-none truncate max-w-full ${
                             isSelected
                               ? "bg-velvi-gold text-velvi-brownDark"
                               : "bg-velvi-sacredGreen text-white shadow-xs"
@@ -316,6 +499,8 @@ export default function CalendarPage() {
                           {dayBookings.length} {dayBookings.length === 1 ? "seva" : "sevas"}
                         </span>
                       </div>
+                    ) : (
+                      <div className="h-2" />
                     )}
                   </button>
                 );
@@ -325,7 +510,20 @@ export default function CalendarPage() {
 
           {/* Selected Day Breakdown Card */}
           <div className="bg-gradient-to-br from-velvi-creamLight to-velvi-cream rounded-2xl p-4 border border-velvi-gold/30 shadow-sacred space-y-3">
-            <div className="flex items-center justify-between">
+            {/* Auspicious Day Festive Banner (if applicable) */}
+            {selectedTamilInfo.specialDayTag && (
+              <div className="bg-gradient-to-r from-amber-500/15 via-velvi-gold/25 to-amber-500/15 border border-velvi-gold/40 px-3 py-1.5 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-950">
+                  <span className="text-base">{selectedTamilInfo.specialDayIcon || "✨"}</span>
+                  <span>{selectedTamilInfo.specialDayTag}</span>
+                </div>
+                <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-md border border-amber-200">
+                  Auspicious Day
+                </span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
                   <CalendarIcon className="w-4 h-4 text-velvi-gold" />
@@ -336,13 +534,25 @@ export default function CalendarPage() {
                 </p>
               </div>
 
-              <Link
-                href={`/app/bookings/new?date=${selectedDate}`}
-                className="px-3.5 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition active:scale-95 shrink-0"
-              >
-                <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-                <span>Book Pooja</span>
-              </Link>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  title="Share Panchangam & Schedule on WhatsApp"
+                  className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition active:scale-95 shrink-0"
+                >
+                  <Share2 className="w-3.5 h-3.5 text-white" />
+                  <span className="text-[11px]">WhatsApp</span>
+                </button>
+
+                <Link
+                  href={`/app/bookings/new?date=${selectedDate}`}
+                  className="px-3.5 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition active:scale-95 shrink-0"
+                >
+                  <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
+                  <span>Book Pooja</span>
+                </Link>
+              </div>
             </div>
 
             {/* Panchangam Bar */}
@@ -568,14 +778,38 @@ export default function CalendarPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => stepDay(1)}
-              className="p-1.5 hover:bg-velvi-cream rounded-xl text-velvi-brown transition flex items-center gap-1 text-xs font-semibold"
-            >
-              <span>Next Day</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleShareWhatsApp}
+                title="Share Schedule on WhatsApp"
+                className="p-1.5 hover:bg-emerald-50 text-emerald-700 rounded-xl transition flex items-center gap-1 text-xs font-bold"
+              >
+                <Share2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Share</span>
+              </button>
+              <button
+                onClick={() => stepDay(1)}
+                className="p-1.5 hover:bg-velvi-cream rounded-xl text-velvi-brown transition flex items-center gap-1 text-xs font-semibold"
+              >
+                <span>Next Day</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+
+          {/* Auspicious Day Festive Banner (if applicable) */}
+          {selectedTamilInfo.specialDayTag && (
+            <div className="bg-gradient-to-r from-amber-500/15 via-velvi-gold/25 to-amber-500/15 border border-velvi-gold/40 px-3 py-1.5 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-950">
+                <span className="text-base">{selectedTamilInfo.specialDayIcon || "✨"}</span>
+                <span>{selectedTamilInfo.specialDayTag}</span>
+              </div>
+              <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-md border border-amber-200">
+                Auspicious Day
+              </span>
+            </div>
+          )}
 
           {/* Quick Panchangam Banner with Nalla Neram & Gowri Nalla Neram */}
           <div className="bg-white rounded-2xl p-3 border border-velvi-gold/30 shadow-xs space-y-2">
@@ -689,9 +923,16 @@ export default function CalendarPage() {
                       <span className="text-xs font-bold text-velvi-brown/70 min-w-[65px]">
                         {slot.label}
                       </span>
-                      <span className="text-[11px] text-velvi-brown/50">
-                        {slot.sub} • Available
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] text-velvi-brown/50">
+                          {slot.sub} • Available
+                        </span>
+                        {isSlotInNallaNeram(slot.label) && (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-0.5">
+                            ✨ சுப நேரம்
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <Link

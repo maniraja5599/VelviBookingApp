@@ -56,6 +56,15 @@ export interface TamilDateInfo {
   formattedFullDay: string; // e.g., "Sunday, 13 Sep 2026 / ஆவணி 28"
   formattedTamilFull: string; // e.g., "ஞாயிறு, 13 செப்டம்பர் 2026 • ஆவணி 28 (பராபவ வருடம்)"
   formattedEnglishFull: string; // e.g., "Sunday, 13 September 2026 • Aavani 28 (Parabhava)"
+  isAmavasai?: boolean;
+  isPournami?: boolean;
+  isPradosham?: boolean;
+  isSashti?: boolean;
+  isSankataharaChaturthi?: boolean;
+  isEkadashi?: boolean;
+  isMuhurtham?: boolean;
+  specialDayTag?: string;
+  specialDayIcon?: string;
 }
 
 export const TAMIL_MONTHS = [
@@ -456,6 +465,51 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   // Guaranteed local timezone-safe string YYYY-MM-DD
   const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
+  // Special sacred days calculations
+  const isAmavasai = tithiIndex === 29;
+  const isPournami = tithiIndex === 14;
+  const isPradosham = tithiIndex === 12 || tithiIndex === 27; // Trayodashi
+  const isSashti = tithiIndex === 5 || tithiIndex === 20; // Shukla & Krishna Sashti
+  const isSankataharaChaturthi = tithiIndex === 18; // Krishna Chaturthi
+  const isEkadashi = tithiIndex === 10 || tithiIndex === 25; // Shukla & Krishna Ekadasi
+
+  // Muhurtham calculation:
+  // Favorable tithis: Shukla Dvitiya (1), Tritiya (2), Panchami (4), Saptami (6), Dashami (9), Ekadasi (10), Trayodasi (12)
+  // or Krishna Dvitiya (16), Tritiya (17), Panchami (19)
+  const isAuspiciousTithi = [1, 2, 4, 6, 9, 10, 12, 16, 17, 19].includes(tithiIndex);
+  // Favorable weekdays: Monday (1), Wednesday (3), Thursday (4), Friday (5), Sunday (0)
+  const isAuspiciousWeekday = [0, 1, 3, 4, 5].includes(dayOfWeek);
+  // Favorable Nakshatras: Rohini (3), Mrigashira (4), Magam (9), Uthiram (11), Hastham (12), Swathi (14), Anusham (16), Moolam (18), Uthiradam (20), Thiruvonam (21), Uthirattathi (25), Revathi (26)
+  const isAuspiciousNakshatra = [3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26].includes(nakshatraIndex);
+
+  const isMuhurtham = isAuspiciousTithi && isAuspiciousWeekday && isAuspiciousNakshatra && !isAmavasai;
+
+  let specialDayTag: string | undefined;
+  let specialDayIcon: string | undefined;
+
+  if (isPournami) {
+    specialDayTag = "பௌர்ணமி";
+    specialDayIcon = "🌕";
+  } else if (isAmavasai) {
+    specialDayTag = "அமாவாசை";
+    specialDayIcon = "🌑";
+  } else if (isPradosham) {
+    specialDayTag = "பிரதோஷம்";
+    specialDayIcon = "🐂";
+  } else if (isSankataharaChaturthi) {
+    specialDayTag = "சங்கடஹர சதுர்த்தி";
+    specialDayIcon = "🐘";
+  } else if (isSashti) {
+    specialDayTag = "சஷ்டி விரதம்";
+    specialDayIcon = "🦚";
+  } else if (isEkadashi) {
+    specialDayTag = "ஏகாதசி";
+    specialDayIcon = "🪷";
+  } else if (isMuhurtham) {
+    specialDayTag = "சுப முகூர்த்தம்";
+    specialDayIcon = "💍";
+  }
+
   return {
     gregorianDate: date,
     dateStr,
@@ -488,6 +542,15 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
     formattedFullDay: `${weekdayInfo.en}, ${day} ${englishMonthNames[month]} ${year} / ${currentTamilMonth.ta} ${tamilDay}`,
     formattedTamilFull: `${weekdayInfo.ta}, ${day} ${tamilMonthNamesTrans[month]} ${year} • ${currentTamilMonth.ta} ${tamilDay} (${tamilYear} வருடம்)`,
     formattedEnglishFull: `${weekdayInfo.en}, ${day} ${englishMonthNamesFull[month]} ${year} • ${currentTamilMonth.en} ${tamilDay} (${tamilYear})`,
+    isAmavasai,
+    isPournami,
+    isPradosham,
+    isSashti,
+    isSankataharaChaturthi,
+    isEkadashi,
+    isMuhurtham,
+    specialDayTag,
+    specialDayIcon,
   };
 }
 
