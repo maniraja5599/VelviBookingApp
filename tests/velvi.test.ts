@@ -778,11 +778,44 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
   // TEST CASE 30: Sacred Days and Muhurtham Calculations
   it("Test 30: Tamil calendar correctly detects Muhurtham, Pournami, Amavasai, Pradosham, and sacred tags", () => {
-    // Sep 13, 2026: Sunday, Hastham nakshatra, Dvitiya tithi => Auspicious Subha Muhurtham
+    // Sep 7, 2026: Monday, Aavani 21 => Auspicious Subha Muhurtham
+    const sep7 = getTamilDate("2026-09-07");
+    expect(sep7.isMuhurtham).toBe(true);
+    expect(sep7.specialDayTag).toBe("சுப முகூர்த்தம்");
+    expect(sep7.specialDayIcon).toBe("💍");
+    expect(sep7.tamilMonth).toBe("ஆவணி");
+    expect(sep7.tamilDay).toBe(21);
+
+    // Sep 13, 2026: Sunday, Aavani 27 => Auspicious Subha Muhurtham
     const sep13 = getTamilDate("2026-09-13");
     expect(sep13.isMuhurtham).toBe(true);
     expect(sep13.specialDayTag).toBe("சுப முகூர்த்தம்");
     expect(sep13.specialDayIcon).toBe("💍");
+    expect(sep13.tamilMonth).toBe("ஆவணி");
+    expect(sep13.tamilDay).toBe(27);
+
+    // Sep 14, 2026: Monday, Aavani 28 => Sri Vinayagar Chaturthi festival
+    const sep14 = getTamilDate("2026-09-14");
+    expect(sep14.festivalName).toBe("ஸ்ரீவிநாயகர் சதுர்த்தி");
+    expect(sep14.specialDayTag).toBe("ஸ்ரீவிநாயகர் சதுர்த்தி");
+    expect(sep14.specialDayIcon).toBe("🐘");
+
+    // Sep 17, 2026: Thursday, Aavani 31 => Auspicious Subha Muhurtham
+    const sep17 = getTamilDate("2026-09-17");
+    expect(sep17.isMuhurtham).toBe(true);
+    expect(sep17.specialDayTag).toBe("சுப முகூர்த்தம்");
+    expect(sep17.specialDayIcon).toBe("💍");
+    expect(sep17.tamilMonth).toBe("ஆவணி");
+    expect(sep17.tamilDay).toBe(31);
+
+    // Purattasi Month Rule: NO wedding muhurthams during Purattasi month
+    const sep21 = getTamilDate("2026-09-21");
+    expect(sep21.tamilMonth).toBe("புரட்டாசி");
+    expect(sep21.isMuhurtham).toBe(false);
+
+    const sep28 = getTamilDate("2026-09-28");
+    expect(sep28.tamilMonth).toBe("புரட்டாசி");
+    expect(sep28.isMuhurtham).toBe(false);
 
     // Sep 26, 2026 is Pournami (Full Moon)
     const sep26 = getTamilDate("2026-09-26");

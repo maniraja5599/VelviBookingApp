@@ -94,8 +94,13 @@ export default function CalendarPage() {
     text += `📅 *${dateTitle}*\n`;
     text += `✨ *திதி:* ${selectedTamilInfo.tithiTa}\n`;
     text += `⭐ *நட்சத்திரம்:* ${selectedTamilInfo.nakshatraNameTa}\n`;
-    if (selectedTamilInfo.specialDayTag) {
-      text += `🌟 *விசேஷம்:* ${selectedTamilInfo.specialDayIcon || ""} ${selectedTamilInfo.specialDayTag}\n`;
+    if (selectedTamilInfo.isMuhurtham) {
+      text += `💍 *சுப முகூர்த்த நாள் (Subha Muhurtham)*\n`;
+    }
+    if (selectedTamilInfo.festivalName) {
+      text += `🌟 *விசேஷம்:* ${selectedTamilInfo.specialDayIcon || "✨"} ${selectedTamilInfo.festivalName}\n`;
+    } else if (selectedTamilInfo.specialDayTag && !selectedTamilInfo.isMuhurtham) {
+      text += `🌟 *விசேஷம்:* ${selectedTamilInfo.specialDayIcon || "✨"} ${selectedTamilInfo.specialDayTag}\n`;
     }
     text += `\n🟢 *நல்ல நேரம்:*\n`;
     text += `• காலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning)}\n`;
@@ -511,14 +516,23 @@ export default function CalendarPage() {
           {/* Selected Day Breakdown Card */}
           <div className="bg-gradient-to-br from-velvi-creamLight to-velvi-cream rounded-2xl p-4 border border-velvi-gold/30 shadow-sacred space-y-3">
             {/* Auspicious Day Festive Banner (if applicable) */}
-            {selectedTamilInfo.specialDayTag && (
-              <div className="bg-gradient-to-r from-amber-500/15 via-velvi-gold/25 to-amber-500/15 border border-velvi-gold/40 px-3 py-1.5 rounded-xl flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-amber-950">
-                  <span className="text-base">{selectedTamilInfo.specialDayIcon || "✨"}</span>
-                  <span>{selectedTamilInfo.specialDayTag}</span>
+            {(selectedTamilInfo.specialDayTag || selectedTamilInfo.isMuhurtham || selectedTamilInfo.festivalName) && (
+              <div className="bg-gradient-to-r from-amber-500/15 via-velvi-gold/25 to-amber-500/15 border border-velvi-gold/40 px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-950 flex-wrap">
+                  <span className="text-base">{selectedTamilInfo.specialDayIcon || (selectedTamilInfo.isMuhurtham ? "💍" : "✨")}</span>
+                  <span>{selectedTamilInfo.specialDayTag || (selectedTamilInfo.isMuhurtham ? "சுப முகூர்த்தம்" : selectedTamilInfo.festivalName)}</span>
+                  {selectedTamilInfo.isMuhurtham && selectedTamilInfo.isEkadashi && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/90 text-amber-900 rounded-md border border-amber-300 font-semibold">🪷 ஏகாதசி</span>
+                  )}
+                  {selectedTamilInfo.isMuhurtham && selectedTamilInfo.isSashti && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/90 text-amber-900 rounded-md border border-amber-300 font-semibold">🦚 சஷ்டி</span>
+                  )}
+                  {selectedTamilInfo.isMuhurtham && selectedTamilInfo.isPradosham && (
+                    <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/90 text-amber-900 rounded-md border border-amber-300 font-semibold">🐂 பிரதோஷம்</span>
+                  )}
                 </div>
-                <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-md border border-amber-200">
-                  Auspicious Day
+                <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
+                  {selectedTamilInfo.isMuhurtham ? "சுப முகூர்த்தம்" : selectedTamilInfo.festivalName ? "Festive Day" : "Sacred Day"}
                 </span>
               </div>
             )}

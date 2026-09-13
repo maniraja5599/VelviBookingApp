@@ -63,6 +63,7 @@ export interface TamilDateInfo {
   isSankataharaChaturthi?: boolean;
   isEkadashi?: boolean;
   isMuhurtham?: boolean;
+  festivalName?: string;
   specialDayTag?: string;
   specialDayIcon?: string;
 }
@@ -216,6 +217,213 @@ export const TAMIL_YEARS_60 = [
   "ராட்சச", "நள", "பிங்கள", "காளயுக்தி", "சித்தார்த்தி", "ரௌத்திரி", "துன்மதி", "துந்துபி",
   "ருத்ரோத்காரி", "ரக்தாட்சி", "குரோதன", "அட்சய"
 ];
+
+/**
+ * Authentic Tamil Subha Muhurtham Dates (Tamildailycalendar & Drik Panchang)
+ * Keyed by Year -> Month (1-12) -> Array of Day numbers (1-31)
+ */
+export const TAMIL_MUHURTHAM_LOOKUP: Record<number, Record<number, number[]>> = {
+  2025: {
+    1: [19, 20, 31],
+    2: [2, 3, 10, 16, 17, 23, 26],
+    3: [2, 3, 9, 10, 12, 16, 17],
+    4: [4, 7, 9, 11, 16, 18, 23, 25, 30],
+    5: [4, 9, 11, 14, 16, 18, 19, 23, 28],
+    6: [5, 6, 8, 16, 27],
+    7: [2, 7, 13, 14, 16],
+    8: [20, 21, 27, 28, 29],
+    9: [4, 14],
+    10: [19, 20, 24, 27, 31],
+    11: [3, 10, 16, 23, 27, 30],
+    12: [1, 8, 10, 14, 15],
+  },
+  2026: {
+    1: [28],
+    2: [6, 8, 13, 15, 16, 20],
+    3: [5, 6, 8, 15, 16, 25],
+    4: [6, 12, 13, 16, 20, 23, 30],
+    5: [8, 13, 14, 18, 28, 29],
+    6: [4, 7, 17, 18, 24, 25],
+    7: [2, 5, 12],
+    8: [23, 30, 31],
+    9: [7, 13, 17],
+    10: [25, 30],
+    11: [1, 11, 13, 15, 16, 20, 29],
+    12: [4, 6, 10, 13, 14],
+  },
+  2027: {
+    1: [20, 28],
+    2: [8, 10, 11, 12, 18, 25, 26],
+    3: [4, 10, 11, 12, 15, 17, 18, 24, 25],
+    4: [1, 4, 8, 11, 12, 18, 23, 25, 26],
+    5: [3, 9, 12, 16, 17, 23, 26, 27, 28],
+    6: [7, 10, 13, 14, 23, 24, 25],
+    7: [5, 7, 9, 14, 16],
+    8: [20, 22, 23, 27, 29],
+    9: [3, 5, 12, 13],
+    10: [20, 22, 27],
+    11: [1, 5, 8, 10, 11, 12, 15, 18, 25],
+    12: [2, 5, 8, 9, 10],
+  },
+};
+
+/**
+ * Authentic Major Tamil Festivals (2025 - 2027)
+ */
+export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
+  // 2025
+  "2025-01-10": "வைகுண்ட ஏகாதசி",
+  "2025-01-13": "போகிப் பண்டிகை",
+  "2025-01-14": "தைப் பொங்கல்",
+  "2025-01-15": "மாட்டுப் பொங்கல் / திருவள்ளுவர் தினம்",
+  "2025-01-16": "காணும் பொங்கல் / உழவர் திருநாள்",
+  "2025-01-20": "தை அமாவாசை",
+  "2025-02-04": "ரதசப்தமி",
+  "2025-02-11": "தைப்பூசம்",
+  "2025-02-26": "மஹா சிவராத்திரி",
+  "2025-03-12": "மாசி மகம்",
+  "2025-03-13": "ஹோலி பண்டிகை",
+  "2025-03-30": "தெலுங்கு வருடப் பிறப்பு",
+  "2025-04-06": "ஸ்ரீராம நவமி",
+  "2025-04-11": "பங்குனி உத்திரம்",
+  "2025-04-14": "தமிழ்ப் புத்தாண்டு (விஸ்வாவசு வருடப் பிறப்பு)",
+  "2025-04-30": "அட்சய திருதியை",
+  "2025-05-04": "அக்னி நட்சத்திரம் ஆரம்பம்",
+  "2025-05-08": "ஸ்ரீமீனாட்சி திருக்கல்யாணம்",
+  "2025-05-11": "ஸ்ரீகள்ளழகர் எதிர்ஸேவை",
+  "2025-05-12": "ஸ்ரீகள்ளழகர் வைகை எழுந்தருளல்",
+  "2025-05-28": "அக்னி நட்சத்திரம் முடிவு",
+  "2025-06-09": "வைகாசி விசாகம்",
+  "2025-07-02": "ஆனி உத்திர தரிசனம்",
+  "2025-07-28": "ஆடிப்பூரம்",
+  "2025-08-03": "ஆடிப்பெருக்கு விழா",
+  "2025-08-08": "வரலட்சுமி விரதம்",
+  "2025-08-09": "ஆவணி அவிட்டம்",
+  "2025-08-12": "மகா சங்கடஹர சதுர்த்தி",
+  "2025-08-16": "கோகுலாஷ்டமி",
+  "2025-08-27": "விநாயகர் சதுர்த்தி",
+  "2025-09-05": "ஓணம் பண்டிகை",
+  "2025-09-21": "மகாளய அமாவாசை",
+  "2025-09-22": "நவராத்திரி ஆரம்பம்",
+  "2025-10-01": "சரஸ்வதி பூஜை / ஆயுத பூஜை",
+  "2025-10-02": "விஜயதசமி",
+  "2025-10-20": "தீபாவளி பண்டிகை",
+  "2025-10-22": "கந்தசஷ்டி துவக்கம்",
+  "2025-10-27": "கந்தசஷ்டி சூரசம்ஹாரம்",
+  "2025-12-03": "திருக்கார்த்திகை",
+  "2025-12-19": "அனுமன் ஜெயந்தி",
+  "2025-12-30": "வைகுண்ட ஏகாதசி",
+
+  // 2026
+  "2026-01-03": "ஆருத்ரா தரிசனம்",
+  "2026-01-11": "கெர்போட்ட நிவர்த்தி",
+  "2026-01-14": "போகிப் பண்டிகை",
+  "2026-01-15": "தைப் பொங்கல்",
+  "2026-01-16": "மாட்டுப் பொங்கல் / திருவள்ளுவர் தினம்",
+  "2026-01-17": "காணும் பொங்கல் / உழவர் திருநாள்",
+  "2026-01-18": "தை அமாவாசை",
+  "2026-01-25": "ரத சப்தமி",
+  "2026-02-01": "தைப்பூசம்",
+  "2026-02-15": "மஹாசிவராத்திரி",
+  "2026-03-02": "மாசி மகம்",
+  "2026-03-03": "ஹோலி பண்டிகை",
+  "2026-03-14": "காரடையான் நோன்பு",
+  "2026-03-19": "தெலுங்கு வருடப் பிறப்பு",
+  "2026-03-27": "ராமநவமி",
+  "2026-04-01": "பங்குனி உத்திரம்",
+  "2026-04-14": "தமிழ்ப் புத்தாண்டு (பராபவ வருடப் பிறப்பு)",
+  "2026-04-20": "அட்சய திருதியை",
+  "2026-04-21": "சங்கர ஜெயந்தி",
+  "2026-04-28": "மீனாட்சி திருக்கல்யாணம்",
+  "2026-04-30": "கள்ளழகர் எதிர்ஸேவை",
+  "2026-05-01": "ஸ்ரீகள்ளழகர் வைகை எழுந்தருளல்",
+  "2026-05-04": "அக்னி நட்சத்திரம் துவக்கம்",
+  "2026-05-28": "அக்னி நட்சத்திரம் முடிவு",
+  "2026-05-30": "வைகாசி விசாகம்",
+  "2026-06-22": "ஆனி உத்திர தரிசனம்",
+  "2026-07-29": "சங்கரன்கோவில் தபசு",
+  "2026-08-03": "ஆடிப்பெருக்கு விழா",
+  "2026-08-14": "திருஆடிப்பூரம்",
+  "2026-08-17": "கருட பஞ்சமி",
+  "2026-08-21": "ஸ்ரீவரலட்சுமி விரதம்",
+  "2026-08-26": "ஓணம் பண்டிகை",
+  "2026-08-27": "ஆவணி அவிட்டம்",
+  "2026-08-28": "ஸ்ரீகாயத்ரி ஜெபம்",
+  "2026-08-31": "ஸ்ரீமஹா சங்கடஹர சதுர்த்தி",
+  "2026-09-04": "கோகுலாஷ்டமி / கிருஷ்ண ஜெயந்தி",
+  "2026-09-14": "ஸ்ரீவிநாயகர் சதுர்த்தி",
+  "2026-09-27": "மஹாளய பட்சாரம்பம்",
+  "2026-10-10": "மஹாளய அமாவாசை",
+  "2026-10-11": "நவராத்திரி துவக்கம்",
+  "2026-10-19": "சரஸ்வதி பூஜை / ஆயுத பூஜை",
+  "2026-10-20": "விஜயதசமி",
+  "2026-11-08": "தீபாவளி பண்டிகை",
+  "2026-11-10": "கந்த சஷ்டி துவக்கம்",
+  "2026-11-15": "சூரசம்ஹாரம்",
+  "2026-11-24": "திருக்கார்த்திகை தீபம்",
+  "2026-12-20": "வைகுண்ட ஏகாதசி",
+  "2026-12-24": "ஆருத்ரா தரிசனம்",
+  "2026-12-29": "கெர்போட்ட ஆரம்பம்",
+
+  // 2027
+  "2027-01-14": "போகி பண்டிகை",
+  "2027-01-15": "தைப் பொங்கல்",
+  "2027-01-16": "மாட்டுப் பொங்கல்",
+  "2027-01-17": "காணும் பொங்கல் / உழவர் திருநாள்",
+  "2027-01-23": "தைப்பூசம்",
+  "2027-02-06": "தை அமாவாசை",
+  "2027-02-11": "வசந்த பஞ்சமி",
+  "2027-02-13": "ரத சப்தமி",
+  "2027-02-21": "மாசி மகம்",
+  "2027-03-06": "மஹா சிவராத்திரி",
+  "2027-03-15": "காரடையான் நோன்பு",
+  "2027-03-22": "பங்குனி உத்திரம்",
+  "2027-04-14": "தமிழ்ப் புத்தாண்டு",
+  "2027-04-15": "ஸ்ரீராம நவமி",
+  "2027-04-20": "சித்ரா பௌர்ணமி",
+  "2027-05-09": "அட்சய திருதியை",
+  "2027-05-10": "ஆதி சங்கரர் ஜெயந்தி / ராமானுஜர் ஜெயந்தி",
+  "2027-05-18": "நரசிம்ம ஜெயந்தி",
+  "2027-05-20": "வைகாசி விசாகம்",
+  "2027-07-28": "ஆடி கிருத்திகை",
+  "2027-08-02": "ஆடி அமாவாசை",
+  "2027-08-03": "ஆடிப்பெருக்கு விழா",
+  "2027-08-05": "ஆடிப் பூரம்",
+  "2027-08-13": "ஸ்ரீவரலட்சுமி விரதம்",
+  "2027-08-16": "ஆவணி அவிட்டம்",
+  "2027-08-20": "ஸ்ரீமஹா சங்கடஹர சதுர்த்தி",
+  "2027-08-23": "பலராம ஜெயந்தி",
+  "2027-08-25": "கோகுலாஷ்டமி",
+  "2027-09-04": "ஸ்ரீவிநாயகர் சதுர்த்தி",
+  "2027-09-29": "மஹாளய அமாவாசை",
+  "2027-10-08": "சரஸ்வதி பூஜை / ஆயுத பூஜை",
+  "2027-10-09": "விஜயதசமி",
+  "2027-10-28": "தீபாவளி பண்டிகை",
+  "2027-11-04": "சூரசம்ஹாரம்",
+  "2027-11-11": "துளசி கல்யாணம்",
+  "2027-12-12": "திருக்கார்த்திகை தீபம்",
+  "2027-12-20": "கால பைரவர் அஷ்டமி",
+  "2027-12-27": "அனுமன் ஜெயந்தி",
+};
+
+/**
+ * Assign appropriate emoji icon for Tamil festivals
+ */
+export function getFestivalIcon(name?: string): string {
+  if (!name) return "✨";
+  if (name.includes("விநாயகர்") || name.includes("சதுர்த்தி")) return "🐘";
+  if (name.includes("பொங்கல்") || name.includes("போகி") || name.includes("உழவர்")) return "🌾";
+  if (name.includes("சிவராத்திரி") || name.includes("தரிசனம்") || name.includes("பிரதோஷம்")) return "🔱";
+  if (name.includes("சஷ்டி") || name.includes("சூரசம்ஹாரம்") || name.includes("பூசம்") || name.includes("விசாகம்") || name.includes("முருகன்")) return "🦚";
+  if (name.includes("தீபாவளி") || name.includes("தீபம்") || name.includes("கார்த்திகை")) return "🪔";
+  if (name.includes("கிருஷ்ண") || name.includes("ஜெயந்தி") || name.includes("கோகுலாஷ்டமி")) return "🪈";
+  if (name.includes("சரஸ்வதி") || name.includes("பூஜை") || name.includes("தசமி") || name.includes("நவராத்திரி")) return "🌸";
+  if (name.includes("ஏகாதசி") || name.includes("வைகுண்ட")) return "🪷";
+  if (name.includes("அம்மன்") || name.includes("விரதம்") || name.includes("வரலட்சுமி") || name.includes("பூரம்")) return "🪷";
+  if (name.includes("அவிட்டம்")) return "🧵";
+  if (name.includes("புத்தாண்டு") || name.includes("பிறப்பு")) return "🥭";
+  return "✨";
+}
 
 /**
  * Astronomical calculation of Julian Day
@@ -473,21 +681,37 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   const isSankataharaChaturthi = tithiIndex === 18; // Krishna Chaturthi
   const isEkadashi = tithiIndex === 10 || tithiIndex === 25; // Shukla & Krishna Ekadasi
 
-  // Muhurtham calculation:
-  // Favorable tithis: Shukla Dvitiya (1), Tritiya (2), Panchami (4), Saptami (6), Dashami (9), Ekadasi (10), Trayodasi (12)
-  // or Krishna Dvitiya (16), Tritiya (17), Panchami (19)
-  const isAuspiciousTithi = [1, 2, 4, 6, 9, 10, 12, 16, 17, 19].includes(tithiIndex);
-  // Favorable weekdays: Monday (1), Wednesday (3), Thursday (4), Friday (5), Sunday (0)
-  const isAuspiciousWeekday = [0, 1, 3, 4, 5].includes(dayOfWeek);
-  // Favorable Nakshatras: Rohini (3), Mrigashira (4), Magam (9), Uthiram (11), Hastham (12), Swathi (14), Anusham (16), Moolam (18), Uthiradam (20), Thiruvonam (21), Uthirattathi (25), Revathi (26)
-  const isAuspiciousNakshatra = [3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26].includes(nakshatraIndex);
+  // Check Muhurtham:
+  // 1. Authoritative lookup for 2025-2027 matching Tamil Daily Calendar / Panchangam
+  const monthLookup = TAMIL_MUHURTHAM_LOOKUP[year]?.[month + 1];
+  let isMuhurtham = false;
+  if (monthLookup) {
+    isMuhurtham = monthLookup.includes(day);
+  } else {
+    // 2. Astronomical heuristic fallback for other years (strictly exclude Purattasi monthIndex 5 and Margazhi monthIndex 8)
+    const isAuspiciousTithi = [1, 2, 4, 6, 9, 10, 12, 16, 17, 19].includes(tithiIndex);
+    const isAuspiciousWeekday = [0, 1, 3, 4, 5].includes(dayOfWeek);
+    const isAuspiciousNakshatra = [3, 4, 9, 11, 12, 14, 16, 18, 20, 21, 25, 26].includes(nakshatraIndex);
+    const isAllowedMonth = tamilMonthIndex !== 5 && tamilMonthIndex !== 8;
+    isMuhurtham = isAllowedMonth && isAuspiciousTithi && isAuspiciousWeekday && isAuspiciousNakshatra && !isAmavasai;
+  }
 
-  const isMuhurtham = isAuspiciousTithi && isAuspiciousWeekday && isAuspiciousNakshatra && !isAmavasai;
+  const festivalName = TAMIL_FESTIVALS_LOOKUP[dateStr];
 
   let specialDayTag: string | undefined;
   let specialDayIcon: string | undefined;
 
-  if (isPournami) {
+  if (festivalName) {
+    specialDayTag = festivalName;
+    specialDayIcon = getFestivalIcon(festivalName);
+    if (isMuhurtham) {
+      specialDayTag = `சுப முகூர்த்தம் • ${festivalName}`;
+      specialDayIcon = "💍";
+    }
+  } else if (isMuhurtham) {
+    specialDayTag = "சுப முகூர்த்தம்";
+    specialDayIcon = "💍";
+  } else if (isPournami) {
     specialDayTag = "பௌர்ணமி";
     specialDayIcon = "🌕";
   } else if (isAmavasai) {
@@ -505,9 +729,6 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   } else if (isEkadashi) {
     specialDayTag = "ஏகாதசி";
     specialDayIcon = "🪷";
-  } else if (isMuhurtham) {
-    specialDayTag = "சுப முகூர்த்தம்";
-    specialDayIcon = "💍";
   }
 
   return {
@@ -549,6 +770,7 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
     isSankataharaChaturthi,
     isEkadashi,
     isMuhurtham,
+    festivalName,
     specialDayTag,
     specialDayIcon,
   };
