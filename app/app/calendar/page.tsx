@@ -65,7 +65,7 @@ export default function CalendarPage() {
 
   // Sacred Day Filter State
   const [sacredFilter, setSacredFilter] = useState<
-    "ALL" | "MUHURTHAM" | "POURNAMI_AMAVASAI" | "PRADOSHAM" | "BOOKED"
+    "ALL" | "MUHURTHAM" | "POURNAMI_AMAVASAI" | "BOOKED"
   >("ALL");
 
   // Calendar month grid generation
@@ -104,16 +104,6 @@ export default function CalendarPage() {
     }
     if (selectedTamilInfo.isKarinaal) {
       text += `⚠️ *கரிநாள் - சுபகாரியங்கள் தவிர்க்கவும்*\n`;
-    }
-    if (selectedTamilInfo.amavasaiTiming) {
-      text += `\n🌑 *அமாவாசை கால அளவு (Amavasai Timings):*\n`;
-      text += `• ஆரம்பம்: ${selectedTamilInfo.amavasaiTiming.startFormattedFull}\n`;
-      text += `• முடிவு: ${selectedTamilInfo.amavasaiTiming.endFormattedFull}\n`;
-    }
-    if (selectedTamilInfo.pournamiTiming) {
-      text += `\n🌕 *பௌர்ணமி கால அளவு (Pournami Timings):*\n`;
-      text += `• ஆரம்பம்: ${selectedTamilInfo.pournamiTiming.startFormattedFull}\n`;
-      text += `• முடிவு: ${selectedTamilInfo.pournamiTiming.endFormattedFull}\n`;
     }
     text += `\n🟢 *நல்ல நேரம்:*\n`;
     text += `• காலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning)}\n`;
@@ -370,17 +360,6 @@ export default function CalendarPage() {
               <span>பௌர்ணமி / அமாவாசை</span>
             </button>
             <button
-              onClick={() => setSacredFilter("PRADOSHAM")}
-              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
-                sacredFilter === "PRADOSHAM"
-                  ? "bg-orange-800 text-white shadow-xs"
-                  : "bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100"
-              }`}
-            >
-              <span>🐂</span>
-              <span>பிரதோஷம்</span>
-            </button>
-            <button
               onClick={() => setSacredFilter("BOOKED")}
               className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap text-[11px] flex items-center gap-1 ${
                 sacredFilter === "BOOKED"
@@ -455,7 +434,6 @@ export default function CalendarPage() {
                   if (sacredFilter === "ALL") return true;
                   if (sacredFilter === "MUHURTHAM") return !!dayTamil.isMuhurtham;
                   if (sacredFilter === "POURNAMI_AMAVASAI") return !!dayTamil.isPournami || !!dayTamil.isAmavasai;
-                  if (sacredFilter === "PRADOSHAM") return !!dayTamil.isPradosham;
                   if (sacredFilter === "BOOKED") return dayBookings.length > 0;
                   return true;
                 })();
@@ -540,97 +518,10 @@ export default function CalendarPage() {
                   {selectedTamilInfo.isMuhurtham && selectedTamilInfo.isSashti && (
                     <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/90 text-amber-900 rounded-md border border-amber-300 font-semibold">🦚 சஷ்டி</span>
                   )}
-                  {selectedTamilInfo.isMuhurtham && selectedTamilInfo.isPradosham && (
-                    <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/90 text-amber-900 rounded-md border border-amber-300 font-semibold">🐂 பிரதோஷம்</span>
-                  )}
                 </div>
                 <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider bg-white/80 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
                   {selectedTamilInfo.isMuhurtham ? "சுப முகூர்த்தம்" : selectedTamilInfo.festivalName ? "Festive Day" : "Sacred Day"}
                 </span>
-              </div>
-            )}
-
-            {/* Amavasai Accurate Start & End Timings Card */}
-            {selectedTamilInfo.amavasaiTiming && (
-              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3 rounded-xl border border-indigo-400/40 shadow-sm space-y-2">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-amber-200">
-                    <span className="text-sm">🌑</span>
-                    <span>அமாவாசை கால அளவு (Amavasai Timings)</span>
-                  </div>
-                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full text-slate-200 font-bold tracking-wide">
-                    {selectedTamilInfo.amavasaiTiming.isStartDay ? "ஆரம்ப நாள் (Start Day)" : "முடிவு நாள் (End Day)"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white/10 p-2 rounded-lg border border-white/10">
-                    <span className="text-[10px] text-emerald-300 block font-semibold">ஆரம்பம் (Starts):</span>
-                    <span className="font-bold text-white text-xs block mt-0.5">
-                      {selectedTamilInfo.amavasaiTiming.startFormattedFull}
-                    </span>
-                    <span className="text-[10px] text-slate-300 block">
-                      ({selectedTamilInfo.amavasaiTiming.startFormattedTa})
-                    </span>
-                  </div>
-
-                  <div className="bg-white/10 p-2 rounded-lg border border-white/10">
-                    <span className="text-[10px] text-amber-300 block font-semibold">முடிவு (Ends):</span>
-                    <span className="font-bold text-white text-xs block mt-0.5">
-                      {selectedTamilInfo.amavasaiTiming.endFormattedFull}
-                    </span>
-                    <span className="text-[10px] text-slate-300 block">
-                      ({selectedTamilInfo.amavasaiTiming.endFormattedTa})
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-slate-200 bg-white/5 px-2.5 py-1 rounded-md flex items-center justify-between gap-2">
-                  <span className="text-amber-200/90 font-medium">தர்ப்பணம் / விரத காலம்:</span>
-                  <span className="font-bold text-white">{selectedTamilInfo.amavasaiTiming.displaySummaryTa}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Pournami Accurate Start & End Timings Card */}
-            {selectedTamilInfo.pournamiTiming && (
-              <div className="bg-gradient-to-r from-amber-950 via-yellow-950 to-orange-950 text-white p-3 rounded-xl border border-amber-400/40 shadow-sm space-y-2">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-1.5 font-bold text-xs text-amber-200">
-                    <span className="text-sm">🌕</span>
-                    <span>பௌர்ணமி கால அளவு (Pournami Timings)</span>
-                  </div>
-                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full text-amber-200 font-bold tracking-wide">
-                    {selectedTamilInfo.pournamiTiming.isStartDay ? "ஆரம்ப நாள் (Start Day)" : "முடிவு நாள் (End Day)"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white/10 p-2 rounded-lg border border-white/10">
-                    <span className="text-[10px] text-emerald-300 block font-semibold">ஆரம்பம் (Starts):</span>
-                    <span className="font-bold text-white text-xs block mt-0.5">
-                      {selectedTamilInfo.pournamiTiming.startFormattedFull}
-                    </span>
-                    <span className="text-[10px] text-amber-200/80 block">
-                      ({selectedTamilInfo.pournamiTiming.startFormattedTa})
-                    </span>
-                  </div>
-
-                  <div className="bg-white/10 p-2 rounded-lg border border-white/10">
-                    <span className="text-[10px] text-amber-300 block font-semibold">முடிவு (Ends):</span>
-                    <span className="font-bold text-white text-xs block mt-0.5">
-                      {selectedTamilInfo.pournamiTiming.endFormattedFull}
-                    </span>
-                    <span className="text-[10px] text-amber-200/80 block">
-                      ({selectedTamilInfo.pournamiTiming.endFormattedTa})
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-[11px] text-amber-100 bg-white/5 px-2.5 py-1 rounded-md flex items-center justify-between gap-2">
-                  <span className="text-amber-200/90 font-medium">கிரிவலம் & பூஜை:</span>
-                  <span className="font-bold text-white">{selectedTamilInfo.pournamiTiming.displaySummaryTa}</span>
-                </div>
               </div>
             )}
 

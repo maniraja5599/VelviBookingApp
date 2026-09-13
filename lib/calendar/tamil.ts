@@ -904,7 +904,7 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   const is2025to2027 = year >= 2025 && year <= 2027;
   const isAmavasai = hasOfficialAmavasai || (amavasaiTiming?.isStartDay ?? false) || (amavasaiTiming?.isEndDay ?? false) || tithiIndex === 29;
   const isPournami = hasOfficialPournami || (pournamiTiming?.isStartDay ?? false) || (pournamiTiming?.isEndDay ?? false) || tithiIndex === 14;
-  const isPradosham = is2025to2027 ? hasOfficialPradosham : (tithiIndex === 12 || tithiIndex === 27); // Trayodashi
+  const isPradosham = false; // Pradosham fully removed per user request
   const isSashti = is2025to2027 ? hasOfficialSashti : (tithiIndex === 5 || tithiIndex === 20); // Shukla & Krishna Sashti
   const isSankataharaChaturthi = is2025to2027 ? hasOfficialSankatahara : (tithiIndex === 18); // Krishna Chaturthi
   const isEkadashi = is2025to2027 ? hasOfficialEkadhasi : (tithiIndex === 10 || tithiIndex === 25); // Shukla & Krishna Ekadasi
@@ -939,25 +939,12 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   } else if (isMuhurtham) {
     specialDayTag = "சுப முகூர்த்தம்";
     specialDayIcon = "💍";
-  } else if (amavasaiTiming) {
-    specialDayTag = amavasaiTiming.isStartDay
-      ? `அமாவாசை ஆரம்பம் (${amavasaiTiming.startTimeTa})`
-      : `அமாவாசை முடிவு (${amavasaiTiming.endTimeTa} வரை)`;
-    specialDayIcon = "🌑";
-  } else if (pournamiTiming) {
-    specialDayTag = pournamiTiming.isStartDay
-      ? `பௌர்ணமி ஆரம்பம் (${pournamiTiming.startTimeTa})`
-      : `பௌர்ணமி பூஜை (${pournamiTiming.endTimeTa} வரை)`;
-    specialDayIcon = "🌕";
-  } else if (isPournami) {
-    specialDayTag = "பௌர்ணமி";
-    specialDayIcon = "🌕";
   } else if (isAmavasai) {
     specialDayTag = "அமாவாசை";
     specialDayIcon = "🌑";
-  } else if (isPradosham) {
-    specialDayTag = "பிரதோஷம்";
-    specialDayIcon = "🐂";
+  } else if (isPournami) {
+    specialDayTag = "பௌர்ணமி";
+    specialDayIcon = "🌕";
   } else if (isSankataharaChaturthi) {
     specialDayTag = "சங்கடஹர சதுர்த்தி";
     specialDayIcon = "🐘";
