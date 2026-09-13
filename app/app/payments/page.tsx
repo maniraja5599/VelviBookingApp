@@ -5,6 +5,7 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { IyerSettlement } from "@/lib/types";
 import { IndianRupee, CheckCircle2, Clock, AlertCircle, Plus, X } from "lucide-react";
+import { getLocalDateString } from "@/lib/calendar/tamil";
 
 export default function PaymentsPage() {
   const { currentBusiness } = useAuth();
@@ -33,7 +34,7 @@ export default function PaymentsPage() {
       amount: Number(settlementAmount),
       paymentMethod: settlementMethod,
       reference: settlementRef || `SET/${Date.now().toString().slice(-6)}`,
-      settlementDate: new Date().toISOString().split("T")[0],
+      settlementDate: getLocalDateString(),
       createdAt: new Date().toISOString(),
     };
 

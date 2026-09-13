@@ -5,6 +5,7 @@ import {
   Subscription,
   Customer,
   Pooja,
+  PoojaItemTemplate,
   Booking,
   BookingAssignment,
   IyerSettlement,
@@ -747,6 +748,80 @@ export class VelviDatabaseStore {
       createdAt: new Date().toISOString(),
     });
     return this.platformSettings;
+  }
+
+  // -------------------------------------------------------------
+  // CUSTOMER MANAGEMENT (Quick Add & Find)
+  // -------------------------------------------------------------
+  public createCustomer(params: {
+    businessId: string;
+    name: string;
+    mobile: string;
+    address?: string;
+    city?: string;
+    notes?: string;
+  }): Customer {
+    const normalizedMobile = normalizeIndianMobile(params.mobile);
+    const newCust: Customer = {
+      id: `c-${Date.now()}`,
+      businessId: params.businessId,
+      name: params.name.trim(),
+      mobile: normalizedMobile,
+      whatsapp: normalizedMobile,
+      address: params.address?.trim() || "",
+      city: params.city?.trim() || "Namakkal",
+      notes: params.notes?.trim() || "",
+      createdAt: new Date().toISOString(),
+    };
+    this.customers.unshift(newCust);
+    return newCust;
+  }
+
+  // -------------------------------------------------------------
+  // POOJA & HOMAM SERVICES CRUD
+  // -------------------------------------------------------------
+  public createPooja(params: {
+    businessId: string;
+    englishName: string;
+    tamilName?: string;
+    description?: string;
+    durationMinutes?: number;
+    basePrice?: number;
+    procedure?: string;
+    items?: PoojaItemTemplate[];
+  }): Pooja {
+    const newPooja: Pooja = {
+      id: `p-${Date.now()}`,
+      businessId: params.businessId,
+      englishName: params.englishName.trim(),
+      tamilName: params.tamilName?.trim() || params.englishName.trim(),
+      description: params.description?.trim() || "",
+      durationMinutes: Number(params.durationMinutes) || 120,
+      basePrice: Number(params.basePrice) || 0,
+      procedure: params.procedure?.trim() || "",
+      active: true,
+      items: params.items || [],
+      createdAt: new Date().toISOString(),
+    };
+    this.poojas.unshift(newPooja);
+    return newPooja;
+  }
+
+  public updatePooja(
+    poojaId: string,
+    updates: Partial<Pooja>
+  ): Pooja | null {
+    const pooja = this.poojas.find((p) => p.id === poojaId);
+    if (!pooja) return null;
+    Object.assign(pooja, updates);
+    return pooja;
+  }
+
+  public deletePooja(poojaId: string): boolean {
+    const idx = this.poojas.findIndex((p) => p.id === poojaId);
+    if (idx === -1) return false;
+    this.poojas.splice(idx, 1);
+    return true;
   }
 }
 

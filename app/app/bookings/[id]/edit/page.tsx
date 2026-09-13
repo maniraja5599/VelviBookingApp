@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
-import { getTamilDate } from "@/lib/calendar/tamil";
+import { getTamilDate, getLocalDateString } from "@/lib/calendar/tamil";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -36,7 +36,7 @@ export default function EditBookingPage() {
   const [customerMobile, setCustomerMobile] = useState<string>(booking.customerMobile || "");
   const [location, setLocation] = useState<string>(booking.location || "");
   const [poojaId, setPoojaId] = useState<string>(booking.poojaId || poojas[0]?.id || "");
-  const [date, setDate] = useState<string>(booking.date || new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState<string>(booking.date || getLocalDateString());
   const [startTime, setStartTime] = useState<string>(booking.startTime || "08:00 AM");
   const [durationMinutes, setDurationMinutes] = useState<number>(booking.durationMinutes || 120);
   const [assignedIyerId, setAssignedIyerId] = useState<string>(

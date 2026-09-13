@@ -650,4 +650,129 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const moreCode = fs.readFileSync(morePath, "utf-8");
     expect(moreCode).toContain('currentUser?.role === "SUPER_ADMIN"');
   });
+
+  // TEST CASE 27: New Booking Button Label, Customer Quick Add, and Pooja Homam CRUD
+  it("Test 27: Double '+' fix, Customer quick creation, and Pooja Homam CRUD methods work correctly", async () => {
+    const { DICTIONARY } = await import("../components/providers/LanguageContext");
+
+    // 1. Double '+' fix: newBooking does not have duplicate '+' prefix
+    expect(DICTIONARY.newBooking.en).toBe("New Booking");
+    expect(DICTIONARY.newBooking.ta).toBe("புதிய முன்பதிவு");
+
+    // 2. Customer Quick Creation
+    const newCust = store.createCustomer({
+      businessId: "biz-venkateswara-01",
+      name: "Murugan Swamy",
+      mobile: "94422 11000",
+      city: "Namakkal",
+    });
+    expect(newCust.id).toBeDefined();
+    expect(newCust.mobile).toBe("+919442211000");
+    const foundCustomer = store.getCustomers("biz-venkateswara-01").find((c) => c.id === newCust.id);
+    expect(foundCustomer).toBeDefined();
+    expect(foundCustomer?.name).toBe("Murugan Swamy");
+
+    // 3. Pooja CRUD: Create
+    const newPooja = store.createPooja({
+      businessId: "biz-venkateswara-01",
+      englishName: "Chandi Homam",
+      tamilName: "சண்டி ஹோமம்",
+      description: "Grand ceremony for divine protection and victory.",
+      durationMinutes: 240,
+      basePrice: 15000,
+      items: [
+        {
+          id: "it-1",
+          poojaId: "",
+          itemEnglishName: "Sari",
+          itemTamilName: "பட்டு புடவை",
+          quantity: 1,
+          unit: "nos",
+          sortOrder: 1,
+        },
+      ],
+    });
+    expect(newPooja.id).toBeDefined();
+    expect(newPooja.englishName).toBe("Chandi Homam");
+    expect(store.getPoojas("biz-venkateswara-01").some((p) => p.id === newPooja.id)).toBe(true);
+
+    // 4. Pooja CRUD: Update
+    const updatedPooja = store.updatePooja(newPooja.id, {
+      basePrice: 18000,
+      durationMinutes: 300,
+    });
+    expect(updatedPooja?.basePrice).toBe(18000);
+    expect(updatedPooja?.durationMinutes).toBe(300);
+
+    // 5. Pooja CRUD: Delete
+    const deleted = store.deletePooja(newPooja.id);
+    expect(deleted).toBe(true);
+    expect(store.getPoojas("biz-venkateswara-01").some((p) => p.id === newPooja.id)).toBe(false);
+  });
+
+  // TEST CASE 28: Nalla Neram & Gowri Nalla Neram Calculation
+  it("Test 28: Tamil calendar computes Nalla Neram and Gowri Nalla Neram correctly for weekdays", () => {
+    // 2026-09-13 is a Sunday (ஞாயிறு)
+    const sundayInfo = getTamilDate("2026-09-13");
+    expect(sundayInfo.dayOfWeekTa).toBe("ஞாயிறு");
+    expect(sundayInfo.nallaNeramMorning).toBe("07:45 - 08:45");
+    expect(sundayInfo.nallaNeramEvening).toBe("15:15 - 16:15");
+    expect(sundayInfo.gowriNallaNeramMorning).toBe("10:45 - 11:45");
+    expect(sundayInfo.gowriNallaNeramEvening).toBe("13:30 - 14:30");
+    expect(sundayInfo.nallaNeram).toContain("காலை: 07:45 - 08:45");
+    expect(sundayInfo.gowriNallaNeram).toContain("காலை: 10:45 - 11:45");
+
+    // 2026-09-14 is a Monday (திங்கள்)
+    const mondayInfo = getTamilDate("2026-09-14");
+    expect(mondayInfo.dayOfWeekTa).toBe("திங்கள்");
+    expect(mondayInfo.nallaNeramMorning).toBe("06:15 - 07:15");
+    expect(mondayInfo.gowriNallaNeramMorning).toBe("09:15 - 10:15");
+  });
+
+  // TEST CASE 29: Timezone Safety, Date Parsing, and Accurate Tamil Panchangam Calculations
+  it("Test 29: getLocalDateString and getTamilDate provide 100% timezone-safe, authentic Tamil dates", async () => {
+    const { getLocalDateString, getTamilDate, formatTimeRangeTo12H } = await import("../lib/calendar/tamil");
+
+    // 1. Timezone-safe date string generation (No UTC offset regression)
+    expect(getLocalDateString("2026-09-13")).toBe("2026-09-13");
+    expect(getLocalDateString("2026-09-17")).toBe("2026-09-17");
+
+    // 2. September 13, 2026 (Sunday) evaluation (Matches authentic Tamil Daily Calendar)
+    const sep13 = getTamilDate("2026-09-13");
+    expect(sep13.dateStr).toBe("2026-09-13");
+    expect(sep13.dayOfMonth).toBe(13);
+    expect(sep13.monthNameEn).toBe("Sep");
+    expect(sep13.year).toBe(2026);
+    expect(sep13.dayOfWeekEn).toBe("Sunday");
+    expect(sep13.dayOfWeekTa).toBe("ஞாயிறு");
+    expect(sep13.tamilMonth).toBe("ஆவணி");
+    expect(sep13.tamilDay).toBe(27);
+    expect(sep13.tamilYear).toBe("பராபவ");
+    expect(sep13.tithi).toBe("துவிதியை (Dvitiya)");
+    expect(sep13.nakshatra).toBe("ஹஸ்தம் (Hastham)");
+    expect(sep13.formattedDualDate).toBe("13 Sep 2026 • ஆவணி 27");
+    expect(sep13.formattedTamilFull).toContain("ஞாயிறு, 13 செப்டம்பர் 2026 • ஆவணி 27");
+    expect(sep13.formattedEnglishFull).toContain("Sunday, 13 September 2026 • Aavani 27");
+
+    // 3. Purattasi 1 transition on September 18, 2026
+    const sep17 = getTamilDate("2026-09-17");
+    expect(sep17.dateStr).toBe("2026-09-17");
+    expect(sep17.tamilMonth).toBe("ஆவணி");
+    expect(sep17.tamilDay).toBe(31);
+
+    const sep18 = getTamilDate("2026-09-18");
+    expect(sep18.dateStr).toBe("2026-09-18");
+    expect(sep18.tamilMonth).toBe("புரட்டாசி");
+    expect(sep18.tamilDay).toBe(1);
+    expect(sep18.dayOfWeekEn).toBe("Friday");
+    expect(sep18.dayOfWeekTa).toBe("வெள்ளி");
+
+    // 4. 12-hour format verification with AM/PM
+    expect(formatTimeRangeTo12H(sep13.nallaNeramMorning)).toBe("07:45 - 08:45");
+    expect(formatTimeRangeTo12H(sep13.nallaNeramEvening)).toBe("03:15 - 04:15");
+    expect(formatTimeRangeTo12H(sep13.gowriNallaNeramMorning)).toBe("10:45 - 11:45");
+    expect(formatTimeRangeTo12H(sep13.gowriNallaNeramEvening)).toBe("01:30 - 02:30");
+    expect(formatTimeRangeTo12H(sep13.rahuKalam)).toBe("04:30 - 06:00");
+    expect(formatTimeRangeTo12H("15:15 - 16:15", true)).toBe("03:15 PM - 04:15 PM");
+  });
 });

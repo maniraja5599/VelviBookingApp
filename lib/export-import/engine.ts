@@ -1,6 +1,7 @@
 import * as XLSX from "xlsx";
 import { Customer, Booking, Pooja, BusinessMember, Payment } from "@/lib/types";
 import { isValidIndianMobile, normalizeIndianMobile } from "@/lib/utils/phone";
+import { getLocalDateString } from "@/lib/calendar/tamil";
 
 export interface ExportDataPayload {
   customers: Customer[];
@@ -25,7 +26,7 @@ export function exportBusinessData(
   payload: ExportDataPayload,
   format: "xlsx" | "csv" | "json"
 ): { data: any; filename: string; mimeType: string } {
-  const timestamp = new Date().toISOString().split("T")[0];
+  const timestamp = getLocalDateString();
 
   if (format === "json") {
     return {
