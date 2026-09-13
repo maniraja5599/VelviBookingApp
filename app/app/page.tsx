@@ -163,19 +163,12 @@ export default function HomeDashboardPage() {
         </div>
 
         <div className="mt-2 text-xs text-velvi-brown/80 border-t border-velvi-gold/15 pt-2 space-y-2">
-          {/* Dual Inauspicious Timings: Rahu Kalam & Emakandam in Tamil */}
-          <div className="flex items-center justify-between flex-wrap gap-1.5">
+          {/* Full Date Line */}
+          <div>
             <span className="font-bold text-velvi-brownDark">{todayInfo.formattedFullDay}</span>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[11px] text-red-700 font-bold bg-red-50/90 px-2 py-0.5 rounded-lg border border-red-200/70">
-                ராகு காலம்: {formatTimeRangeTo12H(todayInfo.rahuKalam)}
-              </span>
-              <span className="text-[11px] text-orange-800 font-bold bg-orange-50/90 px-2 py-0.5 rounded-lg border border-orange-200/70">
-                எமகண்டம்: {formatTimeRangeTo12H(todayInfo.yamagandam)}
-              </span>
-            </div>
           </div>
 
+          {/* Auspicious Timings: Nalla Neram & Gowri Nalla Neram */}
           <div className="grid grid-cols-2 gap-2 text-[11px]">
             <div className="bg-white/85 px-2.5 py-2 rounded-xl border border-emerald-300 shadow-2xs">
               <div className="text-emerald-900 font-bold flex items-center gap-1 mb-1">
@@ -209,6 +202,29 @@ export default function HomeDashboardPage() {
                   <span className="font-bold">{formatTimeRangeTo12H(todayInfo.gowriNallaNeramEvening)}</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Inauspicious Timings: Rahu Kalam & Emakandam below Nalla Neram */}
+          <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="bg-red-50/85 px-2.5 py-1.5 rounded-xl border border-red-200/80 flex items-center justify-between shadow-2xs">
+              <span className="text-red-700 font-bold flex items-center gap-1">
+                <span>⚠️</span>
+                <span>ராகு காலம்:</span>
+              </span>
+              <span className="text-red-950 font-extrabold">
+                {formatTimeRangeTo12H(todayInfo.rahuKalam)}
+              </span>
+            </div>
+
+            <div className="bg-orange-50/85 px-2.5 py-1.5 rounded-xl border border-orange-200/80 flex items-center justify-between shadow-2xs">
+              <span className="text-orange-800 font-bold flex items-center gap-1">
+                <span>⏳</span>
+                <span>எமகண்டம்:</span>
+              </span>
+              <span className="text-orange-950 font-extrabold">
+                {formatTimeRangeTo12H(todayInfo.yamagandam)}
+              </span>
             </div>
           </div>
         </div>
