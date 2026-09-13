@@ -748,7 +748,7 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep13.tamilMonth).toBe("ஆவணி");
     expect(sep13.tamilDay).toBe(27);
     expect(sep13.tamilYear).toBe("பராபவ");
-    expect(sep13.tithi).toBe("துவிதியை (Dvitiya)");
+    expect(sep13.tithi).toBe("திருதியை (Tritiya)");
     expect(sep13.nakshatra).toBe("ஹஸ்தம் (Hastham)");
     expect(sep13.formattedDualDate).toBe("13 Sep 2026 • ஆவணி 27");
     expect(sep13.formattedTamilFull).toContain("ஞாயிறு, 13 செப்டம்பர் 2026 • ஆவணி 27");
@@ -799,6 +799,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep14.festivalName).toBe("ஸ்ரீவிநாயகர் சதுர்த்தி");
     expect(sep14.specialDayTag).toBe("ஸ்ரீவிநாயகர் சதுர்த்தி");
     expect(sep14.specialDayIcon).toBe("🐘");
+    expect(sep14.tithiNameTa).toBe("சதுர்த்தி");
+    expect(sep14.isKarinaal).toBe(true);
 
     // Sep 17, 2026: Thursday, Aavani 31 => Auspicious Subha Muhurtham
     const sep17 = getTamilDate("2026-09-17");
@@ -820,6 +822,7 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     // Sep 10 & 11, 2026: Amavasai with precise start & end timings
     const sep10 = getTamilDate("2026-09-10");
     expect(sep10.isAmavasai).toBe(true);
+    expect(sep10.tithiNameTa).toBe("அமாவாசை");
     expect(sep10.amavasaiTiming).toBeDefined();
     expect(sep10.amavasaiTiming?.startDateStr).toBe("2026-09-10");
     expect(sep10.amavasaiTiming?.endDateStr).toBe("2026-09-11");
@@ -830,6 +833,7 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
     const sep11 = getTamilDate("2026-09-11");
     expect(sep11.isAmavasai).toBe(true);
+    expect(sep11.tithiNameTa).toBe("பிரதமை");
     expect(sep11.amavasaiTiming).toBeDefined();
     expect(sep11.amavasaiTiming?.isEndDay).toBe(true);
     expect(sep11.specialDayTag).toContain("அமாவாசை");
@@ -848,12 +852,17 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
     const sep26 = getTamilDate("2026-09-26");
     expect(sep26.isPournami).toBe(true);
+    expect(sep26.tithiNameTa).toBe("பௌர்ணமி");
     expect(sep26.pournamiTiming).toBeDefined();
     expect(sep26.pournamiTiming?.isEndDay).toBe(true);
     expect(sep26.specialDayTag).toContain("பௌர்ணமி");
     expect(sep26.specialDayIcon).toBe("🌕");
 
-    // Sep 24, 2026 is Shukla Pradosham (Trayodashi)
+    // Sep 8 and Sep 24, 2026 are Pradosham days matching Tamil Daily Calendar
+    const sep8 = getTamilDate("2026-09-08");
+    expect(sep8.isPradosham).toBe(true);
+    expect(sep8.specialDayTag).toBe("பிரதோஷம்");
+
     const sep24 = getTamilDate("2026-09-24");
     expect(sep24.isPradosham).toBe(true);
     expect(sep24.specialDayTag).toBe("பிரதோஷம்");

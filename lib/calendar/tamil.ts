@@ -24,6 +24,8 @@ export function getLocalDateString(input?: Date | string): string {
   return `${y}-${m}-${day}`;
 }
 
+import { OFFICIAL_TAMIL_PANCHANGAM, SacredEventType } from "./panchangamData";
+
 export interface TamilDateInfo {
   gregorianDate: Date;
   dateStr: string; // YYYY-MM-DD
@@ -63,9 +65,15 @@ export interface TamilDateInfo {
   isSankataharaChaturthi?: boolean;
   isEkadashi?: boolean;
   isMuhurtham?: boolean;
+  isKarinaal?: boolean;
+  isKarthigai?: boolean;
+  isChandraDarisanam?: boolean;
+  isMaadhaSivarathiri?: boolean;
+  isThiruvonam?: boolean;
   festivalName?: string;
   amavasaiTiming?: SacredEventTiming;
   pournamiTiming?: SacredEventTiming;
+  panchangamEvents?: SacredEventType[];
   specialDayTag?: string;
   specialDayIcon?: string;
 }
@@ -765,9 +773,10 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   const tamilYearOffset = (effectiveYear - 1987 + 60) % 60;
   const tamilYear = TAMIL_YEARS_60[tamilYearOffset] || "பராபவ";
 
-  // Astronomical Tithi & Nakshatra at local sunrise (06:00 AM IST = 00:30 UTC)
-  const sunriseUtc = new Date(Date.UTC(year, month, day, 0, 30, 0));
-  const jd = getJulianDay(sunriseUtc);
+  // Astronomical Tithi & Nakshatra at local midday (12:00 PM IST = 06:30 UTC)
+  // In Tamil daily calendar tradition, the midday/daytime Tithi governs religious observance and daily designation
+  const midDayUtc = new Date(Date.UTC(year, month, day, 6, 30, 0));
+  const jd = getJulianDay(midDayUtc);
   const ayanamsa = getLahiriAyanamsa(jd);
   const sunLong = getSunLongitude(jd);
   const moonLong = getMoonLongitude(jd);
@@ -797,6 +806,20 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
 
   // Guaranteed local timezone-safe string YYYY-MM-DD
   const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+  // Official Tamil Panchangam sacred days from verified Tamil Daily Calendar tables
+  const officialEvents = OFFICIAL_TAMIL_PANCHANGAM[dateStr] || [];
+  const hasOfficialAmavasai = officialEvents.includes("Amavasai");
+  const hasOfficialPournami = officialEvents.includes("Pournami");
+  const hasOfficialPradosham = officialEvents.includes("Pradosham");
+  const hasOfficialEkadhasi = officialEvents.includes("Ekadhasi");
+  const hasOfficialSashti = officialEvents.includes("Sashti");
+  const hasOfficialSankatahara = officialEvents.includes("Sankatahara Chathurthi");
+  const isKarinaal = officialEvents.includes("Karinaal");
+  const isKarthigai = officialEvents.includes("Karthigai");
+  const isChandraDarisanam = officialEvents.includes("Chandra Darisanam");
+  const isMaadhaSivarathiri = officialEvents.includes("Maadha Sivarathiri");
+  const isThiruvonam = officialEvents.includes("Thiruvonam");
 
   // Find Amavasai & Pournami transitions that touch this date (start or end date)
   const sacredEvents = getYearSacredTimings(year);
@@ -878,12 +901,13 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   }
 
   // Special sacred days calculations
-  const isAmavasai = !!amavasaiTiming || tithiIndex === 29;
-  const isPournami = !!pournamiTiming || tithiIndex === 14;
-  const isPradosham = tithiIndex === 12 || tithiIndex === 27; // Trayodashi
-  const isSashti = tithiIndex === 5 || tithiIndex === 20; // Shukla & Krishna Sashti
-  const isSankataharaChaturthi = tithiIndex === 18; // Krishna Chaturthi
-  const isEkadashi = tithiIndex === 10 || tithiIndex === 25; // Shukla & Krishna Ekadasi
+  const is2025to2027 = year >= 2025 && year <= 2027;
+  const isAmavasai = hasOfficialAmavasai || (amavasaiTiming?.isStartDay ?? false) || (amavasaiTiming?.isEndDay ?? false) || tithiIndex === 29;
+  const isPournami = hasOfficialPournami || (pournamiTiming?.isStartDay ?? false) || (pournamiTiming?.isEndDay ?? false) || tithiIndex === 14;
+  const isPradosham = is2025to2027 ? hasOfficialPradosham : (tithiIndex === 12 || tithiIndex === 27); // Trayodashi
+  const isSashti = is2025to2027 ? hasOfficialSashti : (tithiIndex === 5 || tithiIndex === 20); // Shukla & Krishna Sashti
+  const isSankataharaChaturthi = is2025to2027 ? hasOfficialSankatahara : (tithiIndex === 18); // Krishna Chaturthi
+  const isEkadashi = is2025to2027 ? hasOfficialEkadhasi : (tithiIndex === 10 || tithiIndex === 25); // Shukla & Krishna Ekadasi
 
   // Check Muhurtham:
   // 1. Authoritative lookup for 2025-2027 matching Tamil Daily Calendar / Panchangam
@@ -943,6 +967,21 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   } else if (isEkadashi) {
     specialDayTag = "ஏகாதசி";
     specialDayIcon = "🪷";
+  } else if (isKarthigai) {
+    specialDayTag = "கார்த்திகை விரதம்";
+    specialDayIcon = "🪔";
+  } else if (isMaadhaSivarathiri) {
+    specialDayTag = "மாத சிவராத்திரி";
+    specialDayIcon = "🔱";
+  } else if (isChandraDarisanam) {
+    specialDayTag = "சந்திர தரிசனம்";
+    specialDayIcon = "🌙";
+  } else if (isThiruvonam) {
+    specialDayTag = "திருவோண விரதம்";
+    specialDayIcon = "✨";
+  } else if (isKarinaal) {
+    specialDayTag = "கரிநாள்";
+    specialDayIcon = "☀️";
   }
 
   return {
@@ -984,9 +1023,15 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
     isSankataharaChaturthi,
     isEkadashi,
     isMuhurtham,
+    isKarinaal,
+    isKarthigai,
+    isChandraDarisanam,
+    isMaadhaSivarathiri,
+    isThiruvonam,
     festivalName,
     amavasaiTiming,
     pournamiTiming,
+    panchangamEvents: officialEvents,
     specialDayTag,
     specialDayIcon,
   };

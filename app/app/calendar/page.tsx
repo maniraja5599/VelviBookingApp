@@ -102,6 +102,9 @@ export default function CalendarPage() {
     } else if (selectedTamilInfo.specialDayTag && !selectedTamilInfo.isMuhurtham) {
       text += `🌟 *விசேஷம்:* ${selectedTamilInfo.specialDayIcon || "✨"} ${selectedTamilInfo.specialDayTag}\n`;
     }
+    if (selectedTamilInfo.isKarinaal) {
+      text += `⚠️ *கரிநாள் - சுபகாரியங்கள் தவிர்க்கவும்*\n`;
+    }
     if (selectedTamilInfo.amavasaiTiming) {
       text += `\n🌑 *அமாவாசை கால அளவு (Amavasai Timings):*\n`;
       text += `• ஆரம்பம்: ${selectedTamilInfo.amavasaiTiming.startFormattedFull}\n`;
@@ -627,6 +630,16 @@ export default function CalendarPage() {
                 <div className="text-[11px] text-amber-100 bg-white/5 px-2.5 py-1 rounded-md flex items-center justify-between gap-2">
                   <span className="text-amber-200/90 font-medium">கிரிவலம் & பூஜை:</span>
                   <span className="font-bold text-white">{selectedTamilInfo.pournamiTiming.displaySummaryTa}</span>
+                </div>
+              </div>
+            )}
+
+            {selectedTamilInfo.isKarinaal && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-2.5 flex items-center gap-2 text-xs shadow-xs">
+                <span className="text-base">⚠️</span>
+                <div>
+                  <span className="font-bold block">கரிநாள் (Karinaal)</span>
+                  <span className="text-[11px] text-amber-800">கரிநாள் அன்று திருமணம் போன்ற சுபகாரியங்கள் செய்வதைத் தவிர்க்கவும்.</span>
                 </div>
               </div>
             )}
