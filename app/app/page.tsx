@@ -122,117 +122,143 @@ export default function HomeDashboardPage() {
     setSelectedMonthKey(`${newY}-${newM}`);
   };
 
-  // Pooja distribution in selected month
-  const poojaDistributionMap = new Map<string, { name: string; count: number; amount: number }>();
-  selectedMonthBookings.forEach((b) => {
-    const key = b.poojaEnglishName || "Special Pooja";
-    const existing = poojaDistributionMap.get(key) || { name: key, count: 0, amount: 0 };
-    existing.count += 1;
-    existing.amount += b.totalAmount;
-    poojaDistributionMap.set(key, existing);
-  });
-  const poojaDistribution = Array.from(poojaDistributionMap.values()).sort((a, b) => b.count - a.count);
+  // Earnings View Mode: "month" or "all"
+  const [earningsViewMode, setEarningsViewMode] = useState<"month" | "all">("month");
 
-  // Team allocation in selected month
-  const memberAllocationMap = new Map<string, { name: string; count: number }>();
-  selectedMonthBookings.forEach((b) => {
-    const key = b.assignedIyerName || "Self";
-    const existing = memberAllocationMap.get(key) || { name: key, count: 0 };
-    existing.count += 1;
-    memberAllocationMap.set(key, existing);
-  });
-  const memberAllocation = Array.from(memberAllocationMap.values()).sort((a, b) => b.count - a.count);
+  const activeBilled = earningsViewMode === "month" ? monthTotalBilled : cumulativeTotalBilled;
+  const activeCollected = earningsViewMode === "month" ? monthCollected : cumulativeCollected;
+  const activePending = earningsViewMode === "month" ? monthPending : cumulativePending;
+  const activeRate = earningsViewMode === "month" ? collectionRate : cumulativeRate;
+  const activeBookingsCount = earningsViewMode === "month" ? selectedMonthBookings.length : bookings.length;
+
+  // Active revenue by pooja distribution
+  const activePoojas = useMemo(() => {
+    const targetBookings = earningsViewMode === "month" ? selectedMonthBookings : bookings;
+    const map = new Map<string, { name: string; count: number; amount: number }>();
+    targetBookings.forEach((b) => {
+      const key = b.poojaEnglishName || "Special Pooja";
+      const existing = map.get(key) || { name: key, count: 0, amount: 0 };
+      existing.count += 1;
+      existing.amount += b.totalAmount || 0;
+      map.set(key, existing);
+    });
+    const list = Array.from(map.values()).sort((a, b) => b.amount - a.amount);
+    const total = targetBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0) || 1;
+    return list.map((p) => ({
+      ...p,
+      percent: Math.round((p.amount / total) * 100),
+    }));
+  }, [earningsViewMode, selectedMonthBookings, bookings]);
+
+  // Active team allocation
+  const activeTeamAllocation = useMemo(() => {
+    const targetBookings = earningsViewMode === "month" ? selectedMonthBookings : bookings;
+    const map = new Map<string, { name: string; count: number }>();
+    targetBookings.forEach((b) => {
+      const key = b.assignedIyerName || "Self";
+      const existing = map.get(key) || { name: key, count: 0 };
+      existing.count += 1;
+      map.set(key, existing);
+    });
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
+  }, [earningsViewMode, selectedMonthBookings, bookings]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
-      {/* 1. Header Greeting & Tamil Date Card */}
-      <div className="bg-gradient-to-br from-[#0c2b1a] via-[#123e24] to-[#0a2315] text-white rounded-3xl p-4 sm:p-5 shadow-lg border border-emerald-700/30 relative overflow-hidden">
-        {/* Subtle decorative background glow */}
-        <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between relative z-10">
-          <div>
-            <div className="text-[11px] text-amber-300/90 font-bold tracking-wider uppercase flex items-center gap-1.5">
-              <span>🪔</span>
+      {/* 1. Sacred Warm Header Greeting & Tamil Date Card (Styled matching mockup) */}
+      <div className="bg-gradient-to-b from-[#fbf8f0] via-[#fffdfa] to-white rounded-3xl p-4 sm:p-5 border border-amber-200/80 shadow-xs relative overflow-hidden">
+        {/* Top row: Year & Vanakkam with Tamil Day Badge */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-xs sm:text-[13px] text-amber-900 font-bold tracking-wide flex items-center gap-1.5">
+              <span>📍</span>
               <span>{todayInfo.tamilYear} வருடம்</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5">
-              {(() => {
-                const displayName =
-                  (currentBusiness?.iyerName && currentBusiness.iyerName.trim()) ||
-                  (currentUser?.name && currentUser.name !== "Ravi Iyer" && currentUser.name !== "New Iyer" && currentUser.name.trim()) ||
-                  "";
-                return displayName ? `🙏 Vanakkam, ${displayName}` : `🙏 Vanakkam`;
-              })()}
-            </h2>
-            <p className="text-xs text-emerald-100/90 font-medium mt-0.5">
-              {todayInfo.formattedFullDay}
+            <h1 className="text-2xl sm:text-3xl font-black text-emerald-950 tracking-tight mt-1 leading-none">
+              Vanakkam
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
+              {todayInfo.dayOfWeekEn}, {todayInfo.dayOfMonth} {todayInfo.monthNameEn} {todayInfo.year}
+            </p>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-normal mt-0.5">
+              {todayInfo.tamilMonth} {todayInfo.tamilDay}, {todayInfo.tamilYear} வருடம்
             </p>
           </div>
-          <div className="text-right shrink-0">
-            <span className="inline-block px-3 py-1 bg-amber-400/20 text-amber-200 rounded-xl text-xs sm:text-sm font-extrabold border border-amber-400/30 shadow-xs">
-              {todayInfo.tamilMonth} {todayInfo.tamilDay}
+
+          {/* Right Aavani 28 Day Pill Card */}
+          <div className="shrink-0 bg-white rounded-2xl p-2.5 sm:p-3 border border-amber-200/90 shadow-2xs text-center min-w-[82px] sm:min-w-[96px]">
+            <span className="block text-[11px] sm:text-xs font-semibold text-slate-500 capitalize">
+              {todayInfo.tamilMonthEn || todayInfo.tamilMonth}
+            </span>
+            <span className="block text-2xl sm:text-3xl font-black text-emerald-900 leading-tight my-0.5">
+              {todayInfo.tamilDay}
+            </span>
+            <span className="block text-[10px] sm:text-[11px] font-semibold text-slate-500">
+              Day
             </span>
           </div>
         </div>
 
         {/* Auspicious Timings: Nalla Neram & Gowri Nalla Neram */}
-        <div className="mt-3.5 pt-3 border-t border-emerald-800/60 space-y-2 relative z-10">
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="bg-emerald-950/70 backdrop-blur-xs px-3 py-2 rounded-2xl border border-emerald-600/40 shadow-xs">
-              <div className="text-amber-300 font-extrabold flex items-center gap-1 mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>நல்ல நேரம்</span>
+        <div className="mt-4 pt-3 border-t border-amber-200/60 space-y-2.5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+            {/* Nalla Neram */}
+            <div className="bg-[#f2faf5] rounded-2xl p-3 border border-emerald-200/70 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <span className="text-xs sm:text-[13px] font-black text-emerald-950">
+                  நல்ல நேரம்
+                </span>
+                <span className="text-xs">🍃</span>
               </div>
-              <div className="text-emerald-50 text-[10.5px] space-y-0.5 font-medium">
-                <div>
-                  <span className="text-emerald-300/90">காலை:</span>{" "}
-                  <span className="font-bold text-white">{formatTimeRangeTo12H(todayInfo.nallaNeramMorning)}</span>
+              <div className="text-[10.5px] sm:text-xs space-y-1">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-semibold text-emerald-900">காலை :</span>
+                  <span className="font-bold text-slate-900 text-right">{formatTimeRangeTo12H(todayInfo.nallaNeramMorning)}</span>
                 </div>
-                <div>
-                  <span className="text-emerald-300/90">மாலை:</span>{" "}
-                  <span className="font-bold text-white">{formatTimeRangeTo12H(todayInfo.nallaNeramEvening)}</span>
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-semibold text-emerald-900">மாலை :</span>
+                  <span className="font-bold text-slate-900 text-right">{formatTimeRangeTo12H(todayInfo.nallaNeramEvening)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-amber-950/60 backdrop-blur-xs px-3 py-2 rounded-2xl border border-amber-600/40 shadow-xs">
-              <div className="text-amber-300 font-extrabold flex items-center gap-1 mb-1">
-                <Flame className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>கௌரி நல்ல நேரம்</span>
+            {/* Gowri Nalla Neram */}
+            <div className="bg-[#fff9f2] rounded-2xl p-3 border border-amber-200/80 shadow-2xs flex flex-col justify-between">
+              <div className="flex items-center justify-between gap-1 mb-2">
+                <span className="text-xs sm:text-[13px] font-black text-amber-950">
+                  கௌரி நல்ல நேரம்
+                </span>
+                <span className="text-xs">🔥</span>
               </div>
-              <div className="text-amber-50 text-[10.5px] space-y-0.5 font-medium">
-                <div>
-                  <span className="text-amber-300/90">காலை:</span>{" "}
-                  <span className="font-bold text-white">{formatTimeRangeTo12H(todayInfo.gowriNallaNeramMorning)}</span>
+              <div className="text-[10.5px] sm:text-xs space-y-1">
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-semibold text-amber-900">காலை :</span>
+                  <span className="font-bold text-slate-900 text-right">{formatTimeRangeTo12H(todayInfo.gowriNallaNeramMorning)}</span>
                 </div>
-                <div>
-                  <span className="text-amber-300/90">மாலை:</span>{" "}
-                  <span className="font-bold text-white">{formatTimeRangeTo12H(todayInfo.gowriNallaNeramEvening)}</span>
+                <div className="flex items-center justify-between text-slate-700">
+                  <span className="font-semibold text-amber-900">மாலை :</span>
+                  <span className="font-bold text-slate-900 text-right">{formatTimeRangeTo12H(todayInfo.gowriNallaNeramEvening)}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Inauspicious Timings: Rahu Kalam & Emakandam */}
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <div className="bg-red-950/60 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-red-500/40 flex items-center justify-between shadow-xs">
-              <span className="text-red-300 font-bold flex items-center gap-1">
-                <span>⚠️</span>
-                <span>ராகு காலம்:</span>
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+            <div className="bg-[#fdf3f4] px-3 py-2.5 rounded-2xl border border-rose-200/80 flex flex-col justify-center shadow-2xs">
+              <span className="text-xs sm:text-[13px] font-black text-rose-800 mb-0.5">
+                ராகு காலம்
               </span>
-              <span className="text-white font-extrabold">
+              <span className="text-[11px] sm:text-xs font-black text-slate-900">
                 {formatTimeRangeTo12H(todayInfo.rahuKalam)}
               </span>
             </div>
 
-            <div className="bg-orange-950/60 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-orange-500/40 flex items-center justify-between shadow-xs">
-              <span className="text-orange-300 font-bold flex items-center gap-1">
-                <span>⏳</span>
-                <span>எமகண்டம்:</span>
+            <div className="bg-[#f4f4fe] px-3 py-2.5 rounded-2xl border border-indigo-200/80 flex flex-col justify-center shadow-2xs">
+              <span className="text-xs sm:text-[13px] font-black text-indigo-900 mb-0.5">
+                எமகண்டம்
               </span>
-              <span className="text-white font-extrabold">
+              <span className="text-[11px] sm:text-xs font-black text-slate-900">
                 {formatTimeRangeTo12H(todayInfo.yamagandam)}
               </span>
             </div>
@@ -241,13 +267,13 @@ export default function HomeDashboardPage() {
 
         {/* Trial Countdown Badge (if in trial) */}
         {subscription?.status === "TRIAL" && (
-          <div className="mt-3 bg-amber-400/15 border border-amber-400/30 rounded-2xl px-3 py-1.5 flex items-center justify-between relative z-10">
-            <span className="text-xs font-semibold text-amber-200 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" /> 30 Days Free Trial Active
+          <div className="mt-3.5 bg-amber-100/80 border border-amber-300 rounded-2xl px-3 py-1.5 flex items-center justify-between relative z-10">
+            <span className="text-xs font-semibold text-amber-900 flex items-center gap-1.5">
+              <span>✨</span> 30 Days Free Trial Active
             </span>
             <Link
               href="/app/subscription"
-              className="text-[11px] font-bold text-amber-300 hover:text-white hover:underline"
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 hover:underline"
             >
               View Plan →
             </Link>
@@ -255,106 +281,71 @@ export default function HomeDashboardPage() {
         )}
       </div>
 
-      {/* Quick Action Shortcuts Row */}
-      <div className="grid grid-cols-4 gap-2">
-        <Link
-          href="/app/bookings/new"
-          className="flex flex-col items-center justify-center p-2.5 bg-gradient-to-br from-emerald-800 to-emerald-950 text-white rounded-2xl shadow-sm hover:shadow-md transition active:scale-95 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-amber-400/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-            <Plus className="w-4 h-4 text-amber-300 stroke-[3]" />
-          </div>
-          <span className="text-[10px] font-bold text-center leading-tight">New Booking</span>
-        </Link>
 
-        <Link
-          href="/app/calendar"
-          className="flex flex-col items-center justify-center p-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200/90 shadow-2xs transition active:scale-95 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-            <Calendar className="w-4 h-4 text-emerald-800" />
-          </div>
-          <span className="text-[10px] font-bold text-center leading-tight">Calendar</span>
-        </Link>
 
-        <Link
-          href="/app/poojas"
-          className="flex flex-col items-center justify-center p-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200/90 shadow-2xs transition active:scale-95 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-            <Flame className="w-4 h-4 text-amber-600" />
+      {/* 2. KPI Stat Cards (Matching mockup with Dual English + Tamil Subtitles) */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
+        {/* Today's Bookings */}
+        <div className="bg-white rounded-3xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-emerald-300 transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs">📅</span>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-50 text-emerald-800 rounded-full">Today</span>
           </div>
-          <span className="text-[10px] font-bold text-center leading-tight">Poojas</span>
-        </Link>
-
-        <Link
-          href="/app/payments"
-          className="flex flex-col items-center justify-center p-2.5 bg-white hover:bg-slate-50 text-slate-800 rounded-2xl border border-slate-200/90 shadow-2xs transition active:scale-95 group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-            <CircleDollarSign className="w-4 h-4 text-blue-700" />
-          </div>
-          <span className="text-[10px] font-bold text-center leading-tight">Receipts</span>
-        </Link>
-      </div>
-
-      {/* 2. KPI Stat Cards */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-emerald-300 transition">
-          <div className="flex items-center justify-between text-emerald-700">
-            <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <CalendarDays className="w-3.5 h-3.5 text-emerald-800" />
-            </div>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 bg-emerald-50 text-emerald-800 rounded">Today</span>
-          </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-slate-900">
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">
               {todayBookings.length}
             </div>
-            <div className="text-[10px] font-medium text-slate-500 leading-tight">
+            <div className="text-[11px] font-bold text-slate-800 leading-tight mt-1">
               Today's Bookings
             </div>
+            <div className="text-[10px] font-medium text-slate-400 leading-tight">
+              இன்றைய பதிவு
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-amber-300 transition">
-          <div className="flex items-center justify-between text-amber-700">
-            <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center">
-              <CircleDollarSign className="w-3.5 h-3.5 text-amber-700" />
-            </div>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 bg-amber-50 text-amber-800 rounded">Due</span>
+        {/* Pending Due */}
+        <div className="bg-white rounded-3xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-amber-300 transition min-w-0">
+          <div className="flex items-center justify-between">
+            <span className="text-xs">🪙</span>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 bg-amber-50 text-amber-800 rounded-full">Due</span>
           </div>
-          <div className="mt-2">
-            <div className="text-lg sm:text-xl font-black text-slate-900">
+          <div className="mt-3 min-w-0">
+            <div className="text-lg sm:text-2xl font-black text-slate-900 leading-none truncate">
               ₹{pendingAmount.toLocaleString("en-IN")}
             </div>
-            <div className="text-[10px] font-medium text-slate-500 leading-tight">
+            <div className="text-[11px] font-bold text-slate-800 leading-tight mt-1 truncate">
               Pending Due
+            </div>
+            <div className="text-[9.5px] sm:text-[10px] font-medium text-slate-400 leading-tight tracking-tight">
+              நிலுவைத் தொகை
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-indigo-300 transition">
-          <div className="flex items-center justify-between text-indigo-700">
-            <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center">
-              <Clock className="w-3.5 h-3.5 text-indigo-700" />
-            </div>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 bg-indigo-50 text-indigo-800 rounded">Next</span>
+        {/* Upcoming Bookings */}
+        <div className="bg-white rounded-3xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs flex flex-col justify-between hover:border-indigo-300 transition">
+          <div className="flex items-center justify-between">
+            <span className="text-xs">🕒</span>
+            <span className="text-[10px] font-extrabold px-2 py-0.5 bg-indigo-50 text-indigo-800 rounded-full">Next</span>
           </div>
-          <div className="mt-2">
-            <div className="text-xl sm:text-2xl font-black text-slate-900">
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 leading-none">
               {upcomingCount}
             </div>
-            <div className="text-[10px] font-medium text-slate-500 leading-tight">
+            <div className="text-[11px] font-bold text-slate-800 leading-tight mt-1">
               Upcoming Bookings
+            </div>
+            <div className="text-[10px] font-medium text-slate-400 leading-tight">
+              வரவிருக்கும் பதிவு
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Earnings & Payments Analytics (Cumulative + All Month Breakdown) */}
+      {/* 3. Earnings & Cashflow Hub */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-xs space-y-4">
-        {/* Header */}
+        {/* Header with Switcher Tabs */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-800 flex items-center justify-center border border-emerald-200/60 shadow-2xs">
@@ -362,245 +353,264 @@ export default function HomeDashboardPage() {
             </div>
             <div>
               <h3 className="font-extrabold text-sm text-slate-900">
-                Earnings &amp; Payments Overview
+                Earnings &amp; Cashflow
               </h3>
               <p className="text-[11px] text-slate-500 font-medium">
-                Cumulative &amp; Month-Wise Collections
+                {earningsViewMode === "month"
+                  ? `${selectedMonthTamil.monthNameEn} ${selectedMonthTamil.year} (${selectedMonthTamil.tamilMonth} மாதம்)`
+                  : "All-Time Cumulative Collections"}
               </p>
             </div>
           </div>
 
-          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            {bookings.length} {bookings.length === 1 ? "Total Booking" : "Total Bookings"}
-          </span>
+          {/* Period Toggle Pills */}
+          <div className="bg-slate-100 p-0.5 rounded-xl border border-slate-200 flex items-center text-xs font-bold">
+            <button
+              onClick={() => setEarningsViewMode("month")}
+              className={`px-3 py-1 rounded-lg transition ${
+                earningsViewMode === "month"
+                  ? "bg-emerald-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              This Month
+            </button>
+            <button
+              onClick={() => setEarningsViewMode("all")}
+              className={`px-3 py-1 rounded-lg transition ${
+                earningsViewMode === "all"
+                  ? "bg-emerald-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              All-Time
+            </button>
+          </div>
         </div>
 
-        {/* 3A. Cumulative Lifetime Earnings Hero Card */}
-        <div className="bg-gradient-to-br from-slate-50 via-emerald-50/20 to-amber-50/30 p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Main Earnings Card */}
+        <div className="bg-gradient-to-br from-emerald-50/40 via-white to-amber-50/40 p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3.5">
+          {/* Top Row: Total Collected Highlight & Realization Badge */}
+          <div className="flex items-start justify-between flex-wrap gap-2">
+            <div>
+              <span className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
+                {earningsViewMode === "month" ? "Month Dakshina Collected" : "Total Dakshina Collected"}
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-900 mt-0.5 flex items-baseline gap-1.5">
+                <span>₹{activeCollected.toLocaleString("en-IN")}</span>
+                <span className="text-xs font-bold text-slate-500">
+                  / ₹{activeBilled.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
             <div className="flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-emerald-700" />
-              <span className="text-xs font-bold text-slate-900">
-                Cumulative Earnings (All-Time)
+              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
+                {activeRate}% Realized
+              </span>
+              <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                {activeBookingsCount} {activeBookingsCount === 1 ? "Pooja" : "Poojas"}
               </span>
             </div>
-            <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-              {cumulativeRate}% Realized
-            </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center">
+          {/* Progress Bar with Dual Labels */}
+          <div className="space-y-1.5">
+            <div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden flex shadow-inner">
+              <div
+                className="bg-emerald-600 h-full rounded-full transition-all duration-500 shadow-xs"
+                style={{ width: `${Math.min(100, activeRate)}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span className="text-emerald-800">
+                Collected: ₹{activeCollected.toLocaleString("en-IN")}
+              </span>
+              <span className="text-rose-700">
+                Pending Due: ₹{activePending.toLocaleString("en-IN")}
+              </span>
+            </div>
+          </div>
+
+          {/* 3 Metric Breakdown Boxes */}
+          <div className="grid grid-cols-3 gap-2 text-center pt-1">
             <div className="p-2.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[10px] text-slate-500 block font-medium">Gross Billed</span>
+              <span className="text-[10px] text-slate-500 block font-medium">Total Billed</span>
               <span className="text-xs sm:text-sm font-black text-slate-900 block mt-0.5">
-                ₹{cumulativeTotalBilled.toLocaleString("en-IN")}
+                ₹{activeBilled.toLocaleString("en-IN")}
               </span>
             </div>
 
             <div className="p-2.5 bg-emerald-50/90 rounded-xl border border-emerald-200 shadow-2xs">
-              <span className="text-[10px] text-emerald-800 block font-medium">Total Earned</span>
+              <span className="text-[10px] text-emerald-800 block font-medium">Net Received</span>
               <span className="text-xs sm:text-sm font-black text-emerald-900 block mt-0.5">
-                ₹{cumulativeCollected.toLocaleString("en-IN")}
+                ₹{activeCollected.toLocaleString("en-IN")}
               </span>
             </div>
 
-            <div className="p-2.5 bg-amber-50/90 rounded-xl border border-amber-200 shadow-2xs">
-              <span className="text-[10px] text-amber-800 block font-medium">Pending Due</span>
-              <span className="text-xs sm:text-sm font-black text-amber-950 block mt-0.5">
-                ₹{cumulativePending.toLocaleString("en-IN")}
+            <div className="p-2.5 bg-rose-50/90 rounded-xl border border-rose-200 shadow-2xs">
+              <span className="text-[10px] text-rose-800 block font-medium">Pending Due</span>
+              <span className="text-xs sm:text-sm font-black text-rose-950 block mt-0.5">
+                ₹{activePending.toLocaleString("en-IN")}
               </span>
             </div>
           </div>
 
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-[10.5px] text-slate-600 font-medium">
-              <span>Overall Realization Progress</span>
-              <span className="font-bold text-emerald-800">
-                ₹{cumulativeCollected.toLocaleString("en-IN")} / ₹{cumulativeTotalBilled.toLocaleString("en-IN")}
-              </span>
+          {/* Pending Due Follow-up Action Banner */}
+          {activePending > 0 && (
+            <div className="bg-amber-50 border border-amber-200/90 rounded-xl p-2.5 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5 text-amber-900 font-bold">
+                <span>⚠️</span>
+                <span>₹{activePending.toLocaleString("en-IN")} pending collection</span>
+              </div>
+              <Link
+                href="/app/payments"
+                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-[11px] shadow-2xs transition"
+              >
+                Collect Due →
+              </Link>
             </div>
-            <div className="w-full bg-slate-200/80 rounded-full h-2 overflow-hidden flex">
-              <div
-                className="bg-emerald-600 h-full rounded-full transition-all duration-500 shadow-xs"
-                style={{ width: `${Math.min(100, cumulativeRate)}%` }}
-              />
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* 3B. All Month Payments & Earnings List */}
-        <div className="space-y-2 pt-1">
+        {/* Month Selector Carousel / Slider (When in month view) */}
+        {earningsViewMode === "month" && (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                <span>Select Month</span>
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => handleMonthChange(-1)}
+                  className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition"
+                  title="Previous Month"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-[11px] font-bold text-slate-700 px-1.5">
+                  {selectedMonthTamil.monthNameEn} {selectedMonthTamil.year}
+                </span>
+                <button
+                  onClick={() => handleMonthChange(1)}
+                  className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 transition"
+                  title="Next Month"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Month Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {allMonthsSummary.map((m) => {
+                const isSelected = m.monthKey === selectedMonthKey;
+                return (
+                  <button
+                    key={m.monthKey}
+                    onClick={() => setSelectedMonthKey(m.monthKey)}
+                    className={`px-3 py-1.5 rounded-xl whitespace-nowrap text-xs transition shrink-0 flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-emerald-900 text-white font-extrabold shadow-2xs"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 font-medium"
+                    }`}
+                  >
+                    <span>{m.englishMonth}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isSelected ? "bg-amber-400/20 text-amber-200" : "bg-slate-200 text-slate-700"
+                    }`}>
+                      {m.bookingCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Revenue Contribution by Pooja (Visual Progress Bars) */}
+        <div className="space-y-2.5 pt-2 border-t border-slate-100">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-slate-900 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-amber-600" />
-              <span>All Month Payments &amp; Earnings</span>
+            <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-amber-600" />
+              <span>Revenue by Pooja Ceremony</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium">
-              {allMonthsSummary.length} {allMonthsSummary.length === 1 ? "month" : "months"} recorded
+            <span className="text-[10.5px] text-slate-500 font-medium">
+              {activePoojas.length} {activePoojas.length === 1 ? "Ceremony" : "Ceremonies"}
             </span>
           </div>
 
-          <div className="space-y-2">
-            {allMonthsSummary.map((m) => {
-              const isSelected = m.monthKey === selectedMonthKey;
-              return (
-                <div
-                  key={m.monthKey}
-                  onClick={() => setSelectedMonthKey(m.monthKey)}
-                  className={`p-3.5 rounded-2xl border transition cursor-pointer ${
-                    isSelected
-                      ? "bg-emerald-50/40 border-emerald-600 shadow-xs ring-1 ring-emerald-600/30"
-                      : "bg-white hover:bg-slate-50/90 border-slate-200/80"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-1.5 flex-wrap mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-900">
-                        {m.englishMonth}
+          {activePoojas.length === 0 ? (
+            <p className="text-xs text-slate-400 p-2 bg-slate-50 rounded-xl text-center">
+              No ceremony bookings recorded for this period.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {activePoojas.map((p, idx) => (
+                <div key={p.name} className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="w-5 h-5 rounded-full bg-white border border-slate-200 text-[10px] font-bold text-slate-700 flex items-center justify-center shrink-0">
+                        {idx + 1}
                       </span>
-                      <span className="text-[10px] px-2 py-0.2 rounded-full bg-amber-100/70 text-amber-900 font-semibold border border-amber-200">
-                        {m.tamilMonth} மாதம்
+                      <span className="font-bold text-slate-900 truncate max-w-[180px]">
+                        {p.name}
                       </span>
-                      {isSelected && (
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-900 text-white font-bold">
-                          Selected
-                        </span>
-                      )}
-                    </div>
-
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      {m.bookingCount} {m.bookingCount === 1 ? "Pooja" : "Poojas"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                    <div className="p-2 bg-white rounded-xl border border-slate-200/70 shadow-2xs">
-                      <span className="text-[9.5px] text-slate-500 block font-medium">Billed</span>
-                      <span className="text-[11px] sm:text-xs font-bold text-slate-900 block mt-0.5">
-                        ₹{m.billed.toLocaleString("en-IN")}
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 bg-slate-200/70 text-slate-700 rounded-md shrink-0">
+                        {p.count} {p.count === 1 ? "seva" : "sevas"}
                       </span>
                     </div>
 
-                    <div className="p-2 bg-emerald-50/80 rounded-xl border border-emerald-200/60 shadow-2xs">
-                      <span className="text-[9.5px] text-emerald-800 block font-medium">Collected</span>
-                      <span className="text-[11px] sm:text-xs font-bold text-emerald-900 block mt-0.5">
-                        ₹{m.collected.toLocaleString("en-IN")}
+                    <div className="text-right shrink-0">
+                      <span className="font-black text-slate-900 text-xs">
+                        ₹{p.amount.toLocaleString("en-IN")}
                       </span>
-                    </div>
-
-                    <div className="p-2 bg-amber-50/80 rounded-xl border border-amber-200/60 shadow-2xs">
-                      <span className="text-[9.5px] text-amber-800 block font-medium">Pending Due</span>
-                      <span className="text-[11px] sm:text-xs font-bold text-amber-950 block mt-0.5">
-                        ₹{m.pending.toLocaleString("en-IN")}
+                      <span className="text-[10px] text-emerald-800 font-bold ml-1.5">
+                        ({p.percent}%)
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-2.5 flex items-center justify-between text-[10px] text-slate-600 font-medium">
-                    <span>Payment Realization</span>
-                    <span className="font-bold text-emerald-800">{m.rate}% Paid</span>
-                  </div>
-                  <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden flex mt-1">
+                  <div className="w-full bg-slate-200/70 rounded-full h-1.5 overflow-hidden flex">
                     <div
-                      className="bg-emerald-600 h-full rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(100, m.rate)}%` }}
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        idx === 0
+                          ? "bg-emerald-600"
+                          : idx === 1
+                          ? "bg-amber-500"
+                          : "bg-indigo-500"
+                      }`}
+                      style={{ width: `${Math.min(100, p.percent)}%` }}
                     />
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* 3C. Selected Month Deep-Dive */}
-        <div className="pt-2 border-t border-slate-100 space-y-2.5">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <span className="text-xs font-bold text-slate-900 block">
-                {selectedMonthTamil.monthNameEn} {selectedMonthTamil.year} Performance
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">
-                {selectedMonthTamil.tamilMonth} மாதம் • Pooja &amp; Team Breakdown
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => handleMonthChange(-1)}
-                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-700 transition"
-                title="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                {selectedMonthBookings.length} {selectedMonthBookings.length === 1 ? "Pooja" : "Poojas"}
-              </span>
-              <button
-                onClick={() => handleMonthChange(1)}
-                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-700 transition"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+        {/* Team & Seva Contribution Breakdown */}
+        {activeTeamAllocation.length > 0 && (
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-emerald-700" />
+              <span>Team &amp; Iyer Seva Contribution</span>
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              {activeTeamAllocation.map((m) => (
+                <div key={m.name} className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-800 truncate max-w-[100px]">
+                    {m.name}
+                  </span>
+                  <span className="text-[10.5px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-lg">
+                    {m.count} {m.count === 1 ? "seva" : "sevas"}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Pooja Breakdown & Team Allocation */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Popular Poojas */}
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-              <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1">
-                <Flame className="w-3 h-3 text-amber-600" />
-                <span>Top Poojas (Earnings)</span>
-              </span>
-              <div className="space-y-1.5">
-                {poojaDistribution.length === 0 ? (
-                  <p className="text-[10px] text-slate-400">No poojas booked for this month.</p>
-                ) : (
-                  poojaDistribution.map((p) => (
-                    <div key={p.name} className="flex items-center justify-between text-[10.5px]">
-                      <span className="font-medium text-slate-700 truncate max-w-[130px]" title={p.name}>
-                        {p.name}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-900 rounded">
-                          {p.count}
-                        </span>
-                        <span className="font-bold text-slate-900 text-[10px]">
-                          ₹{p.amount.toLocaleString("en-IN")}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Team Member Allocation */}
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
-              <span className="text-[11px] font-bold text-slate-900 flex items-center gap-1">
-                <Users className="w-3 h-3 text-emerald-700" />
-                <span>Team Allocation</span>
-              </span>
-              <div className="space-y-1.5">
-                {memberAllocation.length === 0 ? (
-                  <p className="text-[10px] text-slate-400">No assignments yet.</p>
-                ) : (
-                  memberAllocation.map((m) => (
-                    <div key={m.name} className="flex items-center justify-between text-[10.5px]">
-                      <span className="font-medium text-slate-700 truncate max-w-[140px]">
-                        {m.name}
-                      </span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded">
-                        {m.count} {m.count === 1 ? "seva" : "sevas"}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Quick Report Shortcuts Row */}
         <div className="pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-xs">
