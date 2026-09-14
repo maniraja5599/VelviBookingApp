@@ -30,9 +30,11 @@ export interface TamilDateInfo {
   gregorianDate: Date;
   dateStr: string; // YYYY-MM-DD
   dayOfMonth: number;
+  monthIndex: number; // 0-11
   monthNameEn: string;
   monthNameTa: string;
   year: number;
+  dayOfWeek: number; // 0 (Sunday) to 6 (Saturday)
   dayOfWeekEn: string;
   dayOfWeekTa: string;
   tamilYear: string;
@@ -983,9 +985,11 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
     gregorianDate: date,
     dateStr,
     dayOfMonth: day,
+    monthIndex: month,
     monthNameEn: englishMonthNames[month],
     monthNameTa: currentTamilMonth.ta,
     year,
+    dayOfWeek,
     dayOfWeekEn: weekdayInfo.en,
     dayOfWeekTa: weekdayInfo.ta,
     tamilYear,
