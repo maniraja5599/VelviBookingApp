@@ -57,12 +57,12 @@ export default function MoreMenuPage() {
   return (
     <div className="space-y-4 pb-8 animate-in fade-in duration-200">
       <div>
-        <h2 className="text-base font-bold text-velvi-brownDark">{t("more")}</h2>
-        <p className="text-xs text-velvi-brown/60">Explore additional tools & business settings</p>
+        <h2 className="text-base sm:text-lg font-black text-slate-900">{t("more")}</h2>
+        <p className="text-xs text-slate-500 font-medium">Explore additional tools & business settings</p>
       </div>
 
       {/* Business Brand Header Card */}
-      <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm flex items-center justify-between">
+      <div className="bg-white p-4 rounded-3xl border border-slate-200/90 shadow-2xs flex items-center justify-between">
         <div className="flex items-center gap-3">
           <BrandLogo
             size="md"
@@ -71,17 +71,17 @@ export default function MoreMenuPage() {
             businessName={currentBusiness?.name}
           />
           <div>
-            <h3 className="font-bold text-xs text-velvi-brownDark">
+            <h3 className="font-extrabold text-sm text-slate-900">
               {currentBusiness?.name || "Business Profile"}
             </h3>
-            <p className="text-[11px] text-velvi-brown/60">
+            <p className="text-[11px] text-slate-500 font-medium">
               {currentBusiness?.iyerName || "Vadhyar Profile"}
             </p>
           </div>
         </div>
         <Link
           href="/app/settings/branding"
-          className="text-[11px] font-bold text-velvi-brown hover:text-velvi-goldDark px-2.5 py-1 bg-velvi-cream rounded-xl border border-velvi-gold/30 transition"
+          className="text-xs font-bold text-emerald-900 hover:text-emerald-950 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 rounded-xl border border-emerald-200 transition shadow-2xs"
         >
           Branding
         </Link>
@@ -93,29 +93,29 @@ export default function MoreMenuPage() {
       <div className="space-y-4">
         {menuSections.map((section, idx) => (
           <div key={idx} className="space-y-1.5">
-            <h3 className="text-[11px] font-bold text-velvi-brown/60 uppercase tracking-wider px-1">
+            <h3 className="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider px-1">
               {section.title}
             </h3>
 
-            <div className="bg-white rounded-2xl border border-velvi-gold/20 shadow-sm divide-y divide-velvi-creamDark overflow-hidden">
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="p-3.5 flex items-center justify-between hover:bg-velvi-cream/40 transition"
+                    className="p-3.5 flex items-center justify-between hover:bg-slate-50 transition"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-velvi-gold/10 text-velvi-brown flex items-center justify-center">
-                        <Icon className="w-4 h-4" />
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                        <Icon className="w-4 h-4 text-emerald-800" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-xs text-velvi-brownDark">{item.label}</h4>
-                        <p className="text-[11px] text-velvi-brown/60">{item.desc}</p>
+                        <h4 className="font-extrabold text-xs text-slate-900">{item.label}</h4>
+                        <p className="text-[11px] text-slate-500 font-medium">{item.desc}</p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-velvi-brown/40" />
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
                   </Link>
                 );
               })}
@@ -127,14 +127,14 @@ export default function MoreMenuPage() {
         {currentUser?.role === "SUPER_ADMIN" && (
           <Link
             href="/admin"
-            className="block bg-gradient-to-r from-velvi-brown to-velvi-brownLight p-3.5 rounded-2xl text-white shadow-sacred hover:opacity-95 transition mt-2"
+            className="block bg-gradient-to-r from-emerald-950 to-emerald-900 p-4 rounded-2xl text-white shadow-md hover:opacity-95 transition mt-2 border border-emerald-800"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Shield className="w-5 h-5 text-velvi-goldLight" />
+                <Shield className="w-5 h-5 text-amber-300" />
                 <div>
                   <h4 className="font-bold text-xs">Super Admin Portal</h4>
-                  <p className="text-[11px] text-white/70">
+                  <p className="text-[11px] text-white/80">
                     Global metrics, validity adjustments & audit logs
                   </p>
                 </div>

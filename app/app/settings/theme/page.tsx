@@ -100,7 +100,7 @@ export default function ThemeSettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-[10px] font-bold text-velvi-goldDark">புரட்டாசி 26</div>
-              <h4 className="font-bold text-sm text-velvi-brownDark">🙏 Vanakkam, Ravi Iyer</h4>
+              <h4 className="font-bold text-sm text-velvi-brownDark">🙏 Vanakkam</h4>
             </div>
             <div className="w-6 h-6 rounded-full bg-velvi-gold/20 flex items-center justify-center text-xs">
               🪔

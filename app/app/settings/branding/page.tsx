@@ -25,7 +25,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function BrandingSettingsPage() {
-  const { currentBusiness, updateBusiness, subscription, refreshSubscription } = useAuth();
+  const { currentBusiness, updateBusiness, updateUser, subscription, refreshSubscription } = useAuth();
   const business = currentBusiness || db.businesses[0];
 
   // Form states with empty defaults as requested
@@ -167,6 +167,9 @@ export default function BrandingSettingsPage() {
     };
 
     updateBusiness(updates);
+    if (iyerName.trim()) {
+      updateUser({ name: iyerName.trim() });
+    }
 
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 3000);

@@ -819,7 +819,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep28.tamilMonth).toBe("புரட்டாசி");
     expect(sep28.isMuhurtham).toBe(false);
 
-    // Sep 10 & 11, 2026: Amavasai (symbol 🌑 and title 'அமாவாசை')
+    // Sep 10, 2026: Amavasai start date (symbol 🌑 and title 'அமாவாசை')
+    // Per user rule: Amavasai / Pournami is strictly placed on the start date only
     const sep10 = getTamilDate("2026-09-10");
     expect(sep10.isAmavasai).toBe(true);
     expect(sep10.tithiNameTa).toBe("அமாவாசை");
@@ -827,20 +828,18 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep10.specialDayIcon).toBe("🌑");
 
     const sep11 = getTamilDate("2026-09-11");
-    expect(sep11.isAmavasai).toBe(true);
+    expect(sep11.isAmavasai).toBe(false);
     expect(sep11.tithiNameTa).toBe("பிரதமை");
 
-    // Sep 25 & 26, 2026: Pournami (symbol 🌕 and title 'பௌர்ணமி')
+    // Sep 25, 2026: Pournami start date (symbol 🌕 and title 'பௌர்ணமி')
     const sep25 = getTamilDate("2026-09-25");
     expect(sep25.isPournami).toBe(true);
     expect(sep25.specialDayTag).toBe("பௌர்ணமி");
     expect(sep25.specialDayIcon).toBe("🌕");
 
     const sep26 = getTamilDate("2026-09-26");
-    expect(sep26.isPournami).toBe(true);
-    expect(sep26.tithiNameTa).toBe("பௌர்ணமி");
-    expect(sep26.specialDayTag).toBe("பௌர்ணமி");
-    expect(sep26.specialDayIcon).toBe("🌕");
+    expect(sep26.isPournami).toBe(false);
+    expect(sep26.specialDayTag).not.toBe("பௌர்ணமி");
 
     // Pradosham is fully removed per user request
     const sep8 = getTamilDate("2026-09-08");

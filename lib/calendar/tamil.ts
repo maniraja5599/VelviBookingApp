@@ -302,12 +302,14 @@ export const TAMIL_MUHURTHAM_LOOKUP: Record<number, Record<number, number[]>> = 
  */
 export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
   // 2025
+  "2025-01-01": "ஆங்கிலப் புத்தாண்டு",
   "2025-01-10": "வைகுண்ட ஏகாதசி",
   "2025-01-13": "போகிப் பண்டிகை",
   "2025-01-14": "தைப் பொங்கல்",
-  "2025-01-15": "மாட்டுப் பொங்கல் / திருவள்ளுவர் தினம்",
+  "2025-01-15": "மாட்டுப் பொங்கல்",
   "2025-01-16": "காணும் பொங்கல் / உழவர் திருநாள்",
   "2025-01-20": "தை அமாவாசை",
+  "2025-01-26": "குடியரசு தினம்",
   "2025-02-04": "ரதசப்தமி",
   "2025-02-11": "தைப்பூசம்",
   "2025-02-26": "மஹா சிவராத்திரி",
@@ -318,6 +320,7 @@ export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
   "2025-04-11": "பங்குனி உத்திரம்",
   "2025-04-14": "தமிழ்ப் புத்தாண்டு (விஸ்வாவசு வருடப் பிறப்பு)",
   "2025-04-30": "அட்சய திருதியை",
+  "2025-05-01": "மே தினம் / உழைப்பாளர் தினம்",
   "2025-05-04": "அக்னி நட்சத்திரம் ஆரம்பம்",
   "2025-05-08": "ஸ்ரீமீனாட்சி திருக்கல்யாணம்",
   "2025-05-11": "ஸ்ரீகள்ளழகர் எதிர்ஸேவை",
@@ -330,13 +333,14 @@ export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
   "2025-08-08": "வரலட்சுமி விரதம்",
   "2025-08-09": "ஆவணி அவிட்டம்",
   "2025-08-12": "மகா சங்கடஹர சதுர்த்தி",
+  "2025-08-15": "சுதந்திர தினம்",
   "2025-08-16": "கோகுலாஷ்டமி",
   "2025-08-27": "விநாயகர் சதுர்த்தி",
   "2025-09-05": "ஓணம் பண்டிகை",
   "2025-09-21": "மகாளய அமாவாசை",
   "2025-09-22": "நவராத்திரி ஆரம்பம்",
   "2025-10-01": "சரஸ்வதி பூஜை / ஆயுத பூஜை",
-  "2025-10-02": "விஜயதசமி",
+  "2025-10-02": "காந்தி ஜெயந்தி / விஜயதசமி",
   "2025-10-20": "தீபாவளி பண்டிகை",
   "2025-10-22": "கந்தசஷ்டி துவக்கம்",
   "2025-10-27": "கந்தசஷ்டி சூரசம்ஹாரம்",
@@ -345,14 +349,16 @@ export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
   "2025-12-30": "வைகுண்ட ஏகாதசி",
 
   // 2026
+  "2026-01-01": "ஆங்கிலப் புத்தாண்டு",
   "2026-01-03": "ஆருத்ரா தரிசனம்",
   "2026-01-11": "கெர்போட்ட நிவர்த்தி",
   "2026-01-14": "போகிப் பண்டிகை",
   "2026-01-15": "தைப் பொங்கல்",
-  "2026-01-16": "மாட்டுப் பொங்கல் / திருவள்ளுவர் தினம்",
+  "2026-01-16": "மாட்டுப் பொங்கல்",
   "2026-01-17": "காணும் பொங்கல் / உழவர் திருநாள்",
   "2026-01-18": "தை அமாவாசை",
   "2026-01-25": "ரத சப்தமி",
+  "2026-01-26": "குடியரசு தினம்",
   "2026-02-01": "தைப்பூசம்",
   "2026-02-15": "மஹாசிவராத்திரி",
   "2026-03-02": "மாசி மகம்",
@@ -441,8 +447,11 @@ export const TAMIL_FESTIVALS_LOOKUP: Record<string, string> = {
  */
 export function getFestivalIcon(name?: string): string {
   if (!name) return "✨";
-  if (name.includes("விநாயகர்") || name.includes("சதுர்த்தி")) return "🐘";
+  if (name.includes("குடியரசு") || name.includes("சுதந்திர")) return "🇮🇳";
+  if (name.includes("மாட்டுப் பொங்கல்")) return "🏺";
   if (name.includes("பொங்கல்") || name.includes("போகி") || name.includes("உழவர்")) return "🌾";
+  if (name.includes("புத்தாண்டு") || name.includes("பிறப்பு")) return "☀️";
+  if (name.includes("விநாயகர்") || name.includes("சதுர்த்தி")) return "🐘";
   if (name.includes("சிவராத்திரி") || name.includes("தரிசனம்") || name.includes("பிரதோஷம்")) return "🔱";
   if (name.includes("சஷ்டி") || name.includes("சூரசம்ஹாரம்") || name.includes("பூசம்") || name.includes("விசாகம்") || name.includes("முருகன்")) return "🦚";
   if (name.includes("தீபாவளி") || name.includes("தீபம்") || name.includes("கார்த்திகை")) return "🪔";
@@ -451,7 +460,6 @@ export function getFestivalIcon(name?: string): string {
   if (name.includes("ஏகாதசி") || name.includes("வைகுண்ட")) return "🪷";
   if (name.includes("அம்மன்") || name.includes("விரதம்") || name.includes("வரலட்சுமி") || name.includes("பூரம்")) return "🪷";
   if (name.includes("அவிட்டம்")) return "🧵";
-  if (name.includes("புத்தாண்டு") || name.includes("பிறப்பு")) return "🥭";
   return "✨";
 }
 
@@ -821,19 +829,19 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
   const isMaadhaSivarathiri = officialEvents.includes("Maadha Sivarathiri");
   const isThiruvonam = officialEvents.includes("Thiruvonam");
 
-  // Find Amavasai & Pournami transitions that touch this date (start or end date)
+  // Find Amavasai & Pournami transitions that START on this date (per user request: only show on start date)
   const sacredEvents = getYearSacredTimings(year);
   const matchedAmav = sacredEvents.find(
-    (e) => e.type === "AMAVASAI" && (e.startIst.dateStr === dateStr || e.endIst.dateStr === dateStr)
+    (e) => e.type === "AMAVASAI" && e.startIst.dateStr === dateStr
   );
   const matchedPour = sacredEvents.find(
-    (e) => e.type === "POURNAMI" && (e.startIst.dateStr === dateStr || e.endIst.dateStr === dateStr)
+    (e) => e.type === "POURNAMI" && e.startIst.dateStr === dateStr
   );
 
   let amavasaiTiming: SacredEventTiming | undefined;
   if (matchedAmav) {
-    const isStart = matchedAmav.startIst.dateStr === dateStr;
-    const isEnd = matchedAmav.endIst.dateStr === dateStr;
+    const isStart = true;
+    const isEnd = matchedAmav.startIst.dateStr === matchedAmav.endIst.dateStr;
     const sMonthEn = englishMonthNames[matchedAmav.startIst.month];
     const eMonthEn = englishMonthNames[matchedAmav.endIst.month];
     const sMonthTa = tamilMonthNamesTrans[matchedAmav.startIst.month];
@@ -860,15 +868,15 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
       endFormattedTa: eTa,
       displaySummary: `ஆரம்பம்: ${matchedAmav.startIst.day} ${sMonthEn}, ${matchedAmav.startIst.time12} • முடிவு: ${matchedAmav.endIst.day} ${eMonthEn}, ${matchedAmav.endIst.time12}`,
       displaySummaryTa: `ஆரம்பம்: ${sTa} • முடிவு: ${eTa}`,
-      isStartDay: isStart,
+      isStartDay: true,
       isEndDay: isEnd,
     };
   }
 
   let pournamiTiming: SacredEventTiming | undefined;
   if (matchedPour) {
-    const isStart = matchedPour.startIst.dateStr === dateStr;
-    const isEnd = matchedPour.endIst.dateStr === dateStr;
+    const isStart = true;
+    const isEnd = matchedPour.startIst.dateStr === matchedPour.endIst.dateStr;
     const sMonthEn = englishMonthNames[matchedPour.startIst.month];
     const eMonthEn = englishMonthNames[matchedPour.endIst.month];
     const sMonthTa = tamilMonthNamesTrans[matchedPour.startIst.month];
@@ -895,15 +903,15 @@ export function getTamilDate(inputDate: Date | string): TamilDateInfo {
       endFormattedTa: eTa,
       displaySummary: `ஆரம்பம்: ${matchedPour.startIst.day} ${sMonthEn}, ${matchedPour.startIst.time12} • முடிவு: ${matchedPour.endIst.day} ${eMonthEn}, ${matchedPour.endIst.time12}`,
       displaySummaryTa: `ஆரம்பம்: ${sTa} • முடிவு: ${eTa}`,
-      isStartDay: isStart,
+      isStartDay: true,
       isEndDay: isEnd,
     };
   }
 
   // Special sacred days calculations
   const is2025to2027 = year >= 2025 && year <= 2027;
-  const isAmavasai = hasOfficialAmavasai || (amavasaiTiming?.isStartDay ?? false) || (amavasaiTiming?.isEndDay ?? false) || tithiIndex === 29;
-  const isPournami = hasOfficialPournami || (pournamiTiming?.isStartDay ?? false) || (pournamiTiming?.isEndDay ?? false) || tithiIndex === 14;
+  const isAmavasai = sacredEvents.length > 0 ? Boolean(matchedAmav) : (hasOfficialAmavasai || tithiIndex === 29);
+  const isPournami = sacredEvents.length > 0 ? Boolean(matchedPour) : (hasOfficialPournami || tithiIndex === 14);
   const isPradosham = false; // Pradosham fully removed per user request
   const isSashti = is2025to2027 ? hasOfficialSashti : (tithiIndex === 5 || tithiIndex === 20); // Shukla & Krishna Sashti
   const isSankataharaChaturthi = is2025to2027 ? hasOfficialSankatahara : (tithiIndex === 18); // Krishna Chaturthi

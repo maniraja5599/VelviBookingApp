@@ -98,25 +98,27 @@ export default function BookingsListPage() {
       {/* Header & Quick Actions */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h2 className="text-base sm:text-lg font-bold text-velvi-brownDark flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-velvi-gold" />
+          <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-200/60">
+              <Calendar className="w-4 h-4 text-emerald-800" />
+            </div>
             <span>{t("bookings")}</span>
           </h2>
-          <p className="text-xs text-velvi-brown/60">
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             {filteredBookings.length} bookings found across {monthGroups.length} month(s)
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {/* View Mode Switcher */}
-          <div className="bg-white rounded-xl border border-velvi-gold/20 p-0.5 flex items-center shadow-xs">
+          <div className="bg-white rounded-xl border border-slate-200/90 p-0.5 flex items-center shadow-2xs">
             <button
               onClick={() => setViewMode("timeline")}
               title="Month Timeline View"
               className={`p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-semibold ${
                 viewMode === "timeline"
-                  ? "bg-velvi-brown text-white shadow-xs"
-                  : "text-velvi-brown/70 hover:bg-velvi-cream"
+                  ? "bg-emerald-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               <GitCommitVertical className="w-3.5 h-3.5" />
@@ -127,8 +129,8 @@ export default function BookingsListPage() {
               title="Compact List View"
               className={`p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-semibold ${
                 viewMode === "list"
-                  ? "bg-velvi-brown text-white shadow-xs"
-                  : "text-velvi-brown/70 hover:bg-velvi-cream"
+                  ? "bg-emerald-900 text-white shadow-2xs"
+                  : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               <List className="w-3.5 h-3.5" />
@@ -138,9 +140,9 @@ export default function BookingsListPage() {
 
           <Link
             href="/app/bookings/new"
-            className="px-3.5 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg active:scale-95 transition"
+            className="px-3.5 py-2 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow-md active:scale-95 transition"
           >
-            <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
+            <Plus className="w-4 h-4 text-amber-300 stroke-[3]" />
             <span>New</span>
           </Link>
         </div>
@@ -148,13 +150,13 @@ export default function BookingsListPage() {
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 text-velvi-brown/40 absolute left-3 top-2.5" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
         <input
           type="text"
           placeholder="Search customer, pooja, location..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-velvi-gold/20 text-xs text-velvi-brownDark placeholder:text-velvi-brown/40 focus:outline-none focus:border-velvi-gold transition shadow-xs"
+          className="w-full pl-10 pr-3 py-2.5 bg-white rounded-2xl border border-slate-200/90 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 transition shadow-2xs font-medium"
         />
       </div>
 
@@ -164,10 +166,10 @@ export default function BookingsListPage() {
           <button
             key={st}
             onClick={() => setFilter(st)}
-            className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition shrink-0 ${
+            className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition shrink-0 ${
               filter === st
-                ? "bg-velvi-brown text-white font-bold shadow-xs"
-                : "bg-white text-velvi-brown/70 hover:bg-velvi-cream border border-velvi-gold/20"
+                ? "bg-emerald-900 text-white font-bold shadow-2xs"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/90"
             }`}
           >
             {st === "ALL" ? "All Bookings" : st}
@@ -177,17 +179,17 @@ export default function BookingsListPage() {
 
       {/* No Bookings Empty State */}
       {filteredBookings.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-velvi-gold/30 space-y-2">
+        <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-2xs space-y-3">
           <div className="text-3xl">🪔</div>
-          <h4 className="font-bold text-sm text-velvi-brown">No bookings found</h4>
-          <p className="text-xs text-velvi-brown/60 max-w-xs mx-auto">
+          <h4 className="font-bold text-sm text-slate-800">No bookings found</h4>
+          <p className="text-xs text-slate-500 max-w-xs mx-auto">
             Try clearing your search query or create a new booking using the button above.
           </p>
           <Link
             href="/app/bookings/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-velvi-gold text-velvi-brownDark font-bold text-xs rounded-xl hover:bg-velvi-goldLight transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-800 to-emerald-950 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md transition"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-amber-300" />
             <span>Create New Booking</span>
           </Link>
         </div>
@@ -199,26 +201,26 @@ export default function BookingsListPage() {
           {monthGroups.map((group) => (
             <div key={group.monthKey} className="space-y-3">
               {/* Month Header Banner */}
-              <div className="bg-gradient-to-r from-velvi-cream to-white rounded-2xl p-3 border border-velvi-gold/30 shadow-xs flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-xl bg-velvi-gold/20 text-velvi-brownDark">
-                    <Calendar className="w-4 h-4 text-velvi-goldDark" />
+              <div className="bg-gradient-to-r from-emerald-50/60 via-slate-50 to-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-900 border border-emerald-200">
+                    <Calendar className="w-4 h-4 text-emerald-800" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-velvi-brownDark">
+                    <h3 className="font-extrabold text-sm text-slate-900">
                       {group.englishMonthYear}
                     </h3>
-                    <p className="text-[11px] text-velvi-goldDark font-semibold">
+                    <p className="text-[11px] text-emerald-800 font-semibold">
                       {group.tamilMonthSpan} ({group.tamilYear} வருடம்)
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs flex-wrap">
-                  <span className="px-2 py-0.5 rounded-lg bg-white border border-velvi-gold/30 text-[10.5px] font-bold text-velvi-brownDark shadow-2xs">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-slate-800 shadow-2xs">
                     {group.bookings.length} {group.bookings.length === 1 ? "Pooja" : "Poojas"}
                   </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-velvi-cream/60 border border-velvi-gold/30 text-[10.5px] font-bold text-velvi-brownDark">
+                  <span className="px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[10.5px] font-bold text-slate-700">
                     Billed: ₹{group.totalAmount.toLocaleString("en-IN")}
                   </span>
                   <span className="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[10.5px] font-bold text-emerald-800">
@@ -233,7 +235,7 @@ export default function BookingsListPage() {
               </div>
 
               {/* Month's Vertical Timeline Track */}
-              <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-velvi-gold/30 space-y-3">
+              <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200 space-y-3">
                 {group.bookings.map((b) => {
                   const dateInfo = getTamilDate(b.date);
                   const isSelf =
@@ -244,17 +246,17 @@ export default function BookingsListPage() {
                   return (
                     <div key={b.id} className="relative group">
                       {/* Timeline Node Badge on the rail */}
-                      <div className="absolute -left-6 sm:-left-8 top-3.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border-2 border-velvi-gold flex items-center justify-center text-[10px] sm:text-[11px] font-extrabold text-velvi-brown shadow-xs group-hover:scale-110 group-hover:border-velvi-brown transition-transform">
+                      <div className="absolute -left-6 sm:-left-8 top-3.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border-2 border-emerald-700 flex items-center justify-center text-[10px] sm:text-[11px] font-black text-emerald-950 shadow-2xs group-hover:scale-110 group-hover:border-emerald-900 transition-transform">
                         {dateInfo.dayOfMonth}
                       </div>
 
                       {/* Date & Weekday pill */}
-                      <div className="flex items-center gap-1.5 text-[11px] text-velvi-brown/80 font-semibold mb-1 pl-1">
-                        <span className="text-velvi-brownDark font-bold">
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-600 font-semibold mb-1.5 pl-1">
+                        <span className="text-slate-900 font-bold">
                           {dateInfo.dayOfWeekEn}
                         </span>
                         <span>•</span>
-                        <span className="text-velvi-goldDark">
+                        <span className="text-amber-800 font-bold">
                           {dateInfo.tamilMonth} {dateInfo.tamilDay} ({dateInfo.dayOfWeekTa})
                         </span>
                       </div>
@@ -262,32 +264,32 @@ export default function BookingsListPage() {
                       {/* Booking Card */}
                       <Link
                         href={`/app/bookings/${b.id}`}
-                        className="block bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm hover:border-velvi-gold/60 hover:shadow-md transition active:scale-[0.99] space-y-2"
+                        className="block bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition active:scale-[0.99] space-y-2.5"
                       >
                         {/* Top Line: Booking ID, Self/Team Pill, Status */}
                         <div className="flex items-center justify-between gap-1.5 flex-wrap">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[11px] font-bold text-velvi-goldDark">
+                            <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200">
                               {b.bookingNumber}
                             </span>
                             {isSelf ? (
-                              <span className="text-[9.5px] font-bold text-velvi-brownDark bg-velvi-gold/15 px-2 py-0.5 rounded-full border border-velvi-gold/30 flex items-center gap-1">
+                              <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
                                 <span>🪔</span> Self
                               </span>
                             ) : (
-                              <span className="text-[9.5px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                              <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
                                 <span>👥</span> {b.assignedIyerName || "Team"}
                               </span>
                             )}
                           </div>
 
                           <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                            className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
                               b.status === "CONFIRMED"
-                                ? "bg-green-50 text-green-700 border border-green-200"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                                 : b.status === "COMPLETED"
-                                ? "bg-blue-50 text-blue-700 border border-blue-200"
-                                : "bg-amber-50 text-amber-700 border border-amber-200"
+                                ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                : "bg-amber-50 text-amber-900 border border-amber-200"
                             }`}
                           >
                             {b.status}
@@ -297,57 +299,57 @@ export default function BookingsListPage() {
                         {/* Middle Line: Pooja Name & Time */}
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h4 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
-                              <Flame className="w-3.5 h-3.5 text-velvi-gold shrink-0" />
+                            <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                              <Flame className="w-4 h-4 text-amber-600 shrink-0" />
                               <span>{b.poojaEnglishName}</span>
                             </h4>
                             {b.poojaTamilName && (
-                              <p className="text-[11px] text-velvi-brown/70 font-medium">
+                              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                                 {b.poojaTamilName}
                               </p>
                             )}
                           </div>
 
                           <div className="text-right shrink-0">
-                            <div className="text-xs font-bold text-emerald-800 bg-emerald-50/80 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-emerald-600" />
+                            <div className="text-xs font-extrabold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-emerald-700" />
                               <span>{b.startTime}</span>
                             </div>
-                            <span className="text-[10px] text-velvi-brown/50 block mt-0.5">
+                            <span className="text-[10px] text-slate-400 block mt-0.5">
                               {b.durationMinutes} mins
                             </span>
                           </div>
                         </div>
 
                         {/* Customer, Location & Price Footer */}
-                        <div className="pt-2 border-t border-velvi-creamDark flex items-center justify-between gap-2 text-xs text-velvi-brown/80">
+                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-600">
                           <div className="space-y-0.5 min-w-0">
-                            <div className="flex items-center gap-1 truncate font-medium">
+                            <div className="flex items-center gap-1.5 truncate font-medium text-slate-800">
                               <span>👤</span>
                               <span className="truncate">{b.customerName}</span>
                             </div>
-                            <div className="flex items-center gap-1 text-[11px] text-velvi-brown/60 truncate">
-                              <MapPin className="w-3 h-3 text-velvi-gold shrink-0" />
+                            <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                               <span className="truncate">{b.location}</span>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
                             <div className="text-right">
-                              <span className="text-xs sm:text-sm font-bold text-velvi-brownDark block">
+                              <span className="text-xs sm:text-sm font-black text-slate-900 block">
                                 ₹{b.totalAmount.toLocaleString("en-IN")}
                               </span>
                               <span
-                                className={`text-[10px] font-semibold ${
+                                className={`text-[10px] font-bold ${
                                   b.paymentStatus === "PAID"
                                     ? "text-emerald-700"
-                                    : "text-amber-700"
+                                    : "text-rose-700"
                                 }`}
                               >
                                 {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
                               </span>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-velvi-goldDark group-hover:translate-x-0.5 transition-transform" />
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                           </div>
                         </div>
                       </Link>
@@ -374,67 +376,71 @@ export default function BookingsListPage() {
               <Link
                 key={b.id}
                 href={`/app/bookings/${b.id}`}
-                className="block bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm hover:border-velvi-gold/50 transition relative"
+                className="block bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition relative"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] font-bold text-velvi-goldDark">
+                      <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200">
                         {b.bookingNumber}
                       </span>
                       {isSelf ? (
-                        <span className="text-[9px] font-bold text-velvi-brownDark bg-velvi-gold/15 px-2 py-0.5 rounded-full border border-velvi-gold/30 flex items-center gap-1">
+                        <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
                           <span>🪔</span> Self
                         </span>
                       ) : (
-                        <span className="text-[9px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                        <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
                           <span>👥</span> {b.assignedIyerName || "Team"}
                         </span>
                       )}
                       <span
                         className={`text-[10px] px-2 py-0.2 rounded-full font-bold uppercase ${
                           b.status === "CONFIRMED"
-                            ? "bg-green-50 text-green-700 border border-green-200"
+                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                             : b.status === "COMPLETED"
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
+                            ? "bg-blue-50 text-blue-800 border border-blue-200"
+                            : "bg-amber-50 text-amber-900 border border-amber-200"
                         }`}
                       >
                         {b.status}
                       </span>
                     </div>
-                    <h3 className="font-bold text-sm text-velvi-brownDark mt-1.5">
+                    <h3 className="font-extrabold text-sm text-slate-900 mt-2">
                       {b.poojaEnglishName}
                     </h3>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-sm font-bold text-velvi-brownDark">
+                    <span className="text-sm font-black text-slate-900">
                       ₹{b.totalAmount.toLocaleString("en-IN")}
                     </span>
-                    <div className="text-[10px] font-medium text-velvi-brown/60">
-                      {b.paymentStatus === "PAID" ? "Paid ✅" : `Due: ₹${b.balanceAmount}`}
+                    <div className="text-[10.5px] font-bold mt-0.5">
+                      {b.paymentStatus === "PAID" ? (
+                        <span className="text-emerald-700">Paid ✅</span>
+                      ) : (
+                        <span className="text-rose-700">Due: ₹${b.balanceAmount}</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-2.5 pt-2 border-t border-velvi-creamDark flex items-center justify-between text-xs text-velvi-brown/80">
+                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
                   <div className="space-y-0.5 min-w-0">
                     <div className="flex items-center gap-1 truncate">
-                      <Calendar className="w-3.5 h-3.5 text-velvi-gold shrink-0" />
-                      <span className="font-medium truncate">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="font-medium text-slate-800 truncate">
                         {dateInfo.formattedDualDate} • {b.startTime}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 text-velvi-brown/70 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-velvi-gold shrink-0" />
-                      <span className="truncate">
+                    <div className="flex items-center gap-1 text-slate-400 truncate">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate text-slate-600">
                         {b.customerName} • {b.location}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center text-velvi-goldDark shrink-0">
+                  <div className="flex items-center text-slate-400 shrink-0">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </div>

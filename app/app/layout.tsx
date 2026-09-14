@@ -18,8 +18,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isLoading, currentUser, loginWithGoogle]);
 
   return (
-    <div className="min-h-screen bg-velvi-creamDark/20 flex flex-col justify-between overflow-x-hidden">
-      <div className="w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto min-h-screen bg-velvi-cream shadow-2xl relative flex flex-col pb-24 sm:pb-20 border-x border-velvi-gold/10 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-100/80 flex flex-col justify-between overflow-x-hidden">
+      <div className="w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto min-h-screen bg-[#fafaf9] shadow-xl relative flex flex-col pb-24 sm:pb-20 border-x border-slate-200/80 overflow-x-hidden">
         <MobileHeader />
         <main className="flex-1 px-3 sm:px-5 py-3 sm:py-4 overflow-x-hidden">{children}</main>
         <BottomNav />

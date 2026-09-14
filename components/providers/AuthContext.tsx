@@ -31,6 +31,7 @@ interface AuthContextType {
   }>;
   refreshSubscription: () => void;
   updateBusiness: (updates: Partial<Business>) => void;
+  updateUser: (updates: Partial<User>) => void;
   completeOnboarding: (data: {
     mobile: string;
     businessName: string;
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   verifyAccountRecoveryOtp: async () => ({ success: false }),
   refreshSubscription: () => {},
   updateBusiness: () => {},
+  updateUser: () => {},
   completeOnboarding: async () => {},
 });
 
@@ -272,6 +274,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    if (!currentUser) return;
+    const userIndex = db.users.findIndex((u) => u.id === currentUser.id);
+    if (userIndex >= 0) {
+      db.users[userIndex] = { ...db.users[userIndex], ...updates };
+      setCurrentUser({ ...db.users[userIndex] });
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -287,6 +298,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         verifyAccountRecoveryOtp,
         refreshSubscription,
         updateBusiness,
+        updateUser,
         completeOnboarding,
       }}
     >

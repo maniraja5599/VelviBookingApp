@@ -19,7 +19,7 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-velvi-creamLight border-t border-velvi-gold/30 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] px-1 sm:px-3 py-1.5 max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 shadow-[0_-4px_25px_rgba(0,0,0,0.05)] px-2 sm:px-4 py-1.5 max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto transition-all">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive =
@@ -32,24 +32,30 @@ export const BottomNav: React.FC = () => {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-1 px-1.5 sm:px-3 rounded-xl transition-all duration-150 min-w-[48px] sm:min-w-[56px] ${
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-2xl transition-all duration-200 min-w-[52px] sm:min-w-[62px] ${
                 isActive
-                  ? "text-velvi-brown font-bold"
-                  : "text-velvi-brown/60 hover:text-velvi-brown font-medium"
+                  ? "text-white"
+                  : "text-slate-500 hover:text-slate-900"
               }`}
             >
               <div
-                className={`p-1 rounded-full transition-all ${
-                  isActive ? "bg-velvi-gold/20 scale-110" : ""
+                className={`flex items-center justify-center px-3 py-1 rounded-xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-gradient-to-r from-emerald-900 to-emerald-950 shadow-xs scale-105"
+                    : "hover:bg-slate-100"
                 }`}
               >
                 <Icon
-                  className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                    isActive ? "text-velvi-goldDark stroke-[2.5]" : "stroke-[1.75]"
+                  className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-all ${
+                    isActive ? "text-amber-400 stroke-[2.5]" : "stroke-[1.8]"
                   }`}
                 />
               </div>
-              <span className="text-[9.5px] sm:text-[10px] mt-0.5 tracking-tight truncate max-w-[54px] sm:max-w-[70px]">
+              <span
+                className={`text-[9.5px] sm:text-[10px] mt-0.5 tracking-tight truncate max-w-[58px] sm:max-w-[72px] transition-colors ${
+                  isActive ? "font-bold text-emerald-950" : "font-medium text-slate-500"
+                }`}
+              >
                 {item.label}
               </span>
             </Link>
@@ -59,3 +65,4 @@ export const BottomNav: React.FC = () => {
     </nav>
   );
 };
+

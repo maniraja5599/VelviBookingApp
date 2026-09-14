@@ -167,6 +167,132 @@ export default function CalendarPage() {
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
   ];
+  const monthNamesUpper = [
+    "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
+    "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER",
+  ];
+  const monthNamesTransTa = [
+    "ஜனவரி", "பிப்ரவரி", "மார்ச்", "ஏப்ரல்", "மே", "ஜூன்",
+    "ஜூலை", "ஆகஸ்ட்", "செப்டம்பர்", "அக்டோபர்", "நவம்பர்", "டிசம்பர்"
+  ];
+
+  const TAMIL_MONTH_EN_MAP: Record<string, string> = {
+    "சித்திரை": "CHITHIRAI",
+    "வைகாசி": "VAIKASI",
+    "ஆனி": "AANI",
+    "ஆடி": "AADI",
+    "ஆவணி": "AAVANI",
+    "புரட்டாசி": "PURATTASI",
+    "ஐப்பசி": "AIPPASI",
+    "கார்த்திகை": "KARTHIGAI",
+    "மார்கழி": "MARGAZHI",
+    "தை": "THAI",
+    "மாசி": "MAASI",
+    "பங்குனி": "PANGUNI",
+  };
+
+  const WEEKDAY_SULAM_PARIHARAM = [
+    { sulam: "மேற்கு", pariharam: "வெல்லம்" },
+    { sulam: "கிழக்கு", pariharam: "பால்" },
+    { sulam: "வடக்கு", pariharam: "சுண்ணாம்பு" },
+    { sulam: "வடக்கு", pariharam: "பால்" },
+    { sulam: "தெற்கு", pariharam: "தயிர்" },
+    { sulam: "மேற்கு", pariharam: "வெல்லம்" },
+    { sulam: "கிழக்கு", pariharam: "எள்" },
+  ];
+
+  const monthStartTamil =
+    monthDayDetails[`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`] ||
+    getTamilDate(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`);
+  const monthEndTamil =
+    monthDayDetails[`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`] ||
+    getTamilDate(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`);
+  const dualTamilMonthTa =
+    monthStartTamil.tamilMonth === monthEndTamil.tamilMonth
+      ? monthStartTamil.tamilMonth
+      : `${monthStartTamil.tamilMonth} – ${monthEndTamil.tamilMonth}`;
+  const dualTamilMonthEn =
+    monthStartTamil.tamilMonth === monthEndTamil.tamilMonth
+      ? TAMIL_MONTH_EN_MAP[monthStartTamil.tamilMonth] || monthStartTamil.tamilMonth
+      : `${TAMIL_MONTH_EN_MAP[monthStartTamil.tamilMonth] || monthStartTamil.tamilMonth} – ${TAMIL_MONTH_EN_MAP[monthEndTamil.tamilMonth] || monthEndTamil.tamilMonth}`;
+
+  // Leading days from previous month to fill the first week row
+  const prevMonthObj =
+    currentMonth === 0 ? { year: currentYear - 1, month: 11 } : { year: currentYear, month: currentMonth - 1 };
+  const prevMonthTotalDays = new Date(prevMonthObj.year, prevMonthObj.month + 1, 0).getDate();
+  const prevMonthLeadingDays = Array.from({ length: firstDayIndex }).map((_, i) => {
+    const dayNum = prevMonthTotalDays - firstDayIndex + 1 + i;
+    const dateStr = `${prevMonthObj.year}-${String(prevMonthObj.month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    return {
+      dateStr,
+      dayNum,
+      info: getTamilDate(dateStr),
+    };
+  });
+
+  // Trailing days from next month to complete the grid (standard 35 or 42 cells)
+  const totalGridCells = Math.ceil((firstDayIndex + daysInMonth) / 7) * 7;
+  const nextMonthTrailingCount = totalGridCells - (firstDayIndex + daysInMonth);
+  const nextMonthObj =
+    currentMonth === 11 ? { year: currentYear + 1, month: 0 } : { year: currentYear, month: currentMonth + 1 };
+  const nextMonthTrailingDays = Array.from({ length: nextMonthTrailingCount }).map((_, i) => {
+    const dayNum = i + 1;
+    const dateStr = `${nextMonthObj.year}-${String(nextMonthObj.month + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    return {
+      dateStr,
+      dayNum,
+      info: getTamilDate(dateStr),
+    };
+  });
+
+  // List of important festivals in this month for Card 2
+  const monthFestivals = React.useMemo(() => {
+    const list: { dayNum: number; name: string; icon?: string }[] = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const dayTamil = monthDayDetails[dateStr];
+      if (!dayTamil) continue;
+      if (dayTamil.festivalName) {
+        list.push({ dayNum: day, name: dayTamil.festivalName, icon: dayTamil.specialDayIcon });
+      } else if (dayTamil.specialDayTag && !dayTamil.isMuhurtham) {
+        list.push({ dayNum: day, name: dayTamil.specialDayTag, icon: dayTamil.specialDayIcon });
+      }
+    }
+    return list;
+  }, [currentYear, currentMonth, daysInMonth, monthDayDetails]);
+
+  // List of sacred moon phases & observances in this month for Card 3
+  const monthSacredPhases = React.useMemo(() => {
+    const pournamiDays: number[] = [];
+    const amavasaiDays: number[] = [];
+    const chaturthiDays: number[] = [];
+    const karthigaiDays: number[] = [];
+    const ekadashiDays: number[] = [];
+    const sashtiDays: number[] = [];
+    const muhurthamDays: number[] = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const d = monthDayDetails[dateStr];
+      if (!d) continue;
+      if (d.isPournami) pournamiDays.push(day);
+      if (d.isAmavasai) amavasaiDays.push(day);
+      if (d.isSankataharaChaturthi) chaturthiDays.push(day);
+      if (d.isKarthigai) karthigaiDays.push(day);
+      if (d.isEkadashi) ekadashiDays.push(day);
+      if (d.isSashti) sashtiDays.push(day);
+      if (d.isMuhurtham) muhurthamDays.push(day);
+    }
+    return {
+      pournamiDays,
+      amavasaiDays,
+      chaturthiDays,
+      karthigaiDays,
+      ekadashiDays,
+      sashtiDays,
+      muhurthamDays,
+    };
+  }, [currentYear, currentMonth, daysInMonth, monthDayDetails]);
 
   // Standard Day View Time Slots
   const DAY_SLOTS = [
@@ -372,56 +498,116 @@ export default function CalendarPage() {
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm">
-            {/* Month Navigation Row */}
-            <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-velvi-creamDark">
-              <button
-                onClick={prevMonth}
-                className="p-1.5 hover:bg-velvi-cream rounded-xl text-velvi-brown transition"
-                aria-label="Previous Month"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <div className="text-center">
-                <span className="text-sm font-bold text-velvi-brownDark">
-                  {monthNamesEn[currentMonth]} {currentYear}
-                </span>
-                <span className="text-[11px] text-velvi-goldDark block font-semibold">
-                  {(() => {
-                    const startInfo = getTamilDate(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-01`);
-                    const endInfo = getTamilDate(`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`);
-                    return startInfo.tamilMonth === endInfo.tamilMonth
-                      ? `${startInfo.tamilMonth} மாதம்`
-                      : `${startInfo.tamilMonth} / ${endInfo.tamilMonth} மாதம்`;
-                  })()}
-                </span>
+          {/* Authentic Tamil Calendar Sheet Card */}
+          <div className="rounded-3xl overflow-hidden border border-emerald-950/20 shadow-md bg-white">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-[#0b2b17] via-[#123e24] to-[#0b2b17] text-white px-3 py-2.5 sm:p-4 flex items-center justify-between gap-2">
+              {/* Left: Nav Buttons & English Month Year */}
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                <button
+                  onClick={prevMonth}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition active:scale-95 shrink-0"
+                  aria-label="Previous Month"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                <div className="flex items-baseline gap-1 sm:gap-2">
+                  <span className="text-base sm:text-2xl md:text-3xl font-black tracking-wide text-white uppercase">
+                    {monthNamesUpper[currentMonth]}
+                  </span>
+                  <span className="text-base sm:text-2xl md:text-3xl font-black text-amber-400">
+                    {currentYear}
+                  </span>
+                </div>
+
+                <button
+                  onClick={nextMonth}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition active:scale-95 shrink-0"
+                  aria-label="Next Month"
+                >
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+
+                <button
+                  onClick={jumpToToday}
+                  className="hidden sm:inline-block ml-1 text-[10px] font-bold px-2 py-0.5 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 rounded-full border border-amber-400/40 transition active:scale-95"
+                >
+                  Today
+                </button>
               </div>
-              <button
-                onClick={nextMonth}
-                className="p-1.5 hover:bg-velvi-cream rounded-xl text-velvi-brown transition"
-                aria-label="Next Month"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+
+              {/* Right: Dual Tamil Month Range & Brand Seal */}
+              <div className="flex items-center gap-2 sm:gap-3 text-right">
+                <div>
+                  <div className="text-xs sm:text-base md:text-lg font-black tracking-wide text-white">
+                    {dualTamilMonthTa}
+                  </div>
+                  <div className="text-[8px] sm:text-[10px] md:text-xs font-bold tracking-widest text-emerald-200/90 uppercase">
+                    {dualTamilMonthEn}
+                  </div>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-1.5 pl-3 border-l border-emerald-600/50 text-[9px] leading-tight font-semibold text-emerald-200">
+                  <span className="text-xl">🌿</span>
+                  <div>
+                    <span className="block">TRADITION</span>
+                    <span className="block text-emerald-300">CULTURE</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Weekday headers in English */}
-            <div className="grid grid-cols-7 text-center text-xs font-bold text-velvi-brown/70 mb-2 py-1">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => (
-                <div key={day} className={`${i === 0 ? "text-amber-800" : ""}`}>
-                  {day}
+            {/* Weekday Header Bar (Sunday in Crimson Red, Mon-Sat in Forest Green) */}
+            <div className="grid grid-cols-7 text-center select-none">
+              {/* Sunday (Red) */}
+              <div className="bg-[#b91c1c] text-white py-1 sm:py-1.5 px-0.5 border-r border-red-800/40">
+                <div className="text-[10px] sm:text-xs md:text-sm font-black tracking-wider">SUN</div>
+                <div className="text-[8px] sm:text-[10px] font-bold text-red-100">ஞாயிறு</div>
+              </div>
+
+              {/* Mon to Sat (Forest Green) */}
+              {[
+                { en: "MON", ta: "திங்கள்" },
+                { en: "TUE", ta: "செவ்வாய்" },
+                { en: "WED", ta: "புதன்" },
+                { en: "THU", ta: "வியாழன்" },
+                { en: "FRI", ta: "வெள்ளி" },
+                { en: "SAT", ta: "சனி" },
+              ].map((item) => (
+                <div
+                  key={item.en}
+                  className="bg-[#123e24] text-white py-1 sm:py-1.5 px-0.5 border-r border-emerald-800/40 last:border-r-0"
+                >
+                  <div className="text-[10px] sm:text-xs md:text-sm font-black tracking-wider">{item.en}</div>
+                  <div className="text-[8px] sm:text-[10px] font-semibold text-emerald-200">{item.ta}</div>
                 </div>
               ))}
             </div>
 
-            {/* Month Days Grid */}
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {/* Empty padding cells */}
-              {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-14 p-1 opacity-20" />
+            {/* Calendar Days Grid */}
+            <div className="grid grid-cols-7 border-t border-l border-gray-200 bg-white">
+              {/* 1. Leading Prev-Month Days (shown in muted gray like reference) */}
+              {prevMonthLeadingDays.map((prevDay) => (
+                <button
+                  key={prevDay.dateStr}
+                  onClick={() => {
+                    setSelectedDate(prevDay.dateStr);
+                    prevMonth();
+                  }}
+                  className="min-h-[56px] sm:min-h-[72px] md:min-h-[82px] p-0.5 sm:p-1.5 border-r border-b border-gray-200 bg-gray-50/40 flex flex-col items-center justify-between text-center transition hover:bg-gray-100/60"
+                >
+                  <span className="text-sm sm:text-lg md:text-xl font-bold text-gray-300">
+                    {prevDay.dayNum}
+                  </span>
+                  <span className="text-[8px] sm:text-[10px] font-medium text-gray-300 leading-tight">
+                    {prevDay.info.tamilDay}
+                  </span>
+                  <div className="h-2" />
+                </button>
               ))}
 
-              {/* Actual day cells */}
+              {/* 2. Current Month Days */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const dayNum = i + 1;
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
@@ -429,6 +615,15 @@ export default function CalendarPage() {
                 const dayBookings = filteredBookings.filter((b) => b.date === dateStr);
                 const isSelected = selectedDate === dateStr;
                 const isToday = todayStr === dateStr;
+                const dayOfWeekIndex = new Date(currentYear, currentMonth, dayNum).getDay();
+                const isSunday = dayOfWeekIndex === 0;
+
+                const hasSpecialHoliday =
+                  !!dayTamil.festivalName ||
+                  !!dayTamil.isMuhurtham ||
+                  !!dayTamil.isAmavasai ||
+                  !!dayTamil.isPournami;
+                const isRedDay = isSunday || hasSpecialHoliday;
 
                 const matchesFilter = (() => {
                   if (sacredFilter === "ALL") return true;
@@ -442,65 +637,274 @@ export default function CalendarPage() {
                   <button
                     key={dateStr}
                     onClick={() => setSelectedDate(dateStr)}
-                    className={`h-15 p-1 rounded-xl flex flex-col items-center justify-between transition border relative ${
+                    className={`min-h-[56px] sm:min-h-[72px] md:min-h-[82px] p-0.5 sm:p-1.5 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group ${
                       isSelected
-                        ? "bg-velvi-brown text-white border-velvi-gold font-bold shadow-md scale-105 z-10"
+                        ? "bg-amber-50/80 ring-2 ring-amber-500 ring-inset z-10 font-bold"
                         : isToday
-                        ? "bg-velvi-gold/15 border-velvi-gold/50 text-velvi-brownDark font-bold"
-                        : "bg-velvi-cream/30 hover:bg-velvi-cream border-transparent text-velvi-brownDark"
-                    } ${
-                      !matchesFilter ? "opacity-35 hover:opacity-90" : ""
-                    } ${
-                      sacredFilter !== "ALL" && matchesFilter && !isSelected ? "ring-2 ring-amber-500/80 ring-offset-1" : ""
-                    }`}
+                        ? "bg-emerald-50/50 hover:bg-emerald-50"
+                        : "bg-white hover:bg-gray-50/80"
+                    } ${!matchesFilter ? "opacity-35 hover:opacity-90" : ""}`}
                   >
-                    <div className="flex items-center justify-between w-full px-0.5">
-                      <span className="text-xs font-bold leading-tight flex items-center gap-0.5">
-                        {dayNum}
-                        {isToday && (
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full inline-block ${
-                              isSelected ? "bg-velvi-goldLight" : "bg-amber-600"
-                            }`}
-                          />
-                        )}
-                      </span>
+                    {/* Top Date Number + Special Icon */}
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 leading-tight w-full">
                       <span
-                        className={`text-[9px] leading-tight font-semibold ${
-                          isSelected ? "text-velvi-goldLight" : "text-velvi-goldDark"
+                        className={`text-sm sm:text-lg md:text-xl font-black ${
+                          isRedDay ? "text-[#b91c1c]" : "text-slate-900"
                         }`}
                       >
-                        {dayTamil.tamilDay}
+                        {dayNum}
                       </span>
+                      {dayTamil.specialDayIcon && (
+                        <span className="text-[9px] sm:text-xs md:text-sm shrink-0">
+                          {dayTamil.specialDayIcon}
+                        </span>
+                      )}
                     </div>
 
-                    {/* Sacred Festival / Special Day Badge */}
-                    {dayTamil.specialDayIcon ? (
-                      <div className="flex items-center justify-center leading-none" title={dayTamil.specialDayTag}>
-                        <span className="text-[11px]">{dayTamil.specialDayIcon}</span>
-                      </div>
-                    ) : (
-                      <div className="h-2.5" />
-                    )}
+                    {/* Tamil Day Number */}
+                    <div className="text-[8.5px] sm:text-[10px] md:text-xs font-semibold text-slate-600 leading-tight">
+                      {dayTamil.tamilDay}
+                    </div>
 
-                    {dayBookings.length > 0 ? (
+                    {/* Festival / Special Name Label (in red bold) */}
+                    <div className="w-full px-0.5">
+                      {dayTamil.festivalName ? (
+                        <div className="text-[7.5px] sm:text-[9.5px] font-black text-[#b91c1c] leading-tight truncate">
+                          {dayTamil.festivalName}
+                        </div>
+                      ) : dayTamil.specialDayTag ? (
+                        <div className="text-[7.5px] sm:text-[9.5px] font-black text-[#b91c1c] leading-tight truncate">
+                          {dayTamil.specialDayTag}
+                        </div>
+                      ) : (
+                        <div className="h-2 sm:h-2.5" />
+                      )}
+                    </div>
+
+                    {/* Booking Indicator Badge */}
+                    {dayBookings.length > 0 && (
                       <div className="w-full mt-0.5">
-                        <span
-                          className={`text-[8px] px-1 py-0.2 rounded-full font-bold inline-block leading-none truncate max-w-full ${
-                            isSelected
-                              ? "bg-velvi-gold text-velvi-brownDark"
-                              : "bg-velvi-sacredGreen text-white shadow-xs"
-                          }`}
-                        >
-                          {dayBookings.length} {dayBookings.length === 1 ? "seva" : "sevas"}
+                        <span className="text-[7px] sm:text-[8.5px] px-1 py-0.2 rounded-full font-bold inline-block leading-none truncate max-w-full bg-emerald-800 text-white shadow-2xs">
+                          ● {dayBookings.length} {dayBookings.length === 1 ? "seva" : "sevas"}
                         </span>
                       </div>
-                    ) : (
-                      <div className="h-2" />
                     )}
                   </button>
                 );
               })}
+
+              {/* 3. Trailing Next-Month Days (shown in muted gray like reference) */}
+              {nextMonthTrailingDays.map((nextDay) => (
+                <button
+                  key={nextDay.dateStr}
+                  onClick={() => {
+                    setSelectedDate(nextDay.dateStr);
+                    nextMonth();
+                  }}
+                  className="min-h-[56px] sm:min-h-[72px] md:min-h-[82px] p-0.5 sm:p-1.5 border-r border-b border-gray-200 bg-gray-50/40 flex flex-col items-center justify-between text-center transition hover:bg-gray-100/60"
+                >
+                  <span className="text-sm sm:text-lg md:text-xl font-bold text-gray-300">
+                    {nextDay.dayNum}
+                  </span>
+                  <span className="text-[8px] sm:text-[10px] font-medium text-gray-300 leading-tight">
+                    {nextDay.info.tamilDay}
+                  </span>
+                  <div className="h-2" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* The 3 Bottom Summary Cards Matching Traditional Tamil Calendar Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* 1. நல்ல நேரம் (Timings Card) */}
+            <div className="bg-[#fffdf7] border border-amber-200/90 rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-amber-200/70">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
+                      ☀️
+                    </div>
+                    <h4 className="font-extrabold text-sm text-amber-950">நல்ல நேரம்</h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                    {selectedTamilInfo.dayOfMonth} {monthNamesEn[selectedTamilInfo.monthIndex ?? currentMonth]}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs text-amber-950">
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">ராகு காலம்</span>
+                    <span className="font-bold">: {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">எமகண்டம்</span>
+                    <span className="font-bold">: {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">குளிகை</span>
+                    <span className="font-bold">: {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">காலை ந.நேரம்</span>
+                    <span className="font-bold text-emerald-800">: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">மாலை ந.நேரம்</span>
+                    <span className="font-bold text-emerald-800">: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">சூலம்</span>
+                    <span className="font-bold">: {WEEKDAY_SULAM_PARIHARAM[selectedTamilInfo.dayOfWeek]?.sulam || "வடக்கு"}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-amber-900/80">பரிகாரம்</span>
+                    <span className="font-bold">: {WEEKDAY_SULAM_PARIHARAM[selectedTamilInfo.dayOfWeek]?.pariharam || "பால்"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 pt-2 border-t border-amber-200/50 flex items-center justify-between text-[11px]">
+                <span className="text-amber-800/80 font-medium">திதி: {selectedTamilInfo.tithiNameTa || selectedTamilInfo.tithiTa}</span>
+                <span className="text-amber-900 font-semibold">{selectedTamilInfo.nakshatraNameTa}</span>
+              </div>
+            </div>
+
+            {/* 2. முக்கிய நாட்கள் (Important Days of Month Card) */}
+            <div className="bg-[#f8fdfa] border border-emerald-200/90 rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-emerald-200/70">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs shadow-xs">
+                      📅
+                    </div>
+                    <h4 className="font-extrabold text-sm text-emerald-950">முக்கிய நாட்கள்</h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                    {monthFestivals.length} விசேஷங்கள்
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-emerald-950 max-h-52 overflow-y-auto pr-1">
+                  {monthFestivals.length === 0 ? (
+                    <div className="py-6 text-center text-emerald-800/60 font-medium text-xs">
+                      இம்மாத சிறப்பு தினங்கள்
+                    </div>
+                  ) : (
+                    monthFestivals.map((fest, idx) => (
+                      <div key={idx} className="flex items-start gap-1.5 py-0.5 leading-snug">
+                        <span className="font-black text-red-600 shrink-0 w-5">
+                          {String(fest.dayNum).padStart(2, "0")}
+                        </span>
+                        <span className="text-emerald-900/60 font-bold shrink-0">–</span>
+                        <span className="font-semibold text-slate-800 flex items-center gap-1">
+                          <span>{fest.name}</span>
+                          {fest.icon && <span className="text-xs">{fest.icon}</span>}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-2.5 pt-2 border-t border-emerald-200/50 text-[11px] text-emerald-800 font-medium">
+                சுப முகூர்த்த நாட்கள்: <span className="font-bold text-amber-700">{monthMuhurthamDaysCount} நாட்கள்</span>
+              </div>
+            </div>
+
+            {/* 3. சந்திர நிலைகள் (Sacred Moon Phases Card) */}
+            <div className="bg-[#f8faff] border border-indigo-200/90 rounded-2xl p-3.5 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between gap-2 pb-2 mb-2.5 border-b border-indigo-200/70">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-indigo-800 text-white flex items-center justify-center text-xs shadow-xs">
+                      🌙
+                    </div>
+                    <h4 className="font-extrabold text-sm text-indigo-950">சந்திர நிலைகள்</h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-indigo-800 bg-indigo-100/80 px-2 py-0.5 rounded-md">
+                    விரத தினங்கள்
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-indigo-950">
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🌕</span>
+                      <span>பௌர்ணமி</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.pournamiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.pournamiDays.join(", ")}`
+                        : "இம்மாதம் இல்லை"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🌑</span>
+                      <span>அமாவாசை</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.amavasaiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.amavasaiDays.join(", ")}`
+                        : "இம்மாதம் இல்லை"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🐘</span>
+                      <span>சங்கடஹர சதுர்த்தி</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.chaturthiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.chaturthiDays.join(", ")}`
+                        : "–"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🪔</span>
+                      <span>கிருத்திகை</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.karthigaiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.karthigaiDays.join(", ")}`
+                        : "–"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🪷</span>
+                      <span>ஏகாதசி</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.ekadashiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.ekadashiDays.join(", ")}`
+                        : "–"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-0.5">
+                    <span className="font-semibold text-indigo-900/80 flex items-center gap-1">
+                      <span>🦚</span>
+                      <span>சஷ்டி</span>
+                    </span>
+                    <span className="font-bold text-slate-900">
+                      {monthSacredPhases.sashtiDays.length > 0
+                        ? `${monthNamesTransTa[currentMonth]} ${monthSacredPhases.sashtiDays.join(", ")}`
+                        : "–"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 pt-2 border-t border-indigo-200/50 text-[11px] text-indigo-800 font-medium">
+                துல்லிய ஜோதிடக் கணிப்பு • ஆரம்ப நாள் குறிப்பு
+              </div>
             </div>
           </div>
 
