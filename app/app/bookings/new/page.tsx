@@ -25,6 +25,73 @@ import {
 import Link from "next/link";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
 
+const PRESET_POOJA_TEMPLATES = [
+  {
+    icon: "🐘",
+    englishName: "Ganapathi Homam",
+    tamilName: "கணபதி ஹோமம்",
+    description: "Invokes Lord Ganesha for removing obstacles, beginnings & prosperity.",
+    durationMinutes: 120,
+    basePrice: 5000,
+  },
+  {
+    icon: "🪔",
+    englishName: "Maha Sudarshana Homam",
+    tamilName: "மகா சுதர்சன ஹோமம்",
+    description: "Powerful Vedic ritual for protection against negative forces, health & victory.",
+    durationMinutes: 180,
+    basePrice: 7500,
+  },
+  {
+    icon: "🌿",
+    englishName: "Rudrabhishekam & Homam",
+    tamilName: "ருத்ராபிஷேகம் & ஹோமம்",
+    description: "Sacred abhishekam with Sri Rudram chanting for inner peace, health and longevity.",
+    durationMinutes: 150,
+    basePrice: 6000,
+  },
+  {
+    icon: "🏠",
+    englishName: "Gruhapravesam & Vastu Homam",
+    tamilName: "கிரகப்பிரவேசம் & வாஸ்து ஹோமம்",
+    description: "Traditional house-warming ritual invoking Vastu Purusha, Ganapathi & Lakshmi.",
+    durationMinutes: 240,
+    basePrice: 12000,
+  },
+  {
+    icon: "🪐",
+    englishName: "Navagraha Homam",
+    tamilName: "நவகிரக ஹோமம்",
+    description: "Appeases the nine celestial planetary deities for dosha nivarthi and prosperity.",
+    durationMinutes: 180,
+    basePrice: 8000,
+  },
+  {
+    icon: "🪙",
+    englishName: "Maha Lakshmi Kubera Pooja",
+    tamilName: "மகா லக்ஷ்மி குபேர பூஜை",
+    description: "Divine pooja invoking Goddess Lakshmi & Lord Kubera for wealth and debt removal.",
+    durationMinutes: 90,
+    basePrice: 4500,
+  },
+  {
+    icon: "🌸",
+    englishName: "Sri Satyanarayana Pooja",
+    tamilName: "ஸ்ரீ சத்யநாராயண பூஜை",
+    description: "Sacred full-moon / pournami pooja with 5-chapter katha & prasad for family welfare.",
+    durationMinutes: 120,
+    basePrice: 4000,
+  },
+  {
+    icon: "👶",
+    englishName: "Ayush Homam / Sashtiapthapoorthi",
+    tamilName: "ஆயுஷ் ஹோமம் / சஷ்டியப்தபூர்த்தி",
+    description: "Vedic ceremony for child's 1st birthday or 60th / 80th anniversary for long life & health.",
+    durationMinutes: 240,
+    basePrice: 10000,
+  },
+];
+
 function NewBookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,14 +144,23 @@ function NewBookingForm() {
   const [custModalError, setCustModalError] = useState<string>("");
   const [customerAddedSuccess, setCustomerAddedSuccess] = useState<string>("");
 
+  const applyInstantPoojaPreset = (preset: (typeof PRESET_POOJA_TEMPLATES)[0]) => {
+    setPoojaFormEnglish(preset.englishName);
+    setPoojaFormTamil(preset.tamilName);
+    setPoojaFormPrice(preset.basePrice);
+    setPoojaFormDuration(preset.durationMinutes);
+    setPoojaFormDesc(preset.description);
+  };
+
   const handleOpenAddPooja = () => {
     setIsEditingPooja(false);
     setPoojaFormId("");
-    setPoojaFormEnglish("");
-    setPoojaFormTamil("");
-    setPoojaFormPrice(5000);
-    setPoojaFormDuration(120);
-    setPoojaFormDesc("");
+    const def = PRESET_POOJA_TEMPLATES[0];
+    setPoojaFormEnglish(def.englishName);
+    setPoojaFormTamil(def.tamilName);
+    setPoojaFormPrice(def.basePrice);
+    setPoojaFormDuration(def.durationMinutes);
+    setPoojaFormDesc(def.description);
     setPoojaModalError("");
     setShowPoojaModal(true);
   };
@@ -817,6 +893,35 @@ function NewBookingForm() {
             )}
 
             <form onSubmit={handleSavePooja} className="space-y-3">
+              {/* 1-Tap Popular Pooja Presets */}
+              <div className="bg-gradient-to-r from-amber-50/80 via-velvi-cream/70 to-amber-50/80 p-2.5 rounded-2xl border border-velvi-gold/35 space-y-1.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                    <span>பிரபலமான டெம்ப்ளேட்கள் (1-Tap Fill)</span>
+                  </span>
+                  <span className="text-[9px] text-velvi-maroon font-bold bg-white px-1.5 py-0.5 rounded-full border border-velvi-gold/20">
+                    1-கிளிக்
+                  </span>
+                </div>
+                <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                  {PRESET_POOJA_TEMPLATES.map((tpl) => (
+                    <button
+                      key={tpl.englishName}
+                      type="button"
+                      onClick={() => applyInstantPoojaPreset(tpl)}
+                      className="shrink-0 bg-white hover:bg-amber-100/70 border border-velvi-gold/30 hover:border-velvi-gold rounded-xl px-2 py-1 text-xs font-bold text-velvi-brownDark flex items-center gap-1 shadow-2xs transition active:scale-95"
+                    >
+                      <span>{tpl.icon}</span>
+                      <span>{tpl.tamilName}</span>
+                      <span className="text-[9px] text-velvi-maroon bg-amber-50 px-1 py-0.2 rounded font-bold">
+                        ₹{tpl.basePrice.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div>
                 <label className="text-xs font-bold text-velvi-brown block mb-1">
                   Pooja Name (English) *
@@ -855,9 +960,26 @@ function NewBookingForm() {
                     step="500"
                     value={poojaFormPrice}
                     onChange={(e) => setPoojaFormPrice(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {[3000, 5000, 7500, 10000, 12000].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPoojaFormPrice(p)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
+                          poojaFormPrice === p
+                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                        }`}
+                      >
+                        ₹{p.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
                 <div>
                   <label className="text-xs font-bold text-velvi-brown block mb-1">Duration (Mins)</label>
                   <input
@@ -866,8 +988,30 @@ function NewBookingForm() {
                     step="15"
                     value={poojaFormDuration}
                     onChange={(e) => setPoojaFormDuration(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {[
+                      { mins: 60, label: "1h" },
+                      { mins: 90, label: "1.5h" },
+                      { mins: 120, label: "2h" },
+                      { mins: 180, label: "3h" },
+                      { mins: 240, label: "4h" },
+                    ].map((d) => (
+                      <button
+                        key={d.mins}
+                        type="button"
+                        onClick={() => setPoojaFormDuration(d.mins)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
+                          poojaFormDuration === d.mins
+                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 

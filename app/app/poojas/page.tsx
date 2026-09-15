@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   ListChecks,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -51,6 +52,151 @@ const QUICK_SAMAGRI_SUGGESTIONS = [
   { en: "Garlands & Flowers", ta: "பூக்கள் & மாலை", qty: 2, unit: "nos" as const },
   { en: "Honey", ta: "தேன்", qty: 100, unit: "ml" as const },
   { en: "Sesame Oil", ta: "நல்லெண்ணெய்", qty: 1, unit: "litre" as const },
+];
+
+const PRESET_POOJA_TEMPLATES = [
+  {
+    icon: "🐘",
+    englishName: "Ganapathi Homam",
+    tamilName: "கணபதி ஹோமம்",
+    description: "Invokes Lord Ganesha for removing obstacles, beginnings & prosperity.",
+    durationMinutes: 120,
+    basePrice: 5000,
+    items: [
+      { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள் தூள்", quantity: 100, unit: "g" as const },
+      { itemEnglishName: "Kumkum", itemTamilName: "குங்குமம்", quantity: 50, unit: "g" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 5, unit: "nos" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 500, unit: "ml" as const },
+      { itemEnglishName: "Modak / Kozhukattai", itemTamilName: "மோதகம் / கொழுக்கட்டை", quantity: 21, unit: "nos" as const },
+      { itemEnglishName: "Arugampul", itemTamilName: "அருகம்புல்", quantity: 2, unit: "bundle" as const },
+      { itemEnglishName: "Betel Leaves & Nut", itemTamilName: "வெற்றிலை பாக்கு", quantity: 2, unit: "bundle" as const },
+      { itemEnglishName: "Camphor", itemTamilName: "கற்பூரம்", quantity: 2, unit: "packet" as const },
+      { itemEnglishName: "Honey", itemTamilName: "தேன்", quantity: 100, unit: "ml" as const },
+    ],
+  },
+  {
+    icon: "🪔",
+    englishName: "Maha Sudarshana Homam",
+    tamilName: "மகா சுதர்சன ஹோமம்",
+    description: "Powerful Vedic ritual for protection against negative forces, health & victory.",
+    durationMinutes: 180,
+    basePrice: 7500,
+    items: [
+      { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள் தூள்", quantity: 200, unit: "g" as const },
+      { itemEnglishName: "Kumkum", itemTamilName: "குங்குமம்", quantity: 100, unit: "g" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 7, unit: "nos" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 1000, unit: "ml" as const },
+      { itemEnglishName: "Raw Rice", itemTamilName: "பச்சரிசி", quantity: 3, unit: "kg" as const },
+      { itemEnglishName: "Thulasi Leaves", itemTamilName: "துளசி தளம்", quantity: 3, unit: "bundle" as const },
+      { itemEnglishName: "White Mustard (Kadugu)", itemTamilName: "வெண் கடுகு", quantity: 100, unit: "g" as const },
+      { itemEnglishName: "Homam Wood (Samithu)", itemTamilName: "சமித்து கட்டை", quantity: 3, unit: "bundle" as const },
+      { itemEnglishName: "Camphor & Agarbatti", itemTamilName: "கற்பூரம் & அகர்பத்தி", quantity: 3, unit: "packet" as const },
+    ],
+  },
+  {
+    icon: "🌿",
+    englishName: "Rudrabhishekam & Homam",
+    tamilName: "ருத்ராபிஷேகம் & ஹோமம்",
+    description: "Sacred abhishekam with Sri Rudram chanting for inner peace, health and longevity.",
+    durationMinutes: 150,
+    basePrice: 6000,
+    items: [
+      { itemEnglishName: "Milk", itemTamilName: "பசும்பால்", quantity: 3, unit: "litre" as const },
+      { itemEnglishName: "Curd", itemTamilName: "தயிர்", quantity: 1, unit: "litre" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 500, unit: "ml" as const },
+      { itemEnglishName: "Honey", itemTamilName: "தேன்", quantity: 200, unit: "ml" as const },
+      { itemEnglishName: "Tender Coconut", itemTamilName: "இளநீர்", quantity: 5, unit: "nos" as const },
+      { itemEnglishName: "Vilvam Leaves", itemTamilName: "வில்வ இலை", quantity: 3, unit: "bundle" as const },
+      { itemEnglishName: "Vibhuti (Sacred Ash)", itemTamilName: "திருநீறு (விபூதி)", quantity: 200, unit: "g" as const },
+      { itemEnglishName: "Sandalwood Paste", itemTamilName: "சந்தனம்", quantity: 100, unit: "g" as const },
+    ],
+  },
+  {
+    icon: "🏠",
+    englishName: "Gruhapravesam & Vastu Homam",
+    tamilName: "கிரகப்பிரவேசம் & வாஸ்து ஹோமம்",
+    description: "Traditional house-warming ritual invoking Vastu Purusha, Ganapathi & Lakshmi.",
+    durationMinutes: 240,
+    basePrice: 12000,
+    items: [
+      { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள் தூள்", quantity: 500, unit: "g" as const },
+      { itemEnglishName: "Kumkum", itemTamilName: "குங்குமம்", quantity: 250, unit: "g" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 11, unit: "nos" as const },
+      { itemEnglishName: "Raw Rice", itemTamilName: "பச்சரிசி", quantity: 5, unit: "kg" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 1500, unit: "ml" as const },
+      { itemEnglishName: "Navadhanyam", itemTamilName: "நவதானியம்", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Mango Leaves", itemTamilName: "மாவிலை", quantity: 3, unit: "bundle" as const },
+      { itemEnglishName: "Betel Leaves & Nut", itemTamilName: "வெற்றிலை பாக்கு", quantity: 5, unit: "bundle" as const },
+      { itemEnglishName: "Milk for Boiling", itemTamilName: "பால் காய்ச்ச பசும்பால்", quantity: 2, unit: "litre" as const },
+      { itemEnglishName: "Banana Fruits", itemTamilName: "வாழைப்பழம்", quantity: 2, unit: "dozen" as const },
+      { itemEnglishName: "Camphor", itemTamilName: "கற்பூரம்", quantity: 5, unit: "packet" as const },
+    ],
+  },
+  {
+    icon: "🪐",
+    englishName: "Navagraha Homam",
+    tamilName: "நவகிரக ஹோமம்",
+    description: "Appeases the nine celestial planetary deities for dosha nivarthi and prosperity.",
+    durationMinutes: 180,
+    basePrice: 8000,
+    items: [
+      { itemEnglishName: "Navadhanyam 9 Grains", itemTamilName: "நவதானியம் (9 தானியங்கள்)", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Navagraha Vastram", itemTamilName: "நவகிரக வஸ்திரம்", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Turmeric & Kumkum", itemTamilName: "மஞ்சள் & குங்குமம்", quantity: 200, unit: "g" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 9, unit: "nos" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 1000, unit: "ml" as const },
+      { itemEnglishName: "Navagraha Samithu", itemTamilName: "நவகிரக சமித்து கட்டை", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Betel Leaves", itemTamilName: "வெற்றிலை பாக்கு", quantity: 3, unit: "bundle" as const },
+    ],
+  },
+  {
+    icon: "🪙",
+    englishName: "Maha Lakshmi Kubera Pooja",
+    tamilName: "மகா லக்ஷ்மி குபேர பூஜை",
+    description: "Divine pooja invoking Goddess Lakshmi & Lord Kubera for wealth and debt removal.",
+    durationMinutes: 90,
+    basePrice: 4500,
+    items: [
+      { itemEnglishName: "Turmeric & Kumkum", itemTamilName: "மஞ்சள் & குங்குமம்", quantity: 150, unit: "g" as const },
+      { itemEnglishName: "Lotus Flowers", itemTamilName: "தாமரை பூக்கள்", quantity: 8, unit: "nos" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 3, unit: "nos" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 500, unit: "ml" as const },
+      { itemEnglishName: "108 Coins Set", itemTamilName: "108 நாணயங்கள்", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Betel Leaves", itemTamilName: "வெற்றிலை பாக்கு", quantity: 2, unit: "bundle" as const },
+    ],
+  },
+  {
+    icon: "🌸",
+    englishName: "Sri Satyanarayana Pooja",
+    tamilName: "ஸ்ரீ சத்யநாராயண பூஜை",
+    description: "Sacred full-moon / pournami pooja with 5-chapter katha & prasad for family welfare.",
+    durationMinutes: 120,
+    basePrice: 4000,
+    items: [
+      { itemEnglishName: "Wheat Rava / Sooji", itemTamilName: "கோதுமை ரவை", quantity: 500, unit: "g" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 500, unit: "ml" as const },
+      { itemEnglishName: "Sugar / Jaggery", itemTamilName: "சர்க்கரை / வெல்லம்", quantity: 500, unit: "g" as const },
+      { itemEnglishName: "Milk", itemTamilName: "பசும்பால்", quantity: 1, unit: "litre" as const },
+      { itemEnglishName: "Bananas", itemTamilName: "வாழைப்பழம்", quantity: 1, unit: "dozen" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 5, unit: "nos" as const },
+    ],
+  },
+  {
+    icon: "👶",
+    englishName: "Ayush Homam / Sashtiapthapoorthi",
+    tamilName: "ஆயுஷ் ஹோமம் / சஷ்டியப்தபூர்த்தி",
+    description: "Vedic ceremony for child's 1st birthday or 60th / 80th anniversary for long life & health.",
+    durationMinutes: 240,
+    basePrice: 10000,
+    items: [
+      { itemEnglishName: "Turmeric & Kumkum", itemTamilName: "மஞ்சள் & குங்குமம்", quantity: 300, unit: "g" as const },
+      { itemEnglishName: "Coconuts", itemTamilName: "தேங்காய்", quantity: 9, unit: "nos" as const },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "தூய பசு நெய்", quantity: 1000, unit: "ml" as const },
+      { itemEnglishName: "Raw Rice", itemTamilName: "பச்சரிசி", quantity: 5, unit: "kg" as const },
+      { itemEnglishName: "Dhothi & Angavastram", itemTamilName: "வேஷ்டி & துண்டு செட்", quantity: 1, unit: "set" as const },
+      { itemEnglishName: "Ayur Devatha Samithu", itemTamilName: "ஆயுர் தேவதை சமித்து", quantity: 2, unit: "bundle" as const },
+    ],
+  },
 ];
 
 const getUnitBadgeLabel = (unit: string) => {
@@ -101,43 +247,45 @@ export default function PoojasCataloguePage() {
       (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const applyPoojaPreset = (preset: (typeof PRESET_POOJA_TEMPLATES)[0]) => {
+    setFormEnglishName(preset.englishName);
+    setFormTamilName(preset.tamilName);
+    setFormDescription(preset.description);
+    setFormDuration(preset.durationMinutes);
+    setFormBasePrice(preset.basePrice);
+    setFormItems(
+      preset.items.map((item, idx) => ({
+        id: `item-${Date.now()}-${idx + 1}`,
+        poojaId: editingPoojaId || "",
+        itemEnglishName: item.itemEnglishName,
+        itemTamilName: item.itemTamilName,
+        quantity: item.quantity,
+        unit: item.unit,
+        sortOrder: idx + 1,
+      }))
+    );
+  };
+
   const openCreateModal = () => {
     setIsEditing(false);
     setEditingPoojaId(null);
-    setFormEnglishName("");
-    setFormTamilName("");
-    setFormDescription("");
-    setFormDuration(120);
-    setFormBasePrice(5000);
-    setFormItems([
-      {
-        id: `item-${Date.now()}-1`,
+    const defaultPreset = PRESET_POOJA_TEMPLATES[0];
+    setFormEnglishName(defaultPreset.englishName);
+    setFormTamilName(defaultPreset.tamilName);
+    setFormDescription(defaultPreset.description);
+    setFormDuration(defaultPreset.durationMinutes);
+    setFormBasePrice(defaultPreset.basePrice);
+    setFormItems(
+      defaultPreset.items.map((item, idx) => ({
+        id: `item-${Date.now()}-${idx + 1}`,
         poojaId: "",
-        itemEnglishName: "Turmeric Powder",
-        itemTamilName: "மஞ்சள் தூள்",
-        quantity: 100,
-        unit: "g",
-        sortOrder: 1,
-      },
-      {
-        id: `item-${Date.now()}-2`,
-        poojaId: "",
-        itemEnglishName: "Coconuts",
-        itemTamilName: "தேங்காய்",
-        quantity: 5,
-        unit: "nos",
-        sortOrder: 2,
-      },
-      {
-        id: `item-${Date.now()}-3`,
-        poojaId: "",
-        itemEnglishName: "Pure Ghee",
-        itemTamilName: "தூய பசு நெய்",
-        quantity: 500,
-        unit: "ml",
-        sortOrder: 3,
-      },
-    ]);
+        itemEnglishName: item.itemEnglishName,
+        itemTamilName: item.itemTamilName,
+        quantity: item.quantity,
+        unit: item.unit,
+        sortOrder: idx + 1,
+      }))
+    );
     setFormError("");
     setNewItemEnglish("");
     setNewItemTamil("");
@@ -516,6 +664,35 @@ export default function PoojasCataloguePage() {
             )}
 
             <form onSubmit={handleSavePooja} className="space-y-3.5">
+              {/* 1-Tap Popular Pooja Presets */}
+              <div className="bg-gradient-to-r from-amber-50/80 via-velvi-cream/70 to-amber-50/80 p-3 rounded-2xl border border-velvi-gold/35 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                    <span>பிரபலமான பூஜை டெம்ப்ளேட்கள் (1-Tap Fast Fill)</span>
+                  </span>
+                  <span className="text-[10px] text-velvi-maroon font-bold bg-white px-2 py-0.5 rounded-full border border-velvi-gold/20">
+                    1-கிளிக் தேர்வு
+                  </span>
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                  {PRESET_POOJA_TEMPLATES.map((tpl) => (
+                    <button
+                      key={tpl.englishName}
+                      type="button"
+                      onClick={() => applyPoojaPreset(tpl)}
+                      className="shrink-0 bg-white hover:bg-amber-100/70 border border-velvi-gold/30 hover:border-velvi-gold rounded-xl px-2.5 py-1.5 text-xs font-bold text-velvi-brownDark flex items-center gap-1.5 shadow-2xs transition active:scale-95"
+                    >
+                      <span className="text-sm">{tpl.icon}</span>
+                      <span>{tpl.tamilName}</span>
+                      <span className="text-[10px] text-velvi-maroon bg-amber-50 px-1 py-0.5 rounded font-bold">
+                        ₹{tpl.basePrice.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Names */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -534,7 +711,7 @@ export default function PoojasCataloguePage() {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-velvi-brown block mb-1">
-                    Tamil Name
+                    Tamil Name (பூஜை பெயர்)
                   </label>
                   <input
                     type="text"
@@ -546,7 +723,7 @@ export default function PoojasCataloguePage() {
                 </div>
               </div>
 
-              {/* Price & Duration */}
+              {/* Price & Duration with Quick Chips */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-xs font-bold text-velvi-brown block mb-1">
@@ -560,9 +737,26 @@ export default function PoojasCataloguePage() {
                     placeholder="5000"
                     value={formBasePrice}
                     onChange={(e) => setFormBasePrice(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {[3000, 4500, 5000, 7500, 10000, 12000].map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setFormBasePrice(p)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
+                          formBasePrice === p
+                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                        }`}
+                      >
+                        ₹{p.toLocaleString()}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
                 <div>
                   <label className="text-xs font-bold text-velvi-brown block mb-1">
                     Duration (Minutes) *
@@ -575,8 +769,30 @@ export default function PoojasCataloguePage() {
                     placeholder="120"
                     value={formDuration}
                     onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {[
+                      { mins: 60, label: "1h" },
+                      { mins: 90, label: "1.5h" },
+                      { mins: 120, label: "2h" },
+                      { mins: 180, label: "3h" },
+                      { mins: 240, label: "4h" },
+                    ].map((d) => (
+                      <button
+                        key={d.mins}
+                        type="button"
+                        onClick={() => setFormDuration(d.mins)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
+                          formDuration === d.mins
+                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
