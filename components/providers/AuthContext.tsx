@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const syncState = () => {
+  const syncState = React.useCallback(() => {
     const savedUserId = typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null;
 
     // Automatically set default user so any visitor arrives already logged in
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sub = db.subscriptions.find((s) => s.businessId === biz.id) || db.subscriptions[0];
       setSubscription(sub);
     }
-  };
+  }, []);
 
   useEffect(() => {
     syncState();
@@ -91,9 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window !== "undefined") {
       (window as any).velviDb = db;
     }
-  }, []);
+  }, [syncState]);
 
-  const loginWithGoogle = async (email?: string, name?: string): Promise<User> => {
+  const loginWithGoogle = React.useCallback(async (email?: string, name?: string): Promise<User> => {
     setIsLoading(true);
     // Find existing or mock new Google user
     let user = db.users.find((u) => u.email === (email || "ravi.iyer@gmail.com"));
@@ -118,9 +118,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     syncState();
     setIsLoading(false);
     return user;
-  };
+  }, [syncState]);
 
-  const logout = () => {
+  const logout = React.useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("velvi_active_user_id", "LOGGED_OUT");
     }
@@ -130,9 +130,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }
-  };
+  }, []);
 
-  const switchRole = (role: UserRole) => {
+  const switchRole = React.useCallback((role: UserRole) => {
     let target = db.users.find((u) => u.role === role);
     if (!target) {
       if (role === "SUPER_ADMIN") target = db.users.find((u) => u.id === "u-super-admin-01");
@@ -143,9 +143,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("velvi_active_user_id", target.id);
       syncState();
     }
-  };
+  }, [syncState]);
 
-  const lookupAccountsByMobile = async (rawMobile: string) => {
+  const lookupAccountsByMobile = React.useCallback(async (rawMobile: string) => {
     const normalized = normalizeIndianMobile(rawMobile);
     const users = db.findUsersByMobile(normalized);
     if (!users || users.length === 0) {
@@ -156,9 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
     return { success: true, users };
-  };
+  }, []);
 
-  const requestAccountRecoveryOtp = async (rawMobile: string) => {
+  const requestAccountRecoveryOtp = React.useCallback(async (rawMobile: string) => {
     const normalized = normalizeIndianMobile(rawMobile);
     const user = db.findUserByMobile(normalized);
     if (!user) {
@@ -166,9 +166,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     // Simulation: In production, sends SMS OTP. For MVP recovery, test OTP is "123456"
     return { success: true };
-  };
+  }, []);
 
-  const verifyAccountRecoveryOtp = async (rawMobile: string, otp: string) => {
+  const verifyAccountRecoveryOtp = React.useCallback(async (rawMobile: string, otp: string) => {
     const normalized = normalizeIndianMobile(rawMobile);
     const user = db.findUserByMobile(normalized);
     if (!user) {
@@ -183,16 +183,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: user.email,
       userName: user.name,
     };
-  };
+  }, []);
 
-  const refreshSubscription = () => {
+  const refreshSubscription = React.useCallback(() => {
     if (currentBusiness) {
       const sub = db.getSubscription(currentBusiness.id);
       if (sub) setSubscription({ ...sub });
     }
-  };
+  }, [currentBusiness]);
 
-  const completeOnboarding = async (data: {
+  const completeOnboarding = React.useCallback(async (data: {
     mobile: string;
     businessName: string;
     iyerName: string;
@@ -263,45 +263,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     syncState();
-  };
+  }, [currentUser, syncState]);
 
-  const updateBusiness = (updates: Partial<Business>) => {
+  const updateBusiness = React.useCallback((updates: Partial<Business>) => {
     if (!currentBusiness) return;
     const bizIndex = db.businesses.findIndex((b) => b.id === currentBusiness.id);
     if (bizIndex >= 0) {
       db.businesses[bizIndex] = { ...db.businesses[bizIndex], ...updates };
       setCurrentBusiness({ ...db.businesses[bizIndex] });
     }
-  };
+  }, [currentBusiness]);
 
-  const updateUser = (updates: Partial<User>) => {
+  const updateUser = React.useCallback((updates: Partial<User>) => {
     if (!currentUser) return;
     const userIndex = db.users.findIndex((u) => u.id === currentUser.id);
     if (userIndex >= 0) {
       db.users[userIndex] = { ...db.users[userIndex], ...updates };
       setCurrentUser({ ...db.users[userIndex] });
     }
-  };
+  }, [currentUser]);
+
+  const authContextValue = React.useMemo(
+    () => ({
+      currentUser,
+      currentBusiness,
+      subscription,
+      isLoading,
+      loginWithGoogle,
+      logout,
+      switchRole,
+      lookupAccountsByMobile,
+      requestAccountRecoveryOtp,
+      verifyAccountRecoveryOtp,
+      refreshSubscription,
+      updateBusiness,
+      updateUser,
+      completeOnboarding,
+    }),
+    [
+      currentUser,
+      currentBusiness,
+      subscription,
+      isLoading,
+      loginWithGoogle,
+      logout,
+      switchRole,
+      lookupAccountsByMobile,
+      requestAccountRecoveryOtp,
+      verifyAccountRecoveryOtp,
+      refreshSubscription,
+      updateBusiness,
+      updateUser,
+      completeOnboarding,
+    ]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        currentBusiness,
-        subscription,
-        isLoading,
-        loginWithGoogle,
-        logout,
-        switchRole,
-        lookupAccountsByMobile,
-        requestAccountRecoveryOtp,
-        verifyAccountRecoveryOtp,
-        refreshSubscription,
-        updateBusiness,
-        updateUser,
-        completeOnboarding,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

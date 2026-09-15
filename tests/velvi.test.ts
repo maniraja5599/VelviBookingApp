@@ -850,4 +850,50 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(sep24.isPradosham).toBe(false);
     expect(sep24.specialDayTag).not.toBe("பிரதோஷம்");
   });
+
+  // TEST CASE 33: Instant Pooja Add, Edit, Delete during booking
+  it("Test 33: Instant Pooja CRUD operations within business scope", () => {
+    const bizId = "biz-venkateswara-01";
+    const initialPoojas = store.getPoojas(bizId);
+    const initialCount = initialPoojas.length;
+
+    // 1. Instant Add Pooja
+    const newPooja = store.createPooja({
+      businessId: bizId,
+      englishName: "Chandi Homam",
+      tamilName: "சண்டி ஹோமம்",
+      basePrice: 15000,
+      durationMinutes: 180,
+      description: "Grand Chandi Parayanam and Homam",
+    });
+
+    expect(newPooja.id).toBeDefined();
+    expect(newPooja.englishName).toBe("Chandi Homam");
+    expect(newPooja.tamilName).toBe("சண்டி ஹோமம்");
+    expect(newPooja.basePrice).toBe(15000);
+
+    const afterAdd = store.getPoojas(bizId);
+    expect(afterAdd.length).toBe(initialCount + 1);
+    expect(afterAdd.some((p) => p.id === newPooja.id)).toBe(true);
+
+    // 2. Instant Edit Pooja
+    const updated = store.updatePooja(newPooja.id, {
+      englishName: "Maha Chandi Homam",
+      basePrice: 18000,
+      durationMinutes: 240,
+    });
+
+    expect(updated).toBeDefined();
+    expect(updated?.englishName).toBe("Maha Chandi Homam");
+    expect(updated?.basePrice).toBe(18000);
+    expect(updated?.durationMinutes).toBe(240);
+
+    // 3. Instant Delete Pooja
+    const deleteResult = store.deletePooja(newPooja.id);
+    expect(deleteResult).toBe(true);
+
+    const afterDelete = store.getPoojas(bizId);
+    expect(afterDelete.length).toBe(initialCount);
+    expect(afterDelete.some((p) => p.id === newPooja.id)).toBe(false);
+  });
 });

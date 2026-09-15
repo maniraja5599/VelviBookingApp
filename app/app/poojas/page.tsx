@@ -21,18 +21,45 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-const DEFAULT_UNITS: Array<PoojaItemTemplate["unit"]> = [
-  "nos",
-  "pcs",
-  "kg",
-  "g",
-  "litre",
-  "ml",
-  "packet",
-  "bundle",
-  "set",
-  "dozen",
+const SAMAGRI_UNITS: Array<{
+  unit: PoojaItemTemplate["unit"];
+  labelTa: string;
+  labelEn: string;
+  code: string;
+}> = [
+  { unit: "g", labelTa: "கிராம்", labelEn: "g", code: "g" },
+  { unit: "kg", labelTa: "கிலோ", labelEn: "kg", code: "kg" },
+  { unit: "nos", labelTa: "எண்ணிக்கை", labelEn: "nos", code: "nos" },
+  { unit: "packet", labelTa: "பாக்கெட்", labelEn: "pkt", code: "pkt" },
+  { unit: "litre", labelTa: "லிட்டர்", labelEn: "L", code: "L" },
+  { unit: "ml", labelTa: "மி.லி", labelEn: "ml", code: "ml" },
+  { unit: "bundle", labelTa: "கட்டு", labelEn: "bundle", code: "bundle" },
+  { unit: "set", labelTa: "செட்", labelEn: "set", code: "set" },
+  { unit: "dozen", labelTa: "டஜன்", labelEn: "dozen", code: "dozen" },
 ];
+
+const QUICK_SAMAGRI_SUGGESTIONS = [
+  { en: "Turmeric Powder", ta: "மஞ்சள் தூள்", qty: 100, unit: "g" as const },
+  { en: "Kumkum", ta: "குங்குமம்", qty: 50, unit: "g" as const },
+  { en: "Coconuts", ta: "தேங்காய்", qty: 5, unit: "nos" as const },
+  { en: "Camphor", ta: "கற்பூரம்", qty: 2, unit: "packet" as const },
+  { en: "Pure Ghee", ta: "பசு நெய்", qty: 500, unit: "ml" as const },
+  { en: "Betel Leaves & Nut", ta: "வெற்றிலை பாக்கு", qty: 2, unit: "bundle" as const },
+  { en: "Raw Rice", ta: "பச்சரிசி", qty: 2, unit: "kg" as const },
+  { en: "Sandalwood Paste", ta: "சந்தனம்", qty: 50, unit: "g" as const },
+  { en: "Agarbatti", ta: "அகர்பத்தி", qty: 1, unit: "packet" as const },
+  { en: "Garlands & Flowers", ta: "பூக்கள் & மாலை", qty: 2, unit: "nos" as const },
+  { en: "Honey", ta: "தேன்", qty: 100, unit: "ml" as const },
+  { en: "Sesame Oil", ta: "நல்லெண்ணெய்", qty: 1, unit: "litre" as const },
+];
+
+const getUnitBadgeLabel = (unit: string) => {
+  const found = SAMAGRI_UNITS.find((u) => u.unit === unit);
+  if (found) {
+    return `${found.labelTa} (${found.code})`;
+  }
+  return unit;
+};
 
 export default function PoojasCataloguePage() {
   const { currentBusiness } = useAuth();
@@ -567,45 +594,82 @@ export default function PoojasCataloguePage() {
                 />
               </div>
 
-              {/* Items Checklist Template Manager */}
-              <div className="space-y-2 pt-1">
+              {/* Items Checklist Template Manager (Pooja Samagri) */}
+              <div className="space-y-2.5 pt-2 border-t border-velvi-gold/15">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-                    <ListChecks className="w-3.5 h-3.5 text-velvi-gold" />
-                    <span>Checklist Items ({formItems.length})</span>
+                  <label className="text-xs font-bold text-velvi-brownDark flex items-center gap-1.5">
+                    <ListChecks className="w-4 h-4 text-velvi-gold" />
+                    <span>பூஜா பொருட்கள் செக்லிஸ்ட் / Samagri Items ({formItems.length})</span>
                   </label>
-                  <span className="text-[10px] text-velvi-brown/60">
-                    Template items for devotees
+                  <span className="text-[11px] font-semibold text-velvi-brown/70 bg-velvi-cream px-2 py-0.5 rounded-md border border-velvi-gold/20">
+                    {formItems.length} பொருட்கள்
                   </span>
                 </div>
 
-                {/* Items List */}
-                <div className="bg-velvi-cream/20 border border-velvi-gold/20 rounded-xl divide-y divide-velvi-gold/15 max-h-40 overflow-y-auto">
+                {/* Items List with Stepper & Metrics */}
+                <div className="bg-velvi-cream/25 border border-velvi-gold/30 rounded-2xl p-2 divide-y divide-velvi-gold/15 max-h-52 overflow-y-auto space-y-1.5">
                   {formItems.length === 0 ? (
-                    <div className="p-3 text-center text-xs text-velvi-brown/50">
-                      No items added yet. Add items below.
+                    <div className="py-6 text-center text-xs text-velvi-brown/60">
+                      பொருட்கள் எதுவும் சேர்க்கப்படவில்லை. கீழே உள்ள படிவத்தில் சேர்க்கவும்.
                     </div>
                   ) : (
                     formItems.map((it, idx) => (
-                      <div key={it.id} className="p-2 flex items-center justify-between text-xs">
-                        <div className="truncate mr-2">
-                          <span className="font-semibold text-velvi-brownDark">
-                            {idx + 1}. {it.itemEnglishName}
-                          </span>
-                          {it.itemTamilName && it.itemTamilName !== it.itemEnglishName && (
-                            <span className="text-[11px] text-velvi-brown/60 ml-1">
-                              ({it.itemTamilName})
-                            </span>
-                          )}
+                      <div key={it.id} className="pt-1.5 first:pt-0 flex items-center justify-between gap-2 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-velvi-brownDark truncate flex items-center gap-1">
+                            <span className="text-velvi-maroon text-[11px] font-black">{idx + 1}.</span>
+                            <span>{it.itemTamilName || it.itemEnglishName}</span>
+                            {it.itemTamilName && it.itemEnglishName && it.itemTamilName !== it.itemEnglishName && (
+                              <span className="text-[10px] text-gray-500 font-normal truncate">({it.itemEnglishName})</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="bg-white border border-velvi-gold/30 px-2 py-0.5 rounded text-[11px] font-bold text-velvi-brown">
-                            {it.quantity} {it.unit}
+
+                        {/* Quantity Stepper & Unit Badge */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="flex items-center bg-white border border-velvi-gold/30 rounded-lg p-0.5 shadow-xs">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
+                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: Math.max(1, (Number(item.quantity) || 1) - step) } : item));
+                              }}
+                              className="w-5 h-5 rounded bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
+                              title="Decrease"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min="1"
+                              value={it.quantity}
+                              onChange={(e) => {
+                                const val = Math.max(1, Number(e.target.value) || 1);
+                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: val } : item));
+                              }}
+                              className="w-10 text-center font-bold text-velvi-brownDark text-xs bg-transparent focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
+                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: (Number(item.quantity) || 1) + step } : item));
+                              }}
+                              className="w-5 h-5 rounded bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
+                              title="Increase"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          <span className="bg-amber-50 text-velvi-brownDark border border-velvi-gold/30 px-1.5 py-1 rounded-lg text-[10px] font-bold">
+                            {getUnitBadgeLabel(it.unit)}
                           </span>
+
                           <button
                             type="button"
                             onClick={() => handleRemoveItemFromForm(it.id)}
-                            className="p-1 text-red-500 hover:text-red-700 rounded transition"
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
                             title="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -616,54 +680,154 @@ export default function PoojasCataloguePage() {
                   )}
                 </div>
 
-                {/* Quick Add Item Row */}
-                <div className="bg-white p-2.5 rounded-xl border border-velvi-gold/30 space-y-2">
-                  <div className="text-[11px] font-bold text-velvi-brownDark">
-                    + Add Item to Template
+                {/* Add New Item Card */}
+                <div className="bg-white p-3 rounded-2xl border border-velvi-gold/30 shadow-xs space-y-2.5">
+                  <div className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1">
+                    <Plus className="w-3.5 h-3.5 text-velvi-gold" />
+                    <span>புதிய பொருள் சேர்க்க / Add New Item</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-1.5">
+
+                  <div className="grid grid-cols-2 gap-2">
                     <input
                       type="text"
-                      placeholder="Item name (English) *"
-                      value={newItemEnglish}
-                      onChange={(e) => setNewItemEnglish(e.target.value)}
-                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-lg px-2 py-1.5 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Tamil name (Optional)"
+                      placeholder="பொருள் பெயர் (தமிழ்) *"
                       value={newItemTamil}
                       onChange={(e) => setNewItemTamil(e.target.value)}
-                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-lg px-2 py-1.5 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Item Name (English)"
+                      value={newItemEnglish}
+                      onChange={(e) => setNewItemEnglish(e.target.value)}
+                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                     />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      min={1}
-                      placeholder="Qty"
-                      value={newItemQty}
-                      onChange={(e) => setNewItemQty(Number(e.target.value))}
-                      className="w-20 bg-velvi-cream/30 border border-velvi-gold/20 rounded-lg px-2 py-1.5 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
-                    />
-                    <select
-                      value={newItemUnit}
-                      onChange={(e) => setNewItemUnit(e.target.value as PoojaItemTemplate["unit"])}
-                      className="flex-1 bg-velvi-cream/30 border border-velvi-gold/20 rounded-lg px-2 py-1.5 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
-                    >
-                      {DEFAULT_UNITS.map((u) => (
-                        <option key={u} value={u}>
-                          {u}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={handleAddItemToForm}
-                      className="px-3 py-1.5 bg-velvi-gold/20 hover:bg-velvi-gold/30 text-velvi-brownDark font-bold text-xs rounded-lg transition shrink-0"
-                    >
-                      Add Item
-                    </button>
+
+                  <div className="flex items-center gap-2">
+                    <div className="w-24">
+                      <label className="text-[10px] font-bold text-velvi-brown block mb-0.5">அளவு (Qty)</label>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Qty"
+                        value={newItemQty}
+                        onChange={(e) => setNewItemQty(Number(e.target.value))}
+                        className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold text-center"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <label className="text-[10px] font-bold text-velvi-brown block mb-0.5">அலகு / Unit</label>
+                      <select
+                        value={newItemUnit}
+                        onChange={(e) => setNewItemUnit(e.target.value as PoojaItemTemplate["unit"])}
+                        className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold"
+                      >
+                        {SAMAGRI_UNITS.map((u) => (
+                          <option key={u.unit} value={u.unit}>
+                            {u.labelTa} ({u.code})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="pt-3.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const eng = newItemEnglish.trim() || newItemTamil.trim();
+                          const tam = newItemTamil.trim() || newItemEnglish.trim();
+                          if (!eng && !tam) return;
+                          const item: PoojaItemTemplate = {
+                            id: `item-${Date.now()}-${formItems.length + 1}`,
+                            poojaId: editingPoojaId || "",
+                            itemEnglishName: eng,
+                            itemTamilName: tam,
+                            quantity: Number(newItemQty) || 1,
+                            unit: newItemUnit,
+                            sortOrder: formItems.length + 1,
+                          };
+                          setFormItems([...formItems, item]);
+                          setNewItemEnglish("");
+                          setNewItemTamil("");
+                          setNewItemQty(1);
+                        }}
+                        className="px-3.5 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white font-bold text-xs rounded-xl transition shrink-0 shadow-sm active:scale-95 flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-amber-300" />
+                        <span>சேர்</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1-Click Unit Selection Pills */}
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[10px] font-bold text-velvi-brown/80">அலகுகள் (Quick Unit Pick):</span>
+                    <div className="flex flex-wrap gap-1">
+                      {SAMAGRI_UNITS.map((u) => {
+                        const isSelected = newItemUnit === u.unit;
+                        return (
+                          <button
+                            key={u.unit}
+                            type="button"
+                            onClick={() => {
+                              setNewItemUnit(u.unit);
+                              if (u.unit === "g" && newItemQty === 1) setNewItemQty(100);
+                              if (u.unit === "ml" && newItemQty === 1) setNewItemQty(500);
+                              if (u.unit === "kg" && newItemQty === 100) setNewItemQty(1);
+                            }}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition active:scale-95 border ${
+                              isSelected
+                                ? "bg-velvi-brown text-amber-200 border-velvi-brown shadow-xs"
+                                : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                            }`}
+                          >
+                            {u.labelTa} <span className="opacity-75">({u.code})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Quick Suggestions Chips */}
+                  <div className="space-y-1 pt-1 border-t border-velvi-gold/15">
+                    <span className="text-[10px] font-bold text-velvi-brown/80">உடனடி பரிந்துரைகள் (1-Click Suggestions):</span>
+                    <div className="flex flex-wrap gap-1">
+                      {QUICK_SAMAGRI_SUGGESTIONS.map((sug) => {
+                        const alreadyAdded = formItems.some(
+                          (it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en
+                        );
+                        return (
+                          <button
+                            key={sug.en}
+                            type="button"
+                            onClick={() => {
+                              if (alreadyAdded) return;
+                              const item: PoojaItemTemplate = {
+                                id: `item-${Date.now()}-${formItems.length + 1}`,
+                                poojaId: editingPoojaId || "",
+                                itemEnglishName: sug.en,
+                                itemTamilName: sug.ta,
+                                quantity: sug.qty,
+                                unit: sug.unit,
+                                sortOrder: formItems.length + 1,
+                              };
+                              setFormItems([...formItems, item]);
+                            }}
+                            disabled={alreadyAdded}
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 border ${
+                              alreadyAdded
+                                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                : "bg-amber-50 hover:bg-amber-100 text-velvi-brownDark border-amber-200 shadow-2xs active:scale-95"
+                            }`}
+                          >
+                            <span>+ {sug.ta}</span>
+                            <span className="text-[9px] text-velvi-maroon">({sug.qty}{sug.unit})</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

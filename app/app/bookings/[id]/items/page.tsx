@@ -192,14 +192,14 @@ export default function BookingItemsPage() {
             {items.map((item, idx) => (
               <div
                 key={item.id}
-                className="p-3 flex items-center justify-between hover:bg-velvi-cream/30 transition group"
+                className="p-3 flex items-center justify-between hover:bg-velvi-cream/30 transition group gap-2"
               >
                 <div
                   onClick={() => toggleCheck(item.id)}
-                  className="flex items-center gap-3 cursor-pointer flex-1"
+                  className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
                 >
                   <div
-                    className={`w-5 h-5 rounded-md flex items-center justify-center border transition ${
+                    className={`w-5 h-5 rounded-md flex items-center justify-center border shrink-0 transition ${
                       item.isChecked
                         ? "bg-velvi-sacredGreen border-velvi-sacredGreen text-white"
                         : "border-velvi-gold/40 bg-velvi-cream/20"
@@ -208,26 +208,65 @@ export default function BookingItemsPage() {
                     {item.isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <div
-                      className={`text-xs font-semibold ${
+                      className={`text-xs font-semibold truncate ${
                         item.isChecked
                           ? "line-through text-velvi-brown/40"
                           : "text-velvi-brownDark"
                       }`}
                     >
-                      {idx + 1}. {item.itemEnglishName || item.itemTamilName}
+                      {idx + 1}. {item.itemTamilName || item.itemEnglishName}
+                      {item.itemTamilName && item.itemEnglishName && item.itemTamilName !== item.itemEnglishName && (
+                        <span className="text-[10px] text-gray-500 font-normal ml-1">({item.itemEnglishName})</span>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-velvi-brown bg-velvi-cream px-2 py-0.5 rounded-lg border border-velvi-gold/20">
-                    {item.quantity} {item.unit}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center bg-velvi-cream/40 border border-velvi-gold/30 rounded-lg p-0.5 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const step = item.unit === "g" || item.unit === "ml" ? 50 : 1;
+                        const updated = items.map((it) =>
+                          it.id === item.id ? { ...it, quantity: Math.max(1, (Number(it.quantity) || 1) - step) } : it
+                        );
+                        setItems(updated);
+                        booking.items = updated;
+                      }}
+                      className="w-5 h-5 rounded bg-white hover:bg-velvi-cream text-velvi-brown font-bold flex items-center justify-center text-[11px] active:scale-95"
+                    >
+                      -
+                    </button>
+                    <span className="font-bold text-velvi-brownDark text-xs px-1.5 min-w-[24px] text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const step = item.unit === "g" || item.unit === "ml" ? 50 : 1;
+                        const updated = items.map((it) =>
+                          it.id === item.id ? { ...it, quantity: (Number(it.quantity) || 1) + step } : it
+                        );
+                        setItems(updated);
+                        booking.items = updated;
+                      }}
+                      className="w-5 h-5 rounded bg-white hover:bg-velvi-cream text-velvi-brown font-bold flex items-center justify-center text-[11px] active:scale-95"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <span className="text-[11px] font-bold text-velvi-brown bg-amber-50 px-2 py-1 rounded-lg border border-velvi-gold/30">
+                    {item.unit}
                   </span>
+
                   <button
                     onClick={() => handleDeleteItem(item.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-50 rounded transition"
+                    className="p-1 text-red-500 hover:bg-red-50 rounded transition"
+                    title="Delete item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -240,64 +279,99 @@ export default function BookingItemsPage() {
           {showAddForm ? (
             <form
               onSubmit={handleAddItem}
-              className="bg-white p-3 rounded-2xl border border-velvi-gold/40 shadow-sm space-y-2 animate-in fade-in"
+              className="bg-white p-3.5 rounded-2xl border border-velvi-gold/40 shadow-sm space-y-2.5 animate-in fade-in"
             >
-              <h5 className="font-bold text-xs text-velvi-brown">Add Custom Item</h5>
-              <div className="grid grid-cols-3 gap-2">
+              <h5 className="font-bold text-xs text-velvi-brownDark flex items-center gap-1">
+                <Plus className="w-3.5 h-3.5 text-velvi-gold" />
+                <span>புதிய பொருள் சேர்க்க / Add Custom Item</span>
+              </h5>
+              <div className="grid grid-cols-2 gap-2">
                 <input
                   type="text"
-                  placeholder="Item Name (e.g. Tulasi Leaves, Camphor)"
+                  placeholder="Item Name (e.g. குங்குமம், சந்தனம்)"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  className="col-span-3 bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-1.5 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  className="col-span-2 bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                   required
                 />
                 <input
                   type="number"
+                  min={1}
                   placeholder="Qty"
                   value={newItemQty}
                   onChange={(e) => setNewItemQty(Number(e.target.value))}
-                  className="bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-1.5 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  className="bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold text-center"
                   required
                 />
                 <select
                   value={newItemUnit}
                   onChange={(e) => setNewItemUnit(e.target.value)}
-                  className="col-span-2 bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-1.5 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  className="bg-velvi-cream/40 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
                 >
-                  <option value="nos">nos (pieces)</option>
-                  <option value="kg">kg (kilogram)</option>
-                  <option value="g">g (grams)</option>
-                  <option value="litre">litre</option>
-                  <option value="ml">ml</option>
-                  <option value="bundle">bundle</option>
-                  <option value="set">set</option>
-                  <option value="dozen">dozen</option>
+                  <option value="g">கிராம் (g)</option>
+                  <option value="kg">கிலோ (kg)</option>
+                  <option value="nos">எண்ணிக்கை (nos)</option>
+                  <option value="packet">பாக்கெட் (pkt)</option>
+                  <option value="litre">லிட்டர் (L)</option>
+                  <option value="ml">மி.லி (ml)</option>
+                  <option value="bundle">கட்டு (bundle)</option>
+                  <option value="set">செட் (set)</option>
+                  <option value="dozen">டஜன் (dozen)</option>
                 </select>
               </div>
+
+              {/* Quick Unit Pills */}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {[
+                  { u: "g", label: "கிராம் (g)", defQty: 100 },
+                  { u: "kg", label: "கிலோ (kg)", defQty: 1 },
+                  { u: "nos", label: "nos", defQty: 5 },
+                  { u: "packet", label: "பாக்கெட்", defQty: 2 },
+                  { u: "litre", label: "லிட்டர்", defQty: 1 },
+                  { u: "ml", label: "மி.லி (ml)", defQty: 500 },
+                  { u: "bundle", label: "கட்டு", defQty: 2 },
+                ].map((pill) => (
+                  <button
+                    key={pill.u}
+                    type="button"
+                    onClick={() => {
+                      setNewItemUnit(pill.u);
+                      setNewItemQty(pill.defQty);
+                    }}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition ${
+                      newItemUnit === pill.u
+                        ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                        : "bg-velvi-cream/50 text-velvi-brownDark border-velvi-gold/20"
+                    }`}
+                  >
+                    {pill.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => setShowAddForm(false)}
-                  className="flex-1 py-1.5 bg-velvi-cream text-velvi-brown rounded-xl text-xs font-semibold"
+                  className="flex-1 py-2 bg-velvi-cream text-velvi-brown rounded-xl text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-1.5 bg-velvi-brown text-white rounded-xl text-xs font-semibold"
+                  className="flex-1 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-semibold shadow-sm"
                 >
-                  Add Item
+                  Add to Checklist
                 </button>
               </div>
             </form>
           ) : (
             <button
               onClick={() => setShowAddForm(true)}
-              className="w-full py-2 bg-white hover:bg-velvi-cream border border-dashed border-velvi-gold/50 rounded-xl text-xs font-bold text-velvi-brown flex items-center justify-center gap-1 transition"
+              className="w-full py-2.5 bg-white hover:bg-velvi-cream border border-dashed border-velvi-gold/50 rounded-2xl text-xs font-bold text-velvi-brown flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
             >
               <Plus className="w-4 h-4 text-velvi-gold" />
-              <span>Add Custom Item</span>
+              <span>+ பொருள் சேர்க்க / Add Custom Item</span>
             </button>
           )}
 

@@ -39,9 +39,9 @@ export default function BookingsListPage() {
   const [viewMode, setViewMode] = useState<"timeline" | "list">("timeline");
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
-  const allBookings = db.getBookings(businessId);
-  const members = db.getMembers(businessId);
-  const ownerMember = members.find((m) => m.role === "OWNER") || members[0];
+  const allBookings = useMemo(() => db.getBookings(businessId), [businessId]);
+  const members = useMemo(() => db.getMembers(businessId), [businessId]);
+  const ownerMember = useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
 
   const filteredBookings = useMemo(() => {
     return allBookings.filter((b) => {

@@ -76,19 +76,25 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = React.useCallback((lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem("velvi_lang", lang);
-  };
+  }, []);
 
-  const t = (key: string): string => {
+  const t = React.useCallback((key: string): string => {
     const entry = DICTIONARY[key];
     if (!entry) return key;
     return entry[language] || entry.en;
-  };
+  }, [language]);
+
+  const value = React.useMemo(() => ({
+    language,
+    setLanguage,
+    t
+  }), [language, setLanguage, t]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

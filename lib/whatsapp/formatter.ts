@@ -1,6 +1,22 @@
 import { Booking, Business } from "@/lib/types";
 import { getTamilDate } from "@/lib/calendar/tamil";
 
+export function formatUnitTamil(unit: string): string {
+  const map: Record<string, string> = {
+    g: "கிராம்",
+    kg: "கிலோ",
+    nos: "எண்ணிக்கை",
+    pcs: "எண்ணிக்கை",
+    packet: "பாக்கெட்",
+    litre: "லிட்டர்",
+    ml: "மி.லி",
+    bundle: "கட்டு",
+    set: "செட்",
+    dozen: "டஜன்",
+  };
+  return map[unit.toLowerCase()] || unit;
+}
+
 /**
  * Format a WhatsApp message for Pooja Required Items list
  */
@@ -11,10 +27,11 @@ export function formatPoojaItemsWhatsAppMessage(
   const tamilInfo = getTamilDate(booking.date);
 
   const itemsList = booking.items
-    .map(
-      (item, idx) =>
-        `${idx + 1}. ${item.itemEnglishName || item.itemTamilName} - ${item.quantity} ${item.unit}`
-    )
+    .map((item, idx) => {
+      const name = item.itemTamilName || item.itemEnglishName;
+      const unit = formatUnitTamil(item.unit);
+      return `${idx + 1}. ${name} - ${item.quantity} ${unit}`;
+    })
     .join("\n");
 
   return `🙏 *${booking.poojaEnglishName}*

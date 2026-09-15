@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Settings, ChevronLeft, Sparkles } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
-export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl?: string }> = ({
+export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl?: string }> = React.memo(({
   title,
   subtitle,
   backUrl,
@@ -106,5 +106,8 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
       </div>
     </header>
   );
-};
+});
+
+MobileHeader.displayName = "MobileHeader";
+
 

@@ -27,7 +27,7 @@ export default function EditBookingPage() {
   const bookingId = params.id as string;
   const booking = db.bookings.find((b) => b.id === bookingId) || db.bookings[0];
 
-  const poojas = db.getPoojas(businessId);
+  const [poojas, setPoojas] = useState(db.getPoojas(businessId));
   const members = db.getMembers(businessId);
   const ownerMember = members.find((m) => m.role === "OWNER") || members[0];
 

@@ -19,6 +19,8 @@ import {
   CheckCircle2,
   X,
   Sparkles,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
@@ -33,7 +35,7 @@ function NewBookingForm() {
   const { currentBusiness, currentUser } = useAuth();
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
-  const poojas = db.getPoojas(businessId);
+  const [poojas, setPoojas] = useState(db.getPoojas(businessId));
   const [customers, setCustomers] = useState<Customer[]>(db.getCustomers(businessId));
   const members = db.getMembers(businessId);
 
@@ -52,6 +54,19 @@ function NewBookingForm() {
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
 
+  // Instant Pooja Add/Edit/Delete States
+  const [showPoojaModal, setShowPoojaModal] = useState<boolean>(false);
+  const [isEditingPooja, setIsEditingPooja] = useState<boolean>(false);
+  const [poojaFormId, setPoojaFormId] = useState<string>("");
+  const [poojaFormEnglish, setPoojaFormEnglish] = useState<string>("");
+  const [poojaFormTamil, setPoojaFormTamil] = useState<string>("");
+  const [poojaFormPrice, setPoojaFormPrice] = useState<number>(5000);
+  const [poojaFormDuration, setPoojaFormDuration] = useState<number>(120);
+  const [poojaFormDesc, setPoojaFormDesc] = useState<string>("");
+  const [poojaModalError, setPoojaModalError] = useState<string>("");
+  const [poojaSuccessMessage, setPoojaSuccessMessage] = useState<string>("");
+  const [poojaToDelete, setPoojaToDelete] = useState<typeof poojas[0] | null>(null);
+
   // Quick Add Customer Modal State
   const [showAddCustomerModal, setShowAddCustomerModal] = useState<boolean>(false);
   const [newCustName, setNewCustName] = useState<string>("");
@@ -61,6 +76,92 @@ function NewBookingForm() {
   const [newCustNotes, setNewCustNotes] = useState<string>("");
   const [custModalError, setCustModalError] = useState<string>("");
   const [customerAddedSuccess, setCustomerAddedSuccess] = useState<string>("");
+
+  const handleOpenAddPooja = () => {
+    setIsEditingPooja(false);
+    setPoojaFormId("");
+    setPoojaFormEnglish("");
+    setPoojaFormTamil("");
+    setPoojaFormPrice(5000);
+    setPoojaFormDuration(120);
+    setPoojaFormDesc("");
+    setPoojaModalError("");
+    setShowPoojaModal(true);
+  };
+
+  const handleOpenEditPooja = (p: typeof poojas[0]) => {
+    setIsEditingPooja(true);
+    setPoojaFormId(p.id);
+    setPoojaFormEnglish(p.englishName);
+    setPoojaFormTamil(p.tamilName || "");
+    setPoojaFormPrice(p.basePrice || 0);
+    setPoojaFormDuration(p.durationMinutes || 120);
+    setPoojaFormDesc(p.description || "");
+    setPoojaModalError("");
+    setShowPoojaModal(true);
+  };
+
+  const handleSavePooja = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPoojaModalError("");
+
+    if (!poojaFormEnglish.trim()) {
+      setPoojaModalError("Pooja English Name is required.");
+      return;
+    }
+
+    if (isEditingPooja && poojaFormId) {
+      db.updatePooja(poojaFormId, {
+        englishName: poojaFormEnglish.trim(),
+        tamilName: poojaFormTamil.trim() || poojaFormEnglish.trim(),
+        basePrice: Number(poojaFormPrice) || 0,
+        durationMinutes: Number(poojaFormDuration) || 120,
+        description: poojaFormDesc.trim(),
+      });
+      const updatedList = db.getPoojas(businessId);
+      setPoojas(updatedList);
+      setAmount(Number(poojaFormPrice) || 0);
+      setShowPoojaModal(false);
+      setPoojaSuccessMessage(`Updated "${poojaFormEnglish.trim()}"!`);
+    } else {
+      const created = db.createPooja({
+        businessId,
+        englishName: poojaFormEnglish.trim(),
+        tamilName: poojaFormTamil.trim() || poojaFormEnglish.trim(),
+        basePrice: Number(poojaFormPrice) || 0,
+        durationMinutes: Number(poojaFormDuration) || 120,
+        description: poojaFormDesc.trim(),
+      });
+      const updatedList = db.getPoojas(businessId);
+      setPoojas(updatedList);
+      setPoojaId(created.id);
+      setAmount(created.basePrice);
+      setShowPoojaModal(false);
+      setPoojaSuccessMessage(`Added & selected "${created.englishName}"!`);
+    }
+
+    setTimeout(() => setPoojaSuccessMessage(""), 4000);
+  };
+
+  const handleConfirmDeletePooja = () => {
+    if (!poojaToDelete) return;
+    db.deletePooja(poojaToDelete.id);
+    const updatedList = db.getPoojas(businessId);
+    setPoojas(updatedList);
+    if (poojaId === poojaToDelete.id) {
+      const nextPooja = updatedList[0];
+      if (nextPooja) {
+        setPoojaId(nextPooja.id);
+        setAmount(nextPooja.basePrice);
+      } else {
+        setPoojaId("");
+        setAmount(0);
+      }
+    }
+    setPoojaSuccessMessage(`Deleted "${poojaToDelete.englishName}"!`);
+    setPoojaToDelete(null);
+    setTimeout(() => setPoojaSuccessMessage(""), 4000);
+  };
 
   const handleQuickAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,6 +200,10 @@ function NewBookingForm() {
   };
 
   const handlePoojaChange = (newPoojaId: string) => {
+    if (newPoojaId === "__NEW_POOJA__") {
+      handleOpenAddPooja();
+      return;
+    }
     setPoojaId(newPoojaId);
     const selectedPooja = poojas.find((p) => p.id === newPoojaId);
     if (selectedPooja) {
@@ -263,10 +368,20 @@ function NewBookingForm() {
         </div>
 
         {/* Pooja Selector */}
-        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
-          <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-            <Flame className="w-3.5 h-3.5 text-velvi-gold" /> Pooja / Homam
-          </label>
+        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-velvi-gold" /> Pooja / Homam (பூஜை / ஹோமம்)
+            </label>
+            <button
+              type="button"
+              onClick={handleOpenAddPooja}
+              className="text-[11px] font-bold text-velvi-maroon hover:text-velvi-gold flex items-center gap-1 bg-velvi-cream/70 hover:bg-velvi-cream px-2 py-0.5 rounded-lg border border-velvi-gold/20 transition active:scale-95"
+            >
+              <Plus className="w-3 h-3" /> புதிய பூஜை சேர்
+            </button>
+          </div>
+
           <select
             value={poojaId}
             onChange={(e) => handlePoojaChange(e.target.value)}
@@ -274,10 +389,68 @@ function NewBookingForm() {
           >
             {poojas.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.englishName} — ₹{p.basePrice}
+                {p.englishName} {p.tamilName && p.tamilName !== p.englishName ? `(${p.tamilName})` : ""} — ₹{p.basePrice?.toLocaleString()}
               </option>
             ))}
+            <option value="__NEW_POOJA__">+ Add New Pooja / புதிய பூஜை சேர்...</option>
           </select>
+
+          {/* Active Selected Pooja Details & Instant Actions */}
+          {(() => {
+            const activePooja = poojas.find((p) => p.id === poojaId);
+            if (!activePooja) return null;
+            return (
+              <div className="bg-gradient-to-r from-velvi-cream/60 via-amber-50/40 to-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/30 flex items-center justify-between gap-2 text-xs">
+                <div className="min-w-0">
+                  <div className="font-bold text-velvi-brownDark truncate flex items-center gap-1.5">
+                    <span>{activePooja.englishName}</span>
+                    {activePooja.tamilName && activePooja.tamilName !== activePooja.englishName && (
+                      <span className="text-[11px] font-medium text-velvi-maroon truncate">({activePooja.tamilName})</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-velvi-brown mt-0.5">
+                    <span className="font-bold text-velvi-maroon">₹{activePooja.basePrice?.toLocaleString()}</span>
+                    <span>•</span>
+                    <span className="text-gray-500">⏳ {activePooja.durationMinutes || 120} mins</span>
+                    {activePooja.description && (
+                      <>
+                        <span>•</span>
+                        <span className="text-gray-500 truncate max-w-[120px]">{activePooja.description}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditPooja(activePooja)}
+                    className="p-1.5 bg-white hover:bg-velvi-cream border border-velvi-gold/30 rounded-lg text-velvi-brown hover:text-velvi-maroon font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95"
+                    title="Edit this Pooja"
+                  >
+                    <Edit2 className="w-3 h-3 text-velvi-gold" />
+                    <span>மாற்று</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPoojaToDelete(activePooja)}
+                    className="p-1.5 bg-white hover:bg-red-50 border border-red-200 rounded-lg text-red-600 font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95"
+                    title="Delete this Pooja"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>நீக்கு</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {poojaSuccessMessage && (
+            <div className="text-[11px] font-bold text-velvi-sacredGreen flex items-center gap-1 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200 animate-in fade-in">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>{poojaSuccessMessage}</span>
+            </div>
+          )}
         </div>
 
         {/* Date & Time */}
@@ -612,6 +785,159 @@ function NewBookingForm() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Add / Edit Pooja Modal */}
+      {showPoojaModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 w-full max-w-sm border border-velvi-gold/30 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-velvi-gold/10 pb-3">
+              <div className="flex items-center gap-2">
+                <Flame className="w-5 h-5 text-velvi-gold" />
+                <h3 className="font-bold text-sm text-velvi-brownDark">
+                  {isEditingPooja ? "பூஜை விவரங்களை மாற்று / Edit Pooja" : "புதிய பூஜை சேர் / Add New Pooja"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPoojaModal(false)}
+                className="p-1 text-gray-400 hover:text-velvi-brown rounded-full hover:bg-velvi-cream transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {poojaModalError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+                <span>{poojaModalError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePooja} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-velvi-brown block mb-1">
+                  Pooja Name (English) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ganapathi Homam / Sudarshana Homam"
+                  value={poojaFormEnglish}
+                  onChange={(e) => setPoojaFormEnglish(e.target.value)}
+                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-velvi-brown block mb-1">
+                  பூஜை பெயர் (தமிழ்)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. கணபதி ஹோமம்"
+                  value={poojaFormTamil}
+                  onChange={(e) => setPoojaFormTamil(e.target.value)}
+                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-bold text-velvi-brown block mb-1">Base Price (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="500"
+                    value={poojaFormPrice}
+                    onChange={(e) => setPoojaFormPrice(Number(e.target.value))}
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-velvi-brown block mb-1">Duration (Mins)</label>
+                  <input
+                    type="number"
+                    min="15"
+                    step="15"
+                    value={poojaFormDuration}
+                    onChange={(e) => setPoojaFormDuration(Number(e.target.value))}
+                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-velvi-brown block mb-1">
+                  Description / குறிப்புகள் (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Includes pooja samagri & sankalpam"
+                  value={poojaFormDesc}
+                  onChange={(e) => setPoojaFormDesc(e.target.value)}
+                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold resize-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPoojaModal(false)}
+                  className="flex-1 py-2.5 bg-velvi-cream hover:bg-velvi-creamDark/30 text-velvi-brown rounded-xl text-xs font-bold transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition shadow-md"
+                >
+                  {isEditingPooja ? "சேமி / Save" : "சேர் & தேர்ந்தெடு / Add & Select"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Pooja Confirmation Modal */}
+      {poojaToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 w-full max-w-sm border border-red-200 shadow-2xl space-y-4">
+            <div className="flex items-center gap-2.5 text-red-600">
+              <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-velvi-brownDark">பூஜையை நீக்கவா?</h3>
+                <p className="text-[11px] text-gray-500">Delete Pooja from catalogue?</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-velvi-brownDark bg-red-50/70 p-3 rounded-xl border border-red-100 leading-relaxed">
+              <span className="font-bold text-red-700">{poojaToDelete.englishName}</span> {poojaToDelete.tamilName && `(${poojaToDelete.tamilName})`} பூஜையை நீக்க விரும்புகிறீர்களா? இது உங்கள் பூஜை பட்டியலிலிருந்து நீக்கப்படும்.
+            </p>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setPoojaToDelete(null)}
+                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-velvi-brown rounded-xl text-xs font-bold transition"
+              >
+                Cancel / வேண்டாம்
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeletePooja}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-md"
+              >
+                நீக்கு / Confirm Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

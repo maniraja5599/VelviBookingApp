@@ -37,14 +37,14 @@ export default function HomeDashboardPage() {
   const todayInfo = getTamilDate(todayLocalDateStr);
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
-  const bookings = db.getBookings(businessId);
-  const members = db.getMembers(businessId);
-  const ownerMember = members.find((m) => m.role === "OWNER") || members[0];
+  const bookings = useMemo(() => db.getBookings(businessId), [businessId]);
+  const members = useMemo(() => db.getMembers(businessId), [businessId]);
+  const ownerMember = useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
 
   // Compute overall metrics
-  const todayBookings = bookings.filter((b) => b.date === todayInfo.dateStr);
-  const pendingAmount = bookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
-  const upcomingCount = bookings.filter((b) => b.date >= todayInfo.dateStr).length;
+  const todayBookings = useMemo(() => bookings.filter((b) => b.date === todayInfo.dateStr), [bookings, todayInfo.dateStr]);
+  const pendingAmount = useMemo(() => bookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0), [bookings]);
+  const upcomingCount = useMemo(() => bookings.filter((b) => b.date >= todayInfo.dateStr).length, [bookings, todayInfo.dateStr]);
 
   // Cumulative lifetime earnings calculations across all bookings
   const cumulativeTotalBilled = useMemo(
