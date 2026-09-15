@@ -756,12 +756,12 @@ export class VelviDatabaseStore {
   public createCustomer(params: {
     businessId: string;
     name: string;
-    mobile: string;
+    mobile?: string;
     address?: string;
     city?: string;
     notes?: string;
   }): Customer {
-    const normalizedMobile = normalizeIndianMobile(params.mobile);
+    const normalizedMobile = params.mobile?.trim() ? normalizeIndianMobile(params.mobile) : "";
     const newCust: Customer = {
       id: `c-${Date.now()}`,
       businessId: params.businessId,

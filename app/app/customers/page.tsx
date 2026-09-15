@@ -5,7 +5,11 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
 import { Customer } from "@/lib/types";
-import { normalizeIndianMobile } from "@/lib/utils/phone";
+import {
+  normalizeIndianMobile,
+  cleanPastedIndianMobile,
+  inspectIndianMobile,
+} from "@/lib/utils/phone";
 import {
   Search,
   Plus,
@@ -17,6 +21,9 @@ import {
   User,
   X,
   IndianRupee,
+  Clipboard,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function CustomersPage() {
@@ -37,6 +44,32 @@ export default function CustomersPage() {
   const [notes, setNotes] = useState("");
   const [formError, setFormError] = useState("");
 
+  const mobileInspection = inspectIndianMobile(mobile);
+
+  const handleMobileChange = (val: string) => {
+    const cleaned = cleanPastedIndianMobile(val);
+    setMobile(cleaned);
+  };
+
+  const handleMobilePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text");
+    const cleaned = cleanPastedIndianMobile(pastedText);
+    setMobile(cleaned);
+  };
+
+  const handlePasteButtonClick = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const cleaned = cleanPastedIndianMobile(text);
+      if (cleaned) {
+        setMobile(cleaned);
+      }
+    } catch {
+      // Ignore if clipboard permissions not granted
+    }
+  };
+
   const filteredCustomers = customers.filter(
     (c) =>
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,17 +81,25 @@ export default function CustomersPage() {
     e.preventDefault();
     setFormError("");
 
-    if (!name.trim() || !mobile.trim()) {
-      setFormError("Name and Mobile number are required.");
+    if (!name.trim()) {
+      setFormError("வாடிக்கையாளர் பெயர் அவசியம் / Customer Name is required.");
       return;
     }
 
-    const normalizedMobile = normalizeIndianMobile(mobile);
+    let normalizedMobile = "";
+    if (mobile.trim()) {
+      const cleanDigits = mobile.replace(/\D/g, "");
+      if (cleanDigits.length !== 10) {
+        setFormError("சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும் அல்லது காலியாக விடவும்.");
+        return;
+      }
+      normalizedMobile = normalizeIndianMobile(cleanDigits);
 
-    // Duplicate check within business
-    if (customers.some((c) => normalizeIndianMobile(c.mobile) === normalizedMobile)) {
-      setFormError("A customer with this phone number already exists.");
-      return;
+      // Duplicate check within business
+      if (customers.some((c) => c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile)) {
+        setFormError("இந்த மொபைல் எண்ணுடன் ஏற்கனவே ஒரு வாடிக்கையாளர் உள்ளார்.");
+        return;
+      }
     }
 
     const newCust: Customer = {
@@ -218,17 +259,54 @@ export default function CustomersPage() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+91 98765 43210"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-velvi-brown flex items-center gap-1">
+                    <span>அலைபேசி எண் / Mobile</span>
+                    <span className="text-[10px] text-gray-500 font-normal">(விருப்பத்தேர்வு / Optional)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePasteButtonClick}
+                    className="text-[10px] font-bold text-velvi-maroon hover:text-velvi-gold flex items-center gap-1 bg-velvi-cream/70 hover:bg-velvi-cream px-2 py-0.5 rounded-md border border-velvi-gold/20 transition active:scale-95"
+                    title="Paste from clipboard"
+                  >
+                    <Clipboard className="w-3 h-3 text-velvi-gold" />
+                    <span>ஒட்டு (Paste)</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="bg-velvi-cream/70 border border-velvi-gold/30 rounded-xl px-2 py-2 text-xs font-bold text-velvi-brownDark flex items-center gap-1 shrink-0 shadow-2xs">
+                    <span>🇮🇳</span>
+                    <span className="text-[11px]">+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="98765 43210 (Optional)"
+                    value={mobile}
+                    onChange={(e) => handleMobileChange(e.target.value)}
+                    onPaste={handleMobilePaste}
+                    maxLength={10}
+                    className="flex-1 min-w-0 bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  />
+                </div>
+
+                {/* Live validation indicator */}
+                {mobile.trim() ? (
+                  <div
+                    className={`text-[10px] font-bold mt-1 flex items-center gap-1 ${
+                      mobileInspection.status === "VALID"
+                        ? "text-emerald-700"
+                        : "text-amber-700"
+                    }`}
+                  >
+                    <span>{mobileInspection.messageTa}</span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    எண் இல்லாவிட்டாலும் வாடிக்கையாளரைச் சேர்க்கலாம்.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

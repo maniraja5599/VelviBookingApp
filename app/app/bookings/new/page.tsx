@@ -5,7 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { Booking, BookingItem, Customer } from "@/lib/types";
-import { normalizeIndianMobile } from "@/lib/utils/phone";
+import {
+  normalizeIndianMobile,
+  cleanPastedIndianMobile,
+  inspectIndianMobile,
+} from "@/lib/utils/phone";
 import {
   ArrowLeft,
   User,
@@ -21,6 +25,7 @@ import {
   Sparkles,
   Edit2,
   Trash2,
+  Clipboard,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
@@ -239,19 +244,54 @@ function NewBookingForm() {
     setTimeout(() => setPoojaSuccessMessage(""), 4000);
   };
 
+  const newCustMobileInspection = inspectIndianMobile(newCustMobile);
+
+  const handleNewCustMobileChange = (val: string) => {
+    const cleaned = cleanPastedIndianMobile(val);
+    setNewCustMobile(cleaned);
+  };
+
+  const handleNewCustMobilePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text");
+    const cleaned = cleanPastedIndianMobile(pasted);
+    setNewCustMobile(cleaned);
+  };
+
+  const handlePasteCustMobileClick = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const cleaned = cleanPastedIndianMobile(text);
+      if (cleaned) {
+        setNewCustMobile(cleaned);
+      }
+    } catch {
+      // Ignore
+    }
+  };
+
   const handleQuickAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
     setCustModalError("");
 
-    if (!newCustName.trim() || !newCustMobile.trim()) {
-      setCustModalError("Name and Mobile number are required.");
+    if (!newCustName.trim()) {
+      setCustModalError("வாடிக்கையாளர் பெயர் அவசியம் / Customer Name is required.");
       return;
     }
 
-    const normalizedMobile = normalizeIndianMobile(newCustMobile);
-    if (customers.some((c) => normalizeIndianMobile(c.mobile) === normalizedMobile)) {
-      setCustModalError("A customer with this phone number already exists.");
-      return;
+    let normalizedMobile = "";
+    if (newCustMobile.trim()) {
+      const cleanDigits = newCustMobile.replace(/\D/g, "");
+      if (cleanDigits.length !== 10) {
+        setCustModalError("சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும் அல்லது காலியாக விடவும்.");
+        return;
+      }
+      normalizedMobile = normalizeIndianMobile(cleanDigits);
+
+      if (customers.some((c) => c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile)) {
+        setCustModalError("இந்த மொபைல் எண்ணுடன் ஏற்கனவே ஒரு வாடிக்கையாளர் உள்ளார்.");
+        return;
+      }
     }
 
     const created = db.createCustomer({
@@ -796,17 +836,53 @@ function NewBookingForm() {
               </div>
 
               <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="+91 98765 43210"
-                  value={newCustMobile}
-                  onChange={(e) => setNewCustMobile(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-velvi-brown">
+                    மொபைல் எண் / Mobile <span className="text-[10px] font-normal text-gray-500">(விருப்பத்தேர்வு)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handlePasteCustMobileClick}
+                    className="text-[10px] font-bold text-velvi-maroon hover:text-velvi-gold flex items-center gap-1 bg-velvi-cream/70 hover:bg-velvi-cream px-2 py-0.5 rounded-md border border-velvi-gold/20 transition active:scale-95"
+                    title="Paste from clipboard"
+                  >
+                    <Clipboard className="w-3 h-3 text-velvi-gold" />
+                    <span>ஒட்டு (Paste)</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="bg-velvi-cream/70 border border-velvi-gold/30 rounded-xl px-2 py-2 text-xs font-bold text-velvi-brownDark flex items-center gap-1 shrink-0 shadow-2xs">
+                    <span>🇮🇳</span>
+                    <span className="text-[11px]">+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="98765 43210 (Optional)"
+                    value={newCustMobile}
+                    onChange={(e) => handleNewCustMobileChange(e.target.value)}
+                    onPaste={handleNewCustMobilePaste}
+                    maxLength={10}
+                    className="flex-1 min-w-0 bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  />
+                </div>
+
+                {/* Live validation indicator */}
+                {newCustMobile.trim() ? (
+                  <div
+                    className={`text-[10px] font-bold mt-1 flex items-center gap-1 ${
+                      newCustMobileInspection.status === "VALID"
+                        ? "text-emerald-700"
+                        : "text-amber-700"
+                    }`}
+                  >
+                    <span>{newCustMobileInspection.messageTa}</span>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-gray-400 mt-1">
+                    எண் இல்லாவிட்டாலும் வாடிக்கையாளரைச் சேர்க்கலாம்.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">

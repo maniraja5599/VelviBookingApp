@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { VelviDatabaseStore } from "../lib/db/store";
 import { getTamilDate } from "../lib/calendar/tamil";
-import { normalizeIndianMobile, maskEmail } from "../lib/utils/phone";
+import {
+  normalizeIndianMobile,
+  maskEmail,
+  cleanPastedIndianMobile,
+  inspectIndianMobile,
+} from "../lib/utils/phone";
 import { cashfree } from "../lib/payments/cashfree";
 
 describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () => {
@@ -895,5 +900,58 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const afterDelete = store.getPoojas(bizId);
     expect(afterDelete.length).toBe(initialCount);
     expect(afterDelete.some((p) => p.id === newPooja.id)).toBe(false);
+  });
+
+  // TEST CASE 33: Smart Paste & Country Code Sanitizer for Mobile Number
+  it("Test 33: cleanPastedIndianMobile strips +91, leading 0, spaces, dashes properly", () => {
+    expect(cleanPastedIndianMobile("+91 98765 43210")).toBe("9876543210");
+    expect(cleanPastedIndianMobile("919876543210")).toBe("9876543210");
+    expect(cleanPastedIndianMobile("+91-98765-43210")).toBe("9876543210");
+    expect(cleanPastedIndianMobile("09876543210")).toBe("9876543210");
+    expect(cleanPastedIndianMobile("+91 (987) 654-3210")).toBe("9876543210");
+    expect(cleanPastedIndianMobile("98765")).toBe("98765");
+    expect(cleanPastedIndianMobile("9876543210999")).toBe("9876543210");
+
+    // Inspect live feedback status
+    const emptyStatus = inspectIndianMobile("");
+    expect(emptyStatus.status).toBe("EMPTY");
+
+    const shortStatus = inspectIndianMobile("98765");
+    expect(shortStatus.status).toBe("TOO_SHORT");
+    expect(shortStatus.messageTa).toContain("5/10");
+
+    const invalidStart = inspectIndianMobile("1234567890");
+    expect(invalidStart.status).toBe("INVALID_START");
+
+    const validStatus = inspectIndianMobile("9876543210");
+    expect(validStatus.status).toBe("VALID");
+    expect(validStatus.messageTa).toContain("சரியான");
+  });
+
+  // TEST CASE 34: Customer Creation with Optional Mobile Number
+  it("Test 34: Customers can be created without a mobile number (Optional Mobile)", () => {
+    const bizId = "biz-venkateswara-01";
+    const customerWithoutMobile = store.createCustomer({
+      businessId: bizId,
+      name: "Sankaranarayanan (No Phone)",
+      city: "Tiruchengode",
+      address: "Sannathi Street",
+      notes: "Kashyapa Gothram",
+    });
+
+    expect(customerWithoutMobile.id).toBeDefined();
+    expect(customerWithoutMobile.name).toBe("Sankaranarayanan (No Phone)");
+    expect(customerWithoutMobile.mobile).toBe("");
+
+    const customers = store.getCustomers(bizId);
+    expect(customers.some((c) => c.id === customerWithoutMobile.id)).toBe(true);
+
+    // Another customer without phone should also be allowed without triggering duplicate phone error
+    const customer2 = store.createCustomer({
+      businessId: bizId,
+      name: "Meenakshi Ammal",
+    });
+    expect(customer2.id).toBeDefined();
+    expect(customer2.mobile).toBe("");
   });
 });
