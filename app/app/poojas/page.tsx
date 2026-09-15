@@ -39,19 +39,80 @@ const SAMAGRI_UNITS: Array<{
   { unit: "dozen", labelTa: "டஜன்", labelEn: "dozen", code: "dozen" },
 ];
 
-const QUICK_SAMAGRI_SUGGESTIONS = [
-  { en: "Turmeric Powder", ta: "மஞ்சள் தூள்", qty: 100, unit: "g" as const },
-  { en: "Kumkum", ta: "குங்குமம்", qty: 50, unit: "g" as const },
-  { en: "Coconuts", ta: "தேங்காய்", qty: 5, unit: "nos" as const },
-  { en: "Camphor", ta: "கற்பூரம்", qty: 2, unit: "packet" as const },
-  { en: "Pure Ghee", ta: "பசு நெய்", qty: 500, unit: "ml" as const },
-  { en: "Betel Leaves & Nut", ta: "வெற்றிலை பாக்கு", qty: 2, unit: "bundle" as const },
-  { en: "Raw Rice", ta: "பச்சரிசி", qty: 2, unit: "kg" as const },
-  { en: "Sandalwood Paste", ta: "சந்தனம்", qty: 50, unit: "g" as const },
-  { en: "Agarbatti", ta: "அகர்பத்தி", qty: 1, unit: "packet" as const },
-  { en: "Garlands & Flowers", ta: "பூக்கள் & மாலை", qty: 2, unit: "nos" as const },
-  { en: "Honey", ta: "தேன்", qty: 100, unit: "ml" as const },
-  { en: "Sesame Oil", ta: "நல்லெண்ணெய்", qty: 1, unit: "litre" as const },
+export interface SamagriCatalogItem {
+  id: string;
+  category: "essentials" | "ghee_oils" | "homam" | "powders" | "flowers" | "vastram";
+  ta: string;
+  en: string;
+  qty: number;
+  unit: PoojaItemTemplate["unit"];
+}
+
+const SAMAGRI_CATEGORIES = [
+  { id: "all", labelTa: "அனைத்தும்", labelEn: "All", icon: "✨" },
+  { id: "essentials", labelTa: "அடிப்படை & பழங்கள்", labelEn: "Basics & Fruits", icon: "🥥" },
+  { id: "ghee_oils", labelTa: "நெய் & எண்ணெய்கள்", labelEn: "Ghee & Oils", icon: "🪔" },
+  { id: "homam", labelTa: "சமித்து & ஹோம திரவியம்", labelEn: "Homam Samagri", icon: "🪵" },
+  { id: "powders", labelTa: "பொடிகள் & நறுமணம்", labelEn: "Powders & Fragrance", icon: "🌿" },
+  { id: "flowers", labelTa: "பூக்கள் & இலைகள்", labelEn: "Flowers & Leaves", icon: "🌺" },
+  { id: "vastram", labelTa: "வஸ்திரம் & செட்", labelEn: "Vastram & Sets", icon: "🪙" },
+] as const;
+
+const SAMAGRI_CATALOG: SamagriCatalogItem[] = [
+  // Powders & Fragrances
+  { id: "sc-turmeric", category: "powders", ta: "மஞ்சள் தூள்", en: "Turmeric Powder", qty: 100, unit: "g" },
+  { id: "sc-kumkum", category: "powders", ta: "குங்குமம்", en: "Kumkum", qty: 50, unit: "g" },
+  { id: "sc-sandal", category: "powders", ta: "சந்தனம்", en: "Sandalwood Paste", qty: 50, unit: "g" },
+  { id: "sc-vibhuti", category: "powders", ta: "திருநீறு (விபூதி)", en: "Vibhuti (Sacred Ash)", qty: 100, unit: "g" },
+  { id: "sc-camphor", category: "powders", ta: "கற்பூரம்", en: "Camphor", qty: 2, unit: "packet" },
+  { id: "sc-agarbatti", category: "powders", ta: "அகர்பத்தி", en: "Agarbatti (Incense)", qty: 1, unit: "packet" },
+  { id: "sc-javadhu", category: "powders", ta: "ஜவ்வாது", en: "Javadhu", qty: 1, unit: "packet" },
+  { id: "sc-paneer", category: "powders", ta: "பன்னீர்", en: "Rose Water (Paneer)", qty: 100, unit: "ml" },
+  { id: "sc-elaichi", category: "powders", ta: "ஏலக்காய், லவங்கம், ஜாதிக்காய்", en: "Cardamom, Clove & Nutmeg", qty: 50, unit: "g" },
+  { id: "sc-honey", category: "powders", ta: "தேன்", en: "Pure Honey", qty: 100, unit: "ml" },
+
+  // Ghee & Oils
+  { id: "sc-ghee", category: "ghee_oils", ta: "தூய பசு நெய்", en: "Pure Cow Ghee", qty: 500, unit: "ml" },
+  { id: "sc-sesame", category: "ghee_oils", ta: "நல்லெண்ணெய்", en: "Sesame Oil", qty: 1, unit: "litre" },
+  { id: "sc-deepam-oil", category: "ghee_oils", ta: "பஞ்ச தீப எண்ணெய்", en: "Pancha Deepa Oil", qty: 500, unit: "ml" },
+  { id: "sc-milk", category: "ghee_oils", ta: "பசும்பால்", en: "Fresh Cow Milk", qty: 1, unit: "litre" },
+  { id: "sc-curd", category: "ghee_oils", ta: "தயிர்", en: "Fresh Curd", qty: 500, unit: "ml" },
+
+  // Basics & Fruits
+  { id: "sc-coconut", category: "essentials", ta: "தேங்காய்", en: "Coconuts", qty: 5, unit: "nos" },
+  { id: "sc-betel", category: "essentials", ta: "வெற்றிலை பாக்கு", en: "Betel Leaves & Nut", qty: 2, unit: "bundle" },
+  { id: "sc-banana", category: "essentials", ta: "வாழைப்பழம்", en: "Banana Fruits", qty: 1, unit: "dozen" },
+  { id: "sc-lemon", category: "essentials", ta: "எலுமிச்சம்பழம்", en: "Lemons", qty: 5, unit: "nos" },
+  { id: "sc-raw-rice", category: "essentials", ta: "பச்சரிசி", en: "Raw Rice", qty: 2, unit: "kg" },
+  { id: "sc-jaggery", category: "essentials", ta: "வெல்லம்", en: "Jaggery (Vellam)", qty: 500, unit: "g" },
+  { id: "sc-sugar", category: "essentials", ta: "சர்க்கரை", en: "Sugar", qty: 500, unit: "g" },
+  { id: "sc-pori", category: "essentials", ta: "நெல்பொரி (அவல்/பொரி)", en: "Puffed Rice / Pori", qty: 200, unit: "g" },
+  { id: "sc-tender-coconut", category: "essentials", ta: "இளநீர்", en: "Tender Coconut", qty: 3, unit: "nos" },
+  { id: "sc-nuts", category: "essentials", ta: "முந்திரி & உலர்ந்த திராட்சை", en: "Cashews & Raisins", qty: 100, unit: "g" },
+
+  // Homam Samagri
+  { id: "sc-samithu", category: "homam", ta: "சமித்து கட்டை", en: "Homam Wood (Samithu)", qty: 2, unit: "bundle" },
+  { id: "sc-navadhanyam", category: "homam", ta: "நவதானியம் (9 தானியங்கள்)", en: "Navadhanyam 9 Grains", qty: 1, unit: "set" },
+  { id: "sc-ven-kadugu", category: "homam", ta: "வெண் கடுகு", en: "White Mustard Seeds", qty: 100, unit: "g" },
+  { id: "sc-homa-dravyam", category: "homam", ta: "ஹோம திரவிய பொடி", en: "Homa Dravyam Mixture", qty: 200, unit: "g" },
+  { id: "sc-kopparai", category: "homam", ta: "கொப்பரை தேங்காய்", en: "Dry Coconut (Kopparai)", qty: 2, unit: "nos" },
+  { id: "sc-dharba", category: "homam", ta: "தர்பை புல் & பவித்ரம்", en: "Dharba Grass & Pavithram", qty: 2, unit: "bundle" },
+  { id: "sc-navagraha-samithu", category: "homam", ta: "நவகிரக சமித்து செட்", en: "Navagraha Samithu Sticks", qty: 1, unit: "set" },
+
+  // Flowers & Leaves
+  { id: "sc-garland", category: "flowers", ta: "பூக்கள் & மாலை", en: "Garlands & Loose Flowers", qty: 2, unit: "nos" },
+  { id: "sc-lotus", category: "flowers", ta: "தாமரை மலர்கள்", en: "Lotus Flowers", qty: 8, unit: "nos" },
+  { id: "sc-thulasi", category: "flowers", ta: "துளசி தளம்", en: "Thulasi Holy Basil", qty: 2, unit: "bundle" },
+  { id: "sc-arugampul", category: "flowers", ta: "அருகம்புல்", en: "Arugampul Grass", qty: 2, unit: "bundle" },
+  { id: "sc-vilvam", category: "flowers", ta: "வில்வ இலை", en: "Vilvam Leaves", qty: 2, unit: "bundle" },
+  { id: "sc-mavilai", category: "flowers", ta: "மாவிலை", en: "Mango Leaves", qty: 2, unit: "bundle" },
+
+  // Vastram & Sets
+  { id: "sc-vastram", category: "vastram", ta: "வேஷ்டி & துண்டு செட்", en: "Dhothi & Angavastram", qty: 1, unit: "set" },
+  { id: "sc-navagraha-vastram", category: "vastram", ta: "நவகிரக 9 வண்ண வஸ்திரம்", en: "Navagraha 9 Colors Vastram", qty: 1, unit: "set" },
+  { id: "sc-coins-108", category: "vastram", ta: "108 நாணயங்கள் செட்", en: "108 Pooja Coins Set", qty: 1, unit: "set" },
+  { id: "sc-kalasa-thread", category: "vastram", ta: "கலச நூல் & வஸ்திரம்", en: "Kalasa Sacred Thread", qty: 1, unit: "nos" },
+  { id: "sc-modak", category: "vastram", ta: "மோதகம் / கொழுக்கட்டை", en: "Modak / Kozhukattai", qty: 21, unit: "nos" },
 ];
 
 const PRESET_POOJA_TEMPLATES = [
@@ -236,6 +297,10 @@ export default function PoojasCataloguePage() {
   const [newItemQty, setNewItemQty] = useState<number>(1);
   const [newItemUnit, setNewItemUnit] = useState<PoojaItemTemplate["unit"]>("nos");
 
+  // Fast Samagri Library Picker States
+  const [samagriSearchQuery, setSamagriSearchQuery] = useState("");
+  const [selectedSamagriCategory, setSelectedSamagriCategory] = useState<string>("all");
+
   // Delete modal state
   const [deletingPooja, setDeletingPooja] = useState<Pooja | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
@@ -291,6 +356,8 @@ export default function PoojasCataloguePage() {
     setNewItemTamil("");
     setNewItemQty(1);
     setNewItemUnit("nos");
+    setSamagriSearchQuery("");
+    setSelectedSamagriCategory("all");
     setShowFormModal(true);
   };
 
@@ -308,6 +375,8 @@ export default function PoojasCataloguePage() {
     setNewItemTamil("");
     setNewItemQty(1);
     setNewItemUnit("nos");
+    setSamagriSearchQuery("");
+    setSelectedSamagriCategory("all");
     setShowFormModal(true);
   };
 
@@ -578,15 +647,20 @@ export default function PoojasCataloguePage() {
               ) : (
                 <div className="bg-white rounded-xl border border-velvi-gold/20 divide-y divide-velvi-creamDark max-h-48 overflow-y-auto">
                   {selectedPooja.items?.map((it, idx) => (
-                    <div key={it.id} className="p-2.5 flex items-center justify-between text-xs">
-                      <span className="text-velvi-brownDark font-medium">
-                        {idx + 1}. {it.itemEnglishName}
-                        {it.itemTamilName && it.itemTamilName !== it.itemEnglishName && (
-                          <span className="text-velvi-brown/50 ml-1">({it.itemTamilName})</span>
+                    <div key={it.id} className="p-2.5 flex items-center justify-between text-xs gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-velvi-brownDark font-bold text-xs leading-tight flex items-center gap-1.5">
+                          <span className="text-velvi-maroon text-[11px] font-black">{idx + 1}.</span>
+                          <span>{it.itemTamilName || it.itemEnglishName}</span>
+                        </div>
+                        {it.itemEnglishName && it.itemEnglishName !== it.itemTamilName && (
+                          <div className="text-[10px] text-velvi-brown/65 font-medium pl-4 mt-0.5 truncate">
+                            {it.itemEnglishName}
+                          </div>
                         )}
-                      </span>
-                      <span className="font-bold text-velvi-brown bg-velvi-cream px-2 py-0.5 rounded text-[11px]">
-                        {it.quantity} {it.unit}
+                      </div>
+                      <span className="font-bold text-velvi-brown bg-velvi-cream px-2 py-0.5 rounded text-[11px] shrink-0 border border-velvi-gold/20">
+                        {it.quantity} {getUnitBadgeLabel(it.unit)}
                       </span>
                     </div>
                   ))}
@@ -811,47 +885,58 @@ export default function PoojasCataloguePage() {
               </div>
 
               {/* Items Checklist Template Manager (Pooja Samagri) */}
-              <div className="space-y-2.5 pt-2 border-t border-velvi-gold/15">
+              <div className="space-y-3 pt-2 border-t border-velvi-gold/20">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-velvi-brownDark flex items-center gap-1.5">
                     <ListChecks className="w-4 h-4 text-velvi-gold" />
-                    <span>பூஜா பொருட்கள் செக்லிஸ்ட் / Samagri Items ({formItems.length})</span>
+                    <span>பூஜா பொருட்கள் செக்லிஸ்ட் / Samagri Items</span>
                   </label>
-                  <span className="text-[11px] font-semibold text-velvi-brown/70 bg-velvi-cream px-2 py-0.5 rounded-md border border-velvi-gold/20">
-                    {formItems.length} பொருட்கள்
+                  <span className="text-[11px] font-bold text-velvi-maroon bg-velvi-cream/80 px-2.5 py-0.5 rounded-full border border-velvi-gold/30 shadow-2xs">
+                    {formItems.length} பொருட்கள் சேர்க்கப்பட்டுள்ளன
                   </span>
                 </div>
 
-                {/* Items List with Stepper & Metrics */}
-                <div className="bg-velvi-cream/25 border border-velvi-gold/30 rounded-2xl p-2 divide-y divide-velvi-gold/15 max-h-52 overflow-y-auto space-y-1.5">
+                {/* Selected Items List with Stepper, Inline Unit Changer & Tamil-on-top English-underneath */}
+                <div className="bg-velvi-cream/25 border border-velvi-gold/30 rounded-2xl p-2.5 divide-y divide-velvi-gold/15 max-h-56 overflow-y-auto space-y-1.5 shadow-2xs">
                   {formItems.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-velvi-brown/60">
-                      பொருட்கள் எதுவும் சேர்க்கப்படவில்லை. கீழே உள்ள படிவத்தில் சேர்க்கவும்.
+                    <div className="py-6 text-center text-xs text-velvi-brown/60 space-y-1">
+                      <p className="font-semibold">பொருட்கள் எதுவும் இன்னும் சேர்க்கப்படவில்லை.</p>
+                      <p className="text-[11px]">கீழே உள்ள பொருட்கள் நூலகத்திலிருந்து (Catalog) 1-கிளிக்கில் சேர்க்கலாம்.</p>
                     </div>
                   ) : (
                     formItems.map((it, idx) => (
-                      <div key={it.id} className="pt-1.5 first:pt-0 flex items-center justify-between gap-2 text-xs">
+                      <div key={it.id} className="pt-2 first:pt-0 flex items-center justify-between gap-2 text-xs">
+                        {/* Item Name: Tamil on top, English underneath */}
                         <div className="min-w-0 flex-1">
-                          <div className="font-bold text-velvi-brownDark truncate flex items-center gap-1">
-                            <span className="text-velvi-maroon text-[11px] font-black">{idx + 1}.</span>
-                            <span>{it.itemTamilName || it.itemEnglishName}</span>
-                            {it.itemTamilName && it.itemEnglishName && it.itemTamilName !== it.itemEnglishName && (
-                              <span className="text-[10px] text-gray-500 font-normal truncate">({it.itemEnglishName})</span>
-                            )}
+                          <div className="font-bold text-velvi-brownDark text-xs leading-tight flex items-center gap-1.5">
+                            <span className="text-velvi-maroon text-[11px] font-black shrink-0">{idx + 1}.</span>
+                            <span className="truncate">{it.itemTamilName || it.itemEnglishName}</span>
                           </div>
+                          {it.itemEnglishName && it.itemEnglishName !== it.itemTamilName && (
+                            <div className="text-[10px] text-velvi-brown/70 font-medium pl-4 mt-0.5 truncate">
+                              {it.itemEnglishName}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Quantity Stepper & Unit Badge */}
+                        {/* Quantity Stepper & Inline Unit Changer */}
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <div className="flex items-center bg-white border border-velvi-gold/30 rounded-lg p-0.5 shadow-xs">
+                          {/* Stepper */}
+                          <div className="flex items-center bg-white border border-velvi-gold/30 rounded-xl p-0.5 shadow-2xs">
                             <button
                               type="button"
                               onClick={() => {
                                 const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
-                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: Math.max(1, (Number(item.quantity) || 1) - step) } : item));
+                                setFormItems(
+                                  formItems.map((item) =>
+                                    item.id === it.id
+                                      ? { ...item, quantity: Math.max(1, (Number(item.quantity) || 1) - step) }
+                                      : item
+                                  )
+                                );
                               }}
-                              className="w-5 h-5 rounded bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
-                              title="Decrease"
+                              className="w-5 h-5 rounded-lg bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
+                              title="Decrease quantity"
                             >
                               -
                             </button>
@@ -861,7 +946,11 @@ export default function PoojasCataloguePage() {
                               value={it.quantity}
                               onChange={(e) => {
                                 const val = Math.max(1, Number(e.target.value) || 1);
-                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: val } : item));
+                                setFormItems(
+                                  formItems.map((item) =>
+                                    item.id === it.id ? { ...item, quantity: val } : item
+                                  )
+                                );
                               }}
                               className="w-10 text-center font-bold text-velvi-brownDark text-xs bg-transparent focus:outline-none"
                             />
@@ -869,23 +958,47 @@ export default function PoojasCataloguePage() {
                               type="button"
                               onClick={() => {
                                 const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
-                                setFormItems(formItems.map(item => item.id === it.id ? { ...item, quantity: (Number(item.quantity) || 1) + step } : item));
+                                setFormItems(
+                                  formItems.map((item) =>
+                                    item.id === it.id
+                                      ? { ...item, quantity: (Number(item.quantity) || 1) + step }
+                                      : item
+                                  )
+                                );
                               }}
-                              className="w-5 h-5 rounded bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
-                              title="Increase"
+                              className="w-5 h-5 rounded-lg bg-velvi-cream/60 hover:bg-velvi-gold/20 text-velvi-brownDark font-black flex items-center justify-center transition active:scale-95 text-[11px]"
+                              title="Increase quantity"
                             >
                               +
                             </button>
                           </div>
 
-                          <span className="bg-amber-50 text-velvi-brownDark border border-velvi-gold/30 px-1.5 py-1 rounded-lg text-[10px] font-bold">
-                            {getUnitBadgeLabel(it.unit)}
-                          </span>
+                          {/* Direct Inline Unit Dropdown Selector */}
+                          <select
+                            value={it.unit}
+                            onChange={(e) => {
+                              const nextUnit = e.target.value as PoojaItemTemplate["unit"];
+                              setFormItems(
+                                formItems.map((item) =>
+                                  item.id === it.id ? { ...item, unit: nextUnit } : item
+                                )
+                              );
+                            }}
+                            className="bg-amber-50 hover:bg-amber-100 text-velvi-brownDark border border-velvi-gold/40 px-2 py-1 rounded-xl text-[10.5px] font-bold focus:outline-none focus:border-velvi-gold cursor-pointer transition shadow-2xs"
+                            title="Change unit"
+                          >
+                            {SAMAGRI_UNITS.map((u) => (
+                              <option key={u.unit} value={u.unit}>
+                                {u.labelTa} ({u.code})
+                              </option>
+                            ))}
+                          </select>
 
+                          {/* Remove button */}
                           <button
                             type="button"
                             onClick={() => handleRemoveItemFromForm(it.id)}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition"
+                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition active:scale-95"
                             title="Remove item"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -896,28 +1009,173 @@ export default function PoojasCataloguePage() {
                   )}
                 </div>
 
-                {/* Add New Item Card */}
+                {/* Fast Searchable Samagri Library (1-Click Picker) */}
                 <div className="bg-white p-3 rounded-2xl border border-velvi-gold/30 shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>பொருட்கள் நூலகம் (1-கிளிக் தேர்வு / Quick Pick Catalog)</span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 font-medium">
+                      கிளிக் செய்து சேர்க்கவும்
+                    </span>
+                  </div>
+
+                  {/* Search Bar for Samagri */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="தேடுக (எ.கா: மஞ்சள், ghee, தேங்காய், மாலை, rice)..."
+                      value={samagriSearchQuery}
+                      onChange={(e) => setSamagriSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-7 py-1.5 bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl text-xs font-semibold text-velvi-brownDark placeholder:text-gray-400 focus:outline-none focus:border-velvi-gold"
+                    />
+                    {samagriSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSamagriSearchQuery("")}
+                        className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Category Filter Tabs */}
+                  <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
+                    {SAMAGRI_CATEGORIES.map((cat) => {
+                      const isSelected = selectedSamagriCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setSelectedSamagriCategory(cat.id)}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold shrink-0 transition flex items-center gap-1 border ${
+                            isSelected
+                              ? "bg-velvi-brown text-amber-200 border-velvi-brown shadow-xs"
+                              : "bg-velvi-cream/50 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                          }`}
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.labelTa}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Samagri Item Cards Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-0.5">
+                    {SAMAGRI_CATALOG.filter((item) => {
+                      const matchesCategory =
+                        selectedSamagriCategory === "all" || item.category === selectedSamagriCategory;
+                      const q = samagriSearchQuery.toLowerCase().trim();
+                      const matchesSearch =
+                        !q ||
+                        item.ta.toLowerCase().includes(q) ||
+                        item.en.toLowerCase().includes(q);
+                      return matchesCategory && matchesSearch;
+                    }).map((sug) => {
+                      const existingItem = formItems.find(
+                        (it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en
+                      );
+                      const isAdded = !!existingItem;
+
+                      return (
+                        <button
+                          key={sug.id}
+                          type="button"
+                          onClick={() => {
+                            if (isAdded) {
+                              // Increase quantity if clicked again
+                              const step = sug.unit === "g" || sug.unit === "ml" ? 50 : 1;
+                              setFormItems(
+                                formItems.map((it) =>
+                                  it.id === existingItem.id
+                                    ? { ...it, quantity: (Number(it.quantity) || 1) + step }
+                                    : it
+                                )
+                              );
+                            } else {
+                              const item: PoojaItemTemplate = {
+                                id: `item-${Date.now()}-${formItems.length + 1}`,
+                                poojaId: editingPoojaId || "",
+                                itemEnglishName: sug.en,
+                                itemTamilName: sug.ta,
+                                quantity: sug.qty,
+                                unit: sug.unit,
+                                sortOrder: formItems.length + 1,
+                              };
+                              setFormItems([...formItems, item]);
+                            }
+                          }}
+                          className={`p-2 rounded-xl text-left transition flex flex-col justify-between border relative group active:scale-[0.98] ${
+                            isAdded
+                              ? "bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-2xs"
+                              : "bg-amber-50/50 hover:bg-amber-100/60 border-velvi-gold/25 text-velvi-brownDark hover:border-velvi-gold/50 shadow-2xs"
+                          }`}
+                        >
+                          <div className="min-w-0 w-full">
+                            <div className="text-[11px] font-bold leading-tight truncate">
+                              {sug.ta}
+                            </div>
+                            <div className="text-[9.5px] opacity-75 font-medium truncate mt-0.5">
+                              {sug.en}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-black/5 w-full">
+                            <span className="text-[9.5px] font-bold text-velvi-maroon bg-white/80 px-1.5 py-0.5 rounded border border-velvi-gold/20">
+                              {sug.qty} {sug.unit}
+                            </span>
+                            {isAdded ? (
+                              <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                ✓ {existingItem.quantity} {existingItem.unit}
+                              </span>
+                            ) : (
+                              <span className="text-[9.5px] font-bold text-velvi-brown bg-amber-100/80 px-1.5 py-0.5 rounded">
+                                + சேர்
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Item Form */}
+                <div className="bg-velvi-cream/20 p-3 rounded-2xl border border-velvi-gold/25 space-y-2">
                   <div className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1">
                     <Plus className="w-3.5 h-3.5 text-velvi-gold" />
-                    <span>புதிய பொருள் சேர்க்க / Add New Item</span>
+                    <span>பட்டியலில் இல்லாத தனிப்பொருள் சேர்க்க / Add Custom Item</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder="பொருள் பெயர் (தமிழ்) *"
-                      value={newItemTamil}
-                      onChange={(e) => setNewItemTamil(e.target.value)}
-                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Item Name (English)"
-                      value={newItemEnglish}
-                      onChange={(e) => setNewItemEnglish(e.target.value)}
-                      className="bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                    />
+                    <div>
+                      <label className="text-[10px] font-bold text-velvi-brown block mb-0.5">
+                        பொருள் பெயர் (தமிழ்) *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="எ.கா. பஞ்சபாத்திரம்"
+                        value={newItemTamil}
+                        onChange={(e) => setNewItemTamil(e.target.value)}
+                        className="w-full bg-white border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-velvi-brown block mb-0.5">
+                        Item Name (English)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Pancha Patram"
+                        value={newItemEnglish}
+                        onChange={(e) => setNewItemEnglish(e.target.value)}
+                        className="w-full bg-white border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -929,7 +1187,7 @@ export default function PoojasCataloguePage() {
                         placeholder="Qty"
                         value={newItemQty}
                         onChange={(e) => setNewItemQty(Number(e.target.value))}
-                        className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold text-center"
+                        className="w-full bg-white border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold text-center"
                       />
                     </div>
 
@@ -938,7 +1196,7 @@ export default function PoojasCataloguePage() {
                       <select
                         value={newItemUnit}
                         onChange={(e) => setNewItemUnit(e.target.value as PoojaItemTemplate["unit"])}
-                        className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold"
+                        className="w-full bg-white border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark font-bold focus:outline-none focus:border-velvi-gold"
                       >
                         {SAMAGRI_UNITS.map((u) => (
                           <option key={u.unit} value={u.unit}>
@@ -996,50 +1254,10 @@ export default function PoojasCataloguePage() {
                             className={`px-2 py-1 rounded-lg text-[10px] font-bold transition active:scale-95 border ${
                               isSelected
                                 ? "bg-velvi-brown text-amber-200 border-velvi-brown shadow-xs"
-                                : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                                : "bg-white hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
                             }`}
                           >
                             {u.labelTa} <span className="opacity-75">({u.code})</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Quick Suggestions Chips */}
-                  <div className="space-y-1 pt-1 border-t border-velvi-gold/15">
-                    <span className="text-[10px] font-bold text-velvi-brown/80">உடனடி பரிந்துரைகள் (1-Click Suggestions):</span>
-                    <div className="flex flex-wrap gap-1">
-                      {QUICK_SAMAGRI_SUGGESTIONS.map((sug) => {
-                        const alreadyAdded = formItems.some(
-                          (it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en
-                        );
-                        return (
-                          <button
-                            key={sug.en}
-                            type="button"
-                            onClick={() => {
-                              if (alreadyAdded) return;
-                              const item: PoojaItemTemplate = {
-                                id: `item-${Date.now()}-${formItems.length + 1}`,
-                                poojaId: editingPoojaId || "",
-                                itemEnglishName: sug.en,
-                                itemTamilName: sug.ta,
-                                quantity: sug.qty,
-                                unit: sug.unit,
-                                sortOrder: formItems.length + 1,
-                              };
-                              setFormItems([...formItems, item]);
-                            }}
-                            disabled={alreadyAdded}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition flex items-center gap-1 border ${
-                              alreadyAdded
-                                ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                                : "bg-amber-50 hover:bg-amber-100 text-velvi-brownDark border-amber-200 shadow-2xs active:scale-95"
-                            }`}
-                          >
-                            <span>+ {sug.ta}</span>
-                            <span className="text-[9px] text-velvi-maroon">({sug.qty}{sug.unit})</span>
                           </button>
                         );
                       })}

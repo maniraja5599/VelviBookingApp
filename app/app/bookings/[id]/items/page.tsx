@@ -210,17 +210,25 @@ export default function BookingItemsPage() {
 
                   <div className="min-w-0">
                     <div
-                      className={`text-xs font-semibold truncate ${
+                      className={`text-xs font-bold leading-tight truncate ${
                         item.isChecked
                           ? "line-through text-velvi-brown/40"
                           : "text-velvi-brownDark"
                       }`}
                     >
                       {idx + 1}. {item.itemTamilName || item.itemEnglishName}
-                      {item.itemTamilName && item.itemEnglishName && item.itemTamilName !== item.itemEnglishName && (
-                        <span className="text-[10px] text-gray-500 font-normal ml-1">({item.itemEnglishName})</span>
-                      )}
                     </div>
+                    {item.itemEnglishName && item.itemEnglishName !== item.itemTamilName && (
+                      <div
+                        className={`text-[10px] pl-4 font-medium truncate ${
+                          item.isChecked
+                            ? "line-through text-velvi-brown/30"
+                            : "text-velvi-brown/65"
+                        }`}
+                      >
+                        {item.itemEnglishName}
+                      </div>
+                    )}
                   </div>
                 </div>
 
