@@ -68,13 +68,13 @@ const PRESET_POOJA_CATALOG = [
     durationMinutes: 120,
     basePrice: 5000,
     items: [
-      { name: "Cow Ghee (பசு நெய்)", quantity: 1, unit: "kg", providedBy: "IYER" },
-      { name: "Homa Samithu (சமித்து கட்டுகள்)", quantity: 2, unit: "bundles", providedBy: "IYER" },
-      { name: "Turmeric & Kumkum (மஞ்சள், குங்குமம்)", quantity: 1, unit: "set", providedBy: "IYER" },
-      { name: "Betel Leaves & Nuts (வெற்றிலை, பாக்கு)", quantity: 25, unit: "leaves", providedBy: "DEVOTEE" },
-      { name: "Fresh Coconuts (தேங்காய்)", quantity: 5, unit: "nos", providedBy: "DEVOTEE" },
-      { name: "Pooja Flowers & Garland (பூக்கள் & மாலை)", quantity: 1, unit: "set", providedBy: "DEVOTEE" },
-      { name: "Modak / Kozhukattai Prasad (கொழுக்கட்டை)", quantity: 21, unit: "nos", providedBy: "DEVOTEE" },
+      { name: "Cow Ghee (பசு நெய்)", quantity: 1, unit: "kg" },
+      { name: "Homa Samithu (சமித்து கட்டுகள்)", quantity: 2, unit: "bundles" },
+      { name: "Turmeric & Kumkum (மஞ்சள், குங்குமம்)", quantity: 1, unit: "set" },
+      { name: "Betel Leaves & Nuts (வெற்றிலை, பாக்கு)", quantity: 25, unit: "leaves" },
+      { name: "Fresh Coconuts (தேங்காய்)", quantity: 5, unit: "nos" },
+      { name: "Pooja Flowers & Garland (பூக்கள் & மாலை)", quantity: 1, unit: "set" },
+      { name: "Modak / Kozhukattai Prasad (கொழுக்கட்டை)", quantity: 21, unit: "nos" },
     ],
   },
   {
@@ -84,12 +84,12 @@ const PRESET_POOJA_CATALOG = [
     durationMinutes: 180,
     basePrice: 7500,
     items: [
-      { name: "Pure Ghee (சுத்தமான நெய்)", quantity: 2, unit: "kg", providedBy: "IYER" },
-      { name: "Sudarshana Yantra & Samithu", quantity: 3, unit: "bundles", providedBy: "IYER" },
-      { name: "Navadhanyam (நவதானியம்)", quantity: 1, unit: "set", providedBy: "IYER" },
-      { name: "Tulasi Leaves (துளசி மாலை)", quantity: 2, unit: "garlands", providedBy: "DEVOTEE" },
-      { name: "Dry Fruits & Panchamirtham", quantity: 1, unit: "set", providedBy: "DEVOTEE" },
-      { name: "Coconuts & Fruits (தேங்காய், பழங்கள்)", quantity: 7, unit: "nos", providedBy: "DEVOTEE" },
+      { name: "Pure Ghee (சுத்தமான நெய்)", quantity: 2, unit: "kg" },
+      { name: "Sudarshana Yantra & Samithu", quantity: 3, unit: "bundles" },
+      { name: "Navadhanyam (நவதானியம்)", quantity: 1, unit: "set" },
+      { name: "Tulasi Leaves (துளசி மாலை)", quantity: 2, unit: "garlands" },
+      { name: "Dry Fruits & Panchamirtham", quantity: 1, unit: "set" },
+      { name: "Coconuts & Fruits (தேங்காய், பழங்கள்)", quantity: 7, unit: "nos" },
     ],
   },
   {
@@ -99,10 +99,10 @@ const PRESET_POOJA_CATALOG = [
     durationMinutes: 150,
     basePrice: 6000,
     items: [
-      { name: "Cow Milk, Curd, Honey & Ghee (பஞ்சாமிர்தம்)", quantity: 1, unit: "set", providedBy: "DEVOTEE" },
-      { name: "Vilvam Leaves (வில்வ இலைகள்)", quantity: 108, unit: "leaves", providedBy: "DEVOTEE" },
-      { name: "Vibhoothi & Sandal Paste (விபூதி, சந்தனம்)", quantity: 1, unit: "set", providedBy: "IYER" },
-      { name: "Homa Dravyam & Samithu", quantity: 2, unit: "bundles", providedBy: "IYER" },
+      { name: "Cow Milk, Curd, Honey & Ghee (பஞ்சாமிர்தம்)", quantity: 1, unit: "set" },
+      { name: "Vilvam Leaves (வில்வ இலைகள்)", quantity: 108, unit: "leaves" },
+      { name: "Vibhoothi & Sandal Paste (விபூதி, சந்தனம்)", quantity: 1, unit: "set" },
+      { name: "Homa Dravyam & Samithu", quantity: 2, unit: "bundles" },
     ],
   },
   {
@@ -112,11 +112,11 @@ const PRESET_POOJA_CATALOG = [
     durationMinutes: 240,
     basePrice: 12000,
     items: [
-      { name: "Navadhanyam & Navaratnam Set", quantity: 1, unit: "set", providedBy: "IYER" },
-      { name: "Vastu Yantra & Homa Sticks", quantity: 4, unit: "bundles", providedBy: "IYER" },
-      { name: "Milk for Boiling (பால் காய்ச்சுதல்)", quantity: 2, unit: "litres", providedBy: "DEVOTEE" },
-      { name: "Purnahuti Silk Cloth (பூர்ணாஹுதி பட்டு)", quantity: 1, unit: "piece", providedBy: "DEVOTEE" },
-      { name: "Mango Leaves & Toranam (மாவிலை தோரணம்)", quantity: 2, unit: "sets", providedBy: "DEVOTEE" },
+      { name: "Navadhanyam & Navaratnam Set", quantity: 1, unit: "set" },
+      { name: "Vastu Yantra & Homa Sticks", quantity: 4, unit: "bundles" },
+      { name: "Milk for Boiling (பால் காய்ச்சுதல்)", quantity: 2, unit: "litres" },
+      { name: "Purnahuti Silk Cloth (பூர்ணாஹுதி பட்டு)", quantity: 1, unit: "piece" },
+      { name: "Mango Leaves & Toranam (மாவிலை தோரணம்)", quantity: 2, unit: "sets" },
     ],
   },
   {
@@ -126,10 +126,10 @@ const PRESET_POOJA_CATALOG = [
     durationMinutes: 120,
     basePrice: 4000,
     items: [
-      { name: "Rava Kesari / Wheat Sheera Prasad", quantity: 1, unit: "bowl", providedBy: "DEVOTEE" },
-      { name: "Satyanarayana Photo / Murti Peedam", quantity: 1, unit: "set", providedBy: "DEVOTEE" },
-      { name: "Tulasi & Betel Leaves", quantity: 50, unit: "leaves", providedBy: "DEVOTEE" },
-      { name: "Pooja Vidhanam & Flowers", quantity: 1, unit: "set", providedBy: "IYER" },
+      { name: "Rava Kesari / Wheat Sheera Prasad", quantity: 1, unit: "bowl" },
+      { name: "Satyanarayana Photo / Murti Peedam", quantity: 1, unit: "set" },
+      { name: "Tulasi & Betel Leaves", quantity: 50, unit: "leaves" },
+      { name: "Pooja Vidhanam & Flowers", quantity: 1, unit: "set" },
     ],
   },
 ];
@@ -165,15 +165,12 @@ function NewBookingWizardForm() {
 
   // Step 2: Pooja & Samagri State
   const [poojaId, setPoojaId] = useState<string>(initialPoojaId || "");
-  const [samagriItems, setSamagriItems] = useState<
-    (BookingItem & { providedBy?: "IYER" | "DEVOTEE" })[]
-  >([]);
+  const [samagriItems, setSamagriItems] = useState<BookingItem[]>([]);
   const [editingSamagriId, setEditingSamagriId] = useState<string | null>(null);
   const [newSamagriNameEn, setNewSamagriNameEn] = useState<string>("");
   const [newSamagriNameTa, setNewSamagriNameTa] = useState<string>("");
   const [newSamagriQty, setNewSamagriQty] = useState<number>(1);
   const [newSamagriUnit, setNewSamagriUnit] = useState<string>("kg");
-  const [newSamagriProvidedBy, setNewSamagriProvidedBy] = useState<"IYER" | "DEVOTEE">("IYER");
 
   // Step 3: Calendar & Time State
   const [date, setDate] = useState<string>(initialDate);
@@ -243,9 +240,8 @@ function NewBookingWizardForm() {
             itemTamilName: item.itemTamilName || item.itemEnglishName || "பூஜை பொருள்",
             quantity: item.quantity || 1,
             unit: item.unit || "units",
-            isChecked: false,
+            isChecked: true,
             sortOrder: idx,
-            providedBy: idx % 2 === 0 ? "IYER" : "DEVOTEE",
           }))
         );
       } else {
@@ -262,9 +258,8 @@ function NewBookingWizardForm() {
             itemTamilName: item.name.includes("(") ? item.name.split("(")[1].replace(")", "") : item.name,
             quantity: item.quantity,
             unit: item.unit,
-            isChecked: false,
+            isChecked: true,
             sortOrder: idx,
-            providedBy: item.providedBy as any,
           }))
         );
       }
@@ -407,9 +402,8 @@ function NewBookingWizardForm() {
         itemTamilName: newSamagriNameTa.trim() || newSamagriNameEn.trim(),
         quantity: Number(newSamagriQty) || 1,
         unit: newSamagriUnit || "units",
-        isChecked: false,
+        isChecked: true,
         sortOrder: prev.length + 1,
-        providedBy: newSamagriProvidedBy,
       },
     ]);
     setNewSamagriNameEn("");
@@ -498,7 +492,7 @@ function NewBookingWizardForm() {
         assignedIyerId: assignedIyerId || members[0]?.id || "u-ravi-iyer-01",
         assignedIyerName:
           members.find((m) => m.id === assignedIyerId)?.name || members[0]?.name || "Ravi Iyer",
-        items: samagriItems,
+        items: samagriItems.filter((i) => i.isChecked !== false),
         notes: notes.trim(),
       });
 
@@ -635,17 +629,14 @@ function NewBookingWizardForm() {
             <div className="bg-gradient-to-r from-amber-50/90 via-white to-amber-50/50 p-4 rounded-2xl border-2 border-amber-400 shadow-sm space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-13 h-13 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
-                    {selectedCustomer.name.charAt(0).toUpperCase()}
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-4 ring-amber-100">
+                    <User className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-black text-base text-slate-900 truncate">
                         {selectedCustomer.name}
                       </h3>
-                      <span className="text-[10px] font-black bg-emerald-100 text-emerald-850 px-2 py-0.5 rounded-full border border-emerald-300">
-                        Selected ✓
-                      </span>
                       {devoteePastBookingsCount > 0 && (
                         <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
                           {devoteePastBookingsCount} Past Bookings
@@ -758,8 +749,8 @@ function NewBookingWizardForm() {
                       className="bg-white hover:bg-amber-50/70 p-3 rounded-2xl border border-slate-200 hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-amber-200 text-slate-700 group-hover:text-amber-900 flex items-center justify-center font-bold text-sm shrink-0 transition">
-                          {c.name.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 rounded-xl bg-amber-50 group-hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 transition">
+                          <User className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                           <div className="font-extrabold text-xs text-slate-900 truncate">
@@ -799,7 +790,7 @@ function NewBookingWizardForm() {
               onClick={handleNextStep}
               className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
             >
-              <span>Continue to Step 2: Pooja & Samagri</span>
+              <span>Next</span>
               <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </div>
@@ -894,48 +885,43 @@ function NewBookingWizardForm() {
                   </div>
                   <div>
                     <h3 className="text-xs font-black text-slate-900">
-                      Pooja Samagri Checklist ({samagriItems.length} Materials Required)
+                      Pooja Samagri Checklist ({samagriItems.length} Total Materials)
                     </h3>
                     <p className="text-[10px] text-slate-500">
-                      Verified Vedic checklist. Click to toggle ready status.
+                      Click any item to toggle inclusion / exclusion.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] font-bold">
-                  <span className="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-full">
-                    🪔 {samagriItems.filter((i) => i.providedBy === "IYER").length} by Priest
-                  </span>
-                  <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-                    🏡 {samagriItems.filter((i) => i.providedBy === "DEVOTEE").length} by Devotee
-                  </span>
+                <div className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                  {samagriItems.filter((i) => i.isChecked !== false).length} of {samagriItems.length} Included
                 </div>
               </div>
 
               {/* Samagri Items List */}
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {samagriItems.map((item, idx) => {
-                  const isIyer = item.providedBy === "IYER";
+                {samagriItems.map((item) => {
+                  const isIncluded = item.isChecked !== false;
                   return (
                     <div
                       key={item.id}
                       className={`p-2.5 rounded-xl border transition flex items-center justify-between gap-2.5 ${
-                        item.isChecked
-                          ? "bg-emerald-50/70 border-emerald-300 opacity-75 line-through"
-                          : "bg-slate-50/80 border-slate-200 hover:bg-slate-100"
+                        isIncluded
+                          ? "bg-emerald-50/50 border-emerald-300 text-slate-900"
+                          : "bg-slate-50/70 border-slate-200 text-slate-400 opacity-60"
                       }`}
                     >
                       <div
                         onClick={() => handleToggleSamagri(item.id)}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
+                        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
                       >
-                        {item.isChecked ? (
+                        {isIncluded ? (
                           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                         ) : (
                           <Square className="w-4 h-4 text-slate-400 shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <div className="font-extrabold text-xs text-slate-900 truncate">
+                          <div className="font-extrabold text-xs truncate">
                             {item.itemEnglishName}{" "}
                             {item.itemTamilName && item.itemTamilName !== item.itemEnglishName && (
                               <span className="text-[11px] font-medium text-amber-800">
@@ -949,28 +935,18 @@ function NewBookingWizardForm() {
                         </div>
                       </div>
 
-                      {/* Provided By Toggle & Delete Action */}
+                      {/* Status Tag & Delete Action */}
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSamagriItems((prev) =>
-                              prev.map((i) =>
-                                i.id === item.id
-                                  ? { ...i, providedBy: isIyer ? "DEVOTEE" : "IYER" }
-                                  : i
-                              )
-                            );
-                          }}
-                          className={`text-[10px] font-black px-2 py-0.5 rounded-md border transition ${
-                            isIyer
-                              ? "bg-purple-50 text-purple-900 border-purple-200 hover:bg-purple-100"
-                              : "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
+                        <span
+                          onClick={() => handleToggleSamagri(item.id)}
+                          className={`text-[10px] font-black px-2 py-0.5 rounded-md border cursor-pointer select-none transition ${
+                            isIncluded
+                              ? "bg-emerald-100 text-emerald-900 border-emerald-200"
+                              : "bg-slate-200 text-slate-600 border-slate-300"
                           }`}
-                          title="Click to toggle who brings this item"
                         >
-                          {isIyer ? "🪔 Priest Brings" : "🏡 Devotee Brings"}
-                        </button>
+                          {isIncluded ? "Included ✓" : "Excluded"}
+                        </span>
 
                         <button
                           type="button"
@@ -994,7 +970,7 @@ function NewBookingWizardForm() {
                 <span className="text-[11px] font-bold text-slate-700 block">
                   + Add Custom Samagri Item (புதிய பொருள் சேர்க்க):
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
                     required
@@ -1016,7 +992,7 @@ function NewBookingWizardForm() {
                       min={1}
                       value={newSamagriQty}
                       onChange={(e) => setNewSamagriQty(Number(e.target.value))}
-                      className="w-16 bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-900 text-center"
+                      className="w-14 bg-white border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-bold text-slate-900 text-center"
                     />
                     <select
                       value={newSamagriUnit}
@@ -1031,16 +1007,6 @@ function NewBookingWizardForm() {
                       <option value="packet">packet</option>
                       <option value="set">set</option>
                     </select>
-                  </div>
-                  <div className="flex gap-1">
-                    <select
-                      value={newSamagriProvidedBy}
-                      onChange={(e) => setNewSamagriProvidedBy(e.target.value as any)}
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-1.5 py-1.5 text-[11px] font-bold text-slate-900"
-                    >
-                      <option value="IYER">Priest</option>
-                      <option value="DEVOTEE">Devotee</option>
-                    </select>
                     <button
                       type="submit"
                       className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shrink-0 shadow-xs"
@@ -1050,6 +1016,47 @@ function NewBookingWizardForm() {
                   </div>
                 </div>
               </form>
+
+              {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX */}
+              <div className="bg-amber-50/60 rounded-xl p-3 border border-amber-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Clipboard className="w-3.5 h-3.5 text-amber-700" />
+                    <h4 className="text-xs font-extrabold text-slate-900">
+                      Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
+                    ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Ready
+                  </span>
+                </div>
+
+                {samagriItems.filter((i) => i.isChecked !== false).length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-36 overflow-y-auto pr-1">
+                    {samagriItems
+                      .filter((i) => i.isChecked !== false)
+                      .map((i) => (
+                        <div
+                          key={i.id}
+                          className="bg-white px-2 py-1 rounded-lg border border-amber-200/80 text-[11px] shadow-2xs flex items-center gap-1 font-medium text-slate-800"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                          <span className="font-bold text-slate-900">{i.itemEnglishName}</span>
+                          {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
+                            <span className="text-[10px] text-amber-800">({i.itemTamilName})</span>
+                          )}
+                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1 py-0.2 rounded">
+                            {i.quantity} {i.unit}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-amber-800 italic">
+                    No items selected yet. Click any material in the checklist above to include it.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -1070,7 +1077,7 @@ function NewBookingWizardForm() {
               onClick={handleNextStep}
               className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
             >
-              <span>Continue to Step 3: Date & Time</span>
+              <span>Next</span>
               <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </div>
@@ -1433,7 +1440,7 @@ function NewBookingWizardForm() {
               onClick={handleNextStep}
               className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
             >
-              <span>Continue to Step 4: Review & Payment</span>
+              <span>Next</span>
               <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </div>
@@ -1493,7 +1500,7 @@ function NewBookingWizardForm() {
             <div className="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between">
               <span className="font-bold text-emerald-950 flex items-center gap-1.5">
                 <CheckSquare className="w-4 h-4 text-emerald-600" />
-                {samagriItems.length} Samagri Checklist Items Configured
+                {samagriItems.filter((i) => i.isChecked !== false).length} Samagri Checklist Items Included
               </span>
               <span className="text-[11px] font-bold text-emerald-800">
                 Ready for Pooja ✓
