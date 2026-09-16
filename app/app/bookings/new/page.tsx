@@ -41,6 +41,9 @@ import {
   CalendarDays,
   Layers,
   Percent,
+  Share2,
+  Copy,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -228,44 +231,234 @@ function NewBookingWizardForm() {
   // Constructed Time String (e.g. "07:00 AM")
   const selectedTime = `${timeHour}:${timeMinute} ${timeMeridiem}`;
 
-  // When initial pooja changes, setup default checklist items
-  useEffect(() => {
-    if (selectedPooja) {
-      setAmount(selectedPooja.basePrice || 5000);
-      if (selectedPooja.items && selectedPooja.items.length > 0) {
-        setSamagriItems(
-          selectedPooja.items.map((item, idx) => ({
-            id: `item-${Date.now()}-${idx}`,
-            bookingId: "",
-            itemEnglishName: item.itemEnglishName || "Samagri Item",
-            itemTamilName: item.itemTamilName || item.itemEnglishName || "பூஜை பொருள்",
-            quantity: item.quantity || 1,
-            unit: item.unit || "units",
-            isChecked: true,
-            sortOrder: idx,
-          }))
-        );
-      } else {
-        // Fallback default checklist
-        const matchingPreset = PRESET_POOJA_CATALOG.find(
-          (p) => p.englishName.toLowerCase() === selectedPooja.englishName.toLowerCase()
-        ) || PRESET_POOJA_CATALOG[0];
+  // Draft Auto-Save Key
+  const DRAFT_STORAGE_KEY = `velvi_booking_draft_${businessId}`;
+  const [isDraftRestored, setIsDraftRestored] = useState(false);
+  const [hasActiveDraft, setHasActiveDraft] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+  const prevPoojaIdRef = React.useRef<string>(poojaId);
 
-        setSamagriItems(
-          matchingPreset.items.map((item, idx) => ({
-            id: `item-def-${Date.now()}-${idx}`,
-            bookingId: "",
-            itemEnglishName: item.name.split(" (")[0],
-            itemTamilName: item.name.includes("(") ? item.name.split("(")[1].replace(")", "") : item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            isChecked: true,
-            sortOrder: idx,
-          }))
-        );
+  // 1. RESTORE DRAFT ON MOUNT (Keeps exact page, step & data where user left off)
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (rawDraft) {
+          const draft = JSON.parse(rawDraft);
+          if (draft && typeof draft === "object") {
+            if (draft.currentStep) setCurrentStep(draft.currentStep);
+            if (draft.customerId) setCustomerId(draft.customerId);
+            if (draft.poojaId) {
+              setPoojaId(draft.poojaId);
+              prevPoojaIdRef.current = draft.poojaId;
+            }
+            if (Array.isArray(draft.samagriItems) && draft.samagriItems.length > 0) {
+              setSamagriItems(draft.samagriItems);
+            }
+            if (draft.date) setDate(draft.date);
+            if (draft.calendarYear) setCalendarYear(draft.calendarYear);
+            if (draft.calendarMonth !== undefined) setCalendarMonth(draft.calendarMonth);
+            if (draft.timeHour) setTimeHour(draft.timeHour);
+            if (draft.timeMinute) setTimeMinute(draft.timeMinute);
+            if (draft.timeMeridiem) setTimeMeridiem(draft.timeMeridiem);
+            if (draft.amount !== undefined) setAmount(draft.amount);
+            if (draft.advanceAmount !== undefined) setAdvanceAmount(draft.advanceAmount);
+            if (draft.paymentMode) setPaymentMode(draft.paymentMode);
+            if (draft.upiRefId !== undefined) setUpiRefId(draft.upiRefId);
+            if (draft.assignedIyerId) setAssignedIyerId(draft.assignedIyerId);
+            if (draft.location !== undefined) setLocation(draft.location);
+            if (draft.notes !== undefined) setNotes(draft.notes);
+            setHasActiveDraft(true);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error restoring draft:", err);
+    } finally {
+      setIsDraftRestored(true);
+    }
+  }, [businessId, DRAFT_STORAGE_KEY]);
+
+  // 2. AUTO-SAVE DRAFT ON ANY EDIT
+  useEffect(() => {
+    if (!isDraftRestored) return;
+    try {
+      if (typeof window !== "undefined") {
+        const draftPayload = {
+          currentStep,
+          customerId,
+          poojaId,
+          samagriItems,
+          date,
+          calendarYear,
+          calendarMonth,
+          timeHour,
+          timeMinute,
+          timeMeridiem,
+          amount,
+          advanceAmount,
+          paymentMode,
+          upiRefId,
+          assignedIyerId,
+          location,
+          notes,
+          updatedAt: Date.now(),
+        };
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload));
+        setHasActiveDraft(true);
+      }
+    } catch (err) {
+      console.error("Error saving draft:", err);
+    }
+  }, [
+    isDraftRestored,
+    currentStep,
+    customerId,
+    poojaId,
+    samagriItems,
+    date,
+    calendarYear,
+    calendarMonth,
+    timeHour,
+    timeMinute,
+    timeMeridiem,
+    amount,
+    advanceAmount,
+    paymentMode,
+    upiRefId,
+    assignedIyerId,
+    location,
+    notes,
+    DRAFT_STORAGE_KEY,
+  ]);
+
+  // Clear / Reset Draft
+  const handleClearDraft = () => {
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      }
+    } catch (e) {}
+    setHasActiveDraft(false);
+    setCurrentStep(1);
+    setCustomerId("");
+    setPoojaId("");
+    setSamagriItems([]);
+    setDate(getLocalDateString());
+    setTimeHour("07");
+    setTimeMinute("00");
+    setTimeMeridiem("AM");
+    setAmount(5000);
+    setAdvanceAmount(0);
+    setPaymentMode("UPI");
+    setUpiRefId("");
+    setLocation("Namakkal");
+    setNotes("");
+  };
+
+  // When pooja selection changes by user, update checklist items
+  useEffect(() => {
+    if (selectedPooja && isDraftRestored) {
+      if (prevPoojaIdRef.current !== selectedPooja.id || samagriItems.length === 0) {
+        prevPoojaIdRef.current = selectedPooja.id;
+        setAmount(selectedPooja.basePrice || 5000);
+        if (selectedPooja.items && selectedPooja.items.length > 0) {
+          setSamagriItems(
+            selectedPooja.items.map((item, idx) => ({
+              id: `item-${Date.now()}-${idx}`,
+              bookingId: "",
+              itemEnglishName: item.itemEnglishName || "Samagri Item",
+              itemTamilName: item.itemTamilName || item.itemEnglishName || "பூஜை பொருள்",
+              quantity: item.quantity || 1,
+              unit: item.unit || "units",
+              isChecked: true,
+              sortOrder: idx,
+            }))
+          );
+        } else {
+          // Fallback default checklist
+          const matchingPreset = PRESET_POOJA_CATALOG.find(
+            (p) => p.englishName.toLowerCase() === selectedPooja.englishName.toLowerCase()
+          ) || PRESET_POOJA_CATALOG[0];
+
+          setSamagriItems(
+            matchingPreset.items.map((item, idx) => ({
+              id: `item-def-${Date.now()}-${idx}`,
+              bookingId: "",
+              itemEnglishName: item.name.split(" (")[0],
+              itemTamilName: item.name.includes("(") ? item.name.split("(")[1].replace(")", "") : item.name,
+              quantity: item.quantity,
+              unit: item.unit,
+              isChecked: true,
+              sortOrder: idx,
+            }))
+          );
+        }
       }
     }
-  }, [selectedPooja]);
+  }, [selectedPooja, isDraftRestored, samagriItems.length]);
+
+  // Generate WhatsApp Share Message with Devotee, Date, Time & Samagri List
+  const generateWhatsAppShareMessage = () => {
+    const devoteeName = selectedCustomer?.name || "Devotee (பக்தர்)";
+    const poojaName = `${selectedPooja?.englishName || "Pooja"} ${
+      selectedPooja?.tamilName ? `(${selectedPooja.tamilName})` : ""
+    }`;
+    const includedItems = samagriItems.filter((i) => i.isChecked !== false);
+    const itemsList = includedItems
+      .map(
+        (item, idx) =>
+          `${idx + 1}. ${item.itemEnglishName}${
+            item.itemTamilName && item.itemTamilName !== item.itemEnglishName
+              ? ` (${item.itemTamilName})`
+              : ""
+          }: ${item.quantity} ${item.unit}`
+      )
+      .join("\n");
+
+    return `🙏 *ஓம் நமோ நாராயணாய | Velvi Pooja Booking*
+
+வணக்கம் *${devoteeName}*,
+
+தங்களின் பூஜை முன்பதிவு மற்றும் தேவையான பூஜை சாமான்கள் பட்டியல்:
+
+🪔 *பூஜை / Pooja:* ${poojaName}
+📅 *தேதி / Date:* ${date}
+⏰ *நேரம் / Auspicious Time:* ${selectedTime}
+📍 *இடம் / Venue:* ${location || selectedCustomer?.city || "Namakkal"}
+${notes ? `📝 *சங்கல்பக் குறிப்பு / Notes:* ${notes}\n` : ""}
+📋 *தேவையான பூஜை சாமான்கள் பட்டியல் (${includedItems.length} பொருட்கள்):*
+${itemsList || "அனைத்து பொருட்களும் குருக்கள் ஏற்பாடு செய்வார்."}
+
+தயவுசெய்து பூஜை தொடங்குவதற்கு முன் மேற்கண்ட பொருட்களைத் தயார் செய்து வைக்கவும்.
+
+நன்றி & சுபமஸ்து! ✨
+_Velvi Booking App_`;
+  };
+
+  // Send WhatsApp Direct to Devotee
+  const handleShareWhatsApp = () => {
+    const text = generateWhatsAppShareMessage();
+    const rawMobile = selectedCustomer?.mobile ? selectedCustomer.mobile.replace(/\D/g, "") : "";
+    const cleanPhone =
+      rawMobile.length === 10 ? `91${rawMobile}` : rawMobile.length === 12 ? rawMobile : "";
+    const url = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
+  };
+
+  // Copy Formatted Text to Clipboard
+  const handleCopyShareText = () => {
+    const text = generateWhatsAppShareMessage();
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2500);
+    }
+  };
 
   // Calculate devotee past bookings count
   const devoteePastBookingsCount = useMemo(() => {
@@ -518,6 +711,13 @@ function NewBookingWizardForm() {
         notes: notes.trim(),
       });
 
+      // Clear auto-saved draft upon successful booking creation
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+        }
+      } catch (e) {}
+
       router.push(`/app/bookings/${createdBooking.id}?created=true`);
     } catch (err: any) {
       console.error(err);
@@ -528,7 +728,7 @@ function NewBookingWizardForm() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-20">
-      {/* Top Header */}
+      {/* Top Header with Auto-Save Indicator */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2.5">
           <Link
@@ -539,9 +739,17 @@ function NewBookingWizardForm() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-lg font-black text-slate-900 leading-tight">
-              New Pooja Booking
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-black text-slate-900 leading-tight">
+                New Pooja Booking
+              </h1>
+              {hasActiveDraft && (
+                <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-black flex items-center gap-1 shadow-2xs">
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span>Draft Auto-Saved</span>
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-500 font-medium">
               Step {currentStep} of 4 • {currentStep === 1 && "Select Devotee"}
               {currentStep === 2 && "Pooja & Samagri Checklist"}
@@ -551,12 +759,26 @@ function NewBookingWizardForm() {
           </div>
         </div>
 
-        <Link
-          href="/app/bookings"
-          className="text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
-        >
-          Cancel
-        </Link>
+        <div className="flex items-center gap-1.5">
+          {hasActiveDraft && (
+            <button
+              type="button"
+              onClick={handleClearDraft}
+              className="text-xs font-bold text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 transition flex items-center gap-1"
+              title="Reset all fields and start fresh"
+            >
+              <RotateCcw className="w-3 h-3 text-slate-400 group-hover:text-rose-600" />
+              <span>Reset</span>
+            </button>
+          )}
+
+          <Link
+            href="/app/bookings"
+            className="text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+          >
+            Cancel
+          </Link>
+        </div>
       </div>
 
       {/* 4-Step Progress Indicator */}
@@ -1085,51 +1307,108 @@ function NewBookingWizardForm() {
                 </div>
               </form>
 
-              {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX */}
-              <div className="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/80 space-y-2.5">
-                <div className="flex items-center justify-between">
+              {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX (FULL DISPLAY & WHATSAPP SHARE) */}
+              <div className="bg-amber-50/70 rounded-2xl p-4 border-2 border-amber-300 shadow-sm space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Clipboard className="w-3.5 h-3.5 text-amber-700" />
-                    <h4 className="text-xs font-black text-slate-900">
-                      Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
-                    </h4>
+                    <Clipboard className="w-4 h-4 text-amber-700 shrink-0" />
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900">
+                        Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
+                      </h4>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        Complete list of materials to prepare before pooja ceremony.
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300 shadow-2xs">
                     ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Selected
                   </span>
                 </div>
 
+                {/* Devotee & Pooja Confirmation Header Bar */}
+                <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 text-xs flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-extrabold text-slate-900 flex items-center gap-1">
+                      <User className="w-3.5 h-3.5 text-amber-600" />
+                      {selectedCustomer?.name || "Devotee"}
+                    </span>
+                    {selectedCustomer?.mobile && (
+                      <span className="text-[11px] text-slate-500 font-bold">
+                        📱 {selectedCustomer.mobile}
+                      </span>
+                    )}
+                    <span className="text-slate-300">•</span>
+                    <span className="text-amber-800 font-black">
+                      📅 {date} ({selectedTime})
+                    </span>
+                  </div>
+
+                  {/* WhatsApp Direct Share & Copy Text Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleCopyShareText}
+                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[11px] font-bold flex items-center gap-1 transition shadow-2xs"
+                      title="Copy complete pooja & samagri text"
+                    >
+                      {copiedShare ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-700">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Copy List</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleShareWhatsApp}
+                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-xs transition active:scale-95"
+                      title="Send full details and samagri list directly to customer WhatsApp"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-white" />
+                      <span>Send to Devotee</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* FULL ITEMS DISPLAY (No scroll - all items clearly visible) */}
                 {samagriItems.filter((i) => i.isChecked !== false).length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5 max-h-48 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
                     {samagriItems
                       .filter((i) => i.isChecked !== false)
                       .map((i, pIdx) => (
                         <div
                           key={i.id}
-                          className="bg-white px-3 py-1.5 rounded-xl border border-amber-200/80 text-xs shadow-2xs flex items-center justify-between gap-2"
+                          className="bg-white p-2.5 rounded-xl border border-amber-200/90 text-xs shadow-2xs flex items-center justify-between gap-2 hover:border-amber-400 transition"
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[10px] font-black text-amber-800 shrink-0">
-                              {pIdx + 1}.
+                            <span className="text-[11px] font-black text-amber-900 bg-amber-100/80 w-5 h-5 rounded-md flex items-center justify-center shrink-0">
+                              {pIdx + 1}
                             </span>
-                            <span className="font-bold text-slate-900 truncate">
+                            <span className="font-extrabold text-slate-900 truncate">
                               {i.itemEnglishName}
                             </span>
                             {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
-                              <span className="text-[10px] text-amber-800 truncate">
+                              <span className="text-[10px] text-amber-800 truncate font-semibold">
                                 ({i.itemTamilName})
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded shrink-0">
+                          <span className="text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md shrink-0 border border-slate-200">
                             {i.quantity} {i.unit}
                           </span>
                         </div>
                       ))}
                   </div>
                 ) : (
-                  <p className="text-[11px] text-amber-800 italic">
-                    No items selected yet. Click any tick mark in the checklist above to include it.
+                  <p className="text-[11px] text-amber-800 italic bg-white/70 p-3 rounded-xl border border-amber-200">
+                    No items selected yet. Click any tick mark in the checklist above to include materials.
                   </p>
                 )}
               </div>
@@ -1573,14 +1852,27 @@ function NewBookingWizardForm() {
               </div>
             </div>
 
-            <div className="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between">
+            <div className="bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
               <span className="font-bold text-emerald-950 flex items-center gap-1.5">
                 <CheckSquare className="w-4 h-4 text-emerald-600" />
                 {samagriItems.filter((i) => i.isChecked !== false).length} Samagri Checklist Items Included
               </span>
-              <span className="text-[11px] font-bold text-emerald-800">
-                Ready for Pooja ✓
-              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleShareWhatsApp}
+                  className="text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 transition shadow-2xs"
+                  title="Share details with devotee on WhatsApp"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>WhatsApp List</span>
+                </button>
+
+                <span className="text-[11px] font-bold text-emerald-800 hidden sm:inline">
+                  Ready for Pooja ✓
+                </span>
+              </div>
             </div>
           </div>
 
