@@ -21,6 +21,7 @@ import {
   IndianRupee,
   AlertTriangle,
   Plus,
+  Minus,
   CheckCircle2,
   X,
   Sparkles,
@@ -380,6 +381,27 @@ function NewBookingWizardForm() {
   const handleToggleSamagri = (id: string) => {
     setSamagriItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, isChecked: !item.isChecked } : item))
+    );
+  };
+
+  // Adjust Samagri Quantity (+1 or -1)
+  const handleUpdateSamagriQty = (id: string, delta: number) => {
+    setSamagriItems((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextQty = Math.max(1, (Number(item.quantity) || 1) + delta);
+          return { ...item, quantity: nextQty };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Direct Set Samagri Quantity
+  const handleSetSamagriQty = (id: string, val: number) => {
+    const nextQty = Math.max(1, isNaN(val) ? 1 : val);
+    setSamagriItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity: nextQty } : item))
     );
   };
 
@@ -888,70 +910,116 @@ function NewBookingWizardForm() {
                       Pooja Samagri Checklist ({samagriItems.length} Total Materials)
                     </h3>
                     <p className="text-[10px] text-slate-500">
-                      Click any item to toggle inclusion / exclusion.
+                      Tick to include/exclude. Change quantity using - / + or direct number.
                     </p>
                   </div>
                 </div>
 
                 <div className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                  {samagriItems.filter((i) => i.isChecked !== false).length} of {samagriItems.length} Included
+                  {samagriItems.filter((i) => i.isChecked !== false).length} of {samagriItems.length} Selected
                 </div>
               </div>
 
-              {/* Samagri Items List */}
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {samagriItems.map((item) => {
+              {/* Samagri Items List with Left Numbering & Right Aligned Quantities */}
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {samagriItems.map((item, idx) => {
                   const isIncluded = item.isChecked !== false;
                   return (
                     <div
                       key={item.id}
                       className={`p-2.5 rounded-xl border transition flex items-center justify-between gap-2.5 ${
                         isIncluded
-                          ? "bg-emerald-50/50 border-emerald-300 text-slate-900"
+                          ? "bg-emerald-50/40 border-emerald-300 text-slate-900 shadow-2xs"
                           : "bg-slate-50/70 border-slate-200 text-slate-400 opacity-60"
                       }`}
                     >
-                      <div
-                        onClick={() => handleToggleSamagri(item.id)}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer select-none"
-                      >
-                        {isIncluded ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        ) : (
-                          <Square className="w-4 h-4 text-slate-400 shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <div className="font-extrabold text-xs truncate">
-                            {item.itemEnglishName}{" "}
+                      {/* Left Side: 1, 2, 3 Number + Tick Mark + Item Names */}
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="text-xs font-black text-slate-400 w-5 shrink-0 text-center select-none">
+                          {idx + 1}.
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSamagri(item.id)}
+                          className="p-0.5 hover:bg-slate-200/50 rounded-lg transition shrink-0"
+                          title={isIncluded ? "Click to exclude" : "Click to include"}
+                        >
+                          {isIncluded ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 fill-emerald-100" />
+                          ) : (
+                            <Square className="w-5 h-5 text-slate-300" />
+                          )}
+                        </button>
+
+                        <div
+                          onClick={() => handleToggleSamagri(item.id)}
+                          className="min-w-0 flex-1 cursor-pointer select-none"
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`font-black text-xs ${
+                                isIncluded ? "text-slate-900" : "text-slate-400 line-through"
+                              }`}
+                            >
+                              {item.itemEnglishName}
+                            </span>
                             {item.itemTamilName && item.itemTamilName !== item.itemEnglishName && (
-                              <span className="text-[11px] font-medium text-amber-800">
+                              <span
+                                className={`text-[11px] font-semibold ${
+                                  isIncluded
+                                    ? "text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded"
+                                    : "text-slate-400"
+                                }`}
+                              >
                                 ({item.itemTamilName})
                               </span>
                             )}
                           </div>
-                          <div className="text-[10px] text-slate-500 font-medium">
-                            Qty: <span className="font-bold text-slate-800">{item.quantity} {item.unit}</span>
-                          </div>
                         </div>
                       </div>
 
-                      {/* Status Tag & Delete Action */}
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span
-                          onClick={() => handleToggleSamagri(item.id)}
-                          className={`text-[10px] font-black px-2 py-0.5 rounded-md border cursor-pointer select-none transition ${
-                            isIncluded
-                              ? "bg-emerald-100 text-emerald-900 border-emerald-200"
-                              : "bg-slate-200 text-slate-600 border-slate-300"
-                          }`}
-                        >
-                          {isIncluded ? "Included ✓" : "Excluded"}
+                      {/* Right Side: Straight Aligned Easy Quantity Stepper + Unit + Delete */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateSamagriQty(item.id, -1)}
+                            disabled={item.quantity <= 1}
+                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed transition"
+                            title="Decrease quantity"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+
+                          <input
+                            type="number"
+                            min={1}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              handleSetSamagriQty(item.id, parseInt(e.target.value) || 1)
+                            }
+                            className="w-10 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none focus:bg-amber-50/50 rounded py-0.5"
+                          />
+
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateSamagriQty(item.id, 1)}
+                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition"
+                            title="Increase quantity"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <span className="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-1 rounded-md min-w-[34px] text-center">
+                          {item.unit}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleRemoveSamagri(item.id)}
-                          className="p-1 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition"
+                          className="p-1.5 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition"
                           title="Remove item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1018,34 +1086,42 @@ function NewBookingWizardForm() {
               </form>
 
               {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX */}
-              <div className="bg-amber-50/60 rounded-xl p-3 border border-amber-200/80 space-y-2">
+              <div className="bg-amber-50/60 rounded-xl p-3.5 border border-amber-200/80 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Clipboard className="w-3.5 h-3.5 text-amber-700" />
-                    <h4 className="text-xs font-extrabold text-slate-900">
+                    <h4 className="text-xs font-black text-slate-900">
                       Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
                     </h4>
                   </div>
-                  <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
-                    ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Ready
+                  <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-200">
+                    ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Selected
                   </span>
                 </div>
 
                 {samagriItems.filter((i) => i.isChecked !== false).length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5 pt-0.5 max-h-36 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5 max-h-48 overflow-y-auto pr-1">
                     {samagriItems
                       .filter((i) => i.isChecked !== false)
-                      .map((i) => (
+                      .map((i, pIdx) => (
                         <div
                           key={i.id}
-                          className="bg-white px-2 py-1 rounded-lg border border-amber-200/80 text-[11px] shadow-2xs flex items-center gap-1 font-medium text-slate-800"
+                          className="bg-white px-3 py-1.5 rounded-xl border border-amber-200/80 text-xs shadow-2xs flex items-center justify-between gap-2"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                          <span className="font-bold text-slate-900">{i.itemEnglishName}</span>
-                          {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
-                            <span className="text-[10px] text-amber-800">({i.itemTamilName})</span>
-                          )}
-                          <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1 py-0.2 rounded">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="text-[10px] font-black text-amber-800 shrink-0">
+                              {pIdx + 1}.
+                            </span>
+                            <span className="font-bold text-slate-900 truncate">
+                              {i.itemEnglishName}
+                            </span>
+                            {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
+                              <span className="text-[10px] text-amber-800 truncate">
+                                ({i.itemTamilName})
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded shrink-0">
                             {i.quantity} {i.unit}
                           </span>
                         </div>
@@ -1053,7 +1129,7 @@ function NewBookingWizardForm() {
                   </div>
                 ) : (
                   <p className="text-[11px] text-amber-800 italic">
-                    No items selected yet. Click any material in the checklist above to include it.
+                    No items selected yet. Click any tick mark in the checklist above to include it.
                   </p>
                 )}
               </div>
