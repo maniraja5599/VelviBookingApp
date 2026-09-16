@@ -770,10 +770,10 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* 1. Selected Day Breakdown & Panchangam Card (Compact & Sleek) */}
-          <div className="bg-[#fffdf7] border border-amber-200/90 rounded-2xl p-3 shadow-xs space-y-2.5">
-            {/* Header: Date + Sacred Badges + Actions */}
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-amber-200/60 flex-wrap">
+          {/* 1. Selected Day Breakdown & Panchangam Card (Redesigned & Premium) */}
+          <div className="bg-[#fffdf7] border border-amber-200/90 rounded-2xl p-3.5 shadow-xs space-y-3">
+            {/* Header: Date + Sacred Badges + Share & Book Actions */}
+            <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-amber-200/60 flex-wrap">
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-black text-xs sm:text-sm text-emerald-950">
@@ -803,73 +803,106 @@ export default function CalendarPage() {
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-amber-900/70 font-semibold mt-0.5">
+                <div className="text-[10.5px] text-amber-900/80 font-medium mt-1">
                   திதி: <strong className="text-slate-900 font-bold">{selectedTamilInfo.tithiNameTa || selectedTamilInfo.tithiTa}</strong> • நட்சத்திரம்: <strong className="text-slate-900 font-bold">{selectedTamilInfo.nakshatraNameTa}</strong>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              {/* Action Buttons (Clean English/Bilingual without duplicate pluses) */}
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={handleShareWhatsApp}
-                  title="WhatsApp பகிர்க"
-                  className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-2xs transition active:scale-95"
+                  title="Share Panchangam via WhatsApp"
+                  className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition active:scale-95"
                 >
-                  <Share2 className="w-3 h-3 text-white" />
-                  <span>பகிர்</span>
+                  <Share2 className="w-3.5 h-3.5 text-white" />
+                  <span>Share</span>
                 </button>
 
                 <Link
                   href={`/app/bookings/new?date=${selectedDate}`}
-                  className="px-2.5 py-1 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-lg text-[11px] font-bold flex items-center gap-1 shadow-2xs transition active:scale-95"
+                  className="px-3 py-1.5 bg-gradient-to-r from-velvi-brown to-velvi-brownDark hover:opacity-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition active:scale-95"
                 >
-                  <Plus className="w-3.5 h-3.5 text-velvi-goldLight stroke-[3]" />
-                  <span>+ புதிய பூஜை</span>
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Book Pooja</span>
                 </Link>
               </div>
             </div>
 
-            {/* Compact Timings Grid (2-column + sub-bar) */}
-            <div className="grid grid-cols-2 gap-1.5 text-[10.5px]">
-              {/* நல்ல நேரம் */}
-              <div className="bg-[#f2faf5] rounded-xl px-2.5 py-1.5 border border-emerald-200/80 flex flex-col justify-center">
-                <div className="flex items-center justify-between text-emerald-950 font-black text-[10px] mb-0.5">
-                  <span className="flex items-center gap-1"><span>☀️</span> நல்ல நேரம்</span>
+            {/* Redesigned Timings Grid */}
+            <div className="space-y-2 text-xs">
+              {/* Auspicious Timings: நல்ல நேரம் & கௌரி நல்ல நேரம் */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* நல்ல நேரம் */}
+                <div className="bg-gradient-to-br from-[#f0f9f4] to-emerald-50/40 rounded-2xl p-2.5 border border-emerald-200/90 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-emerald-950 font-black text-[11px] mb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <span>☀️</span> நல்ல நேரம்
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-white/80 px-1.5 py-0.2 rounded border border-emerald-200">
+                      Auspicious
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px] text-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-emerald-900">காலை:</span>
+                      <span className="font-bold text-slate-900">{formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-emerald-900">மாலை:</span>
+                      <span className="font-bold text-slate-900">{formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-[10px] text-slate-700 flex items-center justify-between gap-1">
-                  <span>காலை: <strong className="text-slate-900 font-bold">{formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</strong></span>
-                </div>
-                <div className="text-[10px] text-slate-700 flex items-center justify-between gap-1">
-                  <span>மாலை: <strong className="text-slate-900 font-bold">{formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</strong></span>
+
+                {/* கௌரி நல்ல நேரம் */}
+                <div className="bg-gradient-to-br from-[#fff9f0] to-amber-50/40 rounded-2xl p-2.5 border border-amber-200/90 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-amber-950 font-black text-[11px] mb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <span>✨</span> கௌரி நல்ல நேரம்
+                    </span>
+                    <span className="text-[10px] text-amber-700 font-semibold bg-white/80 px-1.5 py-0.2 rounded border border-amber-200">
+                      Gowri
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-[11px] text-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-amber-900">காலை:</span>
+                      <span className="font-bold text-slate-900">{formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-amber-900">மாலை:</span>
+                      <span className="font-bold text-slate-900">{formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* கௌரி நல்ல நேரம் */}
-              <div className="bg-[#fff9f2] rounded-xl px-2.5 py-1.5 border border-amber-200/80 flex flex-col justify-center">
-                <div className="flex items-center justify-between text-amber-950 font-black text-[10px] mb-0.5">
-                  <span className="flex items-center gap-1"><span>✨</span> கௌரி நல்ல நேரம்</span>
+              {/* Inauspicious & Planet Timings Pill Bar (ராகு காலம், எமகண்டம், குளிகை) */}
+              <div className="grid grid-cols-3 gap-1.5 bg-slate-50/80 p-2 rounded-2xl border border-slate-200/80 text-[10.5px]">
+                {/* ராகு காலம் */}
+                <div className="bg-rose-50/90 border border-rose-200/80 rounded-xl px-2 py-1.5 text-center flex flex-col justify-center">
+                  <span className="text-rose-900 font-extrabold text-[10px] block">🌙 ராகு காலம்</span>
+                  <span className="text-slate-900 font-black text-[10.5px] mt-0.5 block leading-tight">
+                    {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
+                  </span>
                 </div>
-                <div className="text-[10px] text-slate-700 flex items-center justify-between gap-1">
-                  <span>காலை: <strong className="text-slate-900 font-bold">{formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}</strong></span>
-                </div>
-                <div className="text-[10px] text-slate-700 flex items-center justify-between gap-1">
-                  <span>மாலை: <strong className="text-slate-900 font-bold">{formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}</strong></span>
-                </div>
-              </div>
 
-              {/* ராகு காலம் & எமகண்டம் & குளிகை Bar */}
-              <div className="col-span-2 bg-slate-50 rounded-xl px-2.5 py-1.5 border border-slate-200/80 flex items-center justify-between flex-wrap gap-2 text-[10px]">
-                <div className="flex items-center gap-1 text-rose-800 font-bold">
-                  <span>🌙 ராகு:</span>
-                  <span className="text-slate-900 font-black">{formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}</span>
+                {/* எமகண்டம் */}
+                <div className="bg-indigo-50/90 border border-indigo-200/80 rounded-xl px-2 py-1.5 text-center flex flex-col justify-center">
+                  <span className="text-indigo-900 font-extrabold text-[10px] block">🐍 எமகண்டம்</span>
+                  <span className="text-slate-900 font-black text-[10.5px] mt-0.5 block leading-tight">
+                    {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
+                  </span>
                 </div>
-                <div className="flex items-center gap-1 text-indigo-900 font-bold">
-                  <span>🐍 எமகண்டம்:</span>
-                  <span className="text-slate-900 font-black">{formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}</span>
-                </div>
-                <div className="flex items-center gap-1 text-amber-900 font-bold">
-                  <span>🪐 குளிகை:</span>
-                  <span className="text-slate-900 font-black">{formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}</span>
+
+                {/* குளிகை */}
+                <div className="bg-amber-50/90 border border-amber-200/80 rounded-xl px-2 py-1.5 text-center flex flex-col justify-center">
+                  <span className="text-amber-900 font-extrabold text-[10px] block">🪐 குளிகை</span>
+                  <span className="text-slate-900 font-black text-[10.5px] mt-0.5 block leading-tight">
+                    {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -887,23 +920,17 @@ export default function CalendarPage() {
                   href={`/app/bookings/new?date=${selectedDate}`}
                   className="text-[11px] font-bold text-velvi-goldDark hover:underline"
                 >
-                  + புதிய புக்கிங்
+                  + Book Pooja
                 </Link>
               )}
             </div>
 
             {selectedDayBookings.length === 0 ? (
-              <div className="bg-white rounded-xl px-3 py-2 border border-dashed border-velvi-gold/30 flex items-center justify-between shadow-2xs">
-                <div className="flex items-center gap-2 text-xs text-velvi-brown/80 font-medium">
+              <div className="bg-white rounded-xl px-3.5 py-2.5 border border-dashed border-velvi-gold/30 flex items-center justify-center text-center shadow-2xs">
+                <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                   <span className="text-sm">🪔</span>
-                  <span>இத்தேதியில் பூஜைகள் ஏதுமில்லை</span>
+                  <span>இத்தேதியில் முன்பதிவுகள் ஏதுமில்லை (Open for Bookings)</span>
                 </div>
-                <Link
-                  href={`/app/bookings/new?date=${selectedDate}`}
-                  className="text-[11px] font-bold text-velvi-brownDark bg-velvi-gold/20 hover:bg-velvi-gold/30 px-2.5 py-1 rounded-lg transition active:scale-95"
-                >
-                  + பூஜை பதிவு செய்
-                </Link>
               </div>
             ) : (
               <div className="space-y-1.5">
