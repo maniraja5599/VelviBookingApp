@@ -163,10 +163,6 @@ export default function BookingItemsPage() {
             {booking.poojaEnglishName} removes all barriers and obstacles. Performed before any
             auspicious beginning, house-warming, business launch, or annual family welfare.
           </p>
-          <div className="pt-2 border-t border-velvi-creamDark">
-            <span className="font-bold text-velvi-brown">Standard Duration:</span>{" "}
-            {booking.durationMinutes} minutes
-          </div>
         </div>
       )}
 

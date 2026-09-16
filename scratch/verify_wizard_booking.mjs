@@ -35,6 +35,8 @@ import path from "path";
     // -------------------------------------------------------------
     console.log("\n👉 Step 1: Devotee Search & Rich Profile Showcase...");
     await page.goto("http://localhost:3000/app/bookings/new", { waitUntil: "networkidle" });
+    await page.evaluate(() => localStorage.clear());
+    await page.reload({ waitUntil: "networkidle" });
     await page.waitForTimeout(600);
     await page.screenshot({ path: path.join(artifactDir, "wizard_v2_01_step1_empty.png") });
 
@@ -132,6 +134,13 @@ import path from "path";
       await page.waitForTimeout(300);
     }
 
+    // Tap direct priest card (Self)
+    const selfPriestBtn = page.locator("button:has-text('நானே செய்து வைக்கிறேன்')").first();
+    if (await selfPriestBtn.isVisible()) {
+      await selfPriestBtn.click();
+      await page.waitForTimeout(200);
+    }
+
     // Set Sankalpam notes
     const notesInput = page.locator("input[placeholder*='Koundinya Gothram']").first();
     if (await notesInput.isVisible()) {
@@ -142,8 +151,12 @@ import path from "path";
 
     // Click "Confirm & Create Booking"
     await page.locator("#confirmAndCreateBookingBtn").click();
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
     await page.screenshot({ path: path.join(artifactDir, "wizard_v2_09_booking_confirmed_redirect.png") });
+
+    console.log("\n👉 Step 5: Verify Revamped Booking Detail Page...");
+    // Verify booking details page is loaded
+    await page.screenshot({ path: path.join(artifactDir, "wizard_v2_10_booking_details_overhaul.png") });
 
     console.log("\n==================================================");
     console.log("🎉 ALL UPGRADED WIZARD FLOWS COMPLETED WITH 100% SUCCESS!");

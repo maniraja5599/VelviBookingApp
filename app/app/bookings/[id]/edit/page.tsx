@@ -233,19 +233,7 @@ export default function EditBookingPage() {
             <span>Rahu Kalam: <span className="font-semibold text-velvi-brownDark">{dateInfo.rahuKalam.split(" - ")[0]}</span></span>
           </div>
 
-          <div>
-            <label className="text-[11px] font-bold text-velvi-brown/80 block mb-1">
-              Duration (Minutes)
-            </label>
-            <input
-              type="number"
-              min="30"
-              step="15"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(Number(e.target.value))}
-              className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-            />
-          </div>
+
         </div>
 
         {/* 4. Performer (Self vs Delegated Staff) */}

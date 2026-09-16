@@ -242,87 +242,181 @@ export default function BookingDetailPage() {
         </div>
       )}
 
-      {/* Main Ceremony Card */}
-      <div className="bg-gradient-to-br from-velvi-creamLight to-velvi-cream rounded-2xl p-4 border border-velvi-gold/30 shadow-sacred space-y-3">
-        <div>
-          <div className="text-xs font-semibold text-velvi-goldDark uppercase tracking-wider">
-            Pooja / Homam
+      {/* Main Ceremony Hero Card (Vedic sacred style without duration) */}
+      <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-3xl p-5 text-white shadow-md space-y-3.5 relative overflow-hidden">
+        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
+
+        <div className="flex items-start justify-between relative z-10">
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-200 block">
+              Pooja Ceremony (ஹோமம் / பூஜை)
+            </span>
+            <h2 className="text-xl font-black text-white mt-1 leading-tight">
+              {booking.poojaEnglishName}
+            </h2>
           </div>
-          <h2 className="text-lg font-bold text-velvi-brownDark mt-0.5">
-            {booking.poojaEnglishName}
-          </h2>
+
+          <div className="text-right shrink-0">
+            <span className="text-xl font-black text-white">
+              ₹{booking.totalAmount.toLocaleString("en-IN")}
+            </span>
+            <div className="text-[10px] text-amber-100 font-bold mt-0.5">Total Fee</div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs text-velvi-brown/80 border-t border-velvi-gold/20 pt-2.5">
-          <div className="flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-velvi-gold" />
-            <div>
-              <div className="font-bold text-velvi-brownDark">{dateInfo.formattedDualDate}</div>
-              <div className="text-[10px] text-velvi-brown/60">{dateInfo.dayOfWeekEn}</div>
+        <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-white/20 text-xs relative z-10">
+          <div className="bg-white/15 backdrop-blur-xs p-2.5 rounded-2xl border border-white/20">
+            <div className="flex items-center gap-1.5 text-amber-200 text-[10px] font-bold uppercase">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Auspicious Date</span>
             </div>
+            <div className="font-black text-white mt-0.5 text-xs">{dateInfo.formattedDualDate}</div>
+            <div className="text-[10px] text-amber-100">{dateInfo.dayOfWeekTa} ({dateInfo.dayOfWeekEn})</div>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-velvi-gold" />
-            <div>
-              <div className="font-bold text-velvi-brownDark">{booking.startTime}</div>
-              <div className="text-[10px] text-velvi-brown/60">{booking.durationMinutes} mins</div>
+          <div className="bg-white/15 backdrop-blur-xs p-2.5 rounded-2xl border border-white/20">
+            <div className="flex items-center gap-1.5 text-amber-200 text-[10px] font-bold uppercase">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Ceremony Time</span>
             </div>
+            <div className="font-black text-white mt-0.5 text-sm">{booking.startTime}</div>
+            <div className="text-[10px] text-amber-100">{dateInfo.tithiTa}</div>
           </div>
         </div>
       </div>
 
-      {/* Customer Information Card */}
-      <div className="bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-velvi-brown/60 uppercase tracking-wide">
-            Customer Details
+      {/* Devotee Information Card with Direct Call / WhatsApp */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-amber-600" /> Devotee Information (பக்தர் விவரம்)
           </span>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-1.5">
             {booking.customerMobile && (
               <a
                 href={`tel:${booking.customerMobile}`}
-                className="p-1.5 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown rounded-lg transition"
+                className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-bold flex items-center gap-1 transition"
                 title="Call Customer"
               >
-                <Phone className="w-4 h-4" />
+                <Phone className="w-3.5 h-3.5 text-slate-700" />
+                <span className="hidden sm:inline">Call</span>
               </a>
             )}
             <button
               onClick={handleWhatsAppShare}
-              className="p-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg transition"
+              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 transition"
               title="WhatsApp Customer"
             >
-              <MessageCircle className="w-4 h-4" />
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+              <span>WhatsApp</span>
             </button>
           </div>
         </div>
 
-        <div>
-          <h4 className="font-bold text-sm text-velvi-brownDark">{booking.customerName}</h4>
-          <p className="text-xs text-velvi-brown/80 flex items-center gap-1 mt-0.5">
-            <MapPin className="w-3.5 h-3.5 text-velvi-gold shrink-0" />
-            <span>{booking.location}</span>
-          </p>
-          {booking.customerMobile && (
-            <p className="text-xs text-velvi-brown/70 mt-0.5">{booking.customerMobile}</p>
-          )}
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1">
+            <h4 className="font-black text-base text-slate-900">{booking.customerName}</h4>
+            <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
+              <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span>{booking.location || "Namakkal / Devotee Residence"}</span>
+            </p>
+            {booking.customerMobile && (
+              <p className="text-xs font-bold text-slate-700">📱 {booking.customerMobile}</p>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Assigned / Performing Iyer Card (Points 35 & 36 - Self Default vs Delegation) */}
-      <div className={`rounded-2xl p-3.5 border shadow-sm space-y-2.5 transition ${
+      {/* DEDICATED FINANCIAL & SETTLEMENT BOX (தனியா ஒரு பாக்ஸ்) */}
+      <div className="bg-gradient-to-br from-white to-amber-50/40 rounded-2xl p-4 border-2 border-amber-300 shadow-sm space-y-3.5">
+        <div className="flex items-center justify-between border-b border-amber-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+              <IndianRupee className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-slate-900">
+                Payment & Fee Summary (கட்டண விவரம்)
+              </h4>
+              <p className="text-[10px] text-slate-500">Direct priest settlement status</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-[10px] px-2.5 py-1 rounded-full font-extrabold border ${
+                booking.paymentStatus === "PAID"
+                  ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                  : "bg-amber-100 text-amber-900 border-amber-300"
+              }`}
+            >
+              {booking.paymentStatus === "PAID" ? "Full Paid ✓" : "Advance Pending"}
+            </span>
+
+            <button
+              onClick={() => {
+                setEditTotalAmount(booking.totalAmount);
+                setEditAdvanceAmount(booking.advanceAmount);
+                setPaymentError("");
+                setShowEditPaymentModal(true);
+              }}
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-700 underline flex items-center gap-0.5"
+              title="Edit Payment Amounts"
+            >
+              <Edit className="w-3 h-3 text-amber-700" />
+              <span>Edit</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-center shadow-2xs">
+            <span className="text-[10px] font-bold text-slate-500 block">Total Fee</span>
+            <div className="text-sm font-black text-slate-900 mt-0.5">
+              ₹{booking.totalAmount.toLocaleString("en-IN")}
+            </div>
+          </div>
+
+          <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 text-center shadow-2xs">
+            <span className="text-[10px] font-bold text-emerald-800 block">Advance Paid</span>
+            <div className="text-sm font-black text-emerald-900 mt-0.5">
+              ₹{booking.advanceAmount.toLocaleString("en-IN")}
+            </div>
+          </div>
+
+          <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-300 text-center shadow-2xs">
+            <span className="text-[10px] font-bold text-amber-900 block">Balance Due</span>
+            <div className="text-sm font-black text-amber-950 mt-0.5">
+              ₹{booking.balanceAmount.toLocaleString("en-IN")}
+            </div>
+          </div>
+        </div>
+
+        {booking.balanceAmount > 0 && booking.status !== "CANCELLED" && (
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5"
+          >
+            <IndianRupee className="w-3.5 h-3.5 text-amber-400" />
+            <span>Record Additional Payment (கட்டணம் செலுத்த)</span>
+          </button>
+        )}
+      </div>
+
+      {/* Assigned / Performing Priest Showcase */}
+      <div className={`rounded-2xl p-4 border shadow-2xs space-y-3 transition ${
         isSelf
-          ? "bg-gradient-to-br from-velvi-creamLight/90 to-velvi-cream border-velvi-gold/40 shadow-sacred"
+          ? "bg-white border-amber-300"
           : "bg-white border-blue-200"
       }`}>
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold text-velvi-brown/70 uppercase tracking-wide">
-            Pooja Performer
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+            Performing Priest (செய்து வைக்கும் குருக்கள்)
           </span>
           {isSelf ? (
-            <span className="text-[10px] font-bold bg-velvi-gold/20 text-velvi-brownDark px-2.5 py-0.5 rounded-full border border-velvi-gold/40 flex items-center gap-1">
-              <span>🪔</span> Self
+            <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300 flex items-center gap-1">
+              <span>🪔</span> தலைமை குருக்கள் (Self)
             </span>
           ) : (
             <span className="text-[10px] font-bold bg-blue-50 text-blue-800 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
@@ -332,41 +426,47 @@ export default function BookingDetailPage() {
         </div>
 
         <div className="flex items-center justify-between">
-          <div>
-            <div className="font-bold text-base text-velvi-brownDark flex items-center gap-1.5">
-              <span>{isSelf ? "🪔" : "👤"}</span>
-              <span>{booking.assignedIyerName || (isSelf ? (currentUser?.name || "Ravi Iyer") : "Unassigned")}</span>
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shadow-2xs ${
+              isSelf ? "bg-amber-500 text-white" : "bg-blue-600 text-white"
+            }`}>
+              {isSelf ? "🪔" : "👤"}
             </div>
-            <p className="text-[11px] text-velvi-brown/70 mt-0.5">
-              {isSelf
-                ? "Standard mode — you will attend and perform this ceremony personally."
-                : "Delegated — you are unable to attend, assigned to this team member."}
-            </p>
+            <div>
+              <div className="font-black text-sm text-slate-900">
+                {booking.assignedIyerName || (isSelf ? (currentUser?.name || "Ravi Iyer") : "Unassigned")}
+              </div>
+              <p className="text-[11px] text-slate-500">
+                {isSelf
+                  ? "நீங்கள் நேரடியாக சென்று செய்து வைக்கிறீர்கள் (Self Performed)"
+                  : "வேறு குருக்களுக்கு ஒப்படைக்கப்பட்டுள்ளது (Delegated)"}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         {isSelf ? (
-          <div className="pt-2 border-t border-velvi-gold/20">
+          <div className="pt-2 border-t border-slate-100">
             <Link
               href={`/app/bookings/${booking.id}/assign`}
-              className="w-full py-2 px-3 bg-white hover:bg-amber-50 text-velvi-brownDark border border-velvi-gold/40 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition"
+              className="w-full py-2 px-3 bg-slate-50 hover:bg-amber-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
             >
               <UserCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Cannot Attend? Delegate to Team</span>
+              <span>Cannot Attend? Delegate to Team (வேறு குருக்களுக்கு மாற்ற)</span>
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-blue-100">
             <button
               onClick={handleRevertToSelf}
-              className="py-2 bg-velvi-gold/15 hover:bg-velvi-gold/25 text-velvi-brownDark rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-velvi-gold/30 transition shadow-sm"
+              className="py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-amber-200 transition shadow-2xs"
             >
               <span>🪔 Perform Myself</span>
             </button>
             <Link
               href={`/app/bookings/${booking.id}/assign`}
-              className="py-2 bg-gray-50 hover:bg-gray-100 text-velvi-brown rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-gray-200 transition"
+              className="py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-200 transition"
             >
               <span>Reassign →</span>
             </Link>
@@ -375,17 +475,17 @@ export default function BookingDetailPage() {
 
         {/* Reassignment Audit History if any exists */}
         {assignmentHistory.length > 0 && (
-          <div className="pt-2 border-t border-velvi-gold/15 space-y-1">
-            <span className="text-[10px] font-bold text-velvi-brown/60 uppercase flex items-center gap-1">
-              <History className="w-3 h-3 text-velvi-gold" /> Reassignment History ({assignmentHistory.length})
+          <div className="pt-2 border-t border-slate-100 space-y-1">
+            <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+              <History className="w-3 h-3 text-amber-600" /> Reassignment History ({assignmentHistory.length})
             </span>
             <div className="space-y-1">
               {assignmentHistory.map((hist) => (
                 <div
                   key={hist.id}
-                  className="text-[10px] bg-white/70 p-2 rounded-lg border border-velvi-gold/15 text-velvi-brown/80"
+                  className="text-[10px] bg-slate-50 p-2 rounded-lg border border-slate-200 text-slate-700"
                 >
-                  <span className="font-semibold text-velvi-brownDark">
+                  <span className="font-bold text-slate-900">
                     {hist.previousIyerName || "Initial"} → {hist.newIyerName}
                   </span>{" "}
                   • Reason: <span className="italic">{hist.reason}</span>
@@ -396,77 +496,19 @@ export default function BookingDetailPage() {
         )}
       </div>
 
-      {/* Payment Information Card (Point 40 & Strict Payment Guardrail) */}
-      <div className="bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm space-y-2.5">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-velvi-brown/60 uppercase tracking-wide">
-            Payment Summary
-          </span>
-          <div className="flex items-center gap-2">
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                booking.paymentStatus === "PAID"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-amber-100 text-amber-800"
-              }`}
-            >
-              {booking.paymentStatus === "PAID" ? "Paid ✅" : "Pending"}
-            </span>
-
-            {/* Controlled Payment Edit Trigger */}
-            <button
-              onClick={() => {
-                setEditTotalAmount(booking.totalAmount);
-                setEditAdvanceAmount(booking.advanceAmount);
-                setPaymentError("");
-                setShowEditPaymentModal(true);
-              }}
-              className="text-[11px] font-bold text-velvi-brownDark hover:text-velvi-goldDark underline flex items-center gap-1"
-              title="Edit Payment Amounts"
-            >
-              <Edit className="w-3 h-3 text-velvi-gold" />
-              <span>Edit Payment</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-baseline justify-between">
-          <div>
-            <div className="text-xl font-extrabold text-velvi-brownDark">
-              ₹{booking.totalAmount.toLocaleString("en-IN")}
-            </div>
-            {booking.advanceAmount > 0 && (
-              <div className="text-xs text-velvi-brown/70">
-                Advance: ₹{booking.advanceAmount.toLocaleString("en-IN")} • Balance: ₹
-                {booking.balanceAmount.toLocaleString("en-IN")}
-              </div>
-            )}
-          </div>
-
-          {booking.balanceAmount > 0 && booking.status !== "CANCELLED" && (
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              className="px-3 py-1.5 bg-velvi-brown text-white font-bold rounded-xl text-xs hover:bg-velvi-brownLight transition shadow-sm"
-            >
-              Record Payment
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Primary 1-Tap Action Grid (Point 73) */}
+      {/* Primary 1-Tap Action Grid */}
       <div className="grid grid-cols-2 gap-2.5 pt-1">
         <Link
           href={`/app/bookings/${booking.id}/items`}
-          className="py-3 bg-velvi-cream border border-velvi-gold/30 rounded-xl font-bold text-xs text-velvi-brown flex items-center justify-center gap-1.5 shadow-sm hover:bg-velvi-gold/15 transition"
+          className="py-3 bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-xl font-bold text-xs text-amber-950 flex items-center justify-center gap-1.5 shadow-2xs transition"
         >
-          <Flame className="w-4 h-4 text-velvi-gold" />
+          <Flame className="w-4 h-4 text-amber-700" />
           <span>Items List ({booking.items?.length || 0})</span>
         </Link>
 
         <button
           onClick={handleWhatsAppShare}
-          className="py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
+          className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition"
         >
           <Share2 className="w-4 h-4" />
           <span>Share WhatsApp</span>
@@ -478,10 +520,10 @@ export default function BookingDetailPage() {
         {booking.status !== "COMPLETED" && booking.status !== "CANCELLED" && (
           <button
             onClick={handleMarkCompleted}
-            className="w-full py-2.5 bg-velvi-sacredGreen hover:bg-velvi-sacredGreenLight text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
+            className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span>Mark Completed</span>
+            <span>Mark Completed (பூஜை நிறைவடைந்தது)</span>
           </button>
         )}
 

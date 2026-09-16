@@ -113,7 +113,7 @@ export default function AssignIyerPage() {
           <p className="text-xs text-velvi-brown/60 flex items-center gap-1">
             <Clock className="w-3 h-3 text-velvi-gold" />
             <span>
-              {booking.date} • {booking.startTime} ({booking.durationMinutes} mins)
+              {booking.date} • {booking.startTime}
             </span>
           </p>
         </div>

@@ -547,11 +547,7 @@ export default function PoojasCataloguePage() {
                   </div>
 
                   <div className="flex items-center gap-2.5 text-[11px] text-slate-500 font-medium mt-1">
-                    <span className="flex items-center gap-1 text-slate-600">
-                      <Clock className="w-3.5 h-3.5 text-amber-600" /> {p.durationMinutes} mins
-                    </span>
-                    <span>•</span>
-                    <span>{p.items?.length || 0} items</span>
+                    <span className="text-slate-600 font-semibold">{p.items?.length || 0} items checklist</span>
                   </div>
                 </div>
               </div>
@@ -624,9 +620,9 @@ export default function PoojasCataloguePage() {
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-velvi-brown/60 block">Standard Duration</span>
+                <span className="text-velvi-brown/60 block">Checklist Items</span>
                 <span className="font-bold text-velvi-brownDark text-sm">
-                  {selectedPooja.durationMinutes} Minutes
+                  {selectedPooja.items?.length || 0} Materials
                 </span>
               </div>
             </div>
@@ -797,76 +793,36 @@ export default function PoojasCataloguePage() {
                 </div>
               </div>
 
-              {/* Price & Duration with Quick Chips */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">
-                    Base Dakshina (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    step={100}
-                    placeholder="5000"
-                    value={formBasePrice}
-                    onChange={(e) => setFormBasePrice(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  />
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {[3000, 4500, 5000, 7500, 10000, 12000].map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setFormBasePrice(p)}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
-                          formBasePrice === p
-                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
-                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
-                        }`}
-                      >
-                        ₹{p.toLocaleString()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">
-                    Duration (Minutes) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={15}
-                    step={15}
-                    placeholder="120"
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  />
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {[
-                      { mins: 60, label: "1h" },
-                      { mins: 90, label: "1.5h" },
-                      { mins: 120, label: "2h" },
-                      { mins: 180, label: "3h" },
-                      { mins: 240, label: "4h" },
-                    ].map((d) => (
-                      <button
-                        key={d.mins}
-                        type="button"
-                        onClick={() => setFormDuration(d.mins)}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
-                          formDuration === d.mins
-                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
-                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
+              {/* Price with Quick Chips */}
+              <div>
+                <label className="text-xs font-bold text-velvi-brown block mb-1">
+                  Base Dakshina (₹) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  step={100}
+                  placeholder="5000"
+                  value={formBasePrice}
+                  onChange={(e) => setFormBasePrice(Number(e.target.value))}
+                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                />
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {[3000, 4500, 5000, 7500, 10000, 12000].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setFormBasePrice(p)}
+                      className={`px-2 py-1 rounded-lg text-[10px] font-bold transition border ${
+                        formBasePrice === p
+                          ? "bg-velvi-brown text-amber-200 border-velvi-brown"
+                          : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
+                      }`}
+                    >
+                      ₹{p.toLocaleString()}
+                    </button>
+                  ))}
                 </div>
               </div>
 
