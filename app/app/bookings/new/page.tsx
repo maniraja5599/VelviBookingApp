@@ -932,10 +932,12 @@ function NewBookingForm() {
 
         {/* Primary Action */}
         <button
+          id="createBookingSubmitBtn"
           type="submit"
-          className="w-full py-3.5 bg-gradient-to-r from-velvi-brown to-velvi-brownLight text-white rounded-xl font-bold text-sm shadow-sacred active:scale-[0.99] transition mt-2"
+          className="w-full py-3.5 bg-gradient-to-r from-velvi-brown to-velvi-brownLight text-white rounded-xl font-bold text-sm shadow-sacred active:scale-[0.99] transition mt-2 flex items-center justify-center gap-2"
         >
-          Create Booking
+          <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
+          <span>+ பூஜை பதிவு செய்க / Create Booking</span>
         </button>
       </form>
 

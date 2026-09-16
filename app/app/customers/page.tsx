@@ -32,9 +32,13 @@ export default function CustomersPage() {
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [customers, setCustomers] = useState<Customer[]>(db.getCustomers(businessId));
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  React.useEffect(() => {
+    setCustomers(db.getCustomers(businessId));
+  }, [businessId]);
 
   // New customer form
   const [name, setName] = useState("");
@@ -135,11 +139,12 @@ export default function CustomersPage() {
         </div>
 
         <button
+          id="addCustomerBtn"
           onClick={() => setShowAddModal(true)}
           className="px-3 py-1.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition"
         >
           <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-          <span>Add</span>
+          <span>+ புதிய பக்தர் (Add)</span>
         </button>
       </div>
 
