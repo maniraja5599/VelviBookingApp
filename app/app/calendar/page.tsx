@@ -139,6 +139,166 @@ export default function CalendarPage() {
     };
   }, [monthDayDetails]);
 
+  // List of all important festival and sacred days for the current month
+  const monthImportantEventsList = React.useMemo(() => {
+    const events: Array<{
+      day: number;
+      dateStr: string;
+      name: string;
+      icon?: string;
+    }> = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const d = monthDayDetails[dateStr] || getTamilDate(dateStr);
+
+      if (d.festivalName) {
+        events.push({
+          day,
+          dateStr,
+          name: d.festivalName,
+          icon: d.specialDayIcon || "⭐",
+        });
+      }
+      if (d.isKarthigai && (!d.festivalName || !d.festivalName.includes("கார்த்திகை"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "கார்த்திகை விரதம்",
+          icon: "🪔",
+        });
+      }
+      if (d.isMaadhaSivarathiri && (!d.festivalName || !d.festivalName.includes("சிவராத்திரி"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "மாத சிவராத்திரி",
+          icon: "🔱",
+        });
+      }
+      if (d.isAmavasai && (!d.festivalName || !d.festivalName.includes("அமாவாசை"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "அமாவாசை",
+          icon: "🌑",
+        });
+      }
+      if (d.isChandraDarisanam && (!d.festivalName || !d.festivalName.includes("சந்திர தரிசனம்"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "சந்திர தரிசனம்",
+          icon: "🌙",
+        });
+      }
+      if (d.isPournami && (!d.festivalName || !d.festivalName.includes("பௌர்ணமி"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "பௌர்ணமி",
+          icon: "🌕",
+        });
+      }
+      if (d.isEkadashi && (!d.festivalName || !d.festivalName.includes("ஏகாதசி"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "ஏகாதசி",
+          icon: "🪷",
+        });
+      }
+      if (d.isSankataharaChaturthi && (!d.festivalName || !d.festivalName.includes("சதுர்த்தி"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "சங்கடஹர சதுர்த்தி",
+          icon: "🐘",
+        });
+      }
+      if (d.isSashti && (!d.festivalName || !d.festivalName.includes("சஷ்டி"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "சஷ்டி விரதம்",
+          icon: "🦚",
+        });
+      }
+      if (d.isThiruvonam && (!d.festivalName || !d.festivalName.includes("திருவோண"))) {
+        events.push({
+          day,
+          dateStr,
+          name: "திருவோண விரதம்",
+          icon: "🌸",
+        });
+      }
+    }
+
+    return events;
+  }, [currentYear, currentMonth, daysInMonth, monthDayDetails]);
+
+  // List of Moon Phases & Fasting Days with compact, smart date numbers
+  const moonAndFastingList = React.useMemo(() => {
+    const allDays = Object.values(monthDayDetails);
+
+    const formatDays = (days: typeof allDays) => {
+      return days.map((d) => ({
+        dayNum: d.dayOfMonth,
+        dateStr: d.dateStr,
+      }));
+    };
+
+    const list = [
+      {
+        title: "பௌர்ணமி",
+        icon: "🌕",
+        dates: formatDays(allDays.filter((d) => d.isPournami)),
+      },
+      {
+        title: "அமாவாசை",
+        icon: "🌑",
+        dates: formatDays(allDays.filter((d) => d.isAmavasai)),
+      },
+      {
+        title: "சங்கடஹர சதுர்த்தி",
+        icon: "🐘",
+        dates: formatDays(allDays.filter((d) => d.isSankataharaChaturthi)),
+      },
+      {
+        title: "கிருத்திகை",
+        icon: "🪔",
+        dates: formatDays(allDays.filter((d) => d.isKarthigai)),
+      },
+      {
+        title: "ஏகாதசி",
+        icon: "🪷",
+        dates: formatDays(allDays.filter((d) => d.isEkadashi)),
+      },
+      {
+        title: "சஷ்டி",
+        icon: "🦚",
+        dates: formatDays(allDays.filter((d) => d.isSashti)),
+      },
+      {
+        title: "சந்திர தரிசனம்",
+        icon: "🌙",
+        dates: formatDays(allDays.filter((d) => d.isChandraDarisanam)),
+      },
+      {
+        title: "மாத சிவராத்திரி",
+        icon: "🔱",
+        dates: formatDays(allDays.filter((d) => d.isMaadhaSivarathiri)),
+      },
+      {
+        title: "திருவோணம்",
+        icon: "🌸",
+        dates: formatDays(allDays.filter((d) => d.isThiruvonam)),
+      },
+    ];
+
+    return list.filter((item) => item.dates.length > 0);
+  }, [monthDayDetails]);
+
   // Grouped booked dates with full Tamil info for instant filtering and list display
   const bookedDatesGrouped = React.useMemo(() => {
     const dates = Array.from(new Set(currentMonthBookings.map((b) => b.date))).sort();
@@ -802,220 +962,102 @@ export default function CalendarPage() {
             )}
           </div>
 
-          {/* 3. Monthly Sacred Days Overview (Ultra-Compact Tabbed View) */}
-          <div className="bg-[#fcfaf5] border border-amber-300/70 rounded-2xl p-3 shadow-xs space-y-2">
-            <div className="flex items-center justify-between pb-1.5 border-b border-amber-200/60">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm">🌾</span>
-                <h4 className="font-black text-xs text-emerald-950">
-                  இம்மாத விசேஷ தினங்கள்
-                </h4>
-                <span className="text-[10px] text-amber-900/70 font-semibold">
-                  ({monthNamesTransTa[currentMonth]})
-                </span>
+          {/* 3. Monthly Important Days & Moon Phases / Fasting Days (2-Column Responsive Layout) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Left Card: முக்கிய நாட்கள் */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-2xs">
+                      <CalendarDays className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      முக்கிய நாட்கள்
+                    </h4>
+                  </div>
+                  <span className="text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                    {monthImportantEventsList.length} விசேஷங்கள்
+                  </span>
+                </div>
+
+                <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto pr-1 space-y-0.5 mt-1.5 scrollbar-thin">
+                  {monthImportantEventsList.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-slate-400 font-medium">
+                      இம்மாதத்தில் சிறப்பு நாட்கள் ஏதுமில்லை
+                    </div>
+                  ) : (
+                    monthImportantEventsList.map((item, idx) => (
+                      <button
+                        key={`${item.dateStr}-${idx}`}
+                        type="button"
+                        onClick={() => setSelectedDate(item.dateStr)}
+                        className={`w-full flex items-center gap-2 py-1.5 px-1.5 rounded-lg text-left transition group ${
+                          selectedDate === item.dateStr
+                            ? "bg-amber-50/90 text-slate-950 font-bold"
+                            : "hover:bg-slate-50 text-slate-800"
+                        }`}
+                      >
+                        <span className="font-black text-red-600 text-xs w-6 shrink-0 tracking-tight">
+                          {String(item.day).padStart(2, "0")}
+                        </span>
+                        <span className="text-slate-300 font-bold">-</span>
+                        <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-900 flex items-center gap-1.5 truncate">
+                          <span className="truncate">{item.name}</span>
+                          {item.icon && <span className="shrink-0">{item.icon}</span>}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
-              <span className="text-[9px] font-bold px-2 py-0.2 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
-                பஞ்சாங்கம்
-              </span>
             </div>
 
-            {/* Category Scrollable Horizontal Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-              {[
-                { id: "muhurtham", label: "💍 முகூர்த்தம்", count: monthSacredSummary.muhurthamDays.length },
-                { id: "pournami", label: "🌕 பௌர்ணமி", count: monthSacredSummary.pournamiDays.length },
-                { id: "amavasai", label: "🌑 அமாவாசை", count: monthSacredSummary.amavasaiDays.length },
-                { id: "pradosham", label: "🪔 பிரதோஷம்", count: monthSacredSummary.pradoshamDays.length },
-                { id: "ekadashi", label: "🌿 ஏகாதசி", count: monthSacredSummary.ekadashiDays.length },
-                { id: "chaturthi", label: "🐘 சதுர்த்தி", count: monthSacredSummary.chaturthiDays.length },
-                { id: "sashti", label: "🚩 சஷ்டி", count: monthSacredSummary.sashtiDays.length },
-                { id: "karthigai", label: "🔥 கார்த்திகை", count: monthSacredSummary.karthigaiDays.length },
-                { id: "karinaal", label: "⚠️ கரிநாட்கள்", count: monthSacredSummary.karinaalDays.length },
-                { id: "festivals", label: "⭐ விழாக்கள்", count: monthSacredSummary.festivalDays.length },
-              ]
-                .filter((cat) => cat.count > 0)
-                .map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setActiveSacredTab(cat.id)}
-                    className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition active:scale-95 shrink-0 flex items-center gap-1 border ${
-                      activeSacredTab === cat.id
-                        ? "bg-emerald-900 text-amber-300 border-emerald-950 shadow-2xs ring-1 ring-emerald-700"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span>{cat.label}</span>
-                    <span className="text-[9.5px] opacity-80">({cat.count})</span>
-                  </button>
-                ))}
-            </div>
+            {/* Right Card: சந்திர நிலைகள் & விரத தினங்கள் */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base leading-none">🌙</span>
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      சந்திர நிலைகள்
+                    </h4>
+                  </div>
+                  <span className="text-xs font-bold text-purple-800">
+                    விரத தினங்கள்
+                  </span>
+                </div>
 
-            {/* Dates corresponding to selected sacred tab */}
-            <div className="pt-1 flex flex-wrap gap-1.5 min-h-[30px] items-center">
-              {activeSacredTab === "muhurtham" &&
-                monthSacredSummary.muhurthamDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-emerald-800 text-white border-emerald-900"
-                        : "bg-white text-emerald-950 border-emerald-300 hover:bg-emerald-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]}</span>
-                    <span className="text-[9.5px] opacity-75 ml-1">({d.tamilMonth} {d.tamilDay} - {d.dayOfWeekTa})</span>
-                  </button>
-                ))}
+                <div className="divide-y divide-gray-50 space-y-0.5 mt-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                  {moonAndFastingList.map((item) => (
+                    <div
+                      key={item.title}
+                      className="flex items-center justify-between py-1.5 px-1.5 text-xs rounded-lg hover:bg-slate-50 transition"
+                    >
+                      <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                        <span className="text-sm leading-none">{item.icon}</span>
+                        <span>{item.title}</span>
+                      </div>
 
-              {activeSacredTab === "pournami" &&
-                monthSacredSummary.pournamiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-amber-800 text-white border-amber-900"
-                        : "bg-white text-amber-950 border-amber-300 hover:bg-amber-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                    <span className="text-[9.5px] opacity-75 ml-1">• {d.tamilMonth} {d.tamilDay} ({d.nakshatraNameTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "amavasai" &&
-                monthSacredSummary.amavasaiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-slate-900 text-white border-slate-950"
-                        : "bg-white text-slate-900 border-slate-300 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                    <span className="text-[9.5px] opacity-75 ml-1">• {d.tamilMonth} {d.tamilDay} ({d.nakshatraNameTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "pradosham" &&
-                monthSacredSummary.pradoshamDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-orange-800 text-white border-orange-900"
-                        : "bg-white text-orange-950 border-orange-300 hover:bg-orange-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "ekadashi" &&
-                monthSacredSummary.ekadashiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-lime-800 text-white border-lime-900"
-                        : "bg-white text-lime-950 border-lime-300 hover:bg-lime-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "chaturthi" &&
-                monthSacredSummary.chaturthiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-purple-800 text-white border-purple-900"
-                        : "bg-white text-purple-950 border-purple-300 hover:bg-purple-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "sashti" &&
-                monthSacredSummary.sashtiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-red-800 text-white border-red-900"
-                        : "bg-white text-red-950 border-red-300 hover:bg-red-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "karthigai" &&
-                monthSacredSummary.karthigaiDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-rose-800 text-white border-rose-900"
-                        : "bg-white text-rose-950 border-rose-300 hover:bg-rose-50"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "karinaal" &&
-                monthSacredSummary.karinaalDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border ${
-                      selectedDate === d.dateStr
-                        ? "bg-gray-800 text-white border-gray-900"
-                        : "bg-white text-gray-900 border-gray-400 hover:bg-gray-100"
-                    }`}
-                  >
-                    <span>{d.dayOfMonth} {monthNamesTransTa[d.monthIndex]} ({d.dayOfWeekTa})</span>
-                  </button>
-                ))}
-
-              {activeSacredTab === "festivals" &&
-                monthSacredSummary.festivalDays.map((d) => (
-                  <button
-                    key={d.dateStr}
-                    type="button"
-                    onClick={() => setSelectedDate(d.dateStr)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition active:scale-95 border flex items-center gap-1.5 ${
-                      selectedDate === d.dateStr
-                        ? "bg-amber-800 text-white border-amber-900"
-                        : "bg-white text-amber-950 border-amber-300 hover:bg-amber-50"
-                    }`}
-                  >
-                    <span>⭐ {d.festivalName}</span>
-                    <span className="text-[10px] text-slate-500">({d.dayOfMonth} {monthNamesTransTa[d.monthIndex]})</span>
-                  </button>
-                ))}
+                      <div className="flex items-center gap-1 text-slate-900 font-extrabold text-xs">
+                        {item.dates.map((dObj, dIdx) => (
+                          <button
+                            key={dObj.dateStr}
+                            type="button"
+                            onClick={() => setSelectedDate(dObj.dateStr)}
+                            className={`hover:text-emerald-700 transition px-1 py-0.5 rounded hover:bg-emerald-50 ${
+                              selectedDate === dObj.dateStr ? "text-emerald-800 underline decoration-2 font-black" : ""
+                            }`}
+                            title={`தேதி: ${dObj.dayNum}`}
+                          >
+                            {dObj.dayNum}{dIdx < item.dates.length - 1 ? "," : ""}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
