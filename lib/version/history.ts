@@ -19,13 +19,53 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "1.3.1";
+export const APP_VERSION = "2.0.0";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "12 Sep 2026, 12:45 PM IST";
+export const BUILD_DATE = "16 Sep 2026, 04:30 PM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.0.0",
+    releaseDate: "16 Sep 2026",
+    releaseTime: "04:30 PM IST",
+    title: "4-Step Pooja Booking Wizard, Standalone Payment Box & Booking Details Overhaul",
+    summary:
+      "Major upgrade featuring a streamlined 4-step Pooja Booking Wizard with draft auto-save, app-wide duration removal, dedicated standalone payment box with advance shortcuts, instant 1-tap priest selection cards, Step 3 live booking preview, and a completely revamped Booking Details dashboard.",
+    isCurrent: true,
+    tag: "Major",
+    changes: [
+      {
+        category: "Feature",
+        description: "Modern 4-Step Pooja Booking Wizard (Devotee → Pooja & Samagri → Date & Time → Review & Payment) with robust localStorage auto-save draft persistence.",
+      },
+      {
+        category: "UI/UX",
+        description: "Step 3 Live Quick Booking Preview Card confirming selected Date, Tamil Panchangam (திதி, நட்சத்திரம்), Time slot, and Devotee/Pooja details before advancing.",
+      },
+      {
+        category: "UI/UX",
+        description: "Dedicated Standalone Payment Box (தனியா ஒரு பாக்ஸ்) with Total Fee, Advance Received, Balance Due, and quick 1-tap advance chips (₹0 Nil, 25%, 50%, 100% Full Paid).",
+      },
+      {
+        category: "Feature",
+        description: "Instant 1-Tap Priest Selection (No dropdown) with default '✨ நானே செய்து வைக்கிறேன் (தலைமை குருக்கள் / Self)' and respectful Tamil priest role labels.",
+      },
+      {
+        category: "UI/UX",
+        description: "App-wide duration purge: Completely removed duration minute inputs and badges across all booking wizards, pooja catalog forms, and detail views.",
+      },
+      {
+        category: "UI/UX",
+        description: "Revamped Booking Details screen (/app/bookings/[id]) with Sacred Amber Hero Card, direct 1-tap Call & WhatsApp devotee actions, and dedicated Financial Settlement Box.",
+      },
+      {
+        category: "UI/UX",
+        description: "Devotee Search list updated with clean Tick Mark (✓ Check Icon) selection buttons and quick phone WhatsApp links.",
+      },
+    ],
+  },
   {
     version: "1.3.1",
     releaseDate: "12 Sep 2026",
@@ -33,7 +73,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Header Brand Identity, Developer Credit & Clean Terminology",
     summary:
       "Enhanced top mobile header branding with prominent Velvi App identity alongside customer company name, added developer credit for Maniraja (@maniraja__), and eliminated SaaS technical jargon from all user-facing screens.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Enhancement",
     changes: [
       {

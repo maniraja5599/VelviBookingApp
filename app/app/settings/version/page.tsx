@@ -9,7 +9,6 @@ import {
   Clock,
   Tag,
   RefreshCw,
-  Wifi,
   Smartphone,
   ShieldCheck,
 } from "lucide-react";
@@ -114,36 +113,7 @@ export default function VersionHistoryPage() {
         )}
       </div>
 
-      {/* Local Network Mobile Access Card */}
-      <div className="bg-white rounded-3xl p-4 border border-velvi-gold/30 shadow-sm space-y-3">
-        <div className="flex items-center gap-2 text-velvi-brownDark">
-          <div className="w-7 h-7 rounded-xl bg-velvi-gold/15 flex items-center justify-center text-velvi-goldDark">
-            <Wifi className="w-4 h-4" />
-          </div>
-          <div>
-            <h4 className="font-bold text-xs">Local Network (LAN) Mobile Access</h4>
-            <p className="text-[11px] text-velvi-brown/60">Connect mobile devices on same Wi-Fi</p>
-          </div>
-        </div>
 
-        <div className="bg-velvi-cream/70 rounded-2xl p-3 border border-velvi-gold/20 space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-velvi-brown/70">Wi-Fi Mobile URL:</span>
-            <code className="font-mono font-bold text-velvi-brownDark bg-white px-2 py-0.5 rounded border border-velvi-gold/30 text-[11px]">
-              http://192.168.11.128:3000/app
-            </code>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-velvi-brown/70">LAN / Fiber URL:</span>
-            <code className="font-mono font-bold text-velvi-brownDark bg-white px-2 py-0.5 rounded border border-velvi-gold/30 text-[11px]">
-              http://192.168.1.50:3000/app
-            </code>
-          </div>
-          <p className="text-[10px] text-velvi-brown/60 pt-1 leading-relaxed">
-            💡 Open any mobile browser connected to your Wi-Fi, enter the URL above, and tap <strong>"Install Velvi App"</strong> to add it directly to your home screen!
-          </p>
-        </div>
-      </div>
 
       {/* PWA Install Button */}
       <PwaInstallBanner mode="button" />
