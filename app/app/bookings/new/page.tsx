@@ -169,6 +169,8 @@ function NewBookingWizardForm() {
 
   // Step 2: Pooja & Samagri State
   const [poojaId, setPoojaId] = useState<string>(initialPoojaId || "");
+  const [isMorePoojasOpen, setIsMorePoojasOpen] = useState<boolean>(false);
+  const [poojaSearchQuery, setPoojaSearchQuery] = useState<string>("");
   const [samagriItems, setSamagriItems] = useState<BookingItem[]>([]);
   const [editingSamagriId, setEditingSamagriId] = useState<string | null>(null);
   const [newSamagriNameEn, setNewSamagriNameEn] = useState<string>("");
@@ -244,6 +246,44 @@ function NewBookingWizardForm() {
     () => poojas.find((p) => p.id === poojaId),
     [poojas, poojaId]
   );
+
+  // Top Popular Poojas ordered 1, 2, 3...
+  const topPoojas = useMemo(() => {
+    const priorityKeywords = [
+      "ganapathi",
+      "navagraha",
+      "gruhapravesam",
+      "sudarshana",
+      "rudra",
+      "satyanarayana",
+      "ayushya",
+    ];
+
+    const sorted = [...poojas].sort((a, b) => {
+      const aIndex = priorityKeywords.findIndex((k) =>
+        a.englishName.toLowerCase().includes(k)
+      );
+      const bIndex = priorityKeywords.findIndex((k) =>
+        b.englishName.toLowerCase().includes(k)
+      );
+      const aPos = aIndex === -1 ? 999 : aIndex;
+      const bPos = bIndex === -1 ? 999 : bIndex;
+      return aPos - bPos;
+    });
+
+    return sorted.slice(0, 6);
+  }, [poojas]);
+
+  const filteredMorePoojas = useMemo(() => {
+    if (!poojaSearchQuery.trim()) return poojas;
+    const q = poojaSearchQuery.toLowerCase().trim();
+    return poojas.filter(
+      (p) =>
+        p.englishName.toLowerCase().includes(q) ||
+        (p.tamilName && p.tamilName.toLowerCase().includes(q)) ||
+        (p.description && p.description.toLowerCase().includes(q))
+    );
+  }, [poojas, poojaSearchQuery]);
 
   // Constructed Time String (e.g. "07:00 AM")
   const selectedTime = `${timeHour}:${timeMinute} ${timeMeridiem}`;
@@ -665,12 +705,18 @@ _Velvi Booking App_`;
       }
       setCurrentStep(4);
     }
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handlePrevStep = () => {
     setStepError("");
     if (currentStep > 1) {
       setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   };
 
@@ -750,29 +796,29 @@ _Velvi Booking App_`;
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-20">
-      {/* Top Header with Auto-Save Indicator */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-2.5">
+      {/* Top Header with Compact Title & Subtle Auto-Save Indicator */}
+      <div className="flex items-center justify-between pt-0.5">
+        <div className="flex items-center gap-2">
           <Link
             href="/app/bookings"
-            className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600"
+            className="p-1.5 hover:bg-slate-100 rounded-xl transition text-slate-600"
             title="Back to Bookings"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-black text-slate-900 leading-tight">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h1 className="text-sm sm:text-base font-extrabold text-slate-900 leading-tight">
                 New Pooja Booking
               </h1>
               {hasActiveDraft && (
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-black flex items-center gap-1 shadow-2xs">
-                  <Check className="w-3 h-3 text-emerald-600" />
-                  <span>Draft Auto-Saved</span>
+                <span className="text-[9px] text-emerald-800 bg-emerald-50 border border-emerald-200/90 px-1.5 py-0.2 rounded-md font-bold inline-flex items-center gap-0.5">
+                  <Check className="w-2.5 h-2.5 text-emerald-600" />
+                  <span>Auto-Saved</span>
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-500 font-medium">
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium">
               Step {currentStep} of 4 • {currentStep === 1 && "Select Devotee"}
               {currentStep === 2 && "Pooja & Samagri Checklist"}
               {currentStep === 3 && "Date, Calendar & Auspicious Time"}
@@ -1088,23 +1134,157 @@ _Velvi Booking App_`;
             </button>
           </div>
 
-          {/* Compact Pooja Selection Bar */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
-            <label className="text-xs font-bold text-slate-700 block">
-              Select Pooja / Homam (பூஜை தேர்வு செய்க):
-            </label>
-            <select
-              value={poojaId}
-              onChange={(e) => setPoojaId(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white"
-            >
-              <option value="">-- Choose Pooja from Catalog --</option>
-              {poojas.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.englishName} {p.tamilName && p.tamilName !== p.englishName ? `(${p.tamilName})` : ""} — ₹{(p.basePrice || 0).toLocaleString()}
-                </option>
-              ))}
-            </select>
+          {/* Popular / Frequent Poojas: Instant 1-Tap Numbered Cards */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <span>1-Tap Popular Poojas (அதிகம் பயன்படும் பூஜைகள்):</span>
+              </label>
+              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                Quick 1, 2, 3...
+              </span>
+            </div>
+
+            {/* Grid of Numbered 1-Tap Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {topPoojas.map((p, pIdx) => {
+                const isSelected = poojaId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setPoojaId(p.id);
+                      setIsMorePoojasOpen(false);
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 shadow-2xs group ${
+                      isSelected
+                        ? "bg-gradient-to-r from-amber-50 to-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 shadow-xs"
+                        : "bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-300"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition ${
+                          isSelected
+                            ? "bg-amber-600 text-white shadow-xs"
+                            : "bg-amber-100 text-amber-900 group-hover:bg-amber-200"
+                        }`}
+                      >
+                        {pIdx + 1}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="text-xs font-black text-slate-900 truncate">
+                          {p.englishName}
+                        </div>
+                        {p.tamilName && (
+                          <div className="text-[10.5px] text-amber-900 font-bold truncate">
+                            {p.tamilName}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="text-xs font-black text-slate-900 block">
+                        ₹{(p.basePrice || 0).toLocaleString("en-IN")}
+                      </span>
+                      {isSelected ? (
+                        <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.2 rounded-md border border-emerald-200">
+                          Selected ✓
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom "More Poojas..." Button & Expandable Picker */}
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setIsMorePoojasOpen((prev) => !prev)}
+                className="w-full py-2.5 px-3 bg-white hover:bg-amber-50/60 border border-slate-200 hover:border-amber-300 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between transition shadow-2xs"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <span>மற்ற அனைத்து பூஜைகள் / More Poojas Catalog ({poojas.length})</span>
+                </span>
+                <span className="text-xs text-amber-800 font-bold">
+                  {isMorePoojasOpen ? "Close ▲" : "View All ▼"}
+                </span>
+              </button>
+
+              {/* Custom Searchable Picker List (No native OS dropdown!) */}
+              {isMorePoojasOpen && (
+                <div className="mt-2 p-3 bg-white rounded-2xl border-2 border-amber-300 shadow-md space-y-2.5 animate-in fade-in">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search pooja by Tamil / English name..."
+                      value={poojaSearchQuery}
+                      onChange={(e) => setPoojaSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
+                    />
+                    {poojaSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setPoojaSearchQuery("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+                    {filteredMorePoojas.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-slate-500">
+                        No poojas found matching &quot;{poojaSearchQuery}&quot;
+                      </div>
+                    ) : (
+                      filteredMorePoojas.map((p) => {
+                        const isSelected = poojaId === p.id;
+                        return (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              setPoojaId(p.id);
+                              setIsMorePoojasOpen(false);
+                            }}
+                            className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2 ${
+                              isSelected
+                                ? "bg-amber-100 border-amber-500 shadow-2xs"
+                                : "bg-slate-50 hover:bg-amber-50/80 border-slate-200"
+                            }`}
+                          >
+                            <div className="min-w-0">
+                              <div className="text-xs font-extrabold text-slate-900 truncate">
+                                {p.englishName}
+                              </div>
+                              {p.tamilName && (
+                                <div className="text-[10px] text-amber-900 font-semibold truncate">
+                                  {p.tamilName}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="text-xs font-black text-slate-900 block">
+                                ₹{(p.basePrice || 0).toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Selected Pooja Full Details Card */}
@@ -2090,37 +2270,37 @@ _Velvi Booking App_`;
             </div>
           </div>
 
-          {/* 3. ASSIGN PRIEST (NO DROPDOWN - DIRECT INSTANT 1-TAP CARDS) */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-2.5">
+          {/* 3. ASSIGN PRIEST (SELF vs OTHERS TOGGLE WITH OTHERS DROPDOWN) */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <label className="text-xs font-black text-slate-900 block">
                   🪔 Assign Priest (செய்து வைக்கும் குருக்கள்)
                 </label>
                 <p className="text-[10px] text-slate-500">
-                  Tap to select who will perform this ceremony
+                  Choose Self or assign to an associate priest
                 </p>
               </div>
               <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                {assignedIyerId === "self" ? "Self (நானே செய்கிறேன்)" : "Assigned"}
+                {assignedIyerId === "self" ? "Self (நானே செய்கிறேன்)" : "Assigned to Assistant"}
               </span>
             </div>
 
-            {/* Direct 1-Tap Selection Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              {/* Option 1: Self */}
+            {/* 2 Primary Toggle Buttons: Self vs Others */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Button 1: Self */}
               <button
                 type="button"
                 onClick={() => setAssignedIyerId("self")}
-                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 ${
+                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs ${
                   assignedIyerId === "self"
-                    ? "bg-gradient-to-r from-amber-50 to-amber-100/80 border-amber-500 ring-2 ring-amber-400/50 shadow-xs"
-                    : "bg-slate-50/70 hover:bg-slate-100 border-slate-200"
+                    ? "bg-gradient-to-r from-amber-50 to-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 shadow-xs"
+                    : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-700"
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base shrink-0 shadow-2xs ${
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
                       assignedIyerId === "self"
                         ? "bg-amber-500 text-white"
                         : "bg-slate-200 text-slate-700"
@@ -2130,58 +2310,81 @@ _Velvi Booking App_`;
                   </div>
                   <div className="min-w-0">
                     <div className="text-xs font-black text-slate-900 truncate">
-                      நானே செய்து வைக்கிறேன்
+                      Self
                     </div>
-                    <div className="text-[10px] text-amber-900 font-extrabold">
-                      தலைமை குருக்கள் (Self)
+                    <div className="text-[10px] text-amber-900 font-bold truncate">
+                      நானே செய்கிறேன்
                     </div>
                   </div>
                 </div>
                 {assignedIyerId === "self" && (
-                  <CheckCircle2 className="w-5 h-5 text-amber-700 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-amber-700 shrink-0" />
                 )}
               </button>
 
-              {/* Option 2+: Other Priests */}
-              {members.map((m) => {
-                const isSelected = assignedIyerId === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setAssignedIyerId(m.id)}
-                    className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 ${
-                      isSelected
-                        ? "bg-gradient-to-r from-blue-50 to-blue-100/80 border-blue-500 ring-2 ring-blue-400/50 shadow-xs"
-                        : "bg-slate-50/70 hover:bg-slate-100 border-slate-200"
+              {/* Button 2: Others */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (assignedIyerId === "self") {
+                    const firstOther = members.find((m) => m.role !== "OWNER") || members[1] || members[0];
+                    if (firstOther) setAssignedIyerId(firstOther.id);
+                  }
+                }}
+                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs ${
+                  assignedIyerId !== "self"
+                    ? "bg-gradient-to-r from-blue-50 to-blue-100/90 border-blue-500 ring-2 ring-blue-400/50 shadow-xs"
+                    : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-700"
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
+                      assignedIyerId !== "self"
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-200 text-slate-700"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-base shrink-0 shadow-2xs ${
-                          isSelected
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        👤
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs font-black text-slate-900 truncate">
-                          {getPriestTamilName(m)}
-                        </div>
-                        <div className="text-[10px] text-slate-600 font-bold">
-                          {getPriestTamilRole(m)}
-                        </div>
-                      </div>
+                    👥
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-black text-slate-900 truncate">
+                      Others
                     </div>
-                    {isSelected && (
-                      <CheckCircle2 className="w-5 h-5 text-blue-700 shrink-0" />
-                    )}
-                  </button>
-                );
-              })}
+                    <div className="text-[10px] text-blue-900 font-bold truncate">
+                      மற்ற குருக்கள்
+                    </div>
+                  </div>
+                </div>
+                {assignedIyerId !== "self" && (
+                  <CheckCircle2 className="w-4 h-4 text-blue-700 shrink-0" />
+                )}
+              </button>
             </div>
+
+            {/* When "Others" is Selected: Show Elegant Priest Dropdown / Selector */}
+            {assignedIyerId !== "self" && (
+              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2 animate-in fade-in">
+                <label className="text-xs font-black text-blue-950 block">
+                  Select Assistant Priest (உதவி குருக்கள் தேர்வு செய்க):
+                </label>
+                <select
+                  value={assignedIyerId}
+                  onChange={(e) => setAssignedIyerId(e.target.value)}
+                  className="w-full bg-white border border-blue-300 rounded-xl px-3 py-2.5 text-xs font-black text-slate-900 focus:outline-none focus:border-blue-500 shadow-2xs"
+                >
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {getPriestTamilName(m)} ({getPriestTamilRole(m)}) {m.specialization ? `— ${m.specialization}` : ""}
+                    </option>
+                  ))}
+                </select>
+
+                <p className="text-[10.5px] text-blue-800 leading-tight">
+                  தேர்ந்தெடுக்கப்பட்ட குருக்களுக்கு பூஜை விவரங்கள் ஒதுக்கப்பட்டு அவரது அட்டவணையில் பதியப்படும்.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* 4. VENUE & SANKALPAM DETAILS */}
