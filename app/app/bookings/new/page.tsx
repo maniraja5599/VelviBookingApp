@@ -193,9 +193,26 @@ function NewBookingWizardForm() {
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
   const [paymentMode, setPaymentMode] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
   const [upiRefId, setUpiRefId] = useState<string>("");
-  const [assignedIyerId, setAssignedIyerId] = useState<string>(members[0]?.id || "");
+  const [assignedIyerId, setAssignedIyerId] = useState<string>("self"); // Default to Self (நானே செய்கிறேன்)
   const [location, setLocation] = useState<string>("Namakkal");
   const [notes, setNotes] = useState<string>("");
+
+  // Tamil Priest Names and Roles Mapping
+  const getPriestTamilName = (m: any) => {
+    const nameMap: Record<string, string> = {
+      "Ravi Iyer": "ரவி சாஸ்திரிகள்",
+      "Sundaram": "சுந்தரம் ஐயர்",
+      "Sundaram Iyer": "சுந்தரம் ஐயர்",
+      "Subramanian": "சுப்பிரமணிய சிவாச்சாரியார்",
+      "Venkatesan": "வெங்கடேசன் சாஸ்திரி",
+      "Ganesh Iyer": "கணேஷ் ஐயர்",
+    };
+    return nameMap[m?.name] || m?.name || "குருக்கள்";
+  };
+
+  const getPriestTamilRole = (m: any) => {
+    return m?.role === "OWNER" || m?.role === "LEAD" ? "தலைமை குருக்கள்" : "உதவி குருக்கள்";
+  };
 
   // Modals & Feedback
   const [stepError, setStepError] = useState<string>("");
@@ -704,9 +721,14 @@ _Velvi Booking App_`;
         balanceAmount: balance,
         paymentStatus,
         status: "CONFIRMED",
-        assignedIyerId: assignedIyerId || members[0]?.id || "u-ravi-iyer-01",
+        assignedIyerId:
+          assignedIyerId === "self" || !assignedIyerId
+            ? members.find((m) => m.role === "OWNER")?.id || members[0]?.id || "u-ravi-iyer-01"
+            : assignedIyerId,
         assignedIyerName:
-          members.find((m) => m.id === assignedIyerId)?.name || members[0]?.name || "Ravi Iyer",
+          assignedIyerId === "self" || !assignedIyerId
+            ? `${getPriestTamilName(members.find((m) => m.role === "OWNER") || members[0])} (தலைமை குருக்கள்)`
+            : `${getPriestTamilName(members.find((m) => m.id === assignedIyerId) || members[0])} (${getPriestTamilRole(members.find((m) => m.id === assignedIyerId) || members[0])})`,
         items: samagriItems.filter((i) => i.isChecked !== false),
         notes: notes.trim(),
       });
@@ -1013,12 +1035,12 @@ _Velvi Booking App_`;
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        className="px-3 py-1.5 bg-slate-100 group-hover:bg-amber-500 text-slate-700 group-hover:text-white rounded-lg text-xs font-bold shrink-0 transition"
+                      <div
+                        className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-emerald-500 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 transition shadow-2xs"
+                        title="Select Devotee"
                       >
-                        Select Devotee →
-                      </button>
+                        <Check className="w-4 h-4 font-black" />
+                      </div>
                     </div>
                   ))
                 )}
@@ -1876,108 +1898,142 @@ _Velvi Booking App_`;
             </div>
           </div>
 
-          {/* REVAMPED PAYMENT SECTION WITH ADVANCE SHORTCUTS */}
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-2xl shadow-md space-y-3.5">
-            <h4 className="text-xs font-black text-amber-400 flex items-center gap-1.5">
-              <IndianRupee className="w-4 h-4" /> Payment & Fee Calculation
-            </h4>
+          {/* REVAMPED PAYMENT SECTION WITH CLEAN LIGHT THEME */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-700">
+                  <IndianRupee className="w-3.5 h-3.5" />
+                </div>
+                <span>Payment & Fee Calculation (கட்டண விவரம்)</span>
+              </h4>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                Direct Settlement
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
-                <label className="text-[10px] font-bold text-slate-300 block mb-1">
-                  Total Pooja Fee (₹)
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                <label className="text-[10px] font-bold text-slate-600 block mb-1">
+                  Total Pooja Fee (மொத்த கட்டணம் ₹)
                 </label>
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full bg-white/20 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs font-black text-white focus:outline-none focus:border-amber-400"
-                />
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="w-full bg-white border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+                  />
+                </div>
               </div>
 
-              <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
-                <label className="text-[10px] font-bold text-emerald-400 block mb-1">
-                  Advance Received (₹)
+              <div className="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/70">
+                <label className="text-[10px] font-bold text-emerald-800 block mb-1">
+                  Advance Received (முன்பணம் ₹)
                 </label>
-                <input
-                  type="number"
-                  min={0}
-                  max={amount}
-                  value={advanceAmount}
-                  onChange={(e) => setAdvanceAmount(Number(e.target.value))}
-                  className="w-full bg-white/20 border border-white/20 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-300 focus:outline-none focus:border-emerald-400"
-                />
+                <div className="relative">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600">₹</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={amount}
+                    value={advanceAmount}
+                    onChange={(e) => setAdvanceAmount(Number(e.target.value))}
+                    className="w-full bg-white border border-emerald-300 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-emerald-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
-              <div className="bg-white/10 p-2.5 rounded-xl border border-white/10">
-                <label className="text-[10px] font-bold text-amber-300 block mb-1">
-                  Balance Due (₹)
+              <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-200/80 flex flex-col justify-between">
+                <label className="text-[10px] font-bold text-amber-900 block">
+                  Balance Due (மீதமுள்ள தொகை)
                 </label>
-                <div className="text-base font-black text-amber-300 py-1">
+                <div className="text-base font-black text-amber-900 py-0.5">
                   ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
                 </div>
               </div>
             </div>
 
             {/* Quick Advance Percentage Shortcuts */}
-            <div className="flex items-center gap-2 text-xs flex-wrap">
-              <span className="text-[11px] text-slate-300 font-semibold">Advance Shortcuts:</span>
+            <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
+              <span className="text-[11px] text-slate-500 font-bold mr-1">Advance Quick:</span>
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(0)}
-                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] font-bold text-slate-300"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+                  advanceAmount === 0
+                    ? "bg-slate-800 text-white border-slate-800 shadow-2xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
+                }`}
               >
-                Zero
+                ₹0 (Nil)
               </button>
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(Math.round(amount * 0.25))}
-                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] font-bold text-amber-300"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+                  advanceAmount === Math.round(amount * 0.25) && amount > 0
+                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
+                    : "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200"
+                }`}
               >
                 25% (₹{Math.round(amount * 0.25)})
               </button>
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(Math.round(amount * 0.5))}
-                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] font-bold text-amber-300"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+                  advanceAmount === Math.round(amount * 0.5) && amount > 0
+                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
+                    : "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200"
+                }`}
               >
                 50% (₹{Math.round(amount * 0.5)})
               </button>
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(amount)}
-                className="px-2.5 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-[11px] font-bold text-emerald-300"
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
+                  advanceAmount === amount && amount > 0
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                    : "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200"
+                }`}
               >
                 100% Full Paid
               </button>
             </div>
 
             {/* Payment Method & Reference */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1.5 border-t border-slate-100">
               <div>
-                <label className="text-[10px] font-bold text-slate-300 block mb-1">Payment Method</label>
+                <label className="text-[10px] font-bold text-slate-600 block mb-1">
+                  Payment Method (செலுத்தும் முறை)
+                </label>
                 <select
                   value={paymentMode}
                   onChange={(e) => setPaymentMode(e.target.value as any)}
-                  className="w-full bg-white/20 border border-white/20 rounded-xl px-3 py-1.5 text-xs font-bold text-white focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white"
                 >
-                  <option value="UPI" className="text-slate-900">UPI (Google Pay / PhonePe / Paytm)</option>
-                  <option value="CASH" className="text-slate-900">Cash in Hand (ரொக்கம்)</option>
-                  <option value="BANK_TRANSFER" className="text-slate-900">Bank Transfer (NEFT/IMPS)</option>
+                  <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
+                  <option value="CASH">Cash in Hand (ரொக்கம்)</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
                 </select>
               </div>
 
               {paymentMode === "UPI" && (
                 <div>
-                  <label className="text-[10px] font-bold text-slate-300 block mb-1">UPI Ref / UTR (Optional)</label>
+                  <label className="text-[10px] font-bold text-slate-600 block mb-1">
+                    UPI Ref / UTR (விருப்பத் தேர்வு)
+                  </label>
                   <input
                     type="text"
                     placeholder="e.g. UPI/4098231"
                     value={upiRefId}
                     onChange={(e) => setUpiRefId(e.target.value)}
-                    className="w-full bg-white/20 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder:text-slate-400 focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
                   />
                 </div>
               )}
@@ -1987,19 +2043,31 @@ _Velvi Booking App_`;
           {/* Priest Assignment & Location */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 block">
-                Assign Priest (செய்து வைக்கும் குருக்கள்)
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 block">
+                  Assign Priest (செய்து வைக்கும் குருக்கள்)
+                </label>
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                  {assignedIyerId === "self" ? "Self (நானே)" : "Assigned"}
+                </span>
+              </div>
               <select
                 value={assignedIyerId}
                 onChange={(e) => setAssignedIyerId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
               >
-                {members.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.role === "OWNER" ? "Lead Priest" : "Associate"})
-                  </option>
-                ))}
+                <option value="self">
+                  ✨ நானே செய்து வைக்கிறேன் (தலைமை குருக்கள் / Self)
+                </option>
+                {members.length > 0 && (
+                  <optgroup label="வேறு குருக்களை நியமிக்க (Assign Other Priests):">
+                    {members.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {getPriestTamilName(m)} — {getPriestTamilRole(m)}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 
