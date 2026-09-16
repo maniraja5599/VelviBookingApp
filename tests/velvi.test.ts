@@ -528,16 +528,16 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("1.3.1");
+    expect(APP_VERSION).toBe("2.0.0");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("1.3.1");
+    expect(latest.version).toBe("2.0.0");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
-    expect(latest.changes.some((c) => c.category === "UI/UX")).toBe(true);
+    expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
 
     // Verify manifest
     const fs = await import("fs");
