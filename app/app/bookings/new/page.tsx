@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
-import { Booking, BookingItem, Customer } from "@/lib/types";
+import { Booking, BookingItem, Customer, Pooja } from "@/lib/types";
 import {
   normalizeIndianMobile,
   cleanPastedIndianMobile,
@@ -12,9 +12,10 @@ import {
 } from "@/lib/utils/phone";
 import {
   ArrowLeft,
+  ArrowRight,
   User,
   Flame,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   MapPin,
   IndianRupee,
@@ -29,78 +30,33 @@ import {
   Search,
   Phone,
   Check,
+  ChevronRight,
+  ChevronLeft,
+  ShieldCheck,
+  CheckSquare,
+  Square,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
+import {
+  getTamilDate,
+  formatTimeRangeTo12H,
+  getLocalDateString,
+  TamilDateInfo,
+} from "@/lib/calendar/tamil";
 
-const PRESET_POOJA_TEMPLATES = [
-  {
-    icon: "🐘",
-    englishName: "Ganapathi Homam",
-    tamilName: "கணபதி ஹோமம்",
-    description: "Invokes Lord Ganesha for removing obstacles, beginnings & prosperity.",
-    durationMinutes: 120,
-    basePrice: 5000,
-  },
-  {
-    icon: "🪔",
-    englishName: "Maha Sudarshana Homam",
-    tamilName: "மகா சுதர்சன ஹோமம்",
-    description: "Powerful Vedic ritual for protection against negative forces, health & victory.",
-    durationMinutes: 180,
-    basePrice: 7500,
-  },
-  {
-    icon: "🌿",
-    englishName: "Rudrabhishekam & Homam",
-    tamilName: "ருத்ராபிஷேகம் & ஹோமம்",
-    description: "Sacred abhishekam with Sri Rudram chanting for inner peace, health and longevity.",
-    durationMinutes: 150,
-    basePrice: 6000,
-  },
-  {
-    icon: "🏠",
-    englishName: "Gruhapravesam & Vastu Homam",
-    tamilName: "கிரகப்பிரவேசம் & வாஸ்து ஹோமம்",
-    description: "Traditional house-warming ritual invoking Vastu Purusha, Ganapathi & Lakshmi.",
-    durationMinutes: 240,
-    basePrice: 12000,
-  },
-  {
-    icon: "🪐",
-    englishName: "Navagraha Homam",
-    tamilName: "நவகிரக ஹோமம்",
-    description: "Appeases the nine celestial planetary deities for dosha nivarthi and prosperity.",
-    durationMinutes: 180,
-    basePrice: 8000,
-  },
-  {
-    icon: "🪙",
-    englishName: "Maha Lakshmi Kubera Pooja",
-    tamilName: "மகா லக்ஷ்மி குபேர பூஜை",
-    description: "Divine pooja invoking Goddess Lakshmi & Lord Kubera for wealth and debt removal.",
-    durationMinutes: 90,
-    basePrice: 4500,
-  },
-  {
-    icon: "🌸",
-    englishName: "Sri Satyanarayana Pooja",
-    tamilName: "ஸ்ரீ சத்யநாராயண பூஜை",
-    description: "Sacred full-moon / pournami pooja with 5-chapter katha & prasad for family welfare.",
-    durationMinutes: 120,
-    basePrice: 4000,
-  },
-  {
-    icon: "👶",
-    englishName: "Ayush Homam / Sashtiapthapoorthi",
-    tamilName: "ஆயுஷ் ஹோமம் / சஷ்டியப்தபூர்த்தி",
-    description: "Vedic ceremony for child's 1st birthday or 60th / 80th anniversary for long life & health.",
-    durationMinutes: 240,
-    basePrice: 10000,
-  },
+const TIME_PRESETS = [
+  { time: "06:00 AM", label: "06:00 AM", tag: "Brahma Muhurtham" },
+  { time: "07:00 AM", label: "07:00 AM", tag: "Morning" },
+  { time: "08:00 AM", label: "08:00 AM", tag: "Morning" },
+  { time: "09:30 AM", label: "09:30 AM", tag: "Morning" },
+  { time: "11:00 AM", label: "11:00 AM", tag: "Mid-day" },
+  { time: "04:30 PM", label: "04:30 PM", tag: "Evening" },
+  { time: "06:00 PM", label: "06:00 PM", tag: "Sandhya / Pradosham" },
+  { time: "07:30 PM", label: "07:30 PM", tag: "Night" },
 ];
 
-function NewBookingForm() {
+function NewBookingWizardForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialDate = searchParams.get("date") || getLocalDateString();
@@ -108,54 +64,43 @@ function NewBookingForm() {
   const initialCustomerId = searchParams.get("customerId");
   const initialTime = searchParams.get("time");
 
-  const { currentBusiness, currentUser } = useAuth();
+  const { currentBusiness } = useAuth();
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
-  const [poojas, setPoojas] = useState(db.getPoojas(businessId));
-  const [customers, setCustomers] = useState<Customer[]>(db.getCustomers(businessId));
-  const members = db.getMembers(businessId);
+  // State initialization
+  const [poojas, setPoojas] = useState<Pooja[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const members = useMemo(() => db.getMembers(businessId), [businessId]);
+  const existingBookings = useMemo(() => db.getBookings(businessId), [businessId]);
 
-  // Initial selected pooja if provided via URL param
-  const selectedInitialPooja = initialPoojaId ? poojas.find((p) => p.id === initialPoojaId) : null;
+  useEffect(() => {
+    setPoojas(db.getPoojas(businessId));
+    setCustomers(db.getCustomers(businessId));
+  }, [businessId]);
 
-  // Form State: Customer is empty by default unless passed via query param
+  // Wizard Step (1: Devotee, 2: Pooja & Samagri, 3: Date & Time, 4: Summary & Confirm)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Form Fields
   const [customerId, setCustomerId] = useState<string>(initialCustomerId || "");
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>("");
-  const [poojaId, setPoojaId] = useState<string>(selectedInitialPooja?.id || "");
+  const [poojaId, setPoojaId] = useState<string>(initialPoojaId || "");
   const [date, setDate] = useState<string>(initialDate);
-  const [startTime, setStartTime] = useState<string>(initialTime || "08:00 AM");
+  const [startTime, setStartTime] = useState<string>(initialTime || "07:00 AM");
   const [location, setLocation] = useState<string>("Namakkal");
-  const [amount, setAmount] = useState<number>(selectedInitialPooja?.basePrice || 5000);
+  const [amount, setAmount] = useState<number>(5000);
+  const [advanceAmount, setAdvanceAmount] = useState<number>(0);
+  const [paymentMode, setPaymentMode] = useState<"CASH" | "UPI" | "BANK_TRANSFER">("UPI");
   const [assignedIyerId, setAssignedIyerId] = useState<string>(members[0]?.id || "");
   const [notes, setNotes] = useState<string>("");
-  const [error, setError] = useState<string>("");
+  const [samagriItems, setSamagriItems] = useState<BookingItem[]>([]);
+  const [newSamagriName, setNewSamagriName] = useState<string>("");
 
-  // Filtered customer list for search
-  const filteredCustomers = customers.filter((c) => {
-    if (!customerSearchQuery.trim()) return true;
-    const q = customerSearchQuery.trim().toLowerCase();
-    return (
-      c.name.toLowerCase().includes(q) ||
-      (c.mobile && c.mobile.includes(q)) ||
-      (c.city && c.city.toLowerCase().includes(q)) ||
-      (c.address && c.address.toLowerCase().includes(q))
-    );
-  });
+  // Error & Confirmation feedback
+  const [stepError, setStepError] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Instant Pooja Add/Edit/Delete States
-  const [showPoojaModal, setShowPoojaModal] = useState<boolean>(false);
-  const [isEditingPooja, setIsEditingPooja] = useState<boolean>(false);
-  const [poojaFormId, setPoojaFormId] = useState<string>("");
-  const [poojaFormEnglish, setPoojaFormEnglish] = useState<string>("");
-  const [poojaFormTamil, setPoojaFormTamil] = useState<string>("");
-  const [poojaFormPrice, setPoojaFormPrice] = useState<number>(5000);
-  const [poojaFormDuration, setPoojaFormDuration] = useState<number>(120);
-  const [poojaFormDesc, setPoojaFormDesc] = useState<string>("");
-  const [poojaModalError, setPoojaModalError] = useState<string>("");
-  const [poojaSuccessMessage, setPoojaSuccessMessage] = useState<string>("");
-  const [poojaToDelete, setPoojaToDelete] = useState<typeof poojas[0] | null>(null);
-
-  // Quick Add Customer Modal State
+  // Quick Add Devotee Modal
   const [showAddCustomerModal, setShowAddCustomerModal] = useState<boolean>(false);
   const [newCustName, setNewCustName] = useState<string>("");
   const [newCustMobile, setNewCustMobile] = useState<string>("");
@@ -163,129 +108,99 @@ function NewBookingForm() {
   const [newCustAddress, setNewCustAddress] = useState<string>("");
   const [newCustNotes, setNewCustNotes] = useState<string>("");
   const [custModalError, setCustModalError] = useState<string>("");
-  const [customerAddedSuccess, setCustomerAddedSuccess] = useState<string>("");
 
-  const applyInstantPoojaPreset = (preset: (typeof PRESET_POOJA_TEMPLATES)[0]) => {
-    setPoojaFormEnglish(preset.englishName);
-    setPoojaFormTamil(preset.tamilName);
-    setPoojaFormPrice(preset.basePrice);
-    setPoojaFormDuration(preset.durationMinutes);
-    setPoojaFormDesc(preset.description);
-  };
+  // Selected Objects
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === customerId),
+    [customers, customerId]
+  );
+  const selectedPooja = useMemo(
+    () => poojas.find((p) => p.id === poojaId),
+    [poojas, poojaId]
+  );
 
-  const handleOpenAddPooja = () => {
-    setIsEditingPooja(false);
-    setPoojaFormId("");
-    const def = PRESET_POOJA_TEMPLATES[0];
-    setPoojaFormEnglish(def.englishName);
-    setPoojaFormTamil(def.tamilName);
-    setPoojaFormPrice(def.basePrice);
-    setPoojaFormDuration(def.durationMinutes);
-    setPoojaFormDesc(def.description);
-    setPoojaModalError("");
-    setShowPoojaModal(true);
-  };
-
-  const handleOpenEditPooja = (p: typeof poojas[0]) => {
-    setIsEditingPooja(true);
-    setPoojaFormId(p.id);
-    setPoojaFormEnglish(p.englishName);
-    setPoojaFormTamil(p.tamilName || "");
-    setPoojaFormPrice(p.basePrice || 0);
-    setPoojaFormDuration(p.durationMinutes || 120);
-    setPoojaFormDesc(p.description || "");
-    setPoojaModalError("");
-    setShowPoojaModal(true);
-  };
-
-  const handleSavePooja = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPoojaModalError("");
-
-    if (!poojaFormEnglish.trim()) {
-      setPoojaModalError("Pooja English Name is required.");
-      return;
-    }
-
-    if (isEditingPooja && poojaFormId) {
-      db.updatePooja(poojaFormId, {
-        englishName: poojaFormEnglish.trim(),
-        tamilName: poojaFormTamil.trim() || poojaFormEnglish.trim(),
-        basePrice: Number(poojaFormPrice) || 0,
-        durationMinutes: Number(poojaFormDuration) || 120,
-        description: poojaFormDesc.trim(),
-      });
-      const updatedList = db.getPoojas(businessId);
-      setPoojas(updatedList);
-      setAmount(Number(poojaFormPrice) || 0);
-      setShowPoojaModal(false);
-      setPoojaSuccessMessage(`Updated "${poojaFormEnglish.trim()}"!`);
-    } else {
-      const created = db.createPooja({
-        businessId,
-        englishName: poojaFormEnglish.trim(),
-        tamilName: poojaFormTamil.trim() || poojaFormEnglish.trim(),
-        basePrice: Number(poojaFormPrice) || 0,
-        durationMinutes: Number(poojaFormDuration) || 120,
-        description: poojaFormDesc.trim(),
-      });
-      const updatedList = db.getPoojas(businessId);
-      setPoojas(updatedList);
-      setPoojaId(created.id);
-      setAmount(created.basePrice);
-      setShowPoojaModal(false);
-      setPoojaSuccessMessage(`Added & selected "${created.englishName}"!`);
-    }
-
-    setTimeout(() => setPoojaSuccessMessage(""), 4000);
-  };
-
-  const handleConfirmDeletePooja = () => {
-    if (!poojaToDelete) return;
-    db.deletePooja(poojaToDelete.id);
-    const updatedList = db.getPoojas(businessId);
-    setPoojas(updatedList);
-    if (poojaId === poojaToDelete.id) {
-      setPoojaId("");
-      setAmount(0);
-    }
-    setPoojaSuccessMessage(`Deleted "${poojaToDelete.englishName}"!`);
-    setPoojaToDelete(null);
-    setTimeout(() => setPoojaSuccessMessage(""), 4000);
-  };
-
-  const newCustMobileInspection = inspectIndianMobile(newCustMobile);
-
-  const handleNewCustMobileChange = (val: string) => {
-    const cleaned = cleanPastedIndianMobile(val);
-    setNewCustMobile(cleaned);
-  };
-
-  const handleNewCustMobilePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData("text");
-    const cleaned = cleanPastedIndianMobile(pasted);
-    setNewCustMobile(cleaned);
-  };
-
-  const handlePasteCustMobileClick = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      const cleaned = cleanPastedIndianMobile(text);
-      if (cleaned) {
-        setNewCustMobile(cleaned);
+  // Set default pooja checklist items whenever pooja is selected
+  useEffect(() => {
+    if (selectedPooja) {
+      setAmount(selectedPooja.basePrice || 5000);
+      if (selectedPooja.items && selectedPooja.items.length > 0) {
+        setSamagriItems(
+          selectedPooja.items.map((item, idx) => ({
+            id: `item-${Date.now()}-${idx}`,
+            bookingId: "",
+            itemEnglishName: item.itemEnglishName || "Samagri Item",
+            itemTamilName: item.itemTamilName || item.itemEnglishName || "பூஜை பொருள்",
+            quantity: item.quantity || 1,
+            unit: item.unit || "units",
+            isChecked: false,
+            sortOrder: idx,
+          }))
+        );
+      } else {
+        // Fallback default Vedic samagri
+        setSamagriItems([
+          { id: "s-1", bookingId: "", itemEnglishName: "Cow Ghee", itemTamilName: "பசு நெய்", quantity: 1, unit: "kg", isChecked: false },
+          { id: "s-2", bookingId: "", itemEnglishName: "Homa Samithu", itemTamilName: "சமித்து கட்டுகள்", quantity: 2, unit: "bundles", isChecked: false },
+          { id: "s-3", bookingId: "", itemEnglishName: "Turmeric & Kumkum", itemTamilName: "மஞ்சள், குங்குமம்", quantity: 1, unit: "set", isChecked: false },
+          { id: "s-4", bookingId: "", itemEnglishName: "Betel Leaves & Nuts", itemTamilName: "வெற்றிலை, பாக்கு", quantity: 25, unit: "leaves", isChecked: false },
+          { id: "s-5", bookingId: "", itemEnglishName: "Fresh Coconuts", itemTamilName: "தேங்காய்", quantity: 5, unit: "nos", isChecked: false },
+          { id: "s-6", bookingId: "", itemEnglishName: "Pooja Flowers & Garland", itemTamilName: "பூக்கள் & மாலை", quantity: 1, unit: "set", isChecked: false },
+        ]);
       }
-    } catch {
-      // Ignore
     }
-  };
+  }, [selectedPooja]);
 
-  const handleQuickAddCustomer = (e: React.FormEvent) => {
+  // Generate 30 scrollable upcoming dates starting from today
+  const upcomingDatesList = useMemo(() => {
+    const list: { dateStr: string; info: TamilDateInfo }[] = [];
+    const baseDate = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() + i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${y}-${m}-${day}`;
+      const info = getTamilDate(dateStr);
+      list.push({ dateStr, info });
+    }
+    return list;
+  }, []);
+
+  // Panchangam for currently selected date
+  const selectedDateInfo = useMemo(() => getTamilDate(date), [date]);
+
+  // Double-booking / Conflict detection
+  const conflictingBookings = useMemo(() => {
+    if (!date || !startTime) return [];
+    return existingBookings.filter(
+      (b) =>
+        b.date === date &&
+        b.startTime?.toLowerCase().trim() === startTime.toLowerCase().trim() &&
+        b.status !== "CANCELLED"
+    );
+  }, [existingBookings, date, startTime]);
+
+  // Filtered customer list for search
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchQuery.trim()) return customers;
+    const q = customerSearchQuery.trim().toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.mobile && c.mobile.includes(q)) ||
+        (c.city && c.city.toLowerCase().includes(q)) ||
+        (c.address && c.address.toLowerCase().includes(q))
+    );
+  }, [customers, customerSearchQuery]);
+
+  // Handle Quick Add Customer
+  const handleSaveQuickCustomer = (e: React.FormEvent) => {
     e.preventDefault();
     setCustModalError("");
 
     if (!newCustName.trim()) {
-      setCustModalError("வாடிக்கையாளர் பெயர் அவசியம் / Customer Name is required.");
+      setCustModalError("Devotee name is required.");
       return;
     }
 
@@ -293,15 +208,10 @@ function NewBookingForm() {
     if (newCustMobile.trim()) {
       const cleanDigits = newCustMobile.replace(/\D/g, "");
       if (cleanDigits.length !== 10) {
-        setCustModalError("சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும் அல்லது காலியாக விடவும்.");
+        setCustModalError("Please enter a valid 10-digit mobile number or leave blank.");
         return;
       }
       normalizedMobile = normalizeIndianMobile(cleanDigits);
-
-      if (customers.some((c) => c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile)) {
-        setCustModalError("இந்த மொபைல் எண்ணுடன் ஏற்கனவே ஒரு வாடிக்கையாளர் உள்ளார்.");
-        return;
-      }
     }
 
     const created = db.createCustomer({
@@ -313,249 +223,338 @@ function NewBookingForm() {
       notes: newCustNotes.trim(),
     });
 
-    const updatedList = db.getCustomers(businessId);
-    setCustomers(updatedList);
+    const updated = db.getCustomers(businessId);
+    setCustomers(updated);
     setCustomerId(created.id);
-    setCustomerSearchQuery("");
     setShowAddCustomerModal(false);
-    setCustomerAddedSuccess(`Added & selected "${created.name}"!`);
     setNewCustName("");
     setNewCustMobile("");
     setNewCustAddress("");
     setNewCustNotes("");
-    setTimeout(() => setCustomerAddedSuccess(""), 4000);
   };
 
-  const handlePoojaChange = (newPoojaId: string) => {
-    if (newPoojaId === "__NEW_POOJA__") {
-      handleOpenAddPooja();
-      return;
-    }
-    setPoojaId(newPoojaId);
-    const selectedPooja = poojas.find((p) => p.id === newPoojaId);
-    if (selectedPooja) {
-      setAmount(selectedPooja.basePrice);
-    } else {
-      setAmount(0);
-    }
-  };
-
-  const handleCreateBooking = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!customerId) {
-      setError("தயவுசெய்து வாடிக்கையாளரைத் தேர்வு செய்யவும் (Please select a Devotee / Customer).");
-      return;
-    }
-
-    if (!poojaId) {
-      setError("தயவுசெய்து பூஜையைத் தேர்வு செய்யவும் (Please select a Pooja / Homam).");
-      return;
-    }
-
-    const selectedPooja = poojas.find((p) => p.id === poojaId);
-    const selectedCustomer = customers.find((c) => c.id === customerId);
-    const selectedIyer = members.find((m) => m.id === assignedIyerId);
-
-    if (!selectedPooja || !selectedCustomer) {
-      setError("Please select both a Pooja and a Customer.");
-      return;
-    }
-
-    // Conflict Check (Point 33)
-    if (assignedIyerId) {
-      const conflict = db.checkIyerConflict({
-        businessId,
-        iyerId: assignedIyerId,
-        date,
-        startTime,
-        durationMinutes: selectedPooja.durationMinutes || 120,
-      });
-
-      if (conflict.hasConflict) {
-        setError(conflict.reason || "This Iyer already has a booking during this time.");
+  // Step Validation & Navigation
+  const handleNextStep = () => {
+    setStepError("");
+    if (currentStep === 1) {
+      if (!customerId) {
+        setStepError("Please select a devotee to proceed to the next step.");
         return;
       }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      if (!poojaId) {
+        setStepError("Please choose a Pooja / Homam ritual to proceed.");
+        return;
+      }
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
+      if (!date) {
+        setStepError("Please select a booking date.");
+        return;
+      }
+      if (!startTime) {
+        setStepError("Please select a pooja start time.");
+        return;
+      }
+      setCurrentStep(4);
     }
-
-    // Inherit default items from pooja template
-    const bookingItems: BookingItem[] = (selectedPooja.items || []).map((item, idx) => ({
-      id: `bi-${Date.now()}-${idx}`,
-      bookingId: `b-${Date.now()}`,
-      itemEnglishName: item.itemEnglishName,
-      itemTamilName: item.itemTamilName,
-      quantity: item.quantity,
-      unit: item.unit,
-      isChecked: false,
-    }));
-
-    const newBooking: Booking = {
-      id: `b-${Date.now()}`,
-      bookingNumber: `#${Math.floor(8000 + Math.random() * 1999)}`,
-      businessId,
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      customerMobile: selectedCustomer.mobile,
-      customerAddress: selectedCustomer.address,
-      poojaId: selectedPooja.id,
-      poojaEnglishName: selectedPooja.englishName,
-      poojaTamilName: selectedPooja.tamilName,
-      assignedIyerId: selectedIyer?.id,
-      assignedIyerName: selectedIyer?.name,
-      date,
-      startTime,
-      endTime: "10:30 AM",
-      durationMinutes: selectedPooja.durationMinutes,
-      location,
-      status: "CONFIRMED",
-      totalAmount: Number(amount),
-      advanceAmount: 0,
-      balanceAmount: Number(amount),
-      paymentStatus: "PENDING",
-      notes,
-      items: bookingItems,
-      createdBy: currentUser?.id || "u-ravi-iyer-01",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    db.bookings.unshift(newBooking);
-
-    // Record audit
-    db.auditLogs.push({
-      id: `audit-${Date.now()}`,
-      businessId,
-      actorName: currentUser?.name || "Ravi Iyer",
-      action: "BOOKING_CREATED",
-      targetType: "BOOKING",
-      targetId: newBooking.id,
-      newValue: { bookingNumber: newBooking.bookingNumber, pooja: newBooking.poojaEnglishName },
-      reason: "Created via quick booking screen",
-      createdAt: new Date().toISOString(),
-    });
-
-    router.push(`/app/bookings/${newBooking.id}`);
   };
 
-  const selectedCustomerObj = customers.find((c) => c.id === customerId);
+  const handlePrevStep = () => {
+    setStepError("");
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+    }
+  };
+
+  // Final Booking Creation
+  const handleCreateBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStepError("");
+
+    if (!customerId) {
+      setStepError("Devotee is missing. Please return to Step 1.");
+      setCurrentStep(1);
+      return;
+    }
+    if (!poojaId) {
+      setStepError("Pooja is missing. Please return to Step 2.");
+      setCurrentStep(2);
+      return;
+    }
+    if (!date || !startTime) {
+      setStepError("Date or time is missing. Please return to Step 3.");
+      setCurrentStep(3);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const balance = Math.max(0, amount - advanceAmount);
+      const paymentStatus =
+        balance === 0
+          ? "PAID"
+          : advanceAmount > 0
+          ? "PARTIALLY_PAID"
+          : "PENDING";
+
+      const createdBooking = db.createBooking({
+        businessId,
+        customerId,
+        customerName: selectedCustomer?.name || "Devotee",
+        customerMobile: selectedCustomer?.mobile || "",
+        customerAddress: selectedCustomer?.address || "",
+        poojaId,
+        poojaEnglishName: selectedPooja?.englishName || "Pooja",
+        poojaTamilName: selectedPooja?.tamilName || "",
+        date,
+        startTime,
+        endTime: startTime,
+        durationMinutes: selectedPooja?.durationMinutes || 120,
+        location: location.trim() || selectedCustomer?.city || "Namakkal",
+        totalAmount: Number(amount) || 0,
+        advanceAmount: Number(advanceAmount) || 0,
+        balanceAmount: balance,
+        paymentStatus,
+        status: "CONFIRMED",
+        assignedIyerId: assignedIyerId || members[0]?.id || "u-ravi-iyer-01",
+        assignedIyerName:
+          members.find((m) => m.id === assignedIyerId)?.name ||
+          members[0]?.name ||
+          "Ravi Iyer",
+        items: samagriItems,
+        notes: notes.trim(),
+      });
+
+      router.push(`/app/bookings/${createdBooking.id}?created=true`);
+    } catch (err: any) {
+      console.error(err);
+      setStepError(err.message || "Failed to create booking. Please try again.");
+      setIsSubmitting(false);
+    }
+  };
+
+  // Toggle Samagri check item
+  const handleToggleSamagri = (id: string) => {
+    setSamagriItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, isChecked: !item.isChecked } : item
+      )
+    );
+  };
+
+  // Add custom samagri item
+  const handleAddCustomSamagri = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSamagriName.trim()) return;
+    setSamagriItems((prev) => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}`,
+        bookingId: "",
+        itemEnglishName: newSamagriName.trim(),
+        itemTamilName: newSamagriName.trim(),
+        quantity: 1,
+        unit: "items",
+        isChecked: false,
+      },
+    ]);
+    setNewSamagriName("");
+  };
 
   return (
-    <div className="space-y-4 pb-8 animate-in fade-in duration-200">
+    <div className="max-w-2xl mx-auto space-y-4 pb-20">
       {/* Top Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2.5">
+          <Link
+            href="/app/bookings"
+            className="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600"
+            title="Back to Bookings"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-lg font-black text-slate-900 leading-tight">
+              New Pooja Booking
+            </h1>
+            <p className="text-[11px] text-slate-500 font-medium">
+              Step {currentStep} of 4 • {currentStep === 1 && "Select Devotee"}
+              {currentStep === 2 && "Choose Pooja & Samagri"}
+              {currentStep === 3 && "Date, Time & Muhurtham"}
+              {currentStep === 4 && "Summary & Confirmation"}
+            </p>
+          </div>
+        </div>
+
         <Link
           href="/app/bookings"
-          className="p-1.5 hover:bg-velvi-cream rounded-full text-velvi-brown transition"
+          className="text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
         >
-          <ArrowLeft className="w-5 h-5" />
+          Cancel
         </Link>
-        <div>
-          <h2 className="text-base font-bold text-velvi-brownDark">New Booking (புதிய பூஜை பதிவு)</h2>
-          <p className="text-[11px] text-velvi-brown/70">பக்தர் மற்றும் பூஜையைத் தேர்வு செய்யவும்</p>
+      </div>
+
+      {/* Step Progress Bar (1, 2, 3, 4) */}
+      <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-2xs">
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { step: 1, title: "1. Devotee", subtitle: "பக்தர்" },
+            { step: 2, title: "2. Pooja", subtitle: "ஹோமம்" },
+            { step: 3, title: "3. Schedule", subtitle: "தேதி & நேரம்" },
+            { step: 4, title: "4. Confirm", subtitle: "உறுதி செய்" },
+          ].map((s) => {
+            const isCompleted = currentStep > s.step;
+            const isCurrent = currentStep === s.step;
+            return (
+              <button
+                key={s.step}
+                type="button"
+                onClick={() => {
+                  // Allow going back to previous completed steps
+                  if (s.step < currentStep) {
+                    setCurrentStep(s.step as any);
+                  }
+                }}
+                disabled={s.step > currentStep}
+                className={`flex flex-col items-center text-center p-2 rounded-xl transition ${
+                  isCurrent
+                    ? "bg-amber-500 text-white font-black shadow-xs ring-2 ring-amber-400/40"
+                    : isCompleted
+                    ? "bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"
+                    : "bg-slate-50 text-slate-400 opacity-60 cursor-not-allowed"
+                }`}
+              >
+                <div className="flex items-center gap-1 text-xs font-black">
+                  {isCompleted ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <span>{s.step}</span>
+                  )}
+                  <span className="hidden sm:inline">{s.title.split(". ")[1]}</span>
+                </div>
+                <div className={`text-[10px] mt-0.5 font-medium ${isCurrent ? "text-amber-100" : "text-slate-500"}`}>
+                  {s.subtitle}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2 animate-in fade-in">
-          <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-          <span className="font-semibold">{error}</span>
+      {/* Step Error Banner */}
+      {stepError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-2 animate-in fade-in">
+          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{stepError}</span>
         </div>
       )}
 
-      <form onSubmit={handleCreateBooking} className="space-y-3.5">
-        {/* Customer Selector & Quick Search */}
-        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
+      {/* ========================================================================= */}
+      {/* STEP 1: DEVOTEE SELECTION                                                 */}
+      {/* ========================================================================= */}
+      {currentStep === 1 && (
+        <div className="space-y-3.5 animate-in fade-in duration-150">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-velvi-gold" /> வாடிக்கையாளர் / பக்தர் (Customer) <span className="text-red-500">*</span>
-            </label>
+            <div>
+              <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <User className="w-4 h-4 text-amber-600" /> 1. Select Devotee (பக்தரைத் தேர்வு செய்க)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Pick an existing customer or add a new devotee instantly.
+              </p>
+            </div>
             <button
               type="button"
+              id="quickAddDevoteeBtn"
               onClick={() => {
                 setCustModalError("");
                 setShowAddCustomerModal(true);
               }}
-              className="px-2.5 py-1 bg-velvi-gold/15 hover:bg-velvi-gold/25 text-velvi-brownDark border border-velvi-gold/30 rounded-lg text-xs font-bold flex items-center gap-1 transition active:scale-95"
+              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs transition"
             >
-              <Plus className="w-3.5 h-3.5 text-velvi-goldDark stroke-[3]" />
-              <span>புதிய வாடிக்கையாளர்</span>
+              <Plus className="w-3.5 h-3.5 text-amber-400" />
+              <span>+ Add Devotee</span>
             </button>
           </div>
 
-          {/* If a customer is currently selected */}
-          {selectedCustomerObj ? (
-            <div className="p-3 bg-gradient-to-r from-velvi-cream/70 via-amber-50/50 to-velvi-cream/50 rounded-xl border border-velvi-gold/40 flex items-center justify-between gap-3 animate-in fade-in">
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-velvi-brownDark">
-                  <span className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px] shrink-0 font-black">
-                    ✓
-                  </span>
-                  <span className="truncate">{selectedCustomerObj.name}</span>
-                  {selectedCustomerObj.city && (
-                    <span className="text-[10px] font-semibold text-slate-600 bg-white/90 px-1.5 py-0.5 rounded border border-velvi-gold/20">
-                      {selectedCustomerObj.city}
-                    </span>
-                  )}
+          {/* Active Selected Devotee Card */}
+          {selectedCustomer ? (
+            <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50/50 p-4 rounded-2xl border-2 border-amber-400 shadow-sm flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-base shrink-0 shadow-xs">
+                  {selectedCustomer.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-velvi-brown mt-1">
-                  {selectedCustomerObj.mobile ? (
-                    <span className="flex items-center gap-1 font-semibold text-slate-700">
-                      <Phone className="w-3 h-3 text-slate-400" /> {selectedCustomerObj.mobile}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-sm text-slate-900 truncate">
+                      {selectedCustomer.name}
+                    </h3>
+                    <span className="text-[10px] font-black bg-emerald-100 text-emerald-850 px-2 py-0.2 rounded-full border border-emerald-300">
+                      Selected ✓
                     </span>
-                  ) : (
-                    <span className="text-slate-400 italic">எண் இல்லை</span>
-                  )}
-                  {selectedCustomerObj.address && (
-                    <>
-                      <span>•</span>
-                      <span className="truncate max-w-[150px] text-slate-500">{selectedCustomerObj.address}</span>
-                    </>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-slate-600 mt-1 flex-wrap">
+                    {selectedCustomer.mobile ? (
+                      <span className="flex items-center gap-1 font-semibold text-slate-800">
+                        <Phone className="w-3 h-3 text-slate-400" /> {selectedCustomer.mobile}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 italic">No phone</span>
+                    )}
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <MapPin className="w-3 h-3 text-slate-400" /> {selectedCustomer.city || "Namakkal"}
+                    </span>
+                  </div>
+                  {selectedCustomer.notes && (
+                    <p className="text-[11px] text-amber-900 mt-1 truncate">
+                      🔖 {selectedCustomer.notes}
+                    </p>
                   )}
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={() => {
-                  setCustomerId("");
-                  setCustomerSearchQuery("");
-                }}
-                className="px-2.5 py-1.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-lg text-xs font-bold shrink-0 transition flex items-center gap-1 shadow-2xs"
-                title="Change Customer"
+                onClick={() => setCustomerId("")}
+                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shrink-0 transition"
               >
-                <X className="w-3 h-3" />
-                <span>மாற்று</span>
+                Change
               </button>
             </div>
           ) : (
-            /* Searchable Customer Picker */
-            <div className="space-y-2">
+            /* Search & Select Devotee list */
+            <div className="space-y-3">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-velvi-brown/60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={customerSearchQuery}
                   onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                  placeholder="தேடுக: பக்தர் பெயர், மொபைல், ஊர்... (Type to search)"
-                  className="w-full pl-8 pr-8 bg-velvi-cream/30 border border-velvi-gold/30 rounded-xl py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  placeholder="Search devotee by name, phone (+91), city..."
+                  className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-2xs"
                 />
                 {customerSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setCustomerSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 )}
               </div>
 
-              {/* Instant Results list */}
-              <div className="max-h-44 overflow-y-auto border border-velvi-gold/20 rounded-xl divide-y divide-velvi-cream/80 bg-white">
+              {/* Devotees Grid */}
+              <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
                 {filteredCustomers.length === 0 ? (
-                  <div className="p-3 text-center text-xs text-slate-500 space-y-1.5">
-                    <p>வாடிக்கையாளர் கிடைக்கவில்லை (No devotee found for &quot;{customerSearchQuery}&quot;)</p>
+                  <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 space-y-2">
+                    <p className="text-xs text-slate-500">
+                      No devotee found for &quot;{customerSearchQuery}&quot;
+                    </p>
                     <button
                       type="button"
                       onClick={() => {
@@ -563,422 +562,624 @@ function NewBookingForm() {
                         setCustModalError("");
                         setShowAddCustomerModal(true);
                       }}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-velvi-gold/20 text-velvi-brownDark rounded-lg font-bold text-xs hover:bg-velvi-gold/30 transition"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition"
                     >
-                      <Plus className="w-3 h-3" /> &quot;{customerSearchQuery}&quot; ஐ புதிய வாடிக்கையாளராக சேர்
+                      <Plus className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Add &quot;{customerSearchQuery}&quot; as New Devotee</span>
                     </button>
                   </div>
                 ) : (
-                  filteredCustomers.slice(0, 8).map((c) => (
+                  filteredCustomers.map((c) => (
                     <div
                       key={c.id}
-                      onClick={() => {
-                        setCustomerId(c.id);
-                        setCustomerSearchQuery("");
-                      }}
-                      className="p-2.5 hover:bg-amber-50/60 cursor-pointer transition flex items-center justify-between gap-2 text-xs"
+                      onClick={() => setCustomerId(c.id)}
+                      className="bg-white hover:bg-amber-50/70 p-3 rounded-2xl border border-slate-200 hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
                     >
-                      <div className="min-w-0">
-                        <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
-                          <span className="truncate">{c.name}</span>
-                          {c.city && (
-                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded">
-                              {c.city}
-                            </span>
-                          )}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-amber-200 text-slate-700 group-hover:text-amber-900 flex items-center justify-center font-bold text-sm shrink-0 transition">
+                          {c.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          {c.mobile ? <span>📱 {c.mobile}</span> : <span className="italic">எண் இல்லை</span>}
-                          {c.address && <span>• {c.address}</span>}
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-xs text-slate-900 truncate">
+                            {c.name}
+                          </div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                            {c.mobile ? <span>📱 {c.mobile}</span> : <span className="italic">No phone</span>}
+                            <span>•</span>
+                            <span>📍 {c.city || "Tamil Nadu"}</span>
+                          </div>
                         </div>
                       </div>
 
                       <button
                         type="button"
-                        className="px-2 py-0.5 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brownDark border border-velvi-gold/30 rounded-md text-[11px] font-bold shrink-0 transition"
+                        className="px-3 py-1 bg-slate-100 group-hover:bg-amber-500 text-slate-700 group-hover:text-white rounded-lg text-xs font-bold shrink-0 transition"
                       >
-                        தேர்வு செய் →
+                        Select →
                       </button>
                     </div>
                   ))
                 )}
               </div>
-
-              {/* Standard Dropdown alternative */}
-              <div className="pt-1">
-                <select
-                  value={customerId}
-                  onChange={(e) => {
-                    if (e.target.value === "__NEW__") {
-                      setCustModalError("");
-                      setShowAddCustomerModal(true);
-                    } else {
-                      setCustomerId(e.target.value);
-                    }
-                  }}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs text-velvi-brownDark font-medium focus:outline-none focus:border-velvi-gold"
-                >
-                  <option value="">-- அல்லது கீழ்தோன்றும் பட்டியலில் இருந்து தேர்வு செய்க (Dropdown) --</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.mobile ? `(${c.mobile})` : ""} - {c.city || "Tamil Nadu"}
-                    </option>
-                  ))}
-                  <option value="__NEW__">+ புதிய வாடிக்கையாளர் சேர்க்க...</option>
-                </select>
-              </div>
             </div>
           )}
 
-          {customerAddedSuccess && (
-            <div className="text-[11px] font-bold text-velvi-sacredGreen flex items-center gap-1 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200 animate-in fade-in">
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-              <span>{customerAddedSuccess}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Pooja Selector */}
-        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-velvi-gold" /> பூஜை / ஹோமம் (Pooja / Homam) <span className="text-red-500">*</span>
-            </label>
+          {/* Navigation */}
+          <div className="flex justify-end pt-3">
             <button
               type="button"
-              onClick={handleOpenAddPooja}
-              className="text-[11px] font-bold text-velvi-maroon hover:text-velvi-gold flex items-center gap-1 bg-velvi-cream/70 hover:bg-velvi-cream px-2 py-0.5 rounded-lg border border-velvi-gold/20 transition active:scale-95"
+              id="step1NextBtn"
+              onClick={handleNextStep}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
             >
-              <Plus className="w-3 h-3" /> புதிய பூஜை சேர்
+              <span>Continue to Step 2: Choose Pooja</span>
+              <ArrowRight className="w-4 h-4 text-amber-400" />
             </button>
           </div>
+        </div>
+      )}
 
-          <select
-            value={poojaId}
-            onChange={(e) => handlePoojaChange(e.target.value)}
-            className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2.5 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
-          >
-            <option value="">-- பூஜையைத் தேர்வு செய்க (Select Pooja) --</option>
-            {poojas.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.englishName} {p.tamilName && p.tamilName !== p.englishName ? `(${p.tamilName})` : ""} — ₹{p.basePrice?.toLocaleString()}
-              </option>
-            ))}
-            <option value="__NEW_POOJA__">+ Add New Pooja / புதிய பூஜை சேர்...</option>
-          </select>
+      {/* ========================================================================= */}
+      {/* STEP 2: POOJA & SAMAGRI SELECTION                                         */}
+      {/* ========================================================================= */}
+      {currentStep === 2 && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-amber-600" /> 2. Choose Pooja & Samagri (பூஜை & ஹோமம்)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Select ritual ceremony, verify samagri items, or set custom pricing.
+              </p>
+            </div>
+          </div>
 
-          {/* Active Selected Pooja Details & Instant Actions */}
-          {(() => {
-            const activePooja = poojas.find((p) => p.id === poojaId);
-            if (!activePooja) return null;
-            return (
-              <div className="bg-gradient-to-r from-velvi-cream/60 via-amber-50/40 to-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/30 flex items-center justify-between gap-2 text-xs animate-in fade-in">
-                <div className="min-w-0">
-                  <div className="font-bold text-velvi-brownDark truncate flex items-center gap-1.5">
-                    <span>{activePooja.englishName}</span>
-                    {activePooja.tamilName && activePooja.tamilName !== activePooja.englishName && (
-                      <span className="text-[11px] font-medium text-velvi-maroon truncate">({activePooja.tamilName})</span>
+          {/* Pooja Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {poojas.map((p) => {
+              const isSelected = poojaId === p.id;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setPoojaId(p.id)}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer relative flex flex-col justify-between ${
+                    isSelected
+                      ? "bg-gradient-to-r from-amber-50 to-amber-100/60 border-2 border-amber-500 shadow-sm"
+                      : "bg-white border-slate-200 hover:border-amber-300 shadow-2xs"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h3 className="font-extrabold text-xs text-slate-900 leading-snug">
+                          {p.englishName}
+                        </h3>
+                        {p.tamilName && p.tamilName !== p.englishName && (
+                          <div className="text-[11px] font-semibold text-amber-800 mt-0.5">
+                            {p.tamilName}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm font-black text-amber-900 shrink-0">
+                        ₹{(p.basePrice || 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    {p.description && (
+                      <p className="text-[11px] text-slate-500 mt-1.5 line-clamp-2 leading-relaxed">
+                        {p.description}
+                      </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-[11px] text-velvi-brown mt-0.5">
-                    <span className="font-bold text-velvi-maroon">₹{activePooja.basePrice?.toLocaleString()}</span>
-                    <span>•</span>
-                    <span className="text-gray-500">⏳ {activePooja.durationMinutes || 120} mins</span>
-                    {activePooja.description && (
-                      <>
-                        <span>•</span>
-                        <span className="text-gray-500 truncate max-w-[120px]">{activePooja.description}</span>
-                      </>
-                    )}
+
+                  <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
+                    <span>⏳ {p.durationMinutes || 120} mins</span>
+                    <span
+                      className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                        isSelected
+                          ? "bg-amber-500 text-white"
+                          : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {isSelected ? "Selected ✓" : "Choose"}
+                    </span>
                   </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenEditPooja(activePooja)}
-                    className="p-1.5 bg-white hover:bg-velvi-cream border border-velvi-gold/30 rounded-lg text-velvi-brown hover:text-velvi-maroon font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95"
-                    title="Edit this Pooja"
-                  >
-                    <Edit2 className="w-3 h-3 text-velvi-gold" />
-                    <span>மாற்று</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPoojaToDelete(activePooja)}
-                    className="p-1.5 bg-white hover:bg-red-50 border border-red-200 rounded-lg text-red-600 font-bold text-[11px] flex items-center gap-1 shadow-sm transition active:scale-95"
-                    title="Delete this Pooja"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                    <span>நீக்கு</span>
-                  </button>
+          {/* Samagri Checklist Section */}
+          {selectedPooja && (
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <CheckSquare className="w-4 h-4 text-emerald-600" />
+                  <h3 className="text-xs font-extrabold text-slate-900">
+                    Samagri Checklist ({samagriItems.length} items for {selectedPooja.englishName})
+                  </h3>
                 </div>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Click to check off
+                </span>
               </div>
-            );
-          })()}
 
-          {poojaSuccessMessage && (
-            <div className="text-[11px] font-bold text-velvi-sacredGreen flex items-center gap-1 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200 animate-in fade-in">
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-              <span>{poojaSuccessMessage}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                {samagriItems.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handleToggleSamagri(item.id)}
+                    className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-2 cursor-pointer transition ${
+                      item.isChecked
+                        ? "bg-emerald-50/60 border-emerald-200 text-emerald-900 line-through opacity-70"
+                        : "bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      {item.isChecked ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Square className="w-4 h-4 text-slate-400 shrink-0" />
+                      )}
+                      <span className="truncate font-semibold">{item.itemEnglishName}</span>
+                    </div>
+                    <span className="text-[10px] text-slate-500 shrink-0">
+                      {item.quantity} {item.unit}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Custom Samagri Input */}
+              <form onSubmit={handleAddCustomSamagri} className="flex gap-2 pt-1">
+                <input
+                  type="text"
+                  value={newSamagriName}
+                  onChange={(e) => setNewSamagriName(e.target.value)}
+                  placeholder="Add custom item (e.g. 10 Bananas / பழங்கள்)..."
+                  className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shrink-0 transition"
+                >
+                  + Add Item
+                </button>
+              </form>
             </div>
           )}
-        </div>
 
-        {/* Date & Time (Responsive with zero overflow) */}
-        <div className="space-y-2 w-full max-w-full min-w-0 overflow-hidden box-border">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1 min-w-0">
-              <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-velvi-gold" /> Date (தேதி)
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                required
-              />
+          {/* Navigation */}
+          <div className="flex items-center justify-between pt-3">
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+
+            <button
+              type="button"
+              id="step2NextBtn"
+              onClick={handleNextStep}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
+            >
+              <span>Continue to Step 3: Date & Time</span>
+              <ArrowRight className="w-4 h-4 text-amber-400" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* STEP 3: DATE & TIME + CONFLICT WARNING                                    */}
+      {/* ========================================================================= */}
+      {currentStep === 3 && (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          <div>
+            <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+              <CalendarIcon className="w-4 h-4 text-amber-600" /> 3. Schedule Date & Auspicious Time (தேதி & நேரம்)
+            </h2>
+            <p className="text-xs text-slate-500">
+              Pick date from scroll strip or calendar, choose time slot, and check Panchangam.
+            </p>
+          </div>
+
+          {/* Horizontal Date Scroll Strip */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-extrabold text-slate-800 block">
+              Quick Date Select (அடுத்த 30 நாட்கள்)
+            </label>
+            <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 scrollbar-thin">
+              {upcomingDatesList.map((item) => {
+                const isSelected = date === item.dateStr;
+                const isToday = item.dateStr === getLocalDateString();
+                const d = new Date(item.dateStr);
+                const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+                const dayNumber = d.getDate();
+                const monthName = d.toLocaleDateString("en-US", { month: "short" });
+
+                return (
+                  <button
+                    key={item.dateStr}
+                    type="button"
+                    onClick={() => setDate(item.dateStr)}
+                    className={`min-w-[74px] p-2.5 rounded-2xl border text-center transition shrink-0 flex flex-col items-center justify-between ${
+                      isSelected
+                        ? "bg-amber-500 text-white border-amber-600 shadow-md ring-2 ring-amber-400/40"
+                        : "bg-white border-slate-200 hover:border-amber-300 text-slate-800"
+                    }`}
+                  >
+                    <span className={`text-[10px] font-black uppercase ${isSelected ? "text-amber-100" : "text-slate-400"}`}>
+                      {isToday ? "Today" : dayName}
+                    </span>
+                    <span className="text-base font-black my-0.5">
+                      {dayNumber} {monthName}
+                    </span>
+                    <div className={`text-[9.5px] font-bold truncate max-w-[66px] ${isSelected ? "text-amber-100" : "text-amber-800"}`}>
+                      {item.info.tamilMonth} {item.info.tamilDay}
+                    </div>
+
+                    {/* Sacred Event Badge */}
+                    {item.info.specialDayIcon && (
+                      <span className="text-xs mt-1" title={item.info.specialDayTag || "Sacred Day"}>
+                        {item.info.specialDayIcon}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Standard Date Picker Alternative */}
+          <div className="bg-white p-3 rounded-2xl border border-slate-200 flex items-center justify-between gap-3 text-xs">
+            <label className="font-bold text-slate-700 flex items-center gap-1.5">
+              <CalendarIcon className="w-4 h-4 text-slate-400" />
+              <span>Or Choose Custom Date:</span>
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+
+          {/* Time Slot Selection */}
+          <div className="space-y-2">
+            <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-amber-600" />
+              <span>Select Start Time (நேரம்):</span>
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {TIME_PRESETS.map((t) => {
+                const isSelected = startTime === t.time;
+                return (
+                  <button
+                    key={t.time}
+                    type="button"
+                    onClick={() => setStartTime(t.time)}
+                    className={`p-2.5 rounded-xl border text-left transition flex flex-col justify-between ${
+                      isSelected
+                        ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                        : "bg-white border-slate-200 hover:border-slate-300 text-slate-800"
+                    }`}
+                  >
+                    <span className="font-black text-xs">{t.label}</span>
+                    <span className={`text-[10px] font-medium mt-0.5 ${isSelected ? "text-amber-400" : "text-slate-500"}`}>
+                      {t.tag}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1 min-w-0">
-              <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-                <Clock className="w-3 h-3 text-velvi-gold" /> Time (நேரம்)
-              </label>
-              <select
+            {/* Custom Time Selector */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs text-slate-500 font-medium">Custom Time:</span>
+              <input
+                type="text"
+                placeholder="e.g. 05:45 AM"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1 text-xs font-bold text-slate-900 w-32 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          {/* ⚠️ DOUBLE BOOKING / CONFLICT WARNING CARD */}
+          {conflictingBookings.length > 0 && (
+            <div className="bg-rose-50 border-2 border-rose-300 p-3.5 rounded-2xl space-y-2 animate-in shake duration-200">
+              <div className="flex items-center gap-2 text-rose-800 font-black text-xs">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>⚠️ Time Slot Conflict ({conflictingBookings.length} existing booking scheduled)</span>
+              </div>
+              <div className="space-y-1 text-xs text-rose-950 bg-white/80 p-2.5 rounded-xl border border-rose-200">
+                {conflictingBookings.map((b) => (
+                  <div key={b.id} className="flex items-center justify-between gap-2">
+                    <span className="font-bold">
+                      {b.bookingNumber} • {b.customerName} ({b.poojaEnglishName})
+                    </span>
+                    <span className="text-[11px] font-medium text-rose-700 bg-rose-100 px-2 py-0.2 rounded">
+                      {b.startTime}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-rose-700 leading-tight">
+                You can still proceed if multiple priests will attend, or select a different time slot above.
+              </p>
+            </div>
+          )}
+
+          {/* Panchangam & Auspicious Timings Card */}
+          <div className="bg-gradient-to-r from-amber-50/70 via-slate-50 to-amber-50/50 p-3.5 rounded-2xl border border-amber-200/80 space-y-2">
+            <div className="flex items-center justify-between text-xs font-black text-slate-900">
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                {selectedDateInfo.formattedDualDate} ({selectedDateInfo.dayOfWeekEn})
+              </span>
+              <span className="text-[11px] text-amber-900 font-bold bg-amber-100 px-2 py-0.5 rounded-md">
+                {selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+              <div className="bg-white p-2 rounded-xl border border-slate-200">
+                <span className="text-emerald-700 font-bold block">✨ நல்ல நேரம் (Nalla Neram):</span>
+                <span className="font-semibold text-slate-800">{selectedDateInfo.nallaNeram}</span>
+              </div>
+              <div className="bg-white p-2 rounded-xl border border-slate-200">
+                <span className="text-amber-800 font-bold block">🪔 கௌரி (Gowri Nalla Neram):</span>
+                <span className="font-semibold text-slate-800">{selectedDateInfo.gowriNallaNeram}</span>
+              </div>
+              <div className="bg-white p-2 rounded-xl border border-slate-200">
+                <span className="text-rose-700 font-bold block">⛔ ராகு காலம் (Rahu Kalam):</span>
+                <span className="font-semibold text-slate-800">{selectedDateInfo.rahuKalam}</span>
+              </div>
+              <div className="bg-white p-2 rounded-xl border border-slate-200">
+                <span className="text-purple-700 font-bold block">⌛ குளிகை (Kuligai):</span>
+                <span className="font-semibold text-slate-800">{selectedDateInfo.kuligai}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between pt-3">
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+
+            <button
+              type="button"
+              id="step3NextBtn"
+              onClick={handleNextStep}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
+            >
+              <span>Continue to Step 4: Summary & Confirm</span>
+              <ArrowRight className="w-4 h-4 text-amber-400" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* STEP 4: SUMMARY, PAYMENT & FINAL CONFIRMATION                            */}
+      {/* ========================================================================= */}
+      {currentStep === 4 && (
+        <form onSubmit={handleCreateBooking} className="space-y-4 animate-in fade-in duration-150">
+          <div>
+            <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" /> 4. Review Summary & Confirm Booking
+            </h2>
+            <p className="text-xs text-slate-500">
+              Verify ceremony details, set advance/balance payments, and assign priest.
+            </p>
+          </div>
+
+          {/* Booking Overview Card */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Pooja Ceremony</span>
+                <h3 className="font-black text-sm text-slate-900">
+                  {selectedPooja?.englishName} {selectedPooja?.tamilName && `(${selectedPooja.tamilName})`}
+                </h3>
+              </div>
+              <span className="text-base font-black text-amber-900">
+                ₹{Number(amount || 0).toLocaleString("en-IN")}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div>
+                <span className="text-[10px] text-slate-400 font-semibold block">Devotee</span>
+                <span className="font-bold text-slate-900">{selectedCustomer?.name}</span>
+                <span className="text-[11px] text-slate-500 block">📱 {selectedCustomer?.mobile || "No phone"}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-400 font-semibold block">Date & Time</span>
+                <span className="font-bold text-slate-900">📅 {date}</span>
+                <span className="text-[11px] text-slate-500 block">⏰ {startTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Breakdown & Advance Input */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+            <h4 className="text-xs font-black text-slate-900 flex items-center gap-1">
+              <IndianRupee className="w-3.5 h-3.5 text-emerald-600" /> Payment Breakdown
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                <label className="text-[10px] font-bold text-slate-500 block mb-1">
+                  Total Pooja Fee (₹)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={0}
+                  value={amount}
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                <label className="text-[10px] font-bold text-emerald-700 block mb-1">
+                  Advance Paid (₹)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={amount}
+                  value={advanceAmount}
+                  onChange={(e) => setAdvanceAmount(Number(e.target.value))}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                <label className="text-[10px] font-bold text-amber-800 block mb-1">
+                  Balance Due (₹)
+                </label>
+                <div className="text-xs font-black text-amber-900 py-1.5">
+                  ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 text-xs">
+              <span className="text-slate-600 font-semibold">Payment Mode:</span>
+              <select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value as any)}
+                className="bg-white border border-slate-200 rounded-xl px-3 py-1 text-xs font-bold text-slate-900 focus:outline-none"
               >
-                <option value="06:00 AM">06:00 AM (Brahma Muhurtham)</option>
-                <option value="07:00 AM">07:00 AM</option>
-                <option value="07:30 AM">07:30 AM</option>
-                <option value="08:00 AM">08:00 AM</option>
-                <option value="09:00 AM">09:00 AM</option>
-                <option value="10:00 AM">10:00 AM</option>
-                <option value="10:30 AM">10:30 AM (Muhurtham)</option>
-                <option value="11:30 AM">11:30 AM</option>
-                <option value="12:00 PM">12:00 PM</option>
-                <option value="02:30 PM">02:30 PM</option>
-                <option value="04:00 PM">04:00 PM</option>
-                <option value="04:30 PM">04:30 PM</option>
-                <option value="06:00 PM">06:00 PM (Sandhya)</option>
-                <option value="07:30 PM">07:30 PM</option>
-                {![
-                  "06:00 AM",
-                  "07:00 AM",
-                  "07:30 AM",
-                  "08:00 AM",
-                  "09:00 AM",
-                  "10:00 AM",
-                  "10:30 AM",
-                  "11:30 AM",
-                  "12:00 PM",
-                  "02:30 PM",
-                  "04:00 PM",
-                  "04:30 PM",
-                  "06:00 PM",
-                  "07:30 PM",
-                ].includes(startTime) && <option value={startTime}>{startTime}</option>}
+                <option value="UPI">UPI / Google Pay</option>
+                <option value="CASH">Cash in Hand</option>
+                <option value="BANK_TRANSFER">Bank Transfer</option>
               </select>
             </div>
           </div>
 
-          {/* Auspicious Timings Indicator for chosen date (Guaranteed zero overflow) */}
-          {(() => {
-            const chosenDateInfo = getTamilDate(date);
-            return (
-              <div className="w-full max-w-full min-w-0 bg-white/95 p-3 rounded-2xl border border-velvi-gold/30 text-xs space-y-2 shadow-2xs overflow-hidden box-border">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-velvi-brownDark font-semibold">
-                  <span className="truncate">📅 {chosenDateInfo.formattedDualDate} ({chosenDateInfo.dayOfWeekTa})</span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-red-700 font-bold text-[10px] bg-red-50 px-2 py-0.5 rounded-md border border-red-200 shrink-0">
-                      ராகு காலம்: {formatTimeRangeTo12H(chosenDateInfo.rahuKalam)}
-                    </span>
-                    <span className="text-orange-800 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 shrink-0">
-                      எமகண்டம்: {formatTimeRangeTo12H(chosenDateInfo.yamagandam)}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-[10.5px] bg-emerald-50/90 text-emerald-950 p-2 rounded-xl border border-emerald-200/80 leading-relaxed break-words">
-                  ✨ <strong>நல்ல நேரம்:</strong> காலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramMorning)} &nbsp;|&nbsp; மாலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramEvening)}
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-
-        {/* Who will perform the Pooja (Self vs Delegate) */}
-        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
-          <div>
-            <label className="text-xs font-bold text-velvi-brown block">
-              Who will perform the Pooja?
-            </label>
-            <p className="text-[11px] text-velvi-brown/60">
-              Normally you perform directly; assign a team member only if you cannot attend.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                const ownerMember = members.find((m) => m.role === "OWNER") || members[0];
-                setAssignedIyerId(ownerMember?.id || "");
-              }}
-              className={`p-2.5 rounded-xl border text-left transition ${
-                members.find((m) => m.id === assignedIyerId)?.role === "OWNER"
-                  ? "bg-velvi-gold/15 border-velvi-gold shadow-sm ring-1 ring-velvi-gold/40"
-                  : "bg-velvi-cream/30 border-velvi-gold/20 hover:bg-velvi-cream"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-bold text-xs text-velvi-brownDark">
-                <span>🪔</span>
-                <span>Perform Myself</span>
-              </div>
-              <p className="text-[10px] text-velvi-brown/70 mt-0.5">
-                ({currentUser?.name || "Ravi Iyer"} - Self)
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const staffMember = members.find((m) => m.role !== "OWNER") || members[1] || members[0];
-                setAssignedIyerId(staffMember?.id || "");
-              }}
-              className={`p-2.5 rounded-xl border text-left transition ${
-                members.find((m) => m.id === assignedIyerId)?.role !== "OWNER"
-                  ? "bg-velvi-gold/15 border-velvi-gold shadow-sm ring-1 ring-velvi-gold/40"
-                  : "bg-velvi-cream/30 border-velvi-gold/20 hover:bg-velvi-cream"
-              }`}
-            >
-              <div className="flex items-center gap-1.5 font-bold text-xs text-velvi-brownDark">
-                <span>👥</span>
-                <span>Assign Team Member</span>
-              </div>
-              <p className="text-[10px] text-velvi-brown/70 mt-0.5">
-                (Delegate to Staff)
-              </p>
-            </button>
-          </div>
-
-          {/* Show dropdown only if assigning to another staff member */}
-          {members.find((m) => m.id === assignedIyerId)?.role !== "OWNER" && (
-            <div className="pt-2 border-t border-velvi-creamDark space-y-1 animate-in fade-in">
-              <label className="text-[11px] font-bold text-velvi-brown block">
-                Select Team Member:
+          {/* Priest Assignment & Location */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">
+                Assign Priest (செய்து வைக்கும் குருக்கள்)
               </label>
               <select
                 value={assignedIyerId}
                 onChange={(e) => setAssignedIyerId(e.target.value)}
-                className="w-full bg-velvi-cream/40 border border-velvi-gold/30 rounded-xl px-3 py-2 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none"
               >
-                {members
-                  .filter((m) => m.role !== "OWNER")
-                  .map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} {m.active ? "✅ Available" : "⚠️ Inactive"} ({m.specialization || "Vedic"})
-                    </option>
-                  ))}
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.role === "OWNER" ? "Lead Priest" : "Associate"})
+                  </option>
+                ))}
               </select>
             </div>
-          )}
-        </div>
 
-        {/* Location & Amount */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
-            <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-velvi-gold" /> Location
+            <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">
+                Ceremony Location / Venue (இடம்)
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Namakkal / Devotee Residence"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+          </div>
+
+          {/* Notes & Special Instructions */}
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 space-y-1.5">
+            <label className="text-xs font-bold text-slate-700 block">
+              Sankalpam Notes / Gothram / Nakshatram (குறிப்புகள்)
             </label>
             <input
               type="text"
-              placeholder="e.g. Namakkal"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-              required
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Koundinya Gothram, Rohini Nakshatram, 4 family members"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
             />
           </div>
 
-          <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
-            <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-              <IndianRupee className="w-3 h-3 text-velvi-gold" /> Amount
-            </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-              required
-            />
+          {/* Final Action Buttons */}
+          <div className="flex items-center justify-between pt-3">
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
+
+            <button
+              type="submit"
+              id="confirmAndCreateBookingBtn"
+              disabled={isSubmitting}
+              className="px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl text-sm font-black shadow-md transition active:scale-95 flex items-center gap-2"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+              <span>{isSubmitting ? "Creating Booking..." : "Confirm & Create Booking"}</span>
+            </button>
           </div>
-        </div>
+        </form>
+      )}
 
-        {/* Optional Notes */}
-        <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
-          <label className="text-[11px] font-bold text-velvi-brown">
-            Notes (Optional)
-          </label>
-          <input
-            type="text"
-            placeholder="Special instructions, family gothram, etc."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-2.5 py-2 text-xs text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-          />
-        </div>
-
-        {/* Primary Action */}
-        <button
-          id="createBookingSubmitBtn"
-          type="submit"
-          className="w-full py-3.5 bg-gradient-to-r from-velvi-brown to-velvi-brownLight text-white rounded-xl font-bold text-sm shadow-sacred active:scale-[0.99] transition mt-2 flex items-center justify-center gap-2"
-        >
-          <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-          <span>+ பூஜை பதிவு செய்க / Create Booking</span>
-        </button>
-      </form>
-
-      {/* Quick Add Customer Modal */}
+      {/* ========================================================================= */}
+      {/* QUICK ADD DEVOTEE MODAL                                                   */}
+      {/* ========================================================================= */}
       {showAddCustomerModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-2xl p-4 sm:p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-velvi-gold/30 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-velvi-gold/20 text-velvi-brownDark flex items-center justify-center font-bold text-sm">
+                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm">
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-velvi-brownDark leading-tight">
-                    Add New Customer
-                  </h3>
-                  <p className="text-[10px] text-velvi-brown/60">
-                    Will be instantly selected for this booking
-                  </p>
+                  <h3 className="font-extrabold text-sm text-slate-900">Add New Devotee</h3>
+                  <p className="text-[10px] text-slate-500">Will be instantly selected for this booking</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddCustomerModal(false)}
-                className="p-1 hover:bg-velvi-cream rounded-full text-velvi-brown/60 transition"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {custModalError && (
-              <div className="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
+              <div className="text-xs text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200 flex items-center gap-1.5 font-bold">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
                 <span>{custModalError}</span>
               </div>
             )}
 
-            <form onSubmit={handleQuickAddCustomer} className="space-y-3">
+            <form onSubmit={handleSaveQuickCustomer} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  Customer Name *
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Devotee Name *
                 </label>
                 <input
                   type="text"
@@ -986,86 +1187,55 @@ function NewBookingForm() {
                   placeholder="e.g. Ramesh Kumar"
                   value={newCustName}
                   onChange={(e) => setNewCustName(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                   autoFocus
                 />
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-velvi-brown">
-                    மொபைல் எண் / Mobile <span className="text-[10px] font-normal text-gray-500">(விருப்பத்தேர்வு)</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handlePasteCustMobileClick}
-                    className="text-[10px] font-bold text-velvi-maroon hover:text-velvi-gold flex items-center gap-1 bg-velvi-cream/70 hover:bg-velvi-cream px-2 py-0.5 rounded-md border border-velvi-gold/20 transition active:scale-95"
-                    title="Paste from clipboard"
-                  >
-                    <Clipboard className="w-3 h-3 text-velvi-gold" />
-                    <span>ஒட்டு (Paste)</span>
-                  </button>
-                </div>
-
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  Mobile Number (Optional)
+                </label>
                 <div className="flex items-center gap-1.5">
-                  <div className="bg-velvi-cream/70 border border-velvi-gold/30 rounded-xl px-2 py-2 text-xs font-bold text-velvi-brownDark flex items-center gap-1 shrink-0 shadow-2xs">
-                    <span>🇮🇳</span>
-                    <span className="text-[11px]">+91</span>
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700">
+                    +91
                   </div>
                   <input
                     type="tel"
-                    placeholder="98765 43210 (Optional)"
+                    placeholder="98765 43210"
                     value={newCustMobile}
-                    onChange={(e) => handleNewCustMobileChange(e.target.value)}
-                    onPaste={handleNewCustMobilePaste}
+                    onChange={(e) => setNewCustMobile(cleanPastedIndianMobile(e.target.value))}
                     maxLength={10}
-                    className="flex-1 min-w-0 bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
-
-                {/* Live validation indicator */}
-                {newCustMobile.trim() ? (
-                  <div
-                    className={`text-[10px] font-bold mt-1 flex items-center gap-1 ${
-                      newCustMobileInspection.status === "VALID"
-                        ? "text-emerald-700"
-                        : "text-amber-700"
-                    }`}
-                  >
-                    <span>{newCustMobileInspection.messageTa}</span>
-                  </div>
-                ) : (
-                  <p className="text-[10px] text-gray-400 mt-1">
-                    எண் இல்லாவிட்டாலும் வாடிக்கையாளரைச் சேர்க்கலாம்.
-                  </p>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">City</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">City</label>
                   <input
                     type="text"
-                    placeholder="e.g. Namakkal"
+                    placeholder="Namakkal"
                     value={newCustCity}
                     onChange={(e) => setNewCustCity(e.target.value)}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">Address</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Address</label>
                   <input
                     type="text"
                     placeholder="Street / Area"
                     value={newCustAddress}
                     onChange={(e) => setNewCustAddress(e.target.value)}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
+                <label className="text-xs font-bold text-slate-700 block mb-1">
                   Notes (Gothram / Nakshatram)
                 </label>
                 <input
@@ -1073,7 +1243,7 @@ function NewBookingForm() {
                   placeholder="e.g. Koundinya, Rohini"
                   value={newCustNotes}
                   onChange={(e) => setNewCustNotes(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1081,239 +1251,18 @@ function NewBookingForm() {
                 <button
                   type="button"
                   onClick={() => setShowAddCustomerModal(false)}
-                  className="flex-1 py-2.5 bg-velvi-cream hover:bg-velvi-creamDark/30 text-velvi-brown rounded-xl text-xs font-bold transition"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition shadow-md"
+                  className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
                 >
                   Save & Select
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Quick Add / Edit Pooja Modal */}
-      {showPoojaModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 w-full max-w-sm border border-velvi-gold/30 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-velvi-gold/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-velvi-gold" />
-                <h3 className="font-bold text-sm text-velvi-brownDark">
-                  {isEditingPooja ? "பூஜை விவரங்களை மாற்று / Edit Pooja" : "புதிய பூஜை சேர் / Add New Pooja"}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPoojaModal(false)}
-                className="p-1 text-gray-400 hover:text-velvi-brown rounded-full hover:bg-velvi-cream transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {poojaModalError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{poojaModalError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSavePooja} className="space-y-3">
-              {/* 1-Tap Popular Pooja Presets */}
-              <div className="bg-gradient-to-r from-amber-50/80 via-velvi-cream/70 to-amber-50/80 p-2.5 rounded-2xl border border-velvi-gold/35 space-y-1.5 shadow-2xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-velvi-brownDark flex items-center gap-1">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
-                    <span>பிரபலமான டெம்ப்ளேட்கள் (1-Tap Fill)</span>
-                  </span>
-                  <span className="text-[9px] text-velvi-maroon font-bold bg-white px-1.5 py-0.5 rounded-full border border-velvi-gold/20">
-                    1-கிளிக்
-                  </span>
-                </div>
-                <div className="flex gap-1 overflow-x-auto pb-1 no-scrollbar scroll-smooth">
-                  {PRESET_POOJA_TEMPLATES.map((tpl) => (
-                    <button
-                      key={tpl.englishName}
-                      type="button"
-                      onClick={() => applyInstantPoojaPreset(tpl)}
-                      className="shrink-0 bg-white hover:bg-amber-100/70 border border-velvi-gold/30 hover:border-velvi-gold rounded-xl px-2 py-1 text-xs font-bold text-velvi-brownDark flex items-center gap-1 shadow-2xs transition active:scale-95"
-                    >
-                      <span>{tpl.icon}</span>
-                      <span>{tpl.tamilName}</span>
-                      <span className="text-[9px] text-velvi-maroon bg-amber-50 px-1 py-0.2 rounded font-bold">
-                        ₹{tpl.basePrice.toLocaleString()}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  Pooja Name (English) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ganapathi Homam / Sudarshana Homam"
-                  value={poojaFormEnglish}
-                  onChange={(e) => setPoojaFormEnglish(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  பூஜை பெயர் (தமிழ்)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. கணபதி ஹோமம்"
-                  value={poojaFormTamil}
-                  onChange={(e) => setPoojaFormTamil(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">Base Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    step="500"
-                    value={poojaFormPrice}
-                    onChange={(e) => setPoojaFormPrice(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  />
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {[3000, 5000, 7500, 10000, 12000].map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        onClick={() => setPoojaFormPrice(p)}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
-                          poojaFormPrice === p
-                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
-                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
-                        }`}
-                      >
-                        ₹{p.toLocaleString()}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">Duration (Mins)</label>
-                  <input
-                    type="number"
-                    min="15"
-                    step="15"
-                    value={poojaFormDuration}
-                    onChange={(e) => setPoojaFormDuration(Number(e.target.value))}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  />
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {[
-                      { mins: 60, label: "1h" },
-                      { mins: 90, label: "1.5h" },
-                      { mins: 120, label: "2h" },
-                      { mins: 180, label: "3h" },
-                      { mins: 240, label: "4h" },
-                    ].map((d) => (
-                      <button
-                        key={d.mins}
-                        type="button"
-                        onClick={() => setPoojaFormDuration(d.mins)}
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition border ${
-                          poojaFormDuration === d.mins
-                            ? "bg-velvi-brown text-amber-200 border-velvi-brown"
-                            : "bg-velvi-cream/60 hover:bg-velvi-cream text-velvi-brownDark border-velvi-gold/20"
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-velvi-brown block mb-1">
-                  Description / குறிப்புகள் (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. Includes pooja samagri & sankalpam"
-                  value={poojaFormDesc}
-                  onChange={(e) => setPoojaFormDesc(e.target.value)}
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold resize-none"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPoojaModal(false)}
-                  className="flex-1 py-2.5 bg-velvi-cream hover:bg-velvi-creamDark/30 text-velvi-brown rounded-xl text-xs font-bold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition shadow-md"
-                >
-                  {isEditingPooja ? "சேமி / Save" : "சேர் & தேர்ந்தெடு / Add & Select"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Pooja Confirmation Modal */}
-      {poojaToDelete && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 w-full max-w-sm border border-red-200 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2.5 text-red-600">
-              <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
-                <Trash2 className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-velvi-brownDark">பூஜையை நீக்கவா?</h3>
-                <p className="text-[11px] text-gray-500">Delete Pooja from catalogue?</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-velvi-brownDark bg-red-50/70 p-3 rounded-xl border border-red-100 leading-relaxed">
-              <span className="font-bold text-red-700">{poojaToDelete.englishName}</span> {poojaToDelete.tamilName && `(${poojaToDelete.tamilName})`} பூஜையை நீக்க விரும்புகிறீர்களா? இது உங்கள் பூஜை பட்டியலிலிருந்து நீக்கப்படும்.
-            </p>
-
-            <div className="flex gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setPoojaToDelete(null)}
-                className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-velvi-brown rounded-xl text-xs font-bold transition"
-              >
-                Cancel / வேண்டாம்
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDeletePooja}
-                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition shadow-md"
-              >
-                நீக்கு / Confirm Delete
-              </button>
-            </div>
           </div>
         </div>
       )}
@@ -1325,12 +1274,12 @@ export default function NewBookingPage() {
   return (
     <Suspense
       fallback={
-        <div className="p-8 text-center text-xs text-velvi-brown/60">
-          Loading booking form...
+        <div className="p-8 text-center text-xs text-slate-500 font-medium">
+          Loading booking wizard...
         </div>
       }
     >
-      <NewBookingForm />
+      <NewBookingWizardForm />
     </Suspense>
   );
 }

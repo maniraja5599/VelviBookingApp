@@ -16,6 +16,9 @@ import {
   SubscriptionAdjustment,
   ThemePreset,
   BrandingSetting,
+  BookingItem,
+  BookingStatus,
+  PaymentStatus,
 } from "@/lib/types";
 import {
   SEED_USER,
@@ -775,6 +778,67 @@ export class VelviDatabaseStore {
     };
     this.customers.unshift(newCust);
     return newCust;
+  }
+
+  // -------------------------------------------------------------
+  // BOOKING MANAGEMENT (Create, Get, List)
+  // -------------------------------------------------------------
+  public createBooking(params: {
+    businessId: string;
+    customerId: string;
+    customerName?: string;
+    customerMobile?: string;
+    customerAddress?: string;
+    poojaId: string;
+    poojaEnglishName?: string;
+    poojaTamilName?: string;
+    assignedIyerId?: string;
+    assignedIyerName?: string;
+    date: string;
+    startTime: string;
+    endTime?: string;
+    durationMinutes?: number;
+    location: string;
+    totalAmount: number;
+    advanceAmount: number;
+    balanceAmount: number;
+    paymentStatus: PaymentStatus;
+    status: BookingStatus;
+    items?: BookingItem[];
+    notes?: string;
+  }): Booking {
+    const bNum = (8248 + this.bookings.length + 1).toString();
+    const newBooking: Booking = {
+      id: `b-${Date.now()}`,
+      bookingNumber: `#${bNum}`,
+      businessId: params.businessId,
+      customerId: params.customerId,
+      customerName: params.customerName,
+      customerMobile: params.customerMobile,
+      customerAddress: params.customerAddress,
+      poojaId: params.poojaId,
+      poojaEnglishName: params.poojaEnglishName,
+      poojaTamilName: params.poojaTamilName,
+      assignedIyerId: params.assignedIyerId,
+      assignedIyerName: params.assignedIyerName,
+      date: params.date,
+      startTime: params.startTime,
+      endTime: params.endTime || params.startTime,
+      durationMinutes: params.durationMinutes || 120,
+      location: params.location || "Namakkal",
+      totalAmount: params.totalAmount,
+      advanceAmount: params.advanceAmount,
+      balanceAmount: params.balanceAmount,
+      paymentStatus: params.paymentStatus,
+      status: params.status || "CONFIRMED",
+      items: params.items || [],
+      notes: params.notes || "",
+      createdBy: params.assignedIyerName || "Priest",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    this.bookings.unshift(newBooking);
+    return newBooking;
   }
 
   // -------------------------------------------------------------
