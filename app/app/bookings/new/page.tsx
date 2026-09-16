@@ -105,6 +105,7 @@ function NewBookingForm() {
   const searchParams = useSearchParams();
   const initialDate = searchParams.get("date") || getLocalDateString();
   const initialPoojaId = searchParams.get("poojaId");
+  const initialCustomerId = searchParams.get("customerId");
   const initialTime = searchParams.get("time");
 
   const { currentBusiness, currentUser } = useAuth();
@@ -117,8 +118,8 @@ function NewBookingForm() {
   // Initial selected pooja if provided via URL param
   const selectedInitialPooja = initialPoojaId ? poojas.find((p) => p.id === initialPoojaId) : null;
 
-  // Form State: Customer is intentionally empty by default so user can search & select
-  const [customerId, setCustomerId] = useState<string>("");
+  // Form State: Customer is empty by default unless passed via query param
+  const [customerId, setCustomerId] = useState<string>(initialCustomerId || "");
   const [customerSearchQuery, setCustomerSearchQuery] = useState<string>("");
   const [poojaId, setPoojaId] = useState<string>(selectedInitialPooja?.id || "");
   const [date, setDate] = useState<string>(initialDate);
