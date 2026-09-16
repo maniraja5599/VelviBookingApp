@@ -26,6 +26,9 @@ import {
   Edit2,
   Trash2,
   Clipboard,
+  Search,
+  Phone,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
@@ -111,12 +114,12 @@ function NewBookingForm() {
   const [customers, setCustomers] = useState<Customer[]>(db.getCustomers(businessId));
   const members = db.getMembers(businessId);
 
-  // Initial selected pooja
-  const selectedInitialPooja =
-    (initialPoojaId ? poojas.find((p) => p.id === initialPoojaId) : null) || poojas[0];
+  // Initial selected pooja if provided via URL param
+  const selectedInitialPooja = initialPoojaId ? poojas.find((p) => p.id === initialPoojaId) : null;
 
-  // Form State
-  const [customerId, setCustomerId] = useState<string>(customers[0]?.id || "");
+  // Form State: Customer is intentionally empty by default so user can search & select
+  const [customerId, setCustomerId] = useState<string>("");
+  const [customerSearchQuery, setCustomerSearchQuery] = useState<string>("");
   const [poojaId, setPoojaId] = useState<string>(selectedInitialPooja?.id || "");
   const [date, setDate] = useState<string>(initialDate);
   const [startTime, setStartTime] = useState<string>(initialTime || "08:00 AM");
@@ -125,6 +128,18 @@ function NewBookingForm() {
   const [assignedIyerId, setAssignedIyerId] = useState<string>(members[0]?.id || "");
   const [notes, setNotes] = useState<string>("");
   const [error, setError] = useState<string>("");
+
+  // Filtered customer list for search
+  const filteredCustomers = customers.filter((c) => {
+    if (!customerSearchQuery.trim()) return true;
+    const q = customerSearchQuery.trim().toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      (c.mobile && c.mobile.includes(q)) ||
+      (c.city && c.city.toLowerCase().includes(q)) ||
+      (c.address && c.address.toLowerCase().includes(q))
+    );
+  });
 
   // Instant Pooja Add/Edit/Delete States
   const [showPoojaModal, setShowPoojaModal] = useState<boolean>(false);
@@ -230,14 +245,8 @@ function NewBookingForm() {
     const updatedList = db.getPoojas(businessId);
     setPoojas(updatedList);
     if (poojaId === poojaToDelete.id) {
-      const nextPooja = updatedList[0];
-      if (nextPooja) {
-        setPoojaId(nextPooja.id);
-        setAmount(nextPooja.basePrice);
-      } else {
-        setPoojaId("");
-        setAmount(0);
-      }
+      setPoojaId("");
+      setAmount(0);
     }
     setPoojaSuccessMessage(`Deleted "${poojaToDelete.englishName}"!`);
     setPoojaToDelete(null);
@@ -306,6 +315,7 @@ function NewBookingForm() {
     const updatedList = db.getCustomers(businessId);
     setCustomers(updatedList);
     setCustomerId(created.id);
+    setCustomerSearchQuery("");
     setShowAddCustomerModal(false);
     setCustomerAddedSuccess(`Added & selected "${created.name}"!`);
     setNewCustName("");
@@ -324,12 +334,24 @@ function NewBookingForm() {
     const selectedPooja = poojas.find((p) => p.id === newPoojaId);
     if (selectedPooja) {
       setAmount(selectedPooja.basePrice);
+    } else {
+      setAmount(0);
     }
   };
 
   const handleCreateBooking = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!customerId) {
+      setError("தயவுசெய்து வாடிக்கையாளரைத் தேர்வு செய்யவும் (Please select a Devotee / Customer).");
+      return;
+    }
+
+    if (!poojaId) {
+      setError("தயவுசெய்து பூஜையைத் தேர்வு செய்யவும் (Please select a Pooja / Homam).");
+      return;
+    }
 
     const selectedPooja = poojas.find((p) => p.id === poojaId);
     const selectedCustomer = customers.find((c) => c.id === customerId);
@@ -415,6 +437,8 @@ function NewBookingForm() {
     router.push(`/app/bookings/${newBooking.id}`);
   };
 
+  const selectedCustomerObj = customers.find((c) => c.id === customerId);
+
   return (
     <div className="space-y-4 pb-8 animate-in fade-in duration-200">
       {/* Top Header */}
@@ -425,22 +449,25 @@ function NewBookingForm() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h2 className="text-base font-bold text-velvi-brownDark">New Booking</h2>
+        <div>
+          <h2 className="text-base font-bold text-velvi-brownDark">New Booking (புதிய பூஜை பதிவு)</h2>
+          <p className="text-[11px] text-velvi-brown/70">பக்தர் மற்றும் பூஜையைத் தேர்வு செய்யவும்</p>
+        </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl text-xs flex items-center gap-2">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-xl text-xs flex items-center gap-2 animate-in fade-in">
           <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
-          <span>{error}</span>
+          <span className="font-semibold">{error}</span>
         </div>
       )}
 
       <form onSubmit={handleCreateBooking} className="space-y-3.5">
-        {/* Customer Selector */}
-        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2">
+        {/* Customer Selector & Quick Search */}
+        <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-velvi-gold" /> Customer
+              <User className="w-3.5 h-3.5 text-velvi-gold" /> வாடிக்கையாளர் / பக்தர் (Customer) <span className="text-red-500">*</span>
             </label>
             <button
               type="button"
@@ -451,29 +478,156 @@ function NewBookingForm() {
               className="px-2.5 py-1 bg-velvi-gold/15 hover:bg-velvi-gold/25 text-velvi-brownDark border border-velvi-gold/30 rounded-lg text-xs font-bold flex items-center gap-1 transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 text-velvi-goldDark stroke-[3]" />
-              <span>Add Customer</span>
+              <span>புதிய வாடிக்கையாளர்</span>
             </button>
           </div>
 
-          <select
-            value={customerId}
-            onChange={(e) => {
-              if (e.target.value === "__NEW__") {
-                setCustModalError("");
-                setShowAddCustomerModal(true);
-              } else {
-                setCustomerId(e.target.value);
-              }
-            }}
-            className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2.5 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
-          >
-            {customers.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.mobile}) - {c.city || "Tamil Nadu"}
-              </option>
-            ))}
-            <option value="__NEW__">+ Add New Customer...</option>
-          </select>
+          {/* If a customer is currently selected */}
+          {selectedCustomerObj ? (
+            <div className="p-3 bg-gradient-to-r from-velvi-cream/70 via-amber-50/50 to-velvi-cream/50 rounded-xl border border-velvi-gold/40 flex items-center justify-between gap-3 animate-in fade-in">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 font-bold text-xs sm:text-sm text-velvi-brownDark">
+                  <span className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px] shrink-0 font-black">
+                    ✓
+                  </span>
+                  <span className="truncate">{selectedCustomerObj.name}</span>
+                  {selectedCustomerObj.city && (
+                    <span className="text-[10px] font-semibold text-slate-600 bg-white/90 px-1.5 py-0.5 rounded border border-velvi-gold/20">
+                      {selectedCustomerObj.city}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-velvi-brown mt-1">
+                  {selectedCustomerObj.mobile ? (
+                    <span className="flex items-center gap-1 font-semibold text-slate-700">
+                      <Phone className="w-3 h-3 text-slate-400" /> {selectedCustomerObj.mobile}
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 italic">எண் இல்லை</span>
+                  )}
+                  {selectedCustomerObj.address && (
+                    <>
+                      <span>•</span>
+                      <span className="truncate max-w-[150px] text-slate-500">{selectedCustomerObj.address}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerId("");
+                  setCustomerSearchQuery("");
+                }}
+                className="px-2.5 py-1.5 bg-white hover:bg-red-50 text-slate-600 hover:text-red-700 border border-slate-200 hover:border-red-200 rounded-lg text-xs font-bold shrink-0 transition flex items-center gap-1 shadow-2xs"
+                title="Change Customer"
+              >
+                <X className="w-3 h-3" />
+                <span>மாற்று</span>
+              </button>
+            </div>
+          ) : (
+            /* Searchable Customer Picker */
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-velvi-brown/60 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={customerSearchQuery}
+                  onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                  placeholder="தேடுக: பக்தர் பெயர், மொபைல், ஊர்... (Type to search)"
+                  className="w-full pl-8 pr-8 bg-velvi-cream/30 border border-velvi-gold/30 rounded-xl py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                />
+                {customerSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Instant Results list */}
+              <div className="max-h-44 overflow-y-auto border border-velvi-gold/20 rounded-xl divide-y divide-velvi-cream/80 bg-white">
+                {filteredCustomers.length === 0 ? (
+                  <div className="p-3 text-center text-xs text-slate-500 space-y-1.5">
+                    <p>வாடிக்கையாளர் கிடைக்கவில்லை (No devotee found for &quot;{customerSearchQuery}&quot;)</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewCustName(customerSearchQuery);
+                        setCustModalError("");
+                        setShowAddCustomerModal(true);
+                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-velvi-gold/20 text-velvi-brownDark rounded-lg font-bold text-xs hover:bg-velvi-gold/30 transition"
+                    >
+                      <Plus className="w-3 h-3" /> &quot;{customerSearchQuery}&quot; ஐ புதிய வாடிக்கையாளராக சேர்
+                    </button>
+                  </div>
+                ) : (
+                  filteredCustomers.slice(0, 8).map((c) => (
+                    <div
+                      key={c.id}
+                      onClick={() => {
+                        setCustomerId(c.id);
+                        setCustomerSearchQuery("");
+                      }}
+                      className="p-2.5 hover:bg-amber-50/60 cursor-pointer transition flex items-center justify-between gap-2 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
+                          <span className="truncate">{c.name}</span>
+                          {c.city && (
+                            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded">
+                              {c.city}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                          {c.mobile ? <span>📱 {c.mobile}</span> : <span className="italic">எண் இல்லை</span>}
+                          {c.address && <span>• {c.address}</span>}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="px-2 py-0.5 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brownDark border border-velvi-gold/30 rounded-md text-[11px] font-bold shrink-0 transition"
+                      >
+                        தேர்வு செய் →
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Standard Dropdown alternative */}
+              <div className="pt-1">
+                <select
+                  value={customerId}
+                  onChange={(e) => {
+                    if (e.target.value === "__NEW__") {
+                      setCustModalError("");
+                      setShowAddCustomerModal(true);
+                    } else {
+                      setCustomerId(e.target.value);
+                    }
+                  }}
+                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs text-velvi-brownDark font-medium focus:outline-none focus:border-velvi-gold"
+                >
+                  <option value="">-- அல்லது கீழ்தோன்றும் பட்டியலில் இருந்து தேர்வு செய்க (Dropdown) --</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.mobile ? `(${c.mobile})` : ""} - {c.city || "Tamil Nadu"}
+                    </option>
+                  ))}
+                  <option value="__NEW__">+ புதிய வாடிக்கையாளர் சேர்க்க...</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {customerAddedSuccess && (
             <div className="text-[11px] font-bold text-velvi-sacredGreen flex items-center gap-1 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200 animate-in fade-in">
@@ -487,7 +641,7 @@ function NewBookingForm() {
         <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-2.5">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brown flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-velvi-gold" /> Pooja / Homam (பூஜை / ஹோமம்)
+              <Flame className="w-3.5 h-3.5 text-velvi-gold" /> பூஜை / ஹோமம் (Pooja / Homam) <span className="text-red-500">*</span>
             </label>
             <button
               type="button"
@@ -503,6 +657,7 @@ function NewBookingForm() {
             onChange={(e) => handlePoojaChange(e.target.value)}
             className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2.5 text-xs text-velvi-brownDark font-semibold focus:outline-none focus:border-velvi-gold"
           >
+            <option value="">-- பூஜையைத் தேர்வு செய்க (Select Pooja) --</option>
             {poojas.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.englishName} {p.tamilName && p.tamilName !== p.englishName ? `(${p.tamilName})` : ""} — ₹{p.basePrice?.toLocaleString()}
@@ -516,7 +671,7 @@ function NewBookingForm() {
             const activePooja = poojas.find((p) => p.id === poojaId);
             if (!activePooja) return null;
             return (
-              <div className="bg-gradient-to-r from-velvi-cream/60 via-amber-50/40 to-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/30 flex items-center justify-between gap-2 text-xs">
+              <div className="bg-gradient-to-r from-velvi-cream/60 via-amber-50/40 to-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/30 flex items-center justify-between gap-2 text-xs animate-in fade-in">
                 <div className="min-w-0">
                   <div className="font-bold text-velvi-brownDark truncate flex items-center gap-1.5">
                     <span>{activePooja.englishName}</span>
@@ -569,12 +724,12 @@ function NewBookingForm() {
           )}
         </div>
 
-        {/* Date & Time */}
-        <div className="space-y-1.5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
+        {/* Date & Time (Responsive with zero overflow) */}
+        <div className="space-y-2 w-full max-w-full min-w-0 overflow-hidden box-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1 min-w-0">
               <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-velvi-gold" /> Date
+                <Calendar className="w-3 h-3 text-velvi-gold" /> Date (தேதி)
               </label>
               <input
                 type="date"
@@ -585,9 +740,9 @@ function NewBookingForm() {
               />
             </div>
 
-            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
+            <div className="bg-white p-3 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1 min-w-0">
               <label className="text-[11px] font-bold text-velvi-brown flex items-center gap-1">
-                <Clock className="w-3 h-3 text-velvi-gold" /> Time
+                <Clock className="w-3 h-3 text-velvi-gold" /> Time (நேரம்)
               </label>
               <select
                 value={startTime}
@@ -628,26 +783,24 @@ function NewBookingForm() {
             </div>
           </div>
 
-          {/* Auspicious Timings Indicator for chosen date */}
+          {/* Auspicious Timings Indicator for chosen date (Guaranteed zero overflow) */}
           {(() => {
             const chosenDateInfo = getTamilDate(date);
             return (
-              <div className="bg-white/90 p-2.5 rounded-xl border border-velvi-gold/30 text-[11px] space-y-1 shadow-2xs">
-                <div className="flex items-center justify-between flex-wrap gap-1 text-velvi-brownDark font-semibold">
-                  <span>📅 {chosenDateInfo.formattedDualDate} ({chosenDateInfo.dayOfWeekTa})</span>
+              <div className="w-full max-w-full min-w-0 bg-white/95 p-3 rounded-2xl border border-velvi-gold/30 text-xs space-y-2 shadow-2xs overflow-hidden box-border">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-velvi-brownDark font-semibold">
+                  <span className="truncate">📅 {chosenDateInfo.formattedDualDate} ({chosenDateInfo.dayOfWeekTa})</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-red-700 font-bold text-[10px] bg-red-50 px-1.5 py-0.5 rounded border border-red-200">
+                    <span className="text-red-700 font-bold text-[10px] bg-red-50 px-2 py-0.5 rounded-md border border-red-200 shrink-0">
                       ராகு காலம்: {formatTimeRangeTo12H(chosenDateInfo.rahuKalam)}
                     </span>
-                    <span className="text-orange-800 font-bold text-[10px] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">
+                    <span className="text-orange-800 font-bold text-[10px] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 shrink-0">
                       எமகண்டம்: {formatTimeRangeTo12H(chosenDateInfo.yamagandam)}
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10.5px] bg-emerald-50/80 text-emerald-950 px-2 py-1 rounded-lg border border-emerald-200/70">
-                  <span>
-                    ✨ <strong>நல்ல நேரம்:</strong> காலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramMorning)} | மாலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramEvening)}
-                  </span>
+                <div className="text-[10.5px] bg-emerald-50/90 text-emerald-950 p-2 rounded-xl border border-emerald-200/80 leading-relaxed break-words">
+                  ✨ <strong>நல்ல நேரம்:</strong> காலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramMorning)} &nbsp;|&nbsp; மாலை: {formatTimeRangeTo12H(chosenDateInfo.nallaNeramEvening)}
                 </div>
               </div>
             );
