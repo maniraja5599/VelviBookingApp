@@ -336,6 +336,19 @@ function NewBookingWizardForm() {
     }
   }, [businessId, DRAFT_STORAGE_KEY]);
 
+  // Lock body scroll when any modal is open to prevent screen displacement and jump on mobile keyboard
+  useEffect(() => {
+    if (showAddCustomerModal || showPoojaModal) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPosition = document.body.style.position;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.position = originalPosition;
+      };
+    }
+  }, [showAddCustomerModal, showPoojaModal]);
+
   // 2. AUTO-SAVE DRAFT ON ANY EDIT
   useEffect(() => {
     if (!isDraftRestored) return;
@@ -929,11 +942,26 @@ _Velvi Booking App_`;
                 setCustModalError("");
                 setShowAddCustomerModal(true);
               }}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition"
+              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-amber-400" />
-              <span>Add Devotee</span>
+              <span>+ Add Devotee</span>
             </button>
+          </div>
+
+          {/* Contextual Smart Tip for Step 1 */}
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+              💡
+            </div>
+            <div className="space-y-0.5">
+              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+                ஸ்மார்ட் குறிப்பு (Devotee Tip):
+              </span>
+              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                பக்தரின் மொபைல் எண் மற்றும் ஊரைச் சேர்த்தால், வாட்ஸ்அப் மூலம் பூஜை விவரங்கள் மற்றும் சாமான்கள் பட்டியலை 1-தட்டில் அனுப்பலாம். சங்கல்பத்திற்கான கோத்திரம்/நட்சத்திரத்தை குறித்துக் கொள்வது நல்லது.
+              </p>
+            </div>
           </div>
 
           {/* If Devotee is Selected: Detailed Showcase Card */}
@@ -1033,6 +1061,33 @@ _Velvi Booking App_`;
                 )}
               </div>
 
+              {/* Quick Devotee Chips (When search is empty) */}
+              {!customerSearchQuery && customers.length > 0 && (
+                <div className="space-y-1.5 pt-0.5">
+                  <div className="flex items-center justify-between text-[10.5px]">
+                    <span className="font-extrabold text-slate-600 flex items-center gap-1">
+                      <span>⚡</span>
+                      <span>அடிக்கடி வரும் பக்தர்கள் (Quick Pick):</span>
+                    </span>
+                    <span className="text-slate-400 font-medium">1-Tap Select</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    {customers.slice(0, 6).map((c) => (
+                      <button
+                        key={`chip-${c.id}`}
+                        type="button"
+                        onClick={() => setCustomerId(c.id)}
+                        className="px-2.5 py-1.5 bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+                      >
+                        <User className="w-3 h-3 text-amber-600" />
+                        <span className="truncate max-w-[120px]">{c.name}</span>
+                        {c.city && <span className="text-[10px] text-slate-400 font-normal">• {c.city}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Devotee Results */}
               <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
                 {filteredCustomers.length === 0 ? (
@@ -1127,11 +1182,26 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={() => setShowPoojaModal(true)}
-              className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+              className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
             >
               <Plus className="w-3.5 h-3.5 text-amber-700" />
-              <span>Add Custom Pooja</span>
+              <span>+ Add Custom Pooja</span>
             </button>
+          </div>
+
+          {/* Contextual Smart Tip for Step 2 */}
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+              💡
+            </div>
+            <div className="space-y-0.5">
+              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+                பூஜை &amp; சாமான்கள் குறிப்பு (Pooja &amp; Samagri Tip):
+              </span>
+              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                ஹோமத்திற்கான பொருட்கள் பட்டியலை இங்கேயே சரிபார்த்து டிக் செய்யலாம். தேவைப்படாத பொருட்களை அன்-டிக் செய்யவும், அல்லது புதிய பொருட்களை எளிதாகச் சேர்த்துக் கொள்ளலாம். பக்தருக்கு அனுப்பும் பட்டியலும் இதன்படி மாறும்.
+              </p>
+            </div>
           </div>
 
           {/* Popular / Frequent Poojas: Instant 1-Tap Numbered Cards */}
@@ -1336,8 +1406,30 @@ _Velvi Booking App_`;
                   </div>
                 </div>
 
-                <div className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                  {samagriItems.filter((i) => i.isChecked !== false).length} of {samagriItems.length} Selected
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSamagriItems((prev) => prev.map((item) => ({ ...item, isChecked: true })));
+                    }}
+                    className="text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 transition active:scale-95 cursor-pointer"
+                    title="அனைத்துப் பொருட்களையும் தேர்வு செய்"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSamagriItems((prev) => prev.map((item) => ({ ...item, isChecked: false })));
+                    }}
+                    className="text-[10px] font-bold text-slate-600 hover:bg-slate-100 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer"
+                    title="அனைத்துப் பொருட்களையும் நீக்கு"
+                  >
+                    Deselect All
+                  </button>
+                  <div className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                    {samagriItems.filter((i) => i.isChecked !== false).length} / {samagriItems.length}
+                  </div>
                 </div>
               </div>
 
@@ -1650,6 +1742,21 @@ _Velvi Booking App_`;
             <p className="text-xs text-slate-500">
               Interactive Tamil calendar grid, 15-min interval time selector, and collision detection.
             </p>
+          </div>
+
+          {/* Contextual Smart Tip for Step 3 */}
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+              💡
+            </div>
+            <div className="space-y-0.5">
+              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+                சுப முகூர்த்த நேரக் குறிப்பு (Muhurtham &amp; Timings Tip):
+              </span>
+              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                தேர்ந்தெடுத்த நாளின் நல்ல நேரம் மற்றும் கௌரி நல்ல நேரத்தைக் கவனித்து பூஜை நேரத்தை முடிவு செய்யவும். ராகு காலம் மற்றும் எமகண்ட நேரங்களில் பூஜை துவங்குவதைத் தவிர்க்கலாம்.
+              </p>
+            </div>
           </div>
 
           {/* FULL INTERACTIVE CALENDAR GRID WITH MONTH/YEAR PICKER */}
@@ -2056,6 +2163,21 @@ _Velvi Booking App_`;
             </p>
           </div>
 
+          {/* Contextual Smart Tip for Step 4 */}
+          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+              💡
+            </div>
+            <div className="space-y-0.5">
+              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+                கட்டணம் &amp; குருக்கள் ஒதுக்கீடு குறிப்பு (Payment &amp; Priest Tip):
+              </span>
+              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                முன்பணம் (Advance) பெற்றிருந்தால் உடனே குறித்துக் கொள்ளுங்கள்; மீதமுள்ள தொகையை பூஜை முடிந்ததும் எளிதாகப் பெற்றுக்கொள்ளலாம். நீங்கள் அல்லது உங்கள் உதவி குருக்களை இங்கு எளிதாக ஒதுக்கீடு செய்யலாம்.
+              </p>
+            </div>
+          </div>
+
           {/* 1. HERO CEREMONY & DEVOTEE OVERVIEW CARD */}
           <div className="bg-gradient-to-r from-amber-50/90 via-white to-amber-50/50 p-4 rounded-2xl border border-amber-300 shadow-2xs space-y-3">
             <div className="flex items-start justify-between border-b border-amber-200/60 pb-2.5">
@@ -2441,213 +2563,283 @@ _Velvi Booking App_`;
       )}
 
       {/* ========================================================================= */}
-      {/* QUICK ADD DEVOTEE MODAL                                                   */}
+      {/* QUICK ADD DEVOTEE MODAL (Fixed Layout & Mobile Keyboard Safe)             */}
       {/* ========================================================================= */}
       {showAddCustomerModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm">
-                  <User className="w-4 h-4" />
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAddCustomerModal(false);
+          }}
+        >
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 flex flex-col max-h-[92dvh] sm:max-h-[85vh] animate-in slide-in-from-bottom-4 duration-200">
+            {/* 1. Fixed Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0 bg-white rounded-t-3xl">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <User className="w-5 h-5 text-amber-800" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900">Add New Devotee</h3>
-                  <p className="text-[10px] text-slate-500">Will be instantly selected for this booking</p>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                    Add New Devotee (புதிய பக்தர்)
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 font-medium">
+                    Will be instantly selected for this booking
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddCustomerModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {custModalError && (
-              <div className="text-xs text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200 flex items-center gap-1.5 font-bold">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>{custModalError}</span>
-              </div>
-            )}
+            {/* 2. Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
+              {custModalError && (
+                <div className="text-xs text-rose-700 bg-rose-50 p-2.5 rounded-xl border border-rose-200 flex items-center gap-1.5 font-bold">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+                  <span>{custModalError}</span>
+                </div>
+              )}
 
-            <form onSubmit={handleSaveQuickCustomer} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Devotee Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Ramesh Kumar"
-                  value={newCustName}
-                  onChange={(e) => setNewCustName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
-                  autoFocus
-                />
-              </div>
+              <form id="quickDevoteeForm" onSubmit={handleSaveQuickCustomer} className="space-y-3.5">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Devotee Name * (பக்தர் பெயர்)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ramesh Kumar"
+                    value={newCustName}
+                    onChange={(e) => setNewCustName(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Mobile Number (Optional)
-                </label>
-                <div className="flex items-center gap-1.5">
-                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700">
-                    +91
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Mobile Number (அலைபேசி எண்)
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <div className="bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-bold text-slate-700 select-none">
+                      +91
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="98765 43210"
+                      value={newCustMobile}
+                      onChange={(e) => setNewCustMobile(cleanPastedIndianMobile(e.target.value))}
+                      maxLength={10}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    வாட்ஸ்அப் மூலம் பூஜை விவரங்கள் அனுப்ப இந்த எண் பயன்படும்.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">City (ஊர்)</label>
+                    <input
+                      type="text"
+                      placeholder="Namakkal"
+                      value={newCustCity}
+                      onChange={(e) => setNewCustCity(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Address (முகவரி)</label>
+                    <input
+                      type="text"
+                      placeholder="Street / Area"
+                      value={newCustAddress}
+                      onChange={(e) => setNewCustAddress(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Notes (Gothram / Nakshatram / Kuladeivam)
+                    </label>
+                    <span className="text-[10px] text-amber-800 font-bold">சங்கல்ப குறிப்பு</span>
                   </div>
                   <input
-                    type="tel"
-                    placeholder="98765 43210"
-                    value={newCustMobile}
-                    onChange={(e) => setNewCustMobile(cleanPastedIndianMobile(e.target.value))}
-                    maxLength={10}
-                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">City</label>
-                  <input
                     type="text"
-                    placeholder="Namakkal"
-                    value={newCustCity}
-                    onChange={(e) => setNewCustCity(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                    placeholder="e.g. Koundinya Gothram, Rohini"
+                    value={newCustNotes}
+                    onChange={(e) => setNewCustNotes(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">Address</label>
-                  <input
-                    type="text"
-                    placeholder="Street / Area"
-                    value={newCustAddress}
-                    onChange={(e) => setNewCustAddress(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Notes (Gothram / Nakshatram / Kuladeivam)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Koundinya Gothram, Rohini"
-                  value={newCustNotes}
-                  onChange={(e) => setNewCustNotes(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+                  {/* Quick Nakshatra Suggestions Chips */}
+                  <div className="mt-2 space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 block">
+                      💡 விரைவு நட்சத்திரம் (1-Tap Suggestion):
+                    </span>
+                    <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto no-scrollbar">
+                      {["அஸ்வினி", "பரணி", "கிருத்திகை", "ரோகிணி", "மிருகசீரிஷம்", "திருவாதிரை", "புனர்பூசம்", "பூசம்", "மகம்", "பூரம்", "உத்திரம்", "ஹஸ்தம்", "சுவாதி", "விசாகம்", "அனுஷம்", "கேட்டை", "மூலம்", "உத்திராடம்", "திருவோணம்", "சதயம்"].map((nak) => (
+                        <button
+                          key={nak}
+                          type="button"
+                          onClick={() => {
+                            setNewCustNotes((prev) => (prev ? `${prev}, ${nak}` : nak));
+                          }}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-amber-100 text-slate-700 hover:text-amber-900 border border-slate-200 transition active:scale-95 cursor-pointer"
+                        >
+                          +{nak}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddCustomerModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
-                >
-                  Save & Select
-                </button>
-              </div>
-            </form>
+            {/* 3. Fixed Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white/95 backdrop-blur-xs shrink-0 flex gap-2.5 rounded-b-3xl">
+              <button
+                type="button"
+                onClick={() => setShowAddCustomerModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Cancel (ரத்து)
+              </button>
+              <button
+                type="submit"
+                form="quickDevoteeForm"
+                className="flex-1 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white rounded-xl text-xs font-black transition shadow-sm cursor-pointer"
+              >
+                Save &amp; Select (சேமி)
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* QUICK ADD CUSTOM POOJA MODAL                                             */}
+      {/* QUICK ADD CUSTOM POOJA MODAL (Fixed Layout & Mobile Keyboard Safe)        */}
       {/* ========================================================================= */}
       {showPoojaModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-amber-600" />
-                <h3 className="font-extrabold text-sm text-slate-900">Add Custom Pooja</h3>
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPoojaModal(false);
+          }}
+        >
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 flex flex-col max-h-[92dvh] sm:max-h-[85vh] animate-in slide-in-from-bottom-4 duration-200">
+            {/* 1. Fixed Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0 bg-white rounded-t-3xl">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <Flame className="w-5 h-5 text-amber-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                    Add Custom Pooja (புதிய பூஜை)
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 font-medium">
+                    Creates custom ritual ceremony with samagri checklist
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowPoojaModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-full"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSavePoojaModal} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Pooja English Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Dhanvantri Homam"
-                  value={poojaModalNameEn}
-                  onChange={(e) => setPoojaModalNameEn(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+            {/* 2. Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
+              <form id="quickPoojaForm" onSubmit={handleSavePoojaModal} className="space-y-3.5">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Pooja English Name * (பூஜை ஆங்கிலப் பெயர்)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dhanvantri Homam"
+                    value={poojaModalNameEn}
+                    onChange={(e) => setPoojaModalNameEn(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Pooja Tamil Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. தன்வந்திரி ஹோமம்"
-                  value={poojaModalNameTa}
-                  onChange={(e) => setPoojaModalNameTa(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Pooja Tamil Name (பூஜை தமிழ்ப் பெயர்)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. தன்வந்திரி ஹோமம்"
+                    value={poojaModalNameTa}
+                    onChange={(e) => setPoojaModalNameTa(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                  />
+                </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Base Fee (₹)</label>
-                <input
-                  type="number"
-                  value={poojaModalPrice}
-                  onChange={(e) => setPoojaModalPrice(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
-                />
-              </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Base Fee (அடிப்படை கட்டணம் ₹)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      value={poojaModalPrice}
+                      onChange={(e) => setPoojaModalPrice(Number(e.target.value))}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="Vedic significance..."
-                  value={poojaModalDesc}
-                  onChange={(e) => setPoojaModalDesc(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 resize-none"
-                />
-              </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">
+                    Description (விளக்கம் / பலன்கள்)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Vedic significance and auspicious benefits..."
+                    value={poojaModalDesc}
+                    onChange={(e) => setPoojaModalDesc(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs resize-none"
+                  />
+                </div>
+              </form>
+            </div>
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPoojaModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs"
-                >
-                  Save & Select
-                </button>
-              </div>
-            </form>
+            {/* 3. Fixed Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white/95 backdrop-blur-xs shrink-0 flex gap-2.5 rounded-b-3xl">
+              <button
+                type="button"
+                onClick={() => setShowPoojaModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Cancel (ரத்து)
+              </button>
+              <button
+                type="submit"
+                form="quickPoojaForm"
+                className="flex-1 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white rounded-xl text-xs font-black transition shadow-sm cursor-pointer"
+              >
+                Save &amp; Select (சேமி)
+              </button>
+            </div>
           </div>
         </div>
       )}
