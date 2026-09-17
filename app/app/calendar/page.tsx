@@ -1680,9 +1680,10 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setShowMonthYearPicker(false)}
-                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95"
+                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 flex items-center gap-1.5 cursor-pointer"
               >
-                மூடுக (Close)
+                <X className="w-3.5 h-3.5" />
+                <span>Close</span>
               </button>
             </div>
           </div>
@@ -1965,9 +1966,10 @@ export default function CalendarPage() {
               <button
                 type="button"
                 onClick={() => setShowDayDetailsModal(false)}
-                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 cursor-pointer"
+                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5"
               >
-                மூடு
+                <X className="w-3.5 h-3.5" />
+                <span>Close</span>
               </button>
             </div>
           </div>

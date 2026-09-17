@@ -213,15 +213,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center p-2.5 sm:p-4 sm:pt-10 bg-slate-900/65 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center p-3 pt-14 sm:pt-16 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col h-[85vh] max-h-[85vh] animate-in zoom-in-95 duration-200"
+        className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 animate-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Search Header */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-200/80 flex items-center gap-2.5 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/40 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-300/80 flex items-center justify-center shrink-0">
-            <Search className="w-4 h-4 text-amber-800" />
+        <div className="p-3 sm:p-3.5 border-b border-slate-200/80 flex items-center gap-2.5 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-300/80 flex items-center justify-center shrink-0 shadow-2xs">
+            <Search className="w-4 h-4 text-emerald-850" />
           </div>
           <input
             ref={inputRef}
@@ -235,30 +238,34 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setQuery("")}
-              className="p-1.5 rounded-full hover:bg-slate-200 text-slate-500 transition shrink-0"
+              className="p-1.5 rounded-full hover:bg-slate-200 text-slate-500 transition shrink-0 cursor-pointer"
               aria-label="Clear search"
             >
               <X className="w-4 h-4" />
             </button>
           )}
+
+          {/* Close Button - Replaced "ESC" with a proper Close Button */}
           <button
             type="button"
             onClick={onClose}
-            className="px-2.5 py-1 text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition shrink-0"
+            className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+            aria-label="Close search"
           >
-            ESC
+            <X className="w-4 h-4 text-slate-500" />
+            <span>Close</span>
           </button>
         </div>
 
-        {/* Category Filter Chips (Shown when searching) */}
+        {/* Category Filter Chips (Shown only when searching) */}
         {cleanQuery.length > 0 && (
           <div className="px-3.5 py-2 border-b border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-slate-50/80 text-xs shrink-0">
             <button
               type="button"
               onClick={() => setActiveCategory("ALL")}
-              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition ${
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition cursor-pointer ${
                 activeCategory === "ALL"
-                  ? "bg-emerald-800 text-white shadow-xs"
+                  ? "bg-emerald-900 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
@@ -267,7 +274,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setActiveCategory("CUSTOMERS")}
-              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
                 activeCategory === "CUSTOMERS"
                   ? "bg-blue-800 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
@@ -278,7 +285,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setActiveCategory("BOOKINGS")}
-              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
                 activeCategory === "BOOKINGS"
                   ? "bg-amber-800 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
@@ -289,7 +296,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setActiveCategory("POOJAS")}
-              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
                 activeCategory === "POOJAS"
                   ? "bg-orange-800 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
@@ -300,7 +307,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={() => setActiveCategory("ACTIONS")}
-              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 ${
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
                 activeCategory === "ACTIONS"
                   ? "bg-purple-800 text-white shadow-xs"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
@@ -312,132 +319,44 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         )}
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-4 space-y-4 text-slate-800 scroll-smooth">
+        <div className={`overflow-y-auto overscroll-contain p-3 sm:p-3.5 space-y-3.5 text-slate-800 scroll-smooth ${cleanQuery ? "max-h-[60vh]" : ""}`}>
           {/* ========================================================================= */}
-          {/* 1. INITIAL MINIMAL VIEW (When query is empty)                             */}
+          {/* 1. INITIAL COMPACT VIEW (When query is empty - small, sleek bar)          */}
           {/* ========================================================================= */}
           {!cleanQuery ? (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              {/* Common Quick Actions Grid */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" /> விரைவு வழிகள் (Quick Actions)
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-medium">1-Tap Navigation</span>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {commonActions.map((act) => {
-                    const IconComp = act.icon;
-                    return (
-                      <div
-                        key={act.id}
-                        onClick={() => handleNavigate(act.url)}
-                        className={`p-2.5 rounded-xl border ${act.bgColor} hover:scale-[1.02] cursor-pointer transition flex flex-col justify-between shadow-2xs active:scale-95`}
-                      >
-                        <div className="flex items-center justify-between mb-1.5">
-                          <IconComp className={`w-4 h-4 ${act.iconColor}`} />
-                          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-xs leading-tight line-clamp-1">
-                            {act.title}
-                          </div>
-                          <div className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">
-                            {act.english}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            <div className="p-3 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold">
+                <span className="text-emerald-700 font-bold">💡 தேடல் குறிப்பு:</span>
+                <span>பக்தர் பெயர், தொலைபேசி, பூஜை அல்லது பதிவு எண் தட்டச்சு செய்க.</span>
               </div>
 
-              {/* Popular Poojas Minimal Highlight */}
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-orange-950 flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5 text-orange-600" /> முக்கிய பூஜைகள் (Popular Poojas)
-                  </span>
-                  <Link
-                    href="/app/poojas"
-                    onClick={onClose}
-                    className="text-[11px] font-bold text-orange-700 hover:underline"
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mr-1">
+                  எடுத்துக்காட்டு:
+                </span>
+                {customers.slice(0, 2).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setQuery(c.name)}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
                   >
-                    அனைத்தும் →
-                  </Link>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {poojas.slice(0, 4).map((p) => (
-                    <div
-                      key={p.id}
-                      onClick={() => handleNavigate(`/app/bookings/new?poojaId=${p.id}`)}
-                      className="p-2.5 rounded-xl bg-slate-50 hover:bg-orange-50/70 border border-slate-200/80 hover:border-orange-300 transition cursor-pointer flex items-center justify-between gap-2 group"
-                    >
-                      <div className="min-w-0">
-                        <div className="font-bold text-xs text-slate-900 group-hover:text-orange-950 truncate">
-                          {p.englishName}
-                        </div>
-                        <div className="flex items-center gap-2 text-[10.5px] text-slate-500 mt-0.5">
-                          <span className="font-bold text-emerald-800">₹{p.basePrice?.toLocaleString()}</span>
-                          <span>•</span>
-                          <span>⏳ {p.durationMinutes || 120}m</span>
-                        </div>
-                      </div>
-                      <span className="px-2 py-0.5 bg-white text-orange-800 font-bold text-[10px] rounded-lg border border-orange-200 shrink-0 group-hover:bg-orange-700 group-hover:text-white transition">
-                        பதிவு →
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    <User className="w-3 h-3 text-emerald-700" />
+                    <span>{c.name}</span>
+                  </button>
+                ))}
+                {poojas.slice(0, 2).map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setQuery(p.englishName)}
+                    className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Flame className="w-3 h-3 text-amber-700" />
+                    <span>{p.tamilName || p.englishName}</span>
+                  </button>
+                ))}
               </div>
-
-              {/* Recent Devotees Minimal Strip */}
-              {customers.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-blue-600" /> சமீபத்திய பக்தர்கள் (Recent Devotees)
-                    </span>
-                    <Link
-                      href="/app/customers"
-                      onClick={onClose}
-                      className="text-[11px] font-bold text-blue-700 hover:underline"
-                    >
-                      பட்டியல் →
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                    {customers.slice(0, 4).map((c) => (
-                      <div
-                        key={c.id}
-                        onClick={() => handleNavigate(`/app/bookings/new?customerId=${c.id}`)}
-                        className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50/70 border border-slate-200/80 hover:border-blue-300 transition cursor-pointer flex items-center justify-between gap-2 group"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-bold text-xs text-slate-900 group-hover:text-blue-950 truncate flex items-center gap-1">
-                            <span>{c.name}</span>
-                            {c.city && (
-                              <span className="text-[9px] font-semibold text-slate-500 bg-white px-1 py-0.2 rounded border border-slate-200">
-                                {c.city}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-[10.5px] text-slate-500 mt-0.5">
-                            {c.mobile || "எண் இல்லை"}
-                          </div>
-                        </div>
-                        <span className="px-2 py-0.5 bg-white text-blue-800 font-bold text-[10px] rounded-lg border border-blue-200 shrink-0 group-hover:bg-blue-700 group-hover:text-white transition">
-                          பூஜை செய் →
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           ) : (
             /* ========================================================================= */
@@ -773,21 +692,26 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           )}
         </div>
 
-        {/* Sticky Footer */}
-        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-700">Velvi Smart Search</span>
-            <span>•</span>
-            <span className="text-slate-500">பக்தர் / பூஜை / பதிவு எண் தேடலாம்</span>
+        {/* Sticky Footer (Only shown when searching) */}
+        {cleanQuery.length > 0 && (
+          <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-700">Velvi Search</span>
+              <span>•</span>
+              <span className="text-slate-500">
+                {filteredCustomers.length + filteredBookings.length + filteredPoojas.length} முடிவுகள்
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-slate-600 hover:text-slate-900 font-bold px-2.5 py-1 rounded-lg hover:bg-slate-200 transition flex items-center gap-1 cursor-pointer active:scale-95"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Close</span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-600 hover:text-slate-900 font-bold px-2 py-0.5 rounded hover:bg-slate-200 transition"
-          >
-            மூடு (Close)
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
