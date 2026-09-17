@@ -338,17 +338,22 @@ export default function BookingsListPage() {
                       <div key={b.id} className="relative flex items-start gap-2.5 sm:gap-3 group">
                         {/* Left Rail & Circular Date Node */}
                         <div className="relative flex flex-col items-center shrink-0 pt-1">
-                          {/* Circular Date Node with Date Number */}
+                          {/* Clear Date Node with Weekday and Day Number */}
                           <div
-                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full ${theme.nodeBg} ${theme.nodeText} font-black text-xs sm:text-sm flex items-center justify-center shadow-xs border-2 border-white ring-1 ring-black/10 z-10 group-hover:scale-105 transition-transform shrink-0`}
+                            className={`w-10 rounded-2xl ${theme.nodeBg} ${theme.nodeText} flex flex-col items-center justify-center py-1 shadow-xs border-2 border-white ring-1 ring-black/10 z-10 group-hover:scale-105 transition-transform shrink-0`}
                           >
-                            <span>{dayNumber}</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider opacity-85 leading-none">
+                              {dateInfo.dayOfWeekEn.slice(0, 3)}
+                            </span>
+                            <span className="text-sm font-black leading-tight mt-0.5">
+                              {dayNumber}
+                            </span>
                           </div>
 
-                          {/* Connecting Rail Line below circle (only if not last in this month) */}
+                          {/* Connecting Rail Line below node (only if not last in this month) */}
                           {!isLastInMonth && (
                             <div
-                              className={`w-1 sm:w-1.25 ${theme.railColor} absolute top-10 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full`}
+                              className={`w-1 sm:w-1.25 ${theme.railColor} absolute top-12 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full`}
                             />
                           )}
                         </div>
@@ -358,17 +363,22 @@ export default function BookingsListPage() {
                           href={`/app/bookings/${b.id}`}
                           className="flex-1 min-w-0 bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs hover:border-amber-300 hover:shadow-xs transition active:scale-[0.99] space-y-2"
                         >
-                          {/* Row 1: Ceremony Title, Time Badge & Chevron */}
+                          {/* Row 1: Customer / Devotee Name FIRST, Time Badge & Chevron */}
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
-                                {b.poojaEnglishName}
-                              </h4>
-                              {b.poojaTamilName && (
-                                <p className="text-[10.5px] font-bold text-amber-850 mt-0.5 truncate">
-                                  {b.poojaTamilName}
-                                </p>
-                              )}
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-slate-400 text-xs">👤</span>
+                                <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
+                                  {b.customerName}
+                                </h4>
+                              </div>
+                              <p className="text-xs font-bold text-amber-900 mt-0.5 truncate flex items-center gap-1">
+                                <span>🪔</span>
+                                <span>{b.poojaEnglishName}</span>
+                                {b.poojaTamilName && (
+                                  <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
+                                )}
+                              </p>
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">
@@ -380,20 +390,21 @@ export default function BookingsListPage() {
                             </div>
                           </div>
 
-                          {/* Row 2: Location, Devotee Name & Fee */}
+                          {/* Row 2: Confirmed Date, Location & Fee */}
                           <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5 gap-2 flex-wrap">
-                            <div className="flex items-center gap-2 truncate min-w-0">
+                            <div className="flex items-center gap-1.5 truncate min-w-0 text-[11px]">
+                              {/* Confirmed Date Badge */}
+                              <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 flex items-center gap-1 shrink-0">
+                                <Calendar className="w-3 h-3 text-slate-500" />
+                                <span>{dateInfo.dayOfMonth} {dateInfo.monthNameEn} ({dateInfo.dayOfWeekEn.slice(0, 3)})</span>
+                              </span>
+
                               {b.location && (
-                                <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 truncate">
-                                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <div className="flex items-center gap-1 font-semibold text-slate-600 truncate">
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                                   <span className="truncate">{b.location}</span>
                                 </div>
                               )}
-                              <span className="text-slate-300">•</span>
-                              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-800 truncate">
-                                <span className="text-slate-400">👤</span>
-                                <span className="truncate">{b.customerName}</span>
-                              </div>
                             </div>
 
                             <div className="text-right shrink-0">
@@ -416,7 +427,7 @@ export default function BookingsListPage() {
                           <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10.5px]">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-mono text-[9.5px] text-slate-400">
-                                {b.bookingNumber}
+                                {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
                               </span>
                               {isSelf ? (
                                 <span className="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
@@ -506,9 +517,13 @@ export default function BookingsListPage() {
                         {b.date} • {b.startTime}
                       </span>
                     </div>
-                    <h3 className="font-extrabold text-sm text-slate-900 mt-1">
-                      {b.poojaEnglishName}
+                    <h3 className="font-black text-sm text-slate-900 mt-1 flex items-center gap-1">
+                      <span>👤</span>
+                      <span>{b.customerName}</span>
                     </h3>
+                    <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
+                      🪔 {b.poojaEnglishName} {b.poojaTamilName && `(${b.poojaTamilName})`}
+                    </p>
                   </div>
 
                   <div className="text-right">
@@ -529,7 +544,7 @@ export default function BookingsListPage() {
                   <div className="flex items-center gap-1 text-slate-500 truncate">
                     <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                     <span className="truncate">
-                      {b.customerName} • {b.location}
+                      {b.location || "Namakkal"}
                     </span>
                   </div>
 

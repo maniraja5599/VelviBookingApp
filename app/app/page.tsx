@@ -88,6 +88,7 @@ export default function HomeDashboardPage() {
   }, [bookingFilter, todayBookings, upcomingBookings, bookings]);
 
   // Sub-Tab 2: Devotee Search & Add
+  const [devoteeSubTab, setDevoteeSubTab] = useState<"devotees" | "assigned">("devotees");
   const [devoteeSearch, setDevoteeSearch] = useState("");
   const [showAddDevoteeModal, setShowAddDevoteeModal] = useState(false);
   const [selectedDevoteeDrawer, setSelectedDevoteeDrawer] = useState<Customer | null>(null);
@@ -378,7 +379,7 @@ export default function HomeDashboardPage() {
               {todayBookings.length}
             </div>
             <div className="text-[9.5px] sm:text-[10px] font-bold text-slate-700 leading-tight mt-1 truncate">
-              இன்றைய பதிவு
+              Today's Bookings
             </div>
           </div>
         </button>
@@ -401,7 +402,7 @@ export default function HomeDashboardPage() {
               ₹{pendingAmount.toLocaleString("en-IN")}
             </div>
             <div className="text-[9.5px] sm:text-[10px] font-bold text-slate-700 leading-tight mt-1 truncate">
-              நிலுவைத் தொகை
+              Pending Due
             </div>
           </div>
         </button>
@@ -424,7 +425,7 @@ export default function HomeDashboardPage() {
               {upcomingCount}
             </div>
             <div className="text-[9.5px] sm:text-[10px] font-bold text-slate-700 leading-tight mt-1 truncate">
-              வரவிருக்கும் பதிவு
+              Upcoming Bookings
             </div>
           </div>
         </button>
@@ -572,66 +573,85 @@ export default function HomeDashboardPage() {
 
                   return (
                     <div key={b.id} className="relative flex items-start gap-2 sm:gap-2.5 group">
-                      {/* Left Rail & Date Circle */}
+                      {/* Left Rail & Date Node with Weekday */}
                       <div className="relative flex flex-col items-center shrink-0 pt-1">
-                        <div className="w-8 h-8 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center shadow-2xs border-2 border-white ring-1 ring-black/10 z-10 shrink-0 group-hover:scale-105 transition-transform">
-                          <span>{dayNum}</span>
+                        <div className="w-9 rounded-xl bg-amber-700 text-white flex flex-col items-center justify-center py-1 shadow-2xs border-2 border-white ring-1 ring-black/10 z-10 shrink-0 group-hover:scale-105 transition-transform">
+                          <span className="text-[8.5px] font-black uppercase tracking-wider opacity-85 leading-none">
+                            {dateInfo.dayOfWeekEn.slice(0, 3)}
+                          </span>
+                          <span className="text-xs font-black leading-tight mt-0.5">{dayNum}</span>
                         </div>
                         {!isLast && (
-                          <div className="w-1 bg-amber-300/60 absolute top-9 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full" />
+                          <div className="w-1 bg-amber-300/60 absolute top-11 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full" />
                         )}
                       </div>
 
                       {/* Right Booking Card */}
                       <div className="flex-1 min-w-0 bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition space-y-1.5">
-                        {/* Top Info */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/70">
-                                {b.startTime}
+                        {/* Top Info: Badges */}
+                        <div className="flex items-center justify-between gap-1 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/70">
+                              {b.startTime}
+                            </span>
+                            {isSelf ? (
+                              <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
+                                🪔 நானே (Self)
                               </span>
-                              {isSelf ? (
-                                <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
-                                  🪔 நானே (Self)
-                                </span>
-                              ) : (
-                                <span className="text-[9.5px] font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded-md border border-blue-200">
-                                  👥 {b.assignedIyerName}
-                                </span>
-                              )}
-                              <span className="text-[9.5px] font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
-                                {b.date}
+                            ) : (
+                              <span className="text-[9.5px] font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded-md border border-blue-200">
+                                👥 {b.assignedIyerName}
                               </span>
-                            </div>
-
-                            <h4 className="font-extrabold text-sm text-slate-900 mt-1 truncate">
-                              {b.poojaEnglishName}
-                            </h4>
-                            <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
-                              <span className="font-semibold text-slate-900">{b.customerName}</span>
-                              {b.location && <span>• 📍 {b.location}</span>}
-                            </p>
+                            )}
+                            {/* Confirmed Date Badge */}
+                            <span className="text-[9.5px] font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
+                              {dateInfo.dayOfMonth} {dateInfo.monthNameEn} ({dateInfo.dayOfWeekEn.slice(0, 3)})
+                            </span>
                           </div>
 
                           <div className="text-right shrink-0">
                             <span className="text-sm font-black text-slate-900">
                               ₹{b.totalAmount.toLocaleString("en-IN")}
                             </span>
-                            <div className="text-[10px] font-bold mt-0.5">
-                              {b.paymentStatus === "PAID" ? (
-                                <span className="text-emerald-700">Paid ✅</span>
-                              ) : (
-                                <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
-                              )}
-                            </div>
+                            <span
+                              className={`text-[10px] font-bold ml-1.5 ${
+                                b.paymentStatus === "PAID"
+                                  ? "text-emerald-700"
+                                  : "text-rose-700"
+                              }`}
+                            >
+                              {b.paymentStatus === "PAID" ? "Paid ✅" : `Due: ₹${b.balanceAmount}`}
+                            </span>
                           </div>
+                        </div>
+
+                        {/* Customer Name FIRST on Top */}
+                        <div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-slate-400 text-xs">👤</span>
+                            <h4 className="font-black text-sm text-slate-900 truncate leading-tight">
+                              {b.customerName}
+                            </h4>
+                          </div>
+                          <p className="text-[11px] font-bold text-amber-900 truncate mt-0.5 flex items-center gap-1">
+                            <span>🪔</span>
+                            <span>{b.poojaEnglishName}</span>
+                            {b.poojaTamilName && (
+                              <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
+                            )}
+                          </p>
+                          {b.location && (
+                            <p className="text-[10.5px] text-slate-500 flex items-center gap-1 mt-0.5">
+                              <span>📍</span>
+                              <span>{b.location}</span>
+                            </p>
+                          )}
                         </div>
 
                         {/* Bottom Actions Bar */}
                         <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs">
                           <span className="text-[10px] font-mono text-slate-400">
-                            #{b.bookingNumber}
+                            {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
                           </span>
 
                           <div className="flex items-center gap-1.5">
@@ -674,97 +694,256 @@ export default function HomeDashboardPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* SUB-TAB 2: DEVOTEES / CUSTOMERS (பக்தர்கள்)                               */}
+        {/* SUB-TAB 2: DEVOTEES / CUSTOMERS (பக்தர்கள் & ஒதுக்கப்பட்ட குருக்கள்)       */}
         {/* ========================================================================= */}
         {activeSubTab === "devotees" && (
           <div className="space-y-2.5 animate-in fade-in duration-150">
-            {/* Search & Add Bar */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 min-w-0">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="பக்தர் பெயர், ஊர், எண்..."
-                  value={devoteeSearch}
-                  onChange={(e) => setDevoteeSearch(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 shadow-2xs"
-                />
-              </div>
-
+            {/* Devotees Sub-Switch: All Devotees vs Assigned Priests */}
+            <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-xl text-xs font-bold border border-slate-200/80">
               <button
                 type="button"
-                onClick={() => setShowAddDevoteeModal(true)}
-                className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs transition active:scale-95 shrink-0"
+                onClick={() => setDevoteeSubTab("devotees")}
+                className={`flex-1 py-1.5 rounded-lg transition text-center ${
+                  devoteeSubTab === "devotees"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>+ சேர்</span>
+                👥 All Devotees ({customers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDevoteeSubTab("assigned")}
+                className={`flex-1 py-1.5 rounded-lg transition text-center ${
+                  devoteeSubTab === "assigned"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                🪔 Assigned Priests ({members.length})
               </button>
             </div>
 
-            {/* Devotees List */}
-            {filteredDevoteesList.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-500 space-y-1">
-                <User className="w-6 h-6 mx-auto text-slate-400" />
-                <p className="text-xs font-semibold">பக்தர்கள் யாரும் பொருந்தவில்லை</p>
-              </div>
+            {devoteeSubTab === "devotees" ? (
+              <>
+                {/* Search & Add Bar in English */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search devotee name, mobile, city..."
+                      value={devoteeSearch}
+                      onChange={(e) => setDevoteeSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 shadow-2xs"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowAddDevoteeModal(true)}
+                    className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs transition active:scale-95 shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Add Devotee</span>
+                  </button>
+                </div>
+
+                {/* Devotees List */}
+                {filteredDevoteesList.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-500 space-y-1">
+                    <User className="w-6 h-6 mx-auto text-slate-400" />
+                    <p className="text-xs font-semibold">No devotees found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredDevoteesList.map((c) => {
+                      const custBookings = bookings.filter(
+                        (b) => b.customerId === c.id || b.customerMobile === c.mobile
+                      );
+                      const initials = c.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2);
+
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => setSelectedDevoteeDrawer(c)}
+                          className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-2"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300/70 shrink-0">
+                              {initials}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                                {c.name}
+                              </h4>
+                              <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
+                                <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
+                                <span>{c.city || "Namakkal"}</span>
+                                <span>•</span>
+                                <span>{custBookings.length} {custBookings.length === 1 ? "Pooja" : "Poojas"}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {c.mobile && (
+                              <>
+                                <a
+                                  href={`tel:${c.mobile}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                                  title="Call"
+                                >
+                                  <Phone className="w-3.5 h-3.5" />
+                                </a>
+                                <a
+                                  href={`https://wa.me/${c.mobile.replace(/\D/g, "")}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition border border-emerald-200"
+                                  title="WhatsApp"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="space-y-2">
-                {filteredDevoteesList.map((c) => {
-                  const custBookings = bookings.filter(
-                    (b) => b.customerId === c.id || b.customerMobile === c.mobile
-                  );
-                  const initials = c.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
+              /* Assigned Priests & Team View */
+              <div className="space-y-3">
+                {members.map((m) => {
+                  const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
+                  const memberBookings = bookings.filter((b) => {
+                    if (isOwner) {
+                      return (
+                        b.assignedIyerId === m.id ||
+                        b.assignedIyerName === m.name ||
+                        b.assignedIyerName === "Ravi Iyer" ||
+                        !b.assignedIyerName ||
+                        b.assignedIyerName.toLowerCase() === "self"
+                      );
+                    }
+                    return b.assignedIyerId === m.id || b.assignedIyerName === m.name;
+                  });
 
                   return (
                     <div
-                      key={c.id}
-                      onClick={() => setSelectedDevoteeDrawer(c)}
-                      className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-2"
+                      key={m.id}
+                      className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs space-y-2.5"
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300/70 shrink-0">
-                          {initials}
+                      {/* Priest Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-950 font-black text-sm flex items-center justify-center border border-emerald-300 shrink-0">
+                            {isOwner ? "🪔" : "👥"}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                                {m.name}
+                              </h4>
+                              <span
+                                className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full border ${
+                                  isOwner
+                                    ? "bg-amber-100 text-amber-900 border-amber-300"
+                                    : "bg-blue-50 text-blue-900 border-blue-200"
+                                }`}
+                              >
+                                {isOwner ? "Head Priest (Self)" : "Assistant Priest"}
+                              </span>
+                            </div>
+                            <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                              {m.specialization || "Vedic Rituals & Pooja"}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                            {c.name}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
-                            <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
-                            <span>{c.city || "Namakkal"}</span>
-                            <span>•</span>
-                            <span>{custBookings.length} பூஜைகள்</span>
-                          </p>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          {m.mobile && (
+                            <>
+                              <a
+                                href={`tel:${m.mobile}`}
+                                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                                title="Call Priest"
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                              </a>
+                              <a
+                                href={`https://wa.me/${m.mobile.replace(/\D/g, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
+                                title="WhatsApp Priest"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </a>
+                            </>
+                          )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {c.mobile && (
-                          <>
-                            <a
-                              href={`tel:${c.mobile}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
-                              title="Call"
-                            >
-                              <Phone className="w-3.5 h-3.5" />
-                            </a>
-                            <a
-                              href={`https://wa.me/${c.mobile.replace(/\D/g, "")}`}
-                              onClick={(e) => e.stopPropagation()}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition border border-emerald-200"
-                              title="WhatsApp"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5" />
-                            </a>
-                          </>
+                      {/* Assigned Bookings Preview */}
+                      <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-700 flex items-center gap-1">
+                            <span>📅 Assigned Poojas</span>
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-slate-100 rounded-md text-slate-700">
+                              {memberBookings.length}
+                            </span>
+                          </span>
+                        </div>
+
+                        {memberBookings.length === 0 ? (
+                          <p className="text-[11px] text-slate-400 italic">
+                            No upcoming poojas assigned currently.
+                          </p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {memberBookings.slice(0, 3).map((b) => (
+                              <Link
+                                key={b.id}
+                                href={`/app/bookings/${b.id}`}
+                                className="p-2 bg-slate-50 hover:bg-amber-50/50 rounded-xl border border-slate-200/70 flex items-center justify-between gap-2 text-xs transition group"
+                              >
+                                <div className="min-w-0">
+                                  {/* Devotee Name First */}
+                                  <div className="font-black text-slate-900 truncate group-hover:text-emerald-950">
+                                    👤 {b.customerName}
+                                  </div>
+                                  <div className="text-[10.5px] text-slate-600 truncate mt-0.5">
+                                    🪔 {b.poojaEnglishName} • 📅 {b.date} ({b.startTime})
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="font-extrabold text-slate-900 block">
+                                    ₹{b.totalAmount.toLocaleString("en-IN")}
+                                  </span>
+                                  <span
+                                    className={`text-[9.5px] font-bold ${
+                                      b.paymentStatus === "PAID"
+                                        ? "text-emerald-700"
+                                        : "text-rose-700"
+                                    }`}
+                                  >
+                                    {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                                  </span>
+                                </div>
+                              </Link>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -787,29 +966,29 @@ export default function HomeDashboardPage() {
               </div>
             )}
 
-            {/* Quick Metrics Bar */}
+            {/* Quick Metrics Bar (English) */}
             <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
-                <span className="text-[9.5px] text-slate-500 font-semibold block">மொத்தம்</span>
+                <span className="text-[9.5px] text-slate-500 font-semibold block">Total Billed</span>
                 <span className="font-extrabold text-slate-900 text-xs block mt-0.5">
                   ₹{totalBilled.toLocaleString("en-IN")}
                 </span>
               </div>
               <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-200 shadow-2xs">
-                <span className="text-[9.5px] text-emerald-800 font-semibold block">பெற்றவை</span>
+                <span className="text-[9.5px] text-emerald-800 font-semibold block">Collected</span>
                 <span className="font-extrabold text-emerald-900 text-xs block mt-0.5">
                   ₹{totalCollected.toLocaleString("en-IN")}
                 </span>
               </div>
               <div className="bg-rose-50 p-2 rounded-xl border border-rose-200 shadow-2xs">
-                <span className="text-[9.5px] text-rose-800 font-semibold block">நிலுவை</span>
+                <span className="text-[9.5px] text-rose-800 font-semibold block">Pending Due</span>
                 <span className="font-extrabold text-rose-950 text-xs block mt-0.5">
                   ₹{totalDue.toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
 
-            {/* Filter Pills */}
+            {/* Filter Pills (English) */}
             <div className="flex items-center gap-1 text-xs overflow-x-auto no-scrollbar">
               <button
                 type="button"
@@ -820,7 +999,7 @@ export default function HomeDashboardPage() {
                     : "bg-white text-slate-600 border border-slate-200"
                 }`}
               >
-                அனைத்தும்
+                All Payments
               </button>
               <button
                 type="button"
@@ -831,7 +1010,7 @@ export default function HomeDashboardPage() {
                     : "bg-white text-rose-800 border border-rose-200"
                 }`}
               >
-                நிலுவை மட்டும்
+                Pending Due
               </button>
               <button
                 type="button"
@@ -842,7 +1021,7 @@ export default function HomeDashboardPage() {
                     : "bg-white text-amber-800 border border-amber-200"
                 }`}
               >
-                முன்பணம் மட்டும்
+                Partial Advance
               </button>
               <button
                 type="button"
@@ -853,14 +1032,14 @@ export default function HomeDashboardPage() {
                     : "bg-white text-emerald-800 border border-emerald-200"
                 }`}
               >
-                முழுதும் பெற்றது
+                Fully Paid
               </button>
             </div>
 
             {/* Receipts List */}
             {filteredPaymentBookings.length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-400 text-xs">
-                கட்டணப் பதிவுகள் எதுவும் பொருந்தவில்லை
+                No payment records match this filter
               </div>
             ) : (
               <div className="space-y-2">
@@ -876,14 +1055,15 @@ export default function HomeDashboardPage() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-extrabold text-[10px] text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/60">
-                              #{b.bookingNumber}
+                              {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
                             </span>
+                            {/* Devotee Name First */}
                             <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                              {b.customerName}
+                              👤 {b.customerName}
                             </h4>
                           </div>
                           <div className="text-[11px] text-slate-600 mt-0.5">
-                            <span>{b.poojaEnglishName}</span> • <span>📅 {b.date}</span>
+                            <span className="font-bold text-amber-900">🪔 {b.poojaEnglishName}</span> • <span>📅 {b.date}</span>
                           </div>
                         </div>
 
@@ -902,29 +1082,29 @@ export default function HomeDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Amounts Bar */}
+                      {/* Amounts Bar (English) */}
                       <div className="grid grid-cols-3 gap-1.5 bg-slate-50 p-2 rounded-xl border border-slate-200/70 text-center text-xs">
                         <div>
-                          <div className="text-[9.5px] text-slate-500">மொத்தம்</div>
+                          <div className="text-[9.5px] text-slate-500">Total</div>
                           <div className="font-extrabold text-slate-900">
                             ₹{b.totalAmount.toLocaleString("en-IN")}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[9.5px] text-emerald-800">பெற்றது</div>
+                          <div className="text-[9.5px] text-emerald-800">Collected</div>
                           <div className="font-extrabold text-emerald-900">
                             ₹{(b.advanceAmount || 0).toLocaleString("en-IN")}
                           </div>
                         </div>
                         <div>
-                          <div className="text-[9.5px] text-amber-800">நிலுவை</div>
+                          <div className="text-[9.5px] text-amber-800">Pending Due</div>
                           <div className={`font-extrabold ${b.balanceAmount > 0 ? "text-amber-950" : "text-slate-400"}`}>
                             ₹{(b.balanceAmount || 0).toLocaleString("en-IN")}
                           </div>
                         </div>
                       </div>
 
-                      {/* Action buttons */}
+                      {/* Action buttons (English) */}
                       <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
                         <span className="text-[10px] text-slate-500">
                           {b.customerMobile || ""}
@@ -938,7 +1118,7 @@ export default function HomeDashboardPage() {
                               className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95"
                             >
                               <IndianRupee className="w-3 h-3" />
-                              <span>பணம் பெறுக</span>
+                              <span>Collect Payment</span>
                             </button>
                           )}
                           <button
@@ -947,7 +1127,7 @@ export default function HomeDashboardPage() {
                             className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95"
                           >
                             <Share2 className="w-3 h-3 text-emerald-700" />
-                            <span>WhatsApp ரசீது</span>
+                            <span>WhatsApp Receipt</span>
                           </button>
                         </div>
                       </div>
@@ -960,14 +1140,14 @@ export default function HomeDashboardPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* SUB-TAB 4: ANALYTICS (புள்ளிவிவரம்)                                        */}
+        {/* SUB-TAB 4: ANALYTICS (விவரம்)                                             */}
         {/* ========================================================================= */}
         {activeSubTab === "analytics" && (
           <div className="space-y-3 animate-in fade-in duration-150">
             {/* Realization Progress Bar */}
             <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-900">கட்டண வசூல் விகிதம்</span>
+                <span className="font-extrabold text-slate-900">Payment Collection Rate</span>
                 <span className="font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
                   {collectionRate}% Realized
                 </span>
@@ -982,10 +1162,10 @@ export default function HomeDashboardPage() {
 
               <div className="flex items-center justify-between text-[11px] font-bold">
                 <span className="text-emerald-800">
-                  பெற்றது: ₹{totalCollected.toLocaleString("en-IN")}
+                  Collected: ₹{totalCollected.toLocaleString("en-IN")}
                 </span>
                 <span className="text-rose-700">
-                  நிலுவை: ₹{totalDue.toLocaleString("en-IN")}
+                  Pending Due: ₹{totalDue.toLocaleString("en-IN")}
                 </span>
               </div>
             </div>
@@ -995,10 +1175,10 @@ export default function HomeDashboardPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
                   <Flame className="w-4 h-4 text-amber-600" />
-                  <span>பிரபலமான பூஜைகள் & வருவாய்</span>
+                  <span>Top Poojas & Revenue</span>
                 </span>
                 <span className="text-[10px] text-slate-500 font-bold">
-                  {topPoojas.length} வகைகள்
+                  {topPoojas.length} Categories
                 </span>
               </div>
 
@@ -1039,7 +1219,7 @@ export default function HomeDashboardPage() {
               <div className="bg-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs space-y-2">
                 <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
                   <Users className="w-4 h-4 text-emerald-700" />
-                  <span>குருக்கள் பூஜை ஒதுக்கீடு</span>
+                  <span>Priest & Team Allocation</span>
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   {teamAllocation.map((m) => (
@@ -1069,7 +1249,7 @@ export default function HomeDashboardPage() {
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-amber-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-slate-900">புதிய பக்தர் சேர்க்க</h3>
+              <h3 className="font-extrabold text-base text-slate-900">Add New Devotee</h3>
               <button
                 onClick={() => setShowAddDevoteeModal(false)}
                 className="p-1 hover:bg-slate-100 rounded-full text-slate-400"
@@ -1087,7 +1267,7 @@ export default function HomeDashboardPage() {
             <form onSubmit={handleAddDevoteeSubmit} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  பக்தர் பெயர் / Devotee Name *
+                  Devotee Full Name *
                 </label>
                 <input
                   type="text"
@@ -1101,7 +1281,7 @@ export default function HomeDashboardPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  அலைபேசி எண் / Mobile (விருப்பத்தேர்வு)
+                  Mobile Number (Optional)
                 </label>
                 <div className="flex items-center gap-1.5">
                   <div className="bg-slate-100 border border-slate-200 rounded-xl px-2 py-2 text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
@@ -1121,7 +1301,7 @@ export default function HomeDashboardPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">ஊர் / City</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">City / Town</label>
                   <input
                     type="text"
                     value={custCity}
@@ -1130,10 +1310,10 @@ export default function HomeDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-slate-700 block mb-1">முகவரி / Address</label>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Address (Optional)</label>
                   <input
                     type="text"
-                    placeholder="Street"
+                    placeholder="Street / Area"
                     value={custAddress}
                     onChange={(e) => setCustAddress(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
@@ -1147,13 +1327,13 @@ export default function HomeDashboardPage() {
                   onClick={() => setShowAddDevoteeModal(false)}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
-                  ரத்து
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-2xs transition"
                 >
-                  சேமிக்கவும்
+                  Save Devotee
                 </button>
               </div>
             </form>
@@ -1172,7 +1352,7 @@ export default function HomeDashboardPage() {
                 <h3 className="font-black text-lg text-slate-900">
                   {selectedDevoteeDrawer.name}
                 </h3>
-                <p className="text-xs text-slate-500 font-semibold">{selectedDevoteeDrawer.mobile || "எண் குறிப்பிடப்படவில்லை"}</p>
+                <p className="text-xs text-slate-500 font-semibold">{selectedDevoteeDrawer.mobile || "No mobile specified"}</p>
               </div>
               <button
                 onClick={() => setSelectedDevoteeDrawer(null)}
@@ -1184,12 +1364,12 @@ export default function HomeDashboardPage() {
 
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
               <div className="text-slate-600">
-                <span className="font-bold text-slate-800">ஊர்: </span>
+                <span className="font-bold text-slate-800">City: </span>
                 {selectedDevoteeDrawer.city || "Namakkal"}
               </div>
               {selectedDevoteeDrawer.address && (
                 <div className="text-slate-600">
-                  <span className="font-bold text-slate-800">முகவரி: </span>
+                  <span className="font-bold text-slate-800">Address: </span>
                   {selectedDevoteeDrawer.address}
                 </div>
               )}
@@ -1198,14 +1378,14 @@ export default function HomeDashboardPage() {
             {/* Devotee's bookings */}
             <div className="space-y-2">
               <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
-                பூஜை வரலாறு
+                Pooja Booking History
               </h4>
               {bookings.filter(
                 (b) =>
                   b.customerId === selectedDevoteeDrawer.id ||
                   b.customerMobile === selectedDevoteeDrawer.mobile
               ).length === 0 ? (
-                <p className="text-xs text-slate-400">பதிவுகள் எதுவும் இல்லை.</p>
+                <p className="text-xs text-slate-400">No bookings recorded yet.</p>
               ) : (
                 bookings
                   .filter(
@@ -1236,7 +1416,7 @@ export default function HomeDashboardPage() {
               onClick={() => setSelectedDevoteeDrawer(null)}
               className="w-full py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl shadow-2xs"
             >
-              முடிந்தது (Close)
+              Close
             </button>
           </div>
         </div>
@@ -1251,7 +1431,7 @@ export default function HomeDashboardPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-1.5">
                 <IndianRupee className="w-4 h-4 text-emerald-700" />
-                <span>கட்டணம் பெறுதல்</span>
+                <span>Record Payment</span>
               </h3>
               <button
                 type="button"
@@ -1263,19 +1443,19 @@ export default function HomeDashboardPage() {
             </div>
 
             <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 text-xs space-y-1">
-              <div className="font-bold text-slate-900">{recordPaymentBooking.customerName}</div>
+              <div className="font-bold text-slate-900">👤 {recordPaymentBooking.customerName}</div>
               <div className="text-slate-600">
-                {recordPaymentBooking.poojaEnglishName} • #{recordPaymentBooking.bookingNumber}
+                🪔 {recordPaymentBooking.poojaEnglishName} • {recordPaymentBooking.bookingNumber?.startsWith("#") ? recordPaymentBooking.bookingNumber : `#${recordPaymentBooking.bookingNumber}`}
               </div>
               <div className="text-amber-950 font-extrabold pt-1">
-                மொத்த நிலுவைத் தொகை: ₹{recordPaymentBooking.balanceAmount?.toLocaleString("en-IN")}
+                Total Due Amount: ₹{recordPaymentBooking.balanceAmount?.toLocaleString("en-IN")}
               </div>
             </div>
 
             <form onSubmit={handleConfirmRecordPayment} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  பெற்ற தொகை / Amount Received (₹) *
+                  Amount Received (₹) *
                 </label>
                 <input
                   type="number"
@@ -1290,7 +1470,7 @@ export default function HomeDashboardPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  செலுத்திய முறை / Payment Method
+                  Payment Method
                 </label>
                 <select
                   value={paymentMethodInput}
@@ -1298,8 +1478,8 @@ export default function HomeDashboardPage() {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
                 >
                   <option value="UPI">UPI / Google Pay / PhonePe</option>
-                  <option value="CASH">ரொக்கம் (Cash in Hand)</option>
-                  <option value="BANK_TRANSFER">வங்கிப் பரிவர்த்தனை (Bank Transfer)</option>
+                  <option value="CASH">Cash in Hand</option>
+                  <option value="BANK_TRANSFER">Bank Transfer</option>
                 </select>
               </div>
 
@@ -1309,13 +1489,13 @@ export default function HomeDashboardPage() {
                   onClick={() => setRecordPaymentBooking(null)}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
-                  ரத்து
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-2xs transition"
                 >
-                  பதிவு செய்
+                  Confirm Payment
                 </button>
               </div>
             </form>
