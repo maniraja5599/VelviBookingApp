@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
-import { Booking, BookingStatus } from "@/lib/types";
+import { Booking } from "@/lib/types";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import Link from "next/link";
 import {
@@ -18,6 +18,10 @@ import {
   Sparkles,
   GitCommitVertical,
   List,
+  MessageCircle,
+  Phone,
+  User,
+  X,
 } from "lucide-react";
 
 interface MonthTimelineGroup {
@@ -30,6 +34,81 @@ interface MonthTimelineGroup {
   totalCollected: number;
   totalPending: number;
 }
+
+interface MonthTheme {
+  headerBg: string;
+  headerBorder: string;
+  headerText: string;
+  countBadgeBg: string;
+  countBadgeText: string;
+  nodeBg: string;
+  nodeText: string;
+  railColor: string;
+  accentText: string;
+}
+
+const MONTH_THEMES: MonthTheme[] = [
+  // 0: Rose / Crimson (e.g. September)
+  {
+    headerBg: "bg-[#fce7ed]/95",
+    headerBorder: "border-[#f7bac8]",
+    headerText: "text-[#881337]",
+    countBadgeBg: "bg-[#881337]/10",
+    countBadgeText: "text-[#881337]",
+    nodeBg: "bg-[#9f1239]",
+    nodeText: "text-white",
+    railColor: "bg-[#9f1239]/40",
+    accentText: "text-[#9f1239]",
+  },
+  // 1: Sacred Emerald / Green (e.g. October)
+  {
+    headerBg: "bg-[#e6f7ec]/95",
+    headerBorder: "border-[#bbf0cb]",
+    headerText: "text-[#14532d]",
+    countBadgeBg: "bg-[#14532d]/10",
+    countBadgeText: "text-[#14532d]",
+    nodeBg: "bg-[#15803d]",
+    nodeText: "text-white",
+    railColor: "bg-[#15803d]/40",
+    accentText: "text-[#15803d]",
+  },
+  // 2: Royal Blue / Indigo (e.g. November)
+  {
+    headerBg: "bg-[#eaf1fb]/95",
+    headerBorder: "border-[#c3d8f8]",
+    headerText: "text-[#1e3a8a]",
+    countBadgeBg: "bg-[#1e3a8a]/10",
+    countBadgeText: "text-[#1e3a8a]",
+    nodeBg: "bg-[#2563eb]",
+    nodeText: "text-white",
+    railColor: "bg-[#2563eb]/40",
+    accentText: "text-[#2563eb]",
+  },
+  // 3: Warm Amber / Haldi Gold (e.g. December)
+  {
+    headerBg: "bg-[#fef3c7]/95",
+    headerBorder: "border-[#fde68a]",
+    headerText: "text-[#78350f]",
+    countBadgeBg: "bg-[#78350f]/10",
+    countBadgeText: "text-[#78350f]",
+    nodeBg: "bg-[#d97706]",
+    nodeText: "text-white",
+    railColor: "bg-[#d97706]/40",
+    accentText: "text-[#d97706]",
+  },
+  // 4: Sacred Purple (e.g. January)
+  {
+    headerBg: "bg-[#f3e8ff]/95",
+    headerBorder: "border-[#e9d5ff]",
+    headerText: "text-[#581c87]",
+    countBadgeBg: "bg-[#581c87]/10",
+    countBadgeText: "text-[#581c87]",
+    nodeBg: "bg-[#7e22ce]",
+    nodeText: "text-white",
+    railColor: "bg-[#7e22ce]/40",
+    accentText: "text-[#7e22ce]",
+  },
+];
 
 export default function BookingsListPage() {
   const { currentBusiness, currentUser } = useAuth();
@@ -63,14 +142,21 @@ export default function BookingsListPage() {
 
     const groupsMap = new Map<string, MonthTimelineGroup>();
 
+    const ENGLISH_MONTHS_FULL = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+
     sorted.forEach((b) => {
       const monthKey = b.date.slice(0, 7); // "YYYY-MM"
       const dateInfo = getTamilDate(b.date);
+      const mIdx = Math.max(0, Math.min(11, parseInt(b.date.slice(5, 7), 10) - 1));
+      const fullMonthName = ENGLISH_MONTHS_FULL[mIdx] || dateInfo.monthNameEn;
 
       if (!groupsMap.has(monthKey)) {
         groupsMap.set(monthKey, {
           monthKey,
-          englishMonthYear: `${dateInfo.monthNameEn} ${dateInfo.year}`,
+          englishMonthYear: `${fullMonthName} ${dateInfo.year}`,
           tamilMonthSpan: `${dateInfo.tamilMonth}`,
           tamilYear: dateInfo.tamilYear,
           bookings: [],
@@ -94,85 +180,94 @@ export default function BookingsListPage() {
   }, [filteredBookings]);
 
   return (
-    <div className="space-y-4 pb-8 animate-in fade-in duration-200 max-w-full">
+    <div className="space-y-3 pb-8 animate-in fade-in duration-200 max-w-full">
       {/* Header & Quick Actions */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-200/60">
-              <Calendar className="w-4 h-4 text-emerald-800" />
+          <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-1.5">
+            <div className="w-7 h-7 rounded-xl bg-amber-100/80 flex items-center justify-center border border-amber-300/70 shadow-2xs">
+              <Calendar className="w-4 h-4 text-amber-900" />
             </div>
-            <span>{t("bookings")}</span>
+            <span>Pooja Bookings</span>
           </h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            {filteredBookings.length} bookings found across {monthGroups.length} month(s)
+          <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+            {filteredBookings.length} பதிவுகள் • {monthGroups.length} மாதங்கள்
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {/* View Mode Switcher */}
-          <div className="bg-white rounded-xl border border-slate-200/90 p-0.5 flex items-center shadow-2xs">
+          <div className="bg-white rounded-xl border border-slate-200 p-0.5 flex items-center shadow-2xs">
             <button
               onClick={() => setViewMode("timeline")}
               title="Month Timeline View"
-              className={`p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-semibold ${
+              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold ${
                 viewMode === "timeline"
-                  ? "bg-emerald-900 text-white shadow-2xs"
+                  ? "bg-slate-900 text-white shadow-2xs"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               <GitCommitVertical className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">Timeline</span>
+              <span>Timeline</span>
             </button>
             <button
               onClick={() => setViewMode("list")}
               title="Compact List View"
-              className={`p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-semibold ${
+              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold ${
                 viewMode === "list"
-                  ? "bg-emerald-900 text-white shadow-2xs"
+                  ? "bg-slate-900 text-white shadow-2xs"
                   : "text-slate-600 hover:bg-slate-100"
               }`}
             >
               <List className="w-3.5 h-3.5" />
-              <span className="hidden xs:inline">List</span>
+              <span>List</span>
             </button>
           </div>
 
           <Link
             href="/app/bookings/new"
-            className="px-3.5 py-2 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm hover:shadow-md active:scale-95 transition"
+            className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs hover:shadow-xs active:scale-95 transition"
           >
-            <Plus className="w-4 h-4 text-amber-300 stroke-[3]" />
-            <span>New</span>
+            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <span>+ New Booking</span>
           </Link>
         </div>
       </div>
 
       {/* Search Input */}
       <div className="relative">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           type="text"
-          placeholder="Search customer, pooja, location..."
+          placeholder="தேடுக: பக்தர் பெயர், பூஜை, ஊர், பதிவு எண்..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-3 py-2.5 bg-white rounded-2xl border border-slate-200/90 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 transition shadow-2xs font-medium"
+          className="w-full pl-9 pr-8 py-2 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition shadow-2xs"
         />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold">
+      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
         {["ALL", "CONFIRMED", "PENDING", "COMPLETED"].map((st) => (
           <button
             key={st}
             onClick={() => setFilter(st)}
-            className={`px-3.5 py-1.5 rounded-xl whitespace-nowrap transition shrink-0 ${
+            className={`px-3 py-1 rounded-xl whitespace-nowrap transition shrink-0 ${
               filter === st
-                ? "bg-emerald-900 text-white font-bold shadow-2xs"
-                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/90"
+                ? "bg-slate-900 text-white shadow-2xs"
+                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
             }`}
           >
-            {st === "ALL" ? "All Bookings" : st}
+            {st === "ALL" ? `அனைத்தும் (${allBookings.length})` : st}
           </button>
         ))}
       </div>
@@ -181,163 +276,132 @@ export default function BookingsListPage() {
       {filteredBookings.length === 0 ? (
         <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-2xs space-y-3">
           <div className="text-3xl">🪔</div>
-          <h4 className="font-bold text-sm text-slate-800">No bookings found</h4>
+          <h4 className="font-bold text-sm text-slate-800">பூஜை பதிவுகள் எதுவும் இல்லை</h4>
           <p className="text-xs text-slate-500 max-w-xs mx-auto">
-            Try clearing your search query or create a new booking using the button above.
+            தேடல் சொல்லை மாற்றி முயற்சிக்கவும் அல்லது புதிய பூஜை பதிவு செய்யவும்.
           </p>
           <Link
             href="/app/bookings/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-800 to-emerald-950 text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl shadow-2xs transition"
           >
-            <Plus className="w-4 h-4 text-amber-300" />
-            <span>Create New Booking</span>
+            <Plus className="w-4 h-4" />
+            <span>புதிய பதிவு செய்க</span>
           </Link>
         </div>
       ) : viewMode === "timeline" ? (
         /* =================================================================== */
-        /* MONTH-WISE TIMELINE VIEW                                           */
+        /* WHATSAPP-STYLE MONTH TIMELINE VIEW                                 */
         /* =================================================================== */
-        <div className="space-y-6">
-          {monthGroups.map((group) => (
-            <div key={group.monthKey} className="space-y-3">
-              {/* Month Header Banner */}
-              <div className="bg-gradient-to-r from-emerald-50/60 via-slate-50 to-white rounded-2xl p-3.5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-emerald-100/70 text-emerald-900 border border-emerald-200">
-                    <Calendar className="w-4 h-4 text-emerald-800" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-slate-900">
+        <div className="space-y-6 pt-1">
+          {monthGroups.map((group, groupIdx) => {
+            const theme = MONTH_THEMES[groupIdx % MONTH_THEMES.length];
+
+            return (
+              <div key={group.monthKey} className="space-y-3 relative">
+                {/* WhatsApp-Style Sticky Floating Month Header */}
+                <div
+                  className={`sticky top-[49px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-xs flex items-center justify-between gap-2 transition-all`}
+                >
+                  <div className="min-w-0">
+                    <h3 className={`font-black text-sm sm:text-base ${theme.headerText} tracking-tight leading-none`}>
                       {group.englishMonthYear}
                     </h3>
-                    <p className="text-[11px] text-emerald-800 font-semibold">
+                    <p className={`text-[10.5px] font-bold ${theme.accentText} mt-0.5 opacity-90 truncate`}>
                       {group.tamilMonthSpan} ({group.tamilYear} வருடம்)
                     </p>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 text-xs flex-wrap">
-                  <span className="px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-[10.5px] font-bold text-slate-800 shadow-2xs">
-                    {group.bookings.length} {group.bookings.length === 1 ? "Pooja" : "Poojas"}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-[10.5px] font-bold text-slate-700">
-                    Billed: ₹{group.totalAmount.toLocaleString("en-IN")}
-                  </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-emerald-50 border border-emerald-200 text-[10.5px] font-bold text-emerald-800">
-                    Collected: ₹{group.totalCollected.toLocaleString("en-IN")}
-                  </span>
-                  {group.totalPending > 0 && (
-                    <span className="px-2 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-[10.5px] font-bold text-amber-900">
-                      Due: ₹{group.totalPending.toLocaleString("en-IN")}
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    <span
+                      className={`text-[10.5px] font-black px-2.5 py-0.5 rounded-lg ${theme.countBadgeBg} ${theme.countBadgeText} border border-black/5`}
+                    >
+                      {group.bookings.length} {group.bookings.length === 1 ? "Booking" : "Bookings"}
                     </span>
-                  )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Month's Vertical Timeline Track */}
-              <div className="relative pl-6 sm:pl-8 before:absolute before:left-3 sm:before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200 space-y-3">
-                {group.bookings.map((b) => {
-                  const dateInfo = getTamilDate(b.date);
-                  const isSelf =
-                    b.assignedIyerId === ownerMember?.id ||
-                    b.assignedIyerName === currentUser?.name ||
-                    b.assignedIyerName === "Ravi Iyer";
+                {/* Timeline Container with Circular Date Nodes & Connecting Rail Line */}
+                <div className="space-y-3 relative pl-1">
+                  {group.bookings.map((b, bIdx) => {
+                    const dateInfo = getTamilDate(b.date);
+                    const dayNumber = dateInfo.dayOfMonth < 10 ? `0${dateInfo.dayOfMonth}` : `${dateInfo.dayOfMonth}`;
+                    const isLastInMonth = bIdx === group.bookings.length - 1;
 
-                  return (
-                    <div key={b.id} className="relative group">
-                      {/* Timeline Node Badge on the rail */}
-                      <div className="absolute -left-6 sm:-left-8 top-3.5 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border-2 border-emerald-700 flex items-center justify-center text-[10px] sm:text-[11px] font-black text-emerald-950 shadow-2xs group-hover:scale-110 group-hover:border-emerald-900 transition-transform">
-                        {dateInfo.dayOfMonth}
-                      </div>
+                    const isSelf =
+                      b.assignedIyerId === ownerMember?.id ||
+                      b.assignedIyerName === currentUser?.name ||
+                      b.assignedIyerName === "Ravi Iyer" ||
+                      !b.assignedIyerName ||
+                      b.assignedIyerName.toLowerCase() === "self";
 
-                      {/* Date & Weekday pill */}
-                      <div className="flex items-center gap-1.5 text-[11px] text-slate-600 font-semibold mb-1.5 pl-1">
-                        <span className="text-slate-900 font-bold">
-                          {dateInfo.dayOfWeekEn}
-                        </span>
-                        <span>•</span>
-                        <span className="text-amber-800 font-bold">
-                          {dateInfo.tamilMonth} {dateInfo.tamilDay} ({dateInfo.dayOfWeekTa})
-                        </span>
-                      </div>
-
-                      {/* Booking Card */}
-                      <Link
-                        href={`/app/bookings/${b.id}`}
-                        className="block bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition active:scale-[0.99] space-y-2.5"
-                      >
-                        {/* Top Line: Booking ID, Self/Team Pill, Status */}
-                        <div className="flex items-center justify-between gap-1.5 flex-wrap">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200">
-                              {b.bookingNumber}
-                            </span>
-                            {isSelf ? (
-                              <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
-                                <span>🪔</span> Self
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
-                                <span>👥</span> {b.assignedIyerName || "Team"}
-                              </span>
-                            )}
-                          </div>
-
-                          <span
-                            className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
-                              b.status === "CONFIRMED"
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                : b.status === "COMPLETED"
-                                ? "bg-blue-50 text-blue-800 border border-blue-200"
-                                : "bg-amber-50 text-amber-900 border border-amber-200"
-                            }`}
+                    return (
+                      <div key={b.id} className="relative flex items-start gap-2.5 sm:gap-3 group">
+                        {/* Left Rail & Circular Date Node */}
+                        <div className="relative flex flex-col items-center shrink-0 pt-1">
+                          {/* Circular Date Node with Date Number */}
+                          <div
+                            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full ${theme.nodeBg} ${theme.nodeText} font-black text-xs sm:text-sm flex items-center justify-center shadow-xs border-2 border-white ring-1 ring-black/10 z-10 group-hover:scale-105 transition-transform shrink-0`}
                           >
-                            {b.status}
-                          </span>
+                            <span>{dayNumber}</span>
+                          </div>
+
+                          {/* Connecting Rail Line below circle (only if not last in this month) */}
+                          {!isLastInMonth && (
+                            <div
+                              className={`w-1 sm:w-1.25 ${theme.railColor} absolute top-10 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full`}
+                            />
+                          )}
                         </div>
 
-                        {/* Middle Line: Pooja Name & Time */}
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
-                              <Flame className="w-4 h-4 text-amber-600 shrink-0" />
-                              <span>{b.poojaEnglishName}</span>
-                            </h4>
-                            {b.poojaTamilName && (
-                              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                                {b.poojaTamilName}
-                              </p>
-                            )}
-                          </div>
-
-                          <div className="text-right shrink-0">
-                            <div className="text-xs font-extrabold text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-emerald-700" />
-                              <span>{b.startTime}</span>
+                        {/* Right: Rich Booking Card Aligned Exactly with the Date */}
+                        <Link
+                          href={`/app/bookings/${b.id}`}
+                          className="flex-1 min-w-0 bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs hover:border-amber-300 hover:shadow-xs transition active:scale-[0.99] space-y-2"
+                        >
+                          {/* Row 1: Ceremony Title, Time Badge & Chevron */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
+                                {b.poojaEnglishName}
+                              </h4>
+                              {b.poojaTamilName && (
+                                <p className="text-[10.5px] font-bold text-amber-850 mt-0.5 truncate">
+                                  {b.poojaTamilName}
+                                </p>
+                              )}
                             </div>
-                          </div>
-                        </div>
 
-                        {/* Customer, Location & Price Footer */}
-                        <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2 text-xs text-slate-600">
-                          <div className="space-y-0.5 min-w-0">
-                            <div className="flex items-center gap-1.5 truncate font-medium text-slate-800">
-                              <span>👤</span>
-                              <span className="truncate">{b.customerName}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[11px] text-slate-400 truncate">
-                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                              <span className="truncate">{b.location}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                                <Clock className="w-3 h-3 text-slate-500" />
+                                <span>{b.startTime}</span>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <div className="text-right">
-                              <span className="text-xs sm:text-sm font-black text-slate-900 block">
+                          {/* Row 2: Location, Devotee Name & Fee */}
+                          <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5 gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 truncate min-w-0">
+                              {b.location && (
+                                <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 truncate">
+                                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span className="truncate">{b.location}</span>
+                                </div>
+                              )}
+                              <span className="text-slate-300">•</span>
+                              <div className="flex items-center gap-1 text-[11px] font-bold text-slate-800 truncate">
+                                <span className="text-slate-400">👤</span>
+                                <span className="truncate">{b.customerName}</span>
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="font-black text-slate-900 text-xs sm:text-sm">
                                 ₹{b.totalAmount.toLocaleString("en-IN")}
                               </span>
                               <span
-                                className={`text-[10px] font-bold ${
+                                className={`text-[10px] font-bold ml-1.5 ${
                                   b.paymentStatus === "PAID"
                                     ? "text-emerald-700"
                                     : "text-rose-700"
@@ -346,22 +410,70 @@ export default function BookingsListPage() {
                                 {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
                               </span>
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
                           </div>
-                        </div>
-                      </Link>
-                    </div>
-                  );
-                })}
+
+                          {/* Row 3: Priest Assignment & 1-tap Actions */}
+                          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10.5px]">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-mono text-[9.5px] text-slate-400">
+                                {b.bookingNumber}
+                              </span>
+                              {isSelf ? (
+                                <span className="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
+                                  <span>🪔</span> நானே (Self)
+                                </span>
+                              ) : (
+                                <span className="font-semibold text-blue-900 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
+                                  <span>👥</span> {b.assignedIyerName || "Team"}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              {b.customerMobile && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      window.location.href = `tel:${b.customerMobile}`;
+                                    }}
+                                    className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                                    title="Call Devotee"
+                                  >
+                                    <Phone className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      window.open(`https://wa.me/${b.customerMobile?.replace(/\D/g, "")}`, "_blank");
+                                    }}
+                                    className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
+                                    title="WhatsApp Devotee"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         /* =================================================================== */
         /* COMPACT LIST VIEW                                                  */
         /* =================================================================== */
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           {filteredBookings.map((b) => {
             const dateInfo = getTamilDate(b.date);
             const isSelf =
@@ -373,36 +485,28 @@ export default function BookingsListPage() {
               <Link
                 key={b.id}
                 href={`/app/bookings/${b.id}`}
-                className="block bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:border-emerald-300 transition relative"
+                className="block bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition relative space-y-1.5"
               >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] font-extrabold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200">
+                      <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/70 px-1.5 py-0.2 rounded border border-amber-200">
                         {b.bookingNumber}
                       </span>
                       {isSelf ? (
-                        <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+                        <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
                           <span>🪔</span> Self
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                        <span className="text-[9.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
                           <span>👥</span> {b.assignedIyerName || "Team"}
                         </span>
                       )}
-                      <span
-                        className={`text-[10px] px-2 py-0.2 rounded-full font-bold uppercase ${
-                          b.status === "CONFIRMED"
-                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                            : b.status === "COMPLETED"
-                            ? "bg-blue-50 text-blue-800 border border-blue-200"
-                            : "bg-amber-50 text-amber-900 border border-amber-200"
-                        }`}
-                      >
-                        {b.status}
+                      <span className="text-[9.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
+                        {b.date} • {b.startTime}
                       </span>
                     </div>
-                    <h3 className="font-extrabold text-sm text-slate-900 mt-2">
+                    <h3 className="font-extrabold text-sm text-slate-900 mt-1">
                       {b.poojaEnglishName}
                     </h3>
                   </div>
@@ -411,30 +515,22 @@ export default function BookingsListPage() {
                     <span className="text-sm font-black text-slate-900">
                       ₹{b.totalAmount.toLocaleString("en-IN")}
                     </span>
-                    <div className="text-[10.5px] font-bold mt-0.5">
+                    <div className="text-[10px] font-bold mt-0.5">
                       {b.paymentStatus === "PAID" ? (
                         <span className="text-emerald-700">Paid ✅</span>
                       ) : (
-                        <span className="text-rose-700">Due: ₹${b.balanceAmount}</span>
+                        <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-1 truncate">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="font-medium text-slate-800 truncate">
-                        {dateInfo.formattedDualDate} • {b.startTime}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-400 truncate">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate text-slate-600">
-                        {b.customerName} • {b.location}
-                      </span>
-                    </div>
+                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                  <div className="flex items-center gap-1 text-slate-500 truncate">
+                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {b.customerName} • {b.location}
+                    </span>
                   </div>
 
                   <div className="flex items-center text-slate-400 shrink-0">
@@ -449,3 +545,4 @@ export default function BookingsListPage() {
     </div>
   );
 }
+

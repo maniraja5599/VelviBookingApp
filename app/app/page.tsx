@@ -544,7 +544,7 @@ export default function HomeDashboardPage() {
               </Link>
             </div>
 
-            {/* Bookings List */}
+            {/* Bookings Timeline List */}
             {filteredBookingsList.length === 0 ? (
               <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-500 space-y-2">
                 <div className="text-2xl">🪔</div>
@@ -557,8 +557,12 @@ export default function HomeDashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2">
-                {filteredBookingsList.map((b) => {
+              <div className="space-y-3 pt-1">
+                {filteredBookingsList.map((b, bIdx) => {
+                  const dateInfo = getTamilDate(b.date);
+                  const dayNum = dateInfo.dayOfMonth < 10 ? `0${dateInfo.dayOfMonth}` : `${dateInfo.dayOfMonth}`;
+                  const isLast = bIdx === filteredBookingsList.length - 1;
+
                   const isSelf =
                     b.assignedIyerId === ownerMember?.id ||
                     b.assignedIyerName === currentUser?.name ||
@@ -567,88 +571,98 @@ export default function HomeDashboardPage() {
                     b.assignedIyerName.toLowerCase() === "self";
 
                   return (
-                    <div
-                      key={b.id}
-                      className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition space-y-2"
-                    >
-                      {/* Top Info */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/70">
-                              {b.startTime}
-                            </span>
-                            {isSelf ? (
-                              <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
-                                🪔 நானே (Self)
-                              </span>
-                            ) : (
-                              <span className="text-[9.5px] font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded-md border border-blue-200">
-                                👥 {b.assignedIyerName}
-                              </span>
-                            )}
-                            <span className="text-[9.5px] font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
-                              {b.date}
-                            </span>
-                          </div>
-
-                          <h4 className="font-extrabold text-sm text-slate-900 mt-1 truncate">
-                            {b.poojaEnglishName}
-                          </h4>
-                          <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
-                            <span className="font-semibold text-slate-900">{b.customerName}</span>
-                            {b.location && <span>• 📍 {b.location}</span>}
-                          </p>
+                    <div key={b.id} className="relative flex items-start gap-2 sm:gap-2.5 group">
+                      {/* Left Rail & Date Circle */}
+                      <div className="relative flex flex-col items-center shrink-0 pt-1">
+                        <div className="w-8 h-8 rounded-full bg-amber-700 text-white font-black text-xs flex items-center justify-center shadow-2xs border-2 border-white ring-1 ring-black/10 z-10 shrink-0 group-hover:scale-105 transition-transform">
+                          <span>{dayNum}</span>
                         </div>
-
-                        <div className="text-right shrink-0">
-                          <span className="text-sm font-black text-slate-900">
-                            ₹{b.totalAmount.toLocaleString("en-IN")}
-                          </span>
-                          <div className="text-[10px] font-bold mt-0.5">
-                            {b.paymentStatus === "PAID" ? (
-                              <span className="text-emerald-700">Paid ✅</span>
-                            ) : (
-                              <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
-                            )}
-                          </div>
-                        </div>
+                        {!isLast && (
+                          <div className="w-1 bg-amber-300/60 absolute top-9 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full" />
+                        )}
                       </div>
 
-                      {/* Bottom Actions Bar */}
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-[10px] font-mono text-slate-400">
-                          #{b.bookingNumber}
-                        </span>
+                      {/* Right Booking Card */}
+                      <div className="flex-1 min-w-0 bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition space-y-1.5">
+                        {/* Top Info */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/70">
+                                {b.startTime}
+                              </span>
+                              {isSelf ? (
+                                <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
+                                  🪔 நானே (Self)
+                                </span>
+                              ) : (
+                                <span className="text-[9.5px] font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.2 rounded-md border border-blue-200">
+                                  👥 {b.assignedIyerName}
+                                </span>
+                              )}
+                              <span className="text-[9.5px] font-extrabold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
+                                {b.date}
+                              </span>
+                            </div>
 
-                        <div className="flex items-center gap-1.5">
-                          {b.customerMobile && (
-                            <>
-                              <a
-                                href={`tel:${b.customerMobile}`}
-                                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
-                                title="Call Devotee"
-                              >
-                                <Phone className="w-3.5 h-3.5" />
-                              </a>
-                              <a
-                                href={`https://wa.me/${b.customerMobile.replace(/\D/g, "")}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
-                                title="WhatsApp Devotee"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" />
-                              </a>
-                            </>
-                          )}
-                          <Link
-                            href={`/app/bookings/${b.id}`}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 font-bold text-[11px] rounded-lg transition flex items-center gap-0.5"
-                          >
-                            <span>விவரம்</span>
-                            <ChevronRight className="w-3 h-3" />
-                          </Link>
+                            <h4 className="font-extrabold text-sm text-slate-900 mt-1 truncate">
+                              {b.poojaEnglishName}
+                            </h4>
+                            <p className="text-[11px] text-slate-600 flex items-center gap-1 mt-0.5">
+                              <span className="font-semibold text-slate-900">{b.customerName}</span>
+                              {b.location && <span>• 📍 {b.location}</span>}
+                            </p>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <span className="text-sm font-black text-slate-900">
+                              ₹{b.totalAmount.toLocaleString("en-IN")}
+                            </span>
+                            <div className="text-[10px] font-bold mt-0.5">
+                              {b.paymentStatus === "PAID" ? (
+                                <span className="text-emerald-700">Paid ✅</span>
+                              ) : (
+                                <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Bottom Actions Bar */}
+                        <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-mono text-slate-400">
+                            #{b.bookingNumber}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            {b.customerMobile && (
+                              <>
+                                <a
+                                  href={`tel:${b.customerMobile}`}
+                                  className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                                  title="Call Devotee"
+                                >
+                                  <Phone className="w-3.5 h-3.5" />
+                                </a>
+                                <a
+                                  href={`https://wa.me/${b.customerMobile.replace(/\D/g, "")}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
+                                  title="WhatsApp Devotee"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5" />
+                                </a>
+                              </>
+                            )}
+                            <Link
+                              href={`/app/bookings/${b.id}`}
+                              className="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 font-bold text-[11px] rounded-lg transition flex items-center gap-0.5"
+                            >
+                              <span>விவரம்</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </Link>
+                          </div>
                         </div>
                       </div>
                     </div>
