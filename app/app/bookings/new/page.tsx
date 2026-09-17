@@ -845,17 +845,17 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={handleClearDraft}
-              className="text-xs font-bold text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 transition flex items-center gap-1"
+              className="text-xs font-bold text-slate-600 hover:text-rose-600 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-rose-50 transition flex items-center gap-1 cursor-pointer active:scale-95"
               title="Reset all fields and start fresh"
             >
-              <RotateCcw className="w-3 h-3 text-slate-400 group-hover:text-rose-600" />
+              <RotateCcw className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-600" />
               <span>Reset</span>
             </button>
           )}
 
           <Link
             href="/app/bookings"
-            className="text-xs font-bold text-slate-500 hover:text-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition"
+            className="text-xs font-bold text-slate-600 hover:text-slate-900 px-3.5 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition shadow-2xs active:scale-95"
           >
             Cancel
           </Link>
@@ -863,8 +863,8 @@ _Velvi Booking App_`;
       </div>
 
       {/* 4-Step Progress Indicator */}
-      <div className="bg-white rounded-2xl p-3 border border-slate-200 shadow-2xs">
-        <div className="grid grid-cols-4 gap-2">
+      <div className="bg-white rounded-3xl p-2 sm:p-2.5 border border-slate-200/90 shadow-2xs">
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
           {[
             { step: 1, title: "Devotee", subtitle: "பக்தர்" },
             { step: 2, title: "Pooja", subtitle: "ஹோமம் & சாமான்கள்" },
@@ -883,25 +883,25 @@ _Velvi Booking App_`;
                   }
                 }}
                 disabled={s.step > currentStep}
-                className={`flex flex-col items-center text-center p-2 rounded-xl transition ${
+                className={`flex flex-col items-center text-center py-2 px-1 rounded-2xl transition active:scale-95 ${
                   isCurrent
-                    ? "bg-amber-500 text-white font-black shadow-xs ring-2 ring-amber-400/40"
+                    ? "bg-gradient-to-br from-[#0b2b17] via-[#123e24] to-[#0b2b17] text-white font-black shadow-sm ring-2 ring-emerald-600/40 scale-[1.02]"
                     : isCompleted
-                    ? "bg-emerald-50 text-emerald-900 border border-emerald-200 cursor-pointer"
-                    : "bg-slate-50 text-slate-400 opacity-60 cursor-not-allowed"
+                    ? "bg-emerald-50 text-emerald-950 border border-emerald-300 font-bold hover:bg-emerald-100/80 cursor-pointer"
+                    : "bg-slate-50 text-slate-400 border border-slate-200/60 opacity-70 cursor-not-allowed"
                 }`}
               >
                 <div className="flex items-center gap-1 text-xs font-black">
                   {isCompleted ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
                   ) : (
-                    <span>{s.step}.</span>
+                    <span className={isCurrent ? "text-amber-300" : ""}>{s.step}.</span>
                   )}
                   <span className="hidden sm:inline">{s.title}</span>
                 </div>
                 <div
-                  className={`text-[10px] mt-0.5 font-medium truncate max-w-[70px] ${
-                    isCurrent ? "text-amber-100" : "text-slate-500"
+                  className={`text-[9.5px] sm:text-[10px] mt-0.5 font-semibold truncate max-w-[70px] ${
+                    isCurrent ? "text-emerald-100" : "text-slate-500"
                   }`}
                 >
                   {s.subtitle}
@@ -942,23 +942,23 @@ _Velvi Booking App_`;
                 setCustModalError("");
                 setShowAddCustomerModal(true);
               }}
-              className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+              className="px-4 py-2 bg-gradient-to-r from-[#0b2b17] to-[#123e24] hover:from-[#123e24] hover:to-[#1a5332] text-white rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
             >
-              <Plus className="w-3.5 h-3.5 text-amber-400" />
+              <Plus className="w-3.5 h-3.5 text-amber-300" />
               <span>+ Add Devotee</span>
             </button>
           </div>
 
           {/* Contextual Smart Tip for Step 1 */}
-          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
               💡
             </div>
             <div className="space-y-0.5">
-              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
                 ஸ்மார்ட் குறிப்பு (Devotee Tip):
               </span>
-              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+              <p className="text-[11px] text-emerald-900/90 leading-relaxed font-medium">
                 பக்தரின் மொபைல் எண் மற்றும் ஊரைச் சேர்த்தால், வாட்ஸ்அப் மூலம் பூஜை விவரங்கள் மற்றும் சாமான்கள் பட்டியலை 1-தட்டில் அனுப்பலாம். சங்கல்பத்திற்கான கோத்திரம்/நட்சத்திரத்தை குறித்துக் கொள்வது நல்லது.
               </p>
             </div>
@@ -966,10 +966,10 @@ _Velvi Booking App_`;
 
           {/* If Devotee is Selected: Detailed Showcase Card */}
           {selectedCustomer ? (
-            <div className="bg-gradient-to-r from-amber-50/90 via-white to-amber-50/50 p-4 rounded-2xl border-2 border-amber-400 shadow-sm space-y-3">
+            <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-4 rounded-2xl border-2 border-emerald-500/80 shadow-sm space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm ring-4 ring-amber-100">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-white flex items-center justify-center shrink-0 shadow-sm ring-4 ring-emerald-100">
                     <User className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
@@ -978,7 +978,7 @@ _Velvi Booking App_`;
                         {selectedCustomer.name}
                       </h3>
                       {devoteePastBookingsCount > 0 && (
-                        <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-950 px-2.5 py-0.5 rounded-full">
                           {devoteePastBookingsCount} Past Bookings
                         </span>
                       )}
@@ -988,7 +988,7 @@ _Velvi Booking App_`;
                       {selectedCustomer.mobile ? (
                         <a
                           href={`tel:${selectedCustomer.mobile}`}
-                          className="flex items-center gap-1 font-bold text-slate-800 hover:text-amber-700"
+                          className="flex items-center gap-1 font-bold text-slate-800 hover:text-emerald-700"
                         >
                           <Phone className="w-3.5 h-3.5 text-emerald-600" />
                           <span>{selectedCustomer.mobile}</span>
@@ -1002,7 +1002,7 @@ _Velvi Booking App_`;
                           href={`https://wa.me/${selectedCustomer.mobile.replace(/\D/g, "")}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200"
+                          className="text-[11px] font-bold text-emerald-800 hover:text-emerald-900 flex items-center gap-0.5 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200 shadow-2xs"
                         >
                           <MessageCircle className="w-3 h-3" /> WhatsApp
                         </a>
@@ -1014,25 +1014,25 @@ _Velvi Booking App_`;
                 <button
                   type="button"
                   onClick={() => setCustomerId("")}
-                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shrink-0 transition"
+                  className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 cursor-pointer shadow-2xs"
                 >
                   Change Devotee
                 </button>
               </div>
 
               {/* Extended Details Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-amber-200/60 text-xs">
-                <div className="bg-white/80 p-2 rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 font-bold block">City & Address</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-emerald-200/60 text-xs">
+                <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] text-slate-400 font-bold block">City &amp; Address</span>
                   <span className="font-semibold text-slate-800 flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                     {selectedCustomer.city || "Namakkal"} {selectedCustomer.address ? `• ${selectedCustomer.address}` : ""}
                   </span>
                 </div>
 
-                <div className="bg-white/80 p-2 rounded-xl border border-slate-200">
-                  <span className="text-[10px] text-slate-400 font-bold block">Gothram & Kuladeivam Notes</span>
-                  <span className="font-semibold text-amber-900 block mt-0.5 truncate">
+                <div className="bg-white/80 p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-[10px] text-slate-400 font-bold block">Gothram &amp; Kuladeivam Notes</span>
+                  <span className="font-semibold text-emerald-950 block mt-0.5 truncate">
                     {selectedCustomer.notes || "No special gothram notes"}
                   </span>
                 </div>
@@ -1048,13 +1048,13 @@ _Velvi Booking App_`;
                   value={customerSearchQuery}
                   onChange={(e) => setCustomerSearchQuery(e.target.value)}
                   placeholder="Search devotee by name, mobile, city, gothram..."
-                  className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 shadow-2xs"
+                  className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-2xs"
                 />
                 {customerSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setCustomerSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1077,9 +1077,9 @@ _Velvi Booking App_`;
                         key={`chip-${c.id}`}
                         type="button"
                         onClick={() => setCustomerId(c.id)}
-                        className="px-2.5 py-1.5 bg-white hover:bg-amber-50 text-slate-800 hover:text-amber-900 border border-slate-200 hover:border-amber-300 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
+                        className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-slate-800 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 shadow-2xs active:scale-95 cursor-pointer"
                       >
-                        <User className="w-3 h-3 text-amber-600" />
+                        <User className="w-3 h-3 text-emerald-700" />
                         <span className="truncate max-w-[120px]">{c.name}</span>
                         {c.city && <span className="text-[10px] text-slate-400 font-normal">• {c.city}</span>}
                       </button>
@@ -1102,9 +1102,9 @@ _Velvi Booking App_`;
                         setCustModalError("");
                         setShowAddCustomerModal(true);
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-2xl text-xs font-bold transition active:scale-95 cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5 text-amber-600" />
+                      <Plus className="w-3.5 h-3.5 text-emerald-700" />
                       <span>Add &quot;{customerSearchQuery}&quot; as New Devotee</span>
                     </button>
                   </div>
@@ -1113,10 +1113,10 @@ _Velvi Booking App_`;
                     <div
                       key={c.id}
                       onClick={() => setCustomerId(c.id)}
-                      className="bg-white hover:bg-amber-50/70 p-3 rounded-2xl border border-slate-200 hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
+                      className="bg-white hover:bg-emerald-50/70 p-3 rounded-2xl border border-slate-200 hover:border-emerald-400 transition cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-amber-50 group-hover:bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 transition">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 group-hover:bg-emerald-100 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0 transition">
                           <User className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
@@ -1129,7 +1129,7 @@ _Velvi Booking App_`;
                             <span>📍 {c.city || "Tamil Nadu"}</span>
                           </div>
                           {c.notes && (
-                            <p className="text-[10px] text-amber-800 truncate mt-0.5">
+                            <p className="text-[10px] text-emerald-900 truncate mt-0.5 font-medium">
                               🔖 {c.notes}
                             </p>
                           )}
@@ -1137,7 +1137,7 @@ _Velvi Booking App_`;
                       </div>
 
                       <div
-                        className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-emerald-500 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 transition shadow-2xs"
+                        className="w-8 h-8 rounded-xl bg-slate-100 group-hover:bg-emerald-700 text-slate-400 group-hover:text-white flex items-center justify-center shrink-0 transition shadow-2xs"
                         title="Select Devotee"
                       >
                         <Check className="w-4 h-4 font-black" />
@@ -1155,10 +1155,10 @@ _Velvi Booking App_`;
               type="button"
               id="step1NextBtn"
               onClick={handleNextStep}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
+              className="px-7 py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
             >
               <span>Next</span>
-              <ArrowRight className="w-4 h-4 text-amber-400" />
+              <ArrowRight className="w-4 h-4 text-amber-300" />
             </button>
           </div>
         </div>
@@ -1172,7 +1172,7 @@ _Velvi Booking App_`;
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-                <Flame className="w-4 h-4 text-amber-600" /> 2. Choose Pooja & Samagri Checklist
+                <Flame className="w-4 h-4 text-emerald-700" /> 2. Choose Pooja & Samagri Checklist
               </h2>
               <p className="text-xs text-slate-500">
                 Select ritual ceremony, review items list, edit or add custom materials.
@@ -1182,23 +1182,23 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={() => setShowPoojaModal(true)}
-              className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs"
+              className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
             >
-              <Plus className="w-3.5 h-3.5 text-amber-700" />
+              <Plus className="w-3.5 h-3.5 text-emerald-700" />
               <span>+ Add Custom Pooja</span>
             </button>
           </div>
 
           {/* Contextual Smart Tip for Step 2 */}
-          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
               💡
             </div>
             <div className="space-y-0.5">
-              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
                 பூஜை &amp; சாமான்கள் குறிப்பு (Pooja &amp; Samagri Tip):
               </span>
-              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
                 ஹோமத்திற்கான பொருட்கள் பட்டியலை இங்கேயே சரிபார்த்து டிக் செய்யலாம். தேவைப்படாத பொருட்களை அன்-டிக் செய்யவும், அல்லது புதிய பொருட்களை எளிதாகச் சேர்த்துக் கொள்ளலாம். பக்தருக்கு அனுப்பும் பட்டியலும் இதன்படி மாறும்.
               </p>
             </div>
@@ -1210,7 +1210,7 @@ _Velvi Booking App_`;
               <label className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                 <span>1-Tap Popular Poojas (அதிகம் பயன்படும் பூஜைகள்):</span>
               </label>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+              <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
                 Quick 1, 2, 3...
               </span>
             </div>
@@ -1227,18 +1227,18 @@ _Velvi Booking App_`;
                       setPoojaId(p.id);
                       setIsMorePoojasOpen(false);
                     }}
-                    className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 shadow-2xs group ${
+                    className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 shadow-2xs group cursor-pointer ${
                       isSelected
-                        ? "bg-gradient-to-r from-amber-50 to-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 shadow-xs"
-                        : "bg-white hover:bg-slate-50 border-slate-200 hover:border-amber-300"
+                        ? "bg-gradient-to-r from-emerald-50 via-white to-emerald-100/80 border-emerald-600 ring-2 ring-emerald-500/30 shadow-xs"
+                        : "bg-white hover:bg-emerald-50/30 border-slate-200 hover:border-emerald-300"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 transition ${
                           isSelected
-                            ? "bg-amber-600 text-white shadow-xs"
-                            : "bg-amber-100 text-amber-900 group-hover:bg-amber-200"
+                            ? "bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 shadow-xs"
+                            : "bg-emerald-100 text-emerald-950 group-hover:bg-emerald-200"
                         }`}
                       >
                         {pIdx + 1}
@@ -1249,7 +1249,7 @@ _Velvi Booking App_`;
                           {p.englishName}
                         </div>
                         {p.tamilName && (
-                          <div className="text-[10.5px] text-amber-900 font-bold truncate">
+                          <div className="text-[10.5px] text-emerald-900 font-bold truncate">
                             {p.tamilName}
                           </div>
                         )}
@@ -1261,7 +1261,7 @@ _Velvi Booking App_`;
                         ₹{(p.basePrice || 0).toLocaleString("en-IN")}
                       </span>
                       {isSelected ? (
-                        <span className="text-[9.5px] font-black text-emerald-700 bg-emerald-100/90 px-1.5 py-0.2 rounded-md border border-emerald-200">
+                        <span className="text-[9.5px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded-md border border-emerald-300">
                           Selected ✓
                         </span>
                       ) : null}
@@ -1276,20 +1276,20 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setIsMorePoojasOpen((prev) => !prev)}
-                className="w-full py-2.5 px-3 bg-white hover:bg-amber-50/60 border border-slate-200 hover:border-amber-300 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-between transition shadow-2xs"
+                className="w-full py-2.5 px-3.5 bg-white hover:bg-emerald-50/60 border border-slate-200 hover:border-emerald-300 rounded-2xl text-xs font-bold text-slate-800 flex items-center justify-between transition shadow-2xs cursor-pointer"
               >
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
                   <span>மற்ற அனைத்து பூஜைகள் / More Poojas Catalog ({poojas.length})</span>
                 </span>
-                <span className="text-xs text-amber-800 font-bold">
+                <span className="text-xs text-emerald-900 font-extrabold">
                   {isMorePoojasOpen ? "Close ▲" : "View All ▼"}
                 </span>
               </button>
 
               {/* Custom Searchable Picker List (No native OS dropdown!) */}
               {isMorePoojasOpen && (
-                <div className="mt-2 p-3 bg-white rounded-2xl border-2 border-amber-300 shadow-md space-y-2.5 animate-in fade-in">
+                <div className="mt-2 p-3 bg-white rounded-2xl border-2 border-emerald-300 shadow-md space-y-2.5 animate-in fade-in">
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
@@ -1297,7 +1297,7 @@ _Velvi Booking App_`;
                       placeholder="Search pooja by Tamil / English name..."
                       value={poojaSearchQuery}
                       onChange={(e) => setPoojaSearchQuery(e.target.value)}
-                      className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
+                      className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white"
                     />
                     {poojaSearchQuery && (
                       <button
@@ -1327,8 +1327,8 @@ _Velvi Booking App_`;
                             }}
                             className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2 ${
                               isSelected
-                                ? "bg-amber-100 border-amber-500 shadow-2xs"
-                                : "bg-slate-50 hover:bg-amber-50/80 border-slate-200"
+                                ? "bg-emerald-100/90 border-emerald-500 shadow-2xs"
+                                : "bg-slate-50 hover:bg-emerald-50/70 border-slate-200"
                             }`}
                           >
                             <div className="min-w-0">
@@ -1336,7 +1336,7 @@ _Velvi Booking App_`;
                                 {p.englishName}
                               </div>
                               {p.tamilName && (
-                                <div className="text-[10px] text-amber-900 font-semibold truncate">
+                                <div className="text-[10px] text-emerald-900 font-semibold truncate">
                                   {p.tamilName}
                                 </div>
                               )}
@@ -1359,7 +1359,7 @@ _Velvi Booking App_`;
 
           {/* Selected Pooja Full Details Card */}
           {selectedPooja && (
-            <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 p-4 rounded-2xl border-2 border-amber-400 shadow-sm space-y-2.5 animate-in fade-in">
+            <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-4 rounded-2xl border-2 border-emerald-400 shadow-sm space-y-2.5 animate-in fade-in">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
@@ -1367,7 +1367,7 @@ _Velvi Booking App_`;
                       {selectedPooja.englishName}
                     </h3>
                     {selectedPooja.tamilName && (
-                      <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                      <span className="text-xs font-bold text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
                         {selectedPooja.tamilName}
                       </span>
                     )}
@@ -1380,7 +1380,7 @@ _Velvi Booking App_`;
                 </div>
 
                 <div className="text-right shrink-0">
-                  <div className="text-base font-black text-amber-900">
+                  <div className="text-base font-black text-emerald-950">
                     ₹{(selectedPooja.basePrice || 0).toLocaleString("en-IN")}
                   </div>
                 </div>
@@ -1393,7 +1393,7 @@ _Velvi Booking App_`;
             <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3.5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-850 flex items-center justify-center font-bold text-xs">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs">
                     <CheckSquare className="w-4 h-4" />
                   </div>
                   <div>
@@ -1412,7 +1412,7 @@ _Velvi Booking App_`;
                     onClick={() => {
                       setSamagriItems((prev) => prev.map((item) => ({ ...item, isChecked: true })));
                     }}
-                    className="text-[10px] font-bold text-emerald-800 hover:bg-emerald-100 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200 transition active:scale-95 cursor-pointer"
+                    className="text-[10px] font-bold text-emerald-900 hover:bg-emerald-100 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-300 transition active:scale-95 cursor-pointer"
                     title="அனைத்துப் பொருட்களையும் தேர்வு செய்"
                   >
                     Select All
@@ -1422,12 +1422,12 @@ _Velvi Booking App_`;
                     onClick={() => {
                       setSamagriItems((prev) => prev.map((item) => ({ ...item, isChecked: false })));
                     }}
-                    className="text-[10px] font-bold text-slate-600 hover:bg-slate-100 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 transition active:scale-95 cursor-pointer"
+                    className="text-[10px] font-bold text-slate-600 hover:bg-slate-100 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-200 transition active:scale-95 cursor-pointer"
                     title="அனைத்துப் பொருட்களையும் நீக்கு"
                   >
                     Deselect All
                   </button>
-                  <div className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                  <div className="text-[11px] font-bold text-emerald-900 bg-emerald-100/80 px-2.5 py-1 rounded-xl border border-emerald-300">
                     {samagriItems.filter((i) => i.isChecked !== false).length} / {samagriItems.length}
                   </div>
                 </div>
@@ -1455,7 +1455,7 @@ _Velvi Booking App_`;
                         <button
                           type="button"
                           onClick={() => handleToggleSamagri(item.id)}
-                          className="p-0.5 hover:bg-slate-200/50 rounded-lg transition shrink-0"
+                          className="p-0.5 hover:bg-slate-200/50 rounded-lg transition shrink-0 cursor-pointer"
                           title={isIncluded ? "Click to exclude" : "Click to include"}
                         >
                           {isIncluded ? (
@@ -1481,7 +1481,7 @@ _Velvi Booking App_`;
                               <span
                                 className={`text-[11px] font-semibold ${
                                   isIncluded
-                                    ? "text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded"
+                                    ? "text-emerald-900 bg-emerald-100/70 px-1.5 py-0.2 rounded"
                                     : "text-slate-400"
                                 }`}
                               >
@@ -1494,12 +1494,12 @@ _Velvi Booking App_`;
 
                       {/* Right Side: Straight Aligned Easy Quantity Stepper + Unit + Delete */}
                       <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-xl p-0.5 shadow-2xs">
                           <button
                             type="button"
                             onClick={() => handleUpdateSamagriQty(item.id, -1)}
                             disabled={item.quantity <= 1}
-                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded disabled:opacity-30 disabled:cursor-not-allowed transition"
+                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer"
                             title="Decrease quantity"
                           >
                             <Minus className="w-3 h-3" />
@@ -1512,27 +1512,27 @@ _Velvi Booking App_`;
                             onChange={(e) =>
                               handleSetSamagriQty(item.id, parseInt(e.target.value) || 1)
                             }
-                            className="w-10 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none focus:bg-amber-50/50 rounded py-0.5"
+                            className="w-10 text-center text-xs font-black text-slate-900 bg-transparent focus:outline-none focus:bg-emerald-50/50 rounded py-0.5"
                           />
 
                           <button
                             type="button"
                             onClick={() => handleUpdateSamagriQty(item.id, 1)}
-                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded transition"
+                            className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition cursor-pointer"
                             title="Increase quantity"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
 
-                        <span className="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-1 rounded-md min-w-[34px] text-center">
+                        <span className="text-[11px] font-extrabold text-slate-700 bg-slate-100 px-2 py-1 rounded-xl min-w-[34px] text-center">
                           {item.unit}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleRemoveSamagri(item.id)}
-                          className="p-1.5 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-lg transition"
+                          className="p-1.5 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-xl transition cursor-pointer"
                           title="Remove item"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1546,7 +1546,7 @@ _Velvi Booking App_`;
               {/* Add Custom Samagri Form */}
               <form
                 onSubmit={handleAddCustomSamagri}
-                className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2"
+                className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2"
               >
                 <span className="text-[11px] font-bold text-slate-700 block">
                   + Add Custom Samagri Item (புதிய பொருள் சேர்க்க):
@@ -1558,14 +1558,14 @@ _Velvi Booking App_`;
                     placeholder="English Name (e.g. Honey)"
                     value={newSamagriNameEn}
                     onChange={(e) => setNewSamagriNameEn(e.target.value)}
-                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                    className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
                   />
                   <input
                     type="text"
                     placeholder="Tamil Name (e.g. தேன்)"
                     value={newSamagriNameTa}
                     onChange={(e) => setNewSamagriNameTa(e.target.value)}
-                    className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    className="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-600"
                   />
                   <div className="flex gap-1">
                     <input
@@ -1573,12 +1573,12 @@ _Velvi Booking App_`;
                       min={1}
                       value={newSamagriQty}
                       onChange={(e) => setNewSamagriQty(Number(e.target.value))}
-                      className="w-14 bg-white border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-bold text-slate-900 text-center"
+                      className="w-14 bg-white border border-slate-200 rounded-xl px-1.5 py-1.5 text-xs font-bold text-slate-900 text-center"
                     />
                     <select
                       value={newSamagriUnit}
                       onChange={(e) => setNewSamagriUnit(e.target.value)}
-                      className="flex-1 bg-white border border-slate-200 rounded-lg px-1.5 py-1.5 text-xs font-medium text-slate-900"
+                      className="flex-1 bg-white border border-slate-200 rounded-xl px-1.5 py-1.5 text-xs font-medium text-slate-900"
                     >
                       <option value="kg">kg</option>
                       <option value="g">g</option>
@@ -1590,7 +1590,7 @@ _Velvi Booking App_`;
                     </select>
                     <button
                       type="submit"
-                      className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shrink-0 shadow-xs"
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-[#0b2b17] to-[#123e24] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-xl text-xs font-bold shrink-0 shadow-xs cursor-pointer active:scale-95"
                     >
                       Add
                     </button>
@@ -1599,10 +1599,10 @@ _Velvi Booking App_`;
               </form>
 
               {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX (FULL DISPLAY & WHATSAPP SHARE) */}
-              <div className="bg-amber-50/70 rounded-2xl p-4 border-2 border-amber-300 shadow-sm space-y-3">
+              <div className="bg-gradient-to-br from-white via-emerald-50/30 to-emerald-50/60 rounded-2xl p-4 border-2 border-emerald-300/80 shadow-sm space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-1.5">
-                    <Clipboard className="w-4 h-4 text-amber-700 shrink-0" />
+                    <Clipboard className="w-4 h-4 text-emerald-800 shrink-0" />
                     <div>
                       <h4 className="text-xs font-black text-slate-900">
                         Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
@@ -1612,16 +1612,16 @@ _Velvi Booking App_`;
                       </p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300 shadow-2xs">
+                  <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-2.5 py-1 rounded-full border border-emerald-300 shadow-2xs">
                     ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Selected
                   </span>
                 </div>
 
                 {/* Devotee & Pooja Confirmation Header Bar */}
-                <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 text-xs flex items-center justify-between flex-wrap gap-2">
+                <div className="bg-white/95 p-2.5 rounded-2xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-extrabold text-slate-900 flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 text-amber-600" />
+                      <User className="w-3.5 h-3.5 text-emerald-700" />
                       {selectedCustomer?.name || "Devotee"}
                     </span>
                     {selectedCustomer?.mobile && (
@@ -1630,7 +1630,7 @@ _Velvi Booking App_`;
                       </span>
                     )}
                     <span className="text-slate-300">•</span>
-                    <span className="text-amber-800 font-black">
+                    <span className="text-emerald-900 font-black">
                       📅 {date} ({selectedTime})
                     </span>
                   </div>
@@ -1640,7 +1640,7 @@ _Velvi Booking App_`;
                     <button
                       type="button"
                       onClick={handleCopyShareText}
-                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[11px] font-bold flex items-center gap-1 transition shadow-2xs"
+                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[11px] font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95"
                       title="Copy complete pooja & samagri text"
                     >
                       {copiedShare ? (
@@ -1659,7 +1659,7 @@ _Velvi Booking App_`;
                     <button
                       type="button"
                       onClick={handleShareWhatsApp}
-                      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-xs transition active:scale-95"
+                      className="px-3 py-1.5 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
                       title="Send full details and samagri list directly to customer WhatsApp"
                     >
                       <MessageCircle className="w-3.5 h-3.5 text-white" />
@@ -1676,17 +1676,17 @@ _Velvi Booking App_`;
                       .map((i, pIdx) => (
                         <div
                           key={i.id}
-                          className="bg-white p-2.5 rounded-xl border border-amber-200/90 text-xs shadow-2xs flex items-center justify-between gap-2 hover:border-amber-400 transition"
+                          className="bg-white p-2.5 rounded-xl border border-emerald-200/90 text-xs shadow-2xs flex items-center justify-between gap-2 hover:border-emerald-400 transition"
                         >
                           <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] font-black text-amber-900 bg-amber-100/80 w-5 h-5 rounded-md flex items-center justify-center shrink-0">
+                            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 w-5 h-5 rounded-md flex items-center justify-center shrink-0">
                               {pIdx + 1}
                             </span>
                             <span className="font-extrabold text-slate-900 truncate">
                               {i.itemEnglishName}
                             </span>
                             {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
-                              <span className="text-[10px] text-amber-800 truncate font-semibold">
+                              <span className="text-[10px] text-emerald-900 truncate font-semibold">
                                 ({i.itemTamilName})
                               </span>
                             )}
@@ -1698,7 +1698,7 @@ _Velvi Booking App_`;
                       ))}
                   </div>
                 ) : (
-                  <p className="text-[11px] text-amber-800 italic bg-white/70 p-3 rounded-xl border border-amber-200">
+                  <p className="text-[11px] text-emerald-900 italic bg-white/70 p-3 rounded-2xl border border-emerald-200">
                     No items selected yet. Click any tick mark in the checklist above to include materials.
                   </p>
                 )}
@@ -1711,7 +1711,7 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={handlePrevStep}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
@@ -1721,10 +1721,10 @@ _Velvi Booking App_`;
               type="button"
               id="step2NextBtn"
               onClick={handleNextStep}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
+              className="px-7 py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
             >
               <span>Next</span>
-              <ArrowRight className="w-4 h-4 text-amber-400" />
+              <ArrowRight className="w-4 h-4 text-amber-300" />
             </button>
           </div>
         </div>
@@ -1737,7 +1737,7 @@ _Velvi Booking App_`;
         <div className="space-y-4 animate-in fade-in duration-150">
           <div>
             <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-              <CalendarIcon className="w-4 h-4 text-amber-600" /> 3. Schedule Date & Auspicious Time
+              <CalendarIcon className="w-4 h-4 text-emerald-700" /> 3. Schedule Date & Auspicious Time
             </h2>
             <p className="text-xs text-slate-500">
               Interactive Tamil calendar grid, 15-min interval time selector, and collision detection.
@@ -1745,15 +1745,15 @@ _Velvi Booking App_`;
           </div>
 
           {/* Contextual Smart Tip for Step 3 */}
-          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
               💡
             </div>
             <div className="space-y-0.5">
-              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
                 சுப முகூர்த்த நேரக் குறிப்பு (Muhurtham &amp; Timings Tip):
               </span>
-              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
                 தேர்ந்தெடுத்த நாளின் நல்ல நேரம் மற்றும் கௌரி நல்ல நேரத்தைக் கவனித்து பூஜை நேரத்தை முடிவு செய்யவும். ராகு காலம் மற்றும் எமகண்ட நேரங்களில் பூஜை துவங்குவதைத் தவிர்க்கலாம்.
               </p>
             </div>
@@ -1774,7 +1774,7 @@ _Velvi Booking App_`;
                       setCalendarMonth((m) => m - 1);
                     }
                   }}
-                  className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 border border-slate-200 transition"
+                  className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 border border-slate-200 transition cursor-pointer active:scale-95"
                   title="Previous Month"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -1794,7 +1794,7 @@ _Velvi Booking App_`;
                       setCalendarMonth((m) => m + 1);
                     }
                   }}
-                  className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 border border-slate-200 transition"
+                  className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-600 border border-slate-200 transition cursor-pointer active:scale-95"
                   title="Next Month"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -1810,7 +1810,7 @@ _Velvi Booking App_`;
                   setCalendarMonth(now.getMonth());
                   setDate(getLocalDateString());
                 }}
-                className="text-[11px] font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-200 transition"
+                className="text-[11px] font-bold text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-xl border border-emerald-300 transition cursor-pointer active:scale-95"
               >
                 Today
               </button>
@@ -1853,18 +1853,18 @@ _Velvi Booking App_`;
                     key={cellDateStr}
                     type="button"
                     onClick={() => setDate(cellDateStr)}
-                    className={`h-14 p-1 rounded-xl border flex flex-col justify-between items-center text-center transition relative ${
+                    className={`h-14 p-1 rounded-xl border flex flex-col justify-between items-center text-center transition relative cursor-pointer active:scale-95 ${
                       isSelected
-                        ? "bg-amber-500 text-white border-amber-600 shadow-md ring-2 ring-amber-400/40"
+                        ? "bg-gradient-to-br from-[#0b2b17] via-emerald-800 to-[#0b2b17] text-white border-emerald-700 shadow-md ring-2 ring-emerald-500/40"
                         : isToday
-                        ? "bg-amber-50/60 border-amber-300 text-slate-900"
-                        : "bg-white border-slate-100 hover:border-amber-300 text-slate-800 hover:bg-amber-50/30"
+                        ? "bg-emerald-50/70 border-emerald-300 text-slate-900"
+                        : "bg-white border-slate-100 hover:border-emerald-300 text-slate-800 hover:bg-emerald-50/30"
                     }`}
                   >
                     <span className="text-xs font-black leading-none">{dayNum}</span>
                     <span
                       className={`text-[8.5px] font-semibold truncate max-w-full ${
-                        isSelected ? "text-amber-100" : "text-amber-800"
+                        isSelected ? "text-amber-300" : "text-emerald-950 font-bold"
                       }`}
                     >
                       {cellInfo.tamilDay}
@@ -1877,7 +1877,7 @@ _Velvi Booking App_`;
                       ) : dayBookingsCount > 0 ? (
                         <span
                           className={`w-1.5 h-1.5 rounded-full ${
-                            isSelected ? "bg-white" : "bg-emerald-600"
+                            isSelected ? "bg-amber-300" : "bg-emerald-600"
                           }`}
                         />
                       ) : null}
@@ -1891,19 +1891,19 @@ _Velvi Booking App_`;
           {/* TIME SELECTION WITH 15-MINUTE INTERVALS & AM/PM */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
             <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-amber-600" />
+              <Clock className="w-4 h-4 text-emerald-700" />
               <span>Select Start Time (15-Min Intervals):</span>
             </label>
 
             {/* Structured Time Picker (Hours, Minutes, Meridiem) */}
-            <div className="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
               {/* Hour Dropdown */}
               <div>
                 <label className="text-[10px] font-bold text-slate-500 block mb-1">Hour</label>
                 <select
                   value={timeHour}
                   onChange={(e) => setTimeHour(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600"
                 >
                   {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map(
                     (h) => (
@@ -1923,7 +1923,7 @@ _Velvi Booking App_`;
                 <select
                   value={timeMinute}
                   onChange={(e) => setTimeMinute(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600"
                 >
                   {["00", "15", "30", "45"].map((m) => (
                     <option key={m} value={m}>
@@ -1940,10 +1940,10 @@ _Velvi Booking App_`;
                   <button
                     type="button"
                     onClick={() => setTimeMeridiem("AM")}
-                    className={`py-2 rounded-lg text-xs font-black transition ${
+                    className={`py-2 rounded-xl text-xs font-black transition cursor-pointer active:scale-95 ${
                       timeMeridiem === "AM"
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-white text-slate-600 border border-slate-200"
+                        ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-xs"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                   >
                     AM
@@ -1951,10 +1951,10 @@ _Velvi Booking App_`;
                   <button
                     type="button"
                     onClick={() => setTimeMeridiem("PM")}
-                    className={`py-2 rounded-lg text-xs font-black transition ${
+                    className={`py-2 rounded-xl text-xs font-black transition cursor-pointer active:scale-95 ${
                       timeMeridiem === "PM"
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-white text-slate-600 border border-slate-200"
+                        ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-xs"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                   >
                     PM
@@ -1982,16 +1982,16 @@ _Velvi Booking App_`;
                         setTimeMinute(m);
                         setTimeMeridiem(mer as any);
                       }}
-                      className={`p-2 rounded-xl border text-left transition ${
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer active:scale-95 ${
                         isMatch
-                          ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100"
+                          ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-2xs"
+                          : "bg-slate-50 border-slate-200 text-slate-800 hover:bg-emerald-50/40 hover:border-emerald-300"
                       }`}
                     >
                       <div className="text-xs font-black">{p.label}</div>
                       <div
                         className={`text-[9.5px] truncate ${
-                          isMatch ? "text-amber-400 font-bold" : "text-slate-500"
+                          isMatch ? "text-amber-300 font-bold" : "text-slate-500"
                         }`}
                       >
                         {p.tag}
@@ -2032,7 +2032,7 @@ _Velvi Booking App_`;
 
           {/* Existing Bookings for Selected Date at a Glance */}
           {selectedDateBookings.length > 0 && conflictingBookings.length === 0 && (
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs space-y-1.5">
               <span className="font-bold text-slate-700 block">
                 📋 Other Bookings on {date} ({selectedDateBookings.length}):
               </span>
@@ -2040,7 +2040,7 @@ _Velvi Booking App_`;
                 {selectedDateBookings.map((b) => (
                   <div
                     key={b.id}
-                    className="bg-white p-2 rounded-lg border border-slate-200 flex items-center justify-between text-[11px]"
+                    className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between text-[11px]"
                   >
                     <span className="font-bold text-slate-800 truncate">
                       {b.customerName} ({b.poojaEnglishName})
@@ -2053,31 +2053,31 @@ _Velvi Booking App_`;
           )}
 
           {/* Rich Panchangam Card for Selected Date */}
-          <div className="bg-gradient-to-r from-amber-50/80 via-white to-amber-50/60 p-3.5 rounded-2xl border border-amber-300 space-y-2">
+          <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/50 p-4 rounded-2xl border border-emerald-300 space-y-2">
             <div className="flex items-center justify-between text-xs font-black text-slate-900">
               <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
                 {selectedDateInfo.formattedDualDate} ({selectedDateInfo.dayOfWeekEn})
               </span>
-              <span className="text-[11px] text-amber-900 font-bold bg-amber-100 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] text-emerald-950 font-bold bg-emerald-100/90 px-2.5 py-0.5 rounded-xl border border-emerald-300">
                 {selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-              <div className="bg-white p-2 rounded-xl border border-slate-200">
-                <span className="text-emerald-700 font-bold block">✨ நல்ல நேரம் (Nalla Neram):</span>
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
+                <span className="text-emerald-800 font-bold block">✨ நல்ல நேரம் (Nalla Neram):</span>
                 <span className="font-semibold text-slate-800">{selectedDateInfo.nallaNeram}</span>
               </div>
-              <div className="bg-white p-2 rounded-xl border border-slate-200">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <span className="text-amber-800 font-bold block">🪔 கௌரி (Gowri Nalla Neram):</span>
                 <span className="font-semibold text-slate-800">{selectedDateInfo.gowriNallaNeram}</span>
               </div>
-              <div className="bg-white p-2 rounded-xl border border-slate-200">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <span className="text-rose-700 font-bold block">⛔ ராகு காலம் (Rahu Kalam):</span>
                 <span className="font-semibold text-slate-800">{selectedDateInfo.rahuKalam}</span>
               </div>
-              <div className="bg-white p-2 rounded-xl border border-slate-200">
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
                 <span className="text-purple-700 font-bold block">⌛ குளிகை (Kuligai):</span>
                 <span className="font-semibold text-slate-800">{selectedDateInfo.kuligai}</span>
               </div>
@@ -2085,40 +2085,40 @@ _Velvi Booking App_`;
           </div>
 
           {/* QUICK BOOKING PREVIEW CARD (டேட், டைம், கஸ்டமரோட நேம் உடனடி பார்வை) */}
-          <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 p-4 rounded-2xl border-2 border-amber-300 shadow-2xs space-y-2.5 animate-in fade-in">
+          <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/50 p-4 rounded-2xl border-2 border-emerald-300 shadow-2xs space-y-2.5 animate-in fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-600" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-emerald-700" />
                 <span>தேர்ந்தெடுக்கப்பட்ட விவரங்கள் (Booking Quick Preview)</span>
               </span>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
                 Step 3 Ready ✓
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-              <div className="bg-white/95 p-2.5 rounded-xl border border-amber-200/90 shadow-2xs">
+              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block">📅 தேர்ந்தெடுக்கப்பட்ட தேதி</span>
                 <div className="font-black text-slate-900 mt-0.5">{selectedDateInfo.formattedDualDate}</div>
-                <div className="text-[10px] text-amber-800 font-bold truncate">
+                <div className="text-[10px] text-emerald-900 font-bold truncate">
                   {selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}
                 </div>
               </div>
 
-              <div className="bg-white/95 p-2.5 rounded-xl border border-amber-200/90 shadow-2xs">
+              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block">⏰ பூஜை நேரம்</span>
-                <div className="font-black text-amber-900 mt-0.5 text-sm">{selectedTime}</div>
+                <div className="font-black text-emerald-950 mt-0.5 text-sm">{selectedTime}</div>
                 <div className="text-[10px] text-slate-600 font-semibold">
                   {selectedDateInfo.dayOfWeekTa} ({selectedDateInfo.dayOfWeekEn})
                 </div>
               </div>
 
-              <div className="bg-white/95 p-2.5 rounded-xl border border-amber-200/90 shadow-2xs">
+              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block">👤 பக்தர் & பூஜை</span>
                 <div className="font-black text-slate-900 truncate mt-0.5">
                   {selectedCustomer?.name || "பக்தர் தேர்வு செய்யப்படவில்லை"}
                 </div>
-                <div className="text-[10px] text-amber-900 font-extrabold truncate">
+                <div className="text-[10px] text-emerald-900 font-extrabold truncate">
                   {selectedPooja?.englishName || "பூஜை தேர்வு செய்யப்படவில்லை"}
                 </div>
               </div>
@@ -2130,7 +2130,7 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={handlePrevStep}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
@@ -2140,10 +2140,10 @@ _Velvi Booking App_`;
               type="button"
               id="step3NextBtn"
               onClick={handleNextStep}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95"
+              className="px-7 py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs font-black flex items-center gap-2 shadow-sm transition active:scale-95 cursor-pointer"
             >
               <span>Next</span>
-              <ArrowRight className="w-4 h-4 text-amber-400" />
+              <ArrowRight className="w-4 h-4 text-amber-300" />
             </button>
           </div>
         </div>
@@ -2156,7 +2156,7 @@ _Velvi Booking App_`;
         <form onSubmit={handleCreateBooking} className="space-y-4 animate-in fade-in duration-150">
           <div>
             <h2 className="text-sm font-black text-slate-900 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" /> 4. Review Summary & Payment Setup
+              <ShieldCheck className="w-4 h-4 text-emerald-700" /> 4. Review Summary & Payment Setup
             </h2>
             <p className="text-xs text-slate-500">
               Verify ceremony details, set up payment, assign performing priest, and confirm booking.
@@ -2164,25 +2164,25 @@ _Velvi Booking App_`;
           </div>
 
           {/* Contextual Smart Tip for Step 4 */}
-          <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-amber-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-amber-400 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
+          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
               💡
             </div>
             <div className="space-y-0.5">
-              <span className="font-extrabold block text-amber-900 text-[11px] sm:text-xs">
+              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
                 கட்டணம் &amp; குருக்கள் ஒதுக்கீடு குறிப்பு (Payment &amp; Priest Tip):
               </span>
-              <p className="text-[11px] text-amber-900/90 leading-relaxed">
+              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
                 முன்பணம் (Advance) பெற்றிருந்தால் உடனே குறித்துக் கொள்ளுங்கள்; மீதமுள்ள தொகையை பூஜை முடிந்ததும் எளிதாகப் பெற்றுக்கொள்ளலாம். நீங்கள் அல்லது உங்கள் உதவி குருக்களை இங்கு எளிதாக ஒதுக்கீடு செய்யலாம்.
               </p>
             </div>
           </div>
 
           {/* 1. HERO CEREMONY & DEVOTEE OVERVIEW CARD */}
-          <div className="bg-gradient-to-r from-amber-50/90 via-white to-amber-50/50 p-4 rounded-2xl border border-amber-300 shadow-2xs space-y-3">
-            <div className="flex items-start justify-between border-b border-amber-200/60 pb-2.5">
+          <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/50 p-4 rounded-2xl border border-emerald-300 shadow-2xs space-y-3">
+            <div className="flex items-start justify-between border-b border-emerald-200/60 pb-2.5">
               <div className="min-w-0">
-                <span className="text-[10px] text-amber-800 font-black uppercase tracking-wider block">
+                <span className="text-[10px] text-emerald-900 font-black uppercase tracking-wider block">
                   Pooja Ceremony
                 </span>
                 <div className="flex items-center gap-2 flex-wrap mt-0.5">
@@ -2190,7 +2190,7 @@ _Velvi Booking App_`;
                     {selectedPooja?.englishName}
                   </h3>
                   {selectedPooja?.tamilName && (
-                    <span className="text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-bold text-emerald-950 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
                       {selectedPooja.tamilName}
                     </span>
                   )}
@@ -2198,7 +2198,7 @@ _Velvi Booking App_`;
               </div>
 
               <div className="text-right shrink-0">
-                <span className="text-lg font-black text-amber-950">
+                <span className="text-lg font-black text-emerald-950">
                   ₹{Number(amount || 0).toLocaleString("en-IN")}
                 </span>
                 <div className="text-[10px] text-slate-500 font-semibold">Total Fee</div>
@@ -2217,13 +2217,13 @@ _Velvi Booking App_`;
                 <span className="text-[10px] text-slate-400 font-bold block">📅 Date & Time (தேதி & நேரம்)</span>
                 <div className="font-extrabold text-slate-900 mt-0.5">{selectedDateInfo.formattedDualDate}</div>
                 <div className="text-[11px] text-slate-800 font-bold">⏰ {selectedTime} ({selectedDateInfo.dayOfWeekTa})</div>
-                <div className="text-[10px] text-amber-800 font-semibold">{selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}</div>
+                <div className="text-[10px] text-emerald-900 font-semibold">{selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}</div>
               </div>
             </div>
 
-            <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
+            <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
               <span className="font-bold text-emerald-950 flex items-center gap-1.5">
-                <CheckSquare className="w-4 h-4 text-emerald-600" />
+                <CheckSquare className="w-4 h-4 text-emerald-700" />
                 {samagriItems.filter((i) => i.isChecked !== false).length} Samagri Checklist Items Included
               </span>
 
@@ -2231,13 +2231,13 @@ _Velvi Booking App_`;
                 <button
                   type="button"
                   onClick={handleShareWhatsApp}
-                  className="text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 transition shadow-2xs"
+                  className="text-[11px] font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-xl border border-emerald-300 flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95"
                   title="Share details with devotee on WhatsApp"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
                   <span>WhatsApp List</span>
                 </button>
-                <span className="text-[11px] font-bold text-emerald-800 hidden sm:inline">
+                <span className="text-[11px] font-bold text-emerald-900 hidden sm:inline">
                   Ready for Pooja ✓
                 </span>
               </div>
@@ -2245,10 +2245,10 @@ _Velvi Booking App_`;
           </div>
 
           {/* 2. DEDICATED STANDALONE PAYMENT BOX (தனியா ஒரு பாக்ஸ்) */}
-          <div className="bg-gradient-to-br from-white to-amber-50/30 rounded-2xl p-4 border-2 border-amber-300 shadow-sm space-y-3.5">
-            <div className="flex items-center justify-between border-b border-amber-100 pb-2.5">
+          <div className="bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/50 rounded-2xl p-4 border-2 border-emerald-300/90 shadow-sm space-y-3.5">
+            <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-2xs">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center font-black shadow-2xs">
                   <IndianRupee className="w-4 h-4" />
                 </div>
                 <div>
@@ -2259,7 +2259,7 @@ _Velvi Booking App_`;
                 </div>
               </div>
 
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-850 border border-emerald-300">
+              <span className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-950 border border-emerald-300">
                 Direct Settlement
               </span>
             </div>
@@ -2277,33 +2277,33 @@ _Velvi Booking App_`;
                     min={0}
                     value={amount}
                     onChange={(e) => setAmount(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white"
                   />
                 </div>
               </div>
 
               <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 shadow-2xs">
-                <label className="text-[10px] font-bold text-emerald-900 block mb-1">
+                <label className="text-[10px] font-bold text-emerald-950 block mb-1">
                   Advance Received (முன்பணம் ₹)
                 </label>
                 <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">₹</span>
                   <input
                     type="number"
                     min={0}
                     max={amount}
                     value={advanceAmount}
                     onChange={(e) => setAdvanceAmount(Number(e.target.value))}
-                    className="w-full bg-white border border-emerald-300 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-emerald-800 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-white border border-emerald-300 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-emerald-900 focus:outline-none focus:border-emerald-600"
                   />
                 </div>
               </div>
 
-              <div className="bg-amber-50 p-3 rounded-xl border border-amber-300 shadow-2xs flex flex-col justify-between">
-                <label className="text-[10px] font-bold text-amber-900 block">
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/70 p-3 rounded-xl border border-emerald-300 shadow-2xs flex flex-col justify-between">
+                <label className="text-[10px] font-bold text-emerald-950 block">
                   Balance Due (மீதமுள்ள தொகை)
                 </label>
-                <div className="text-lg font-black text-amber-950 py-0.5">
+                <div className="text-lg font-black text-emerald-950 py-0.5">
                   ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
                 </div>
               </div>
@@ -2315,9 +2315,9 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(0)}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition ${
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
                   advanceAmount === 0
-                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs"
                     : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
                 }`}
               >
@@ -2326,10 +2326,10 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(Math.round(amount * 0.25))}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition ${
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
                   advanceAmount === Math.round(amount * 0.25) && amount > 0
-                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                    : "bg-white hover:bg-amber-50 text-amber-900 border-amber-200 shadow-2xs"
+                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-amber-300 border-emerald-900 shadow-xs"
+                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
                 }`}
               >
                 25% (₹{Math.round(amount * 0.25)})
@@ -2337,10 +2337,10 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(Math.round(amount * 0.5))}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition ${
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
                   advanceAmount === Math.round(amount * 0.5) && amount > 0
-                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                    : "bg-white hover:bg-amber-50 text-amber-900 border-amber-200 shadow-2xs"
+                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-amber-300 border-emerald-900 shadow-xs"
+                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
                 }`}
               >
                 50% (₹{Math.round(amount * 0.5)})
@@ -2348,10 +2348,10 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setAdvanceAmount(amount)}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition ${
+                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
                   advanceAmount === amount && amount > 0
-                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                    : "bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs"
+                    ? "bg-gradient-to-r from-emerald-700 to-emerald-800 text-white border-emerald-800 shadow-xs"
+                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
                 }`}
               >
                 100% Full Paid
@@ -2359,7 +2359,7 @@ _Velvi Booking App_`;
             </div>
 
             {/* Payment Method & Reference */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-amber-100">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-emerald-100">
               <div>
                 <label className="text-[10px] font-bold text-slate-700 block mb-1">
                   Payment Method (செலுத்தும் முறை)
@@ -2367,7 +2367,7 @@ _Velvi Booking App_`;
                 <select
                   value={paymentMode}
                   onChange={(e) => setPaymentMode(e.target.value as any)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 shadow-2xs"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-600 shadow-2xs"
                 >
                   <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
                   <option value="CASH">Cash in Hand (ரொக்கம்)</option>
@@ -2385,7 +2385,7 @@ _Velvi Booking App_`;
                     placeholder="e.g. UPI/4098231"
                     value={upiRefId}
                     onChange={(e) => setUpiRefId(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 shadow-2xs"
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
                   />
                 </div>
               )}
@@ -2403,7 +2403,7 @@ _Velvi Booking App_`;
                   Choose Self or assign to an associate priest
                 </p>
               </div>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+              <span className="text-[10px] font-bold text-emerald-950 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
                 {assignedIyerId === "self" ? "Self (நானே செய்கிறேன்)" : "Assigned to Assistant"}
               </span>
             </div>
@@ -2414,9 +2414,9 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setAssignedIyerId("self")}
-                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs ${
+                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs cursor-pointer active:scale-95 ${
                   assignedIyerId === "self"
-                    ? "bg-gradient-to-r from-amber-50 to-amber-100/90 border-amber-500 ring-2 ring-amber-400/50 shadow-xs"
+                    ? "bg-gradient-to-r from-emerald-50 via-white to-emerald-100/80 border-emerald-600 ring-2 ring-emerald-500/30 shadow-xs"
                     : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-700"
                 }`}
               >
@@ -2424,7 +2424,7 @@ _Velvi Booking App_`;
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
                       assignedIyerId === "self"
-                        ? "bg-amber-500 text-white"
+                        ? "bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300"
                         : "bg-slate-200 text-slate-700"
                     }`}
                   >
@@ -2434,13 +2434,13 @@ _Velvi Booking App_`;
                     <div className="text-xs font-black text-slate-900 truncate">
                       Self
                     </div>
-                    <div className="text-[10px] text-amber-900 font-bold truncate">
+                    <div className="text-[10px] text-emerald-950 font-bold truncate">
                       நானே செய்கிறேன்
                     </div>
                   </div>
                 </div>
                 {assignedIyerId === "self" && (
-                  <CheckCircle2 className="w-4 h-4 text-amber-700 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
                 )}
               </button>
 
@@ -2453,9 +2453,9 @@ _Velvi Booking App_`;
                     if (firstOther) setAssignedIyerId(firstOther.id);
                   }
                 }}
-                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs ${
+                className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs cursor-pointer active:scale-95 ${
                   assignedIyerId !== "self"
-                    ? "bg-gradient-to-r from-blue-50 to-blue-100/90 border-blue-500 ring-2 ring-blue-400/50 shadow-xs"
+                    ? "bg-gradient-to-r from-slate-100 via-white to-slate-200/80 border-slate-700 ring-2 ring-slate-400/40 shadow-xs"
                     : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-700"
                 }`}
               >
@@ -2463,7 +2463,7 @@ _Velvi Booking App_`;
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
                       assignedIyerId !== "self"
-                        ? "bg-blue-600 text-white"
+                        ? "bg-slate-800 text-white"
                         : "bg-slate-200 text-slate-700"
                     }`}
                   >
@@ -2473,27 +2473,27 @@ _Velvi Booking App_`;
                     <div className="text-xs font-black text-slate-900 truncate">
                       Others
                     </div>
-                    <div className="text-[10px] text-blue-900 font-bold truncate">
+                    <div className="text-[10px] text-slate-700 font-bold truncate">
                       மற்ற குருக்கள்
                     </div>
                   </div>
                 </div>
                 {assignedIyerId !== "self" && (
-                  <CheckCircle2 className="w-4 h-4 text-blue-700 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-slate-800 shrink-0" />
                 )}
               </button>
             </div>
 
             {/* When "Others" is Selected: Show Elegant Priest Dropdown / Selector */}
             {assignedIyerId !== "self" && (
-              <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2 animate-in fade-in">
-                <label className="text-xs font-black text-blue-950 block">
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-300 space-y-2 animate-in fade-in">
+                <label className="text-xs font-black text-slate-900 block">
                   Select Assistant Priest (உதவி குருக்கள் தேர்வு செய்க):
                 </label>
                 <select
                   value={assignedIyerId}
                   onChange={(e) => setAssignedIyerId(e.target.value)}
-                  className="w-full bg-white border border-blue-300 rounded-xl px-3 py-2.5 text-xs font-black text-slate-900 focus:outline-none focus:border-blue-500 shadow-2xs"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-black text-slate-900 focus:outline-none focus:border-slate-700 shadow-2xs"
                 >
                   {members.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -2502,7 +2502,7 @@ _Velvi Booking App_`;
                   ))}
                 </select>
 
-                <p className="text-[10.5px] text-blue-800 leading-tight">
+                <p className="text-[10.5px] text-slate-600 leading-tight">
                   தேர்ந்தெடுக்கப்பட்ட குருக்களுக்கு பூஜை விவரங்கள் ஒதுக்கப்பட்டு அவரது அட்டவணையில் பதியப்படும்.
                 </p>
               </div>
@@ -2520,7 +2520,7 @@ _Velvi Booking App_`;
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Namakkal / Devotee Residence"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white"
               />
             </div>
 
@@ -2533,7 +2533,7 @@ _Velvi Booking App_`;
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. Koundinya Gothram, Rohini Nakshatram"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white"
               />
             </div>
           </div>
@@ -2543,7 +2543,7 @@ _Velvi Booking App_`;
             <button
               type="button"
               onClick={handlePrevStep}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1 transition"
+              className="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
@@ -2553,9 +2553,9 @@ _Velvi Booking App_`;
               type="submit"
               id="confirmAndCreateBookingBtn"
               disabled={isSubmitting}
-              className="px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl text-sm font-black shadow-md transition active:scale-95 flex items-center gap-2"
+              className="px-8 py-3.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-sm font-black shadow-md transition active:scale-95 flex items-center gap-2 cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+              <CheckCircle2 className="w-4 h-4 text-amber-300" />
               <span>{isSubmitting ? "Creating Booking..." : "Confirm & Create Booking"}</span>
             </button>
           </div>
@@ -2576,8 +2576,8 @@ _Velvi Booking App_`;
             {/* 1. Fixed Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0 bg-white rounded-t-3xl">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm shadow-2xs">
-                  <User className="w-5 h-5 text-amber-800" />
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <User className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
@@ -2711,14 +2711,14 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setShowAddCustomerModal(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition cursor-pointer active:scale-95"
               >
                 Cancel (ரத்து)
               </button>
               <button
                 type="submit"
                 form="quickDevoteeForm"
-                className="flex-1 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white rounded-xl text-xs font-black transition shadow-sm cursor-pointer"
+                className="flex-1 py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs font-black transition shadow-sm cursor-pointer active:scale-95"
               >
                 Save &amp; Select (சேமி)
               </button>
@@ -2741,8 +2741,8 @@ _Velvi Booking App_`;
             {/* 1. Fixed Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0 bg-white rounded-t-3xl">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm shadow-2xs">
-                  <Flame className="w-5 h-5 text-amber-700" />
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <Flame className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
@@ -2776,7 +2776,7 @@ _Velvi Booking App_`;
                     placeholder="e.g. Dhanvantri Homam"
                     value={poojaModalNameEn}
                     onChange={(e) => setPoojaModalNameEn(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs"
                   />
                 </div>
 
@@ -2789,7 +2789,7 @@ _Velvi Booking App_`;
                     placeholder="e.g. தன்வந்திரி ஹோமம்"
                     value={poojaModalNameTa}
                     onChange={(e) => setPoojaModalNameTa(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs"
                   />
                 </div>
 
@@ -2803,7 +2803,7 @@ _Velvi Booking App_`;
                       type="number"
                       value={poojaModalPrice}
                       onChange={(e) => setPoojaModalPrice(Number(e.target.value))}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs"
                     />
                   </div>
                 </div>
@@ -2817,7 +2817,7 @@ _Velvi Booking App_`;
                     placeholder="Vedic significance and auspicious benefits..."
                     value={poojaModalDesc}
                     onChange={(e) => setPoojaModalDesc(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500 focus:bg-white transition shadow-2xs resize-none"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs resize-none"
                   />
                 </div>
               </form>
@@ -2828,14 +2828,14 @@ _Velvi Booking App_`;
               <button
                 type="button"
                 onClick={() => setShowPoojaModal(false)}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition cursor-pointer active:scale-95"
               >
                 Cancel (ரத்து)
               </button>
               <button
                 type="submit"
                 form="quickPoojaForm"
-                className="flex-1 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-black hover:to-slate-900 text-white rounded-xl text-xs font-black transition shadow-sm cursor-pointer"
+                className="flex-1 py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs font-black transition shadow-sm cursor-pointer active:scale-95"
               >
                 Save &amp; Select (சேமி)
               </button>
