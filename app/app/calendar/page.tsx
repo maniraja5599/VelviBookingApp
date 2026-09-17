@@ -52,7 +52,6 @@ export default function CalendarPage() {
   const todayStr = getLocalDateString();
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
   const [activeTab, setActiveTab] = useState<"calendar" | "important_days">("calendar");
-  const [eventsFilterCategory, setEventsFilterCategory] = useState<"ALL" | "MUHURTHAM" | "MOON" | "VRATAM" | "FESTIVAL">("ALL");
   const [showPanchangam, setShowPanchangam] = useState<boolean>(true);
   const [showPanchangamGuide, setShowPanchangamGuide] = useState<boolean>(false);
   const [showDayDetailsModal, setShowDayDetailsModal] = useState<boolean>(false);
@@ -180,6 +179,7 @@ export default function CalendarPage() {
       tithi?: string;
       nakshatra?: string;
       tamilDate?: string;
+      isGovtHoliday?: boolean;
     }> = [];
 
     for (let day = 1; day <= daysInMonth; day++) {
@@ -188,17 +188,19 @@ export default function CalendarPage() {
       const tamilDate = `${d.tamilMonth} ${d.tamilDay} (${d.dayOfWeekTa})`;
       const tithi = d.tithiNameTa || d.tithiTa;
       const nakshatra = d.nakshatraNameTa;
+      const isGovtHoliday = d.isGovtHoliday;
 
       if (d.festivalName) {
         events.push({
           day,
           dateStr,
           name: d.festivalName,
-          icon: d.specialDayIcon || "⭐",
+          icon: d.specialDayIcon || (isGovtHoliday ? "🏖️" : "⭐"),
           category: "FESTIVAL",
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isMuhurtham) {
@@ -211,6 +213,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isPournami && (!d.festivalName || !d.festivalName.includes("பௌர்ணமி"))) {
@@ -223,6 +226,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isAmavasai && (!d.festivalName || !d.festivalName.includes("அமாவாசை"))) {
@@ -235,6 +239,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isPradosham && (!d.festivalName || !d.festivalName.includes("பிரதோஷம்"))) {
@@ -247,6 +252,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isEkadashi && (!d.festivalName || !d.festivalName.includes("ஏகாதசி"))) {
@@ -259,6 +265,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isSankataharaChaturthi && (!d.festivalName || !d.festivalName.includes("சதுர்த்தி"))) {
@@ -271,6 +278,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isSashti && (!d.festivalName || !d.festivalName.includes("சஷ்டி"))) {
@@ -283,6 +291,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isKarthigai && (!d.festivalName || !d.festivalName.includes("கார்த்திகை"))) {
@@ -295,6 +304,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isMaadhaSivarathiri && (!d.festivalName || !d.festivalName.includes("சிவராத்திரி"))) {
@@ -307,6 +317,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
       if (d.isThiruvonam && (!d.festivalName || !d.festivalName.includes("திருவோண"))) {
@@ -319,6 +330,7 @@ export default function CalendarPage() {
           tithi,
           nakshatra,
           tamilDate,
+          isGovtHoliday,
         });
       }
     }
@@ -355,29 +367,6 @@ export default function CalendarPage() {
     }
     return counts;
   }, [currentYear]);
-
-  // Counts and filters for Month Important Days view
-  const muhurthamCount = React.useMemo(
-    () => monthImportantEventsList.filter((e) => e.category === "MUHURTHAM").length,
-    [monthImportantEventsList]
-  );
-  const moonCount = React.useMemo(
-    () => monthImportantEventsList.filter((e) => e.category === "MOON").length,
-    [monthImportantEventsList]
-  );
-  const vratamCount = React.useMemo(
-    () => monthImportantEventsList.filter((e) => e.category === "VRATAM").length,
-    [monthImportantEventsList]
-  );
-  const festivalCount = React.useMemo(
-    () => monthImportantEventsList.filter((e) => e.category === "FESTIVAL").length,
-    [monthImportantEventsList]
-  );
-
-  const displayedImportantEvents = React.useMemo(() => {
-    if (eventsFilterCategory === "ALL") return monthImportantEventsList;
-    return monthImportantEventsList.filter((e) => e.category === eventsFilterCategory);
-  }, [monthImportantEventsList, eventsFilterCategory]);
 
   // List of Moon Phases & Fasting Days with compact, smart date numbers
   const moonAndFastingList = React.useMemo(() => {
@@ -778,10 +767,16 @@ export default function CalendarPage() {
               }`}
               title="முக்கிய நாட்கள் பட்டியல்"
             >
-              <Sparkles className="w-3 h-3 text-amber-500" />
+              <Sparkles className={`w-3 h-3 ${activeTab === "important_days" ? "text-emerald-200" : "text-emerald-700"}`} />
               <span>முக்கிய நாட்கள்</span>
               {monthImportantEventsList.length > 0 && (
-                <span className="px-1 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black">
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                    activeTab === "important_days"
+                      ? "bg-white text-emerald-950"
+                      : "bg-emerald-100 text-emerald-900 border border-emerald-300/70"
+                  }`}
+                >
                   {monthImportantEventsList.length}
                 </span>
               )}
@@ -796,7 +791,8 @@ export default function CalendarPage() {
         >
           {MONTH_PICKER_DATA.map((mItem, mIdx) => {
             const isSelectedMonth = currentMonth === mIdx;
-            const eventsCount = yearMonthEventsCounts[mIdx] || 0;
+            const mKey = `${currentYear}-${String(mItem.num).padStart(2, "0")}`;
+            const bookingsCount = filteredBookings.filter((b) => b.date.startsWith(mKey)).length;
 
             return (
               <button
@@ -822,13 +818,13 @@ export default function CalendarPage() {
                 <span
                   className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full leading-none ${
                     isSelectedMonth
-                      ? "bg-amber-400 text-slate-950"
-                      : eventsCount > 0
-                      ? "bg-amber-100 text-amber-900 border border-amber-300/60"
+                      ? "bg-white text-emerald-950 shadow-2xs"
+                      : bookingsCount > 0
+                      ? "bg-emerald-100 text-emerald-900 border border-emerald-300/80"
                       : "bg-slate-100 text-slate-400"
                   }`}
                 >
-                  ⭐ {eventsCount}
+                  {bookingsCount}
                 </span>
               </button>
             );
@@ -1290,6 +1286,11 @@ export default function CalendarPage() {
                           <span className="truncate">{item.name}</span>
                           {item.icon && <span className="shrink-0">{item.icon}</span>}
                         </span>
+                        {item.isGovtHoliday && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 shrink-0 ml-auto">
+                            🏖️ விடுமுறை
+                          </span>
+                        )}
                       </button>
                     ))
                   )}
@@ -1352,218 +1353,146 @@ export default function CalendarPage() {
       {/* 4. MODE 2: MONTH-WISE IMPORTANT DAYS & FESTIVALS VIEW (முக்கிய நாட்கள்) */}
       {/* ========================================================= */}
       {activeTab === "important_days" && (
-        <div className="space-y-3.5 animate-in fade-in duration-200">
-          {/* Header Card */}
-          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-sm space-y-3.5">
-            <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100 flex-wrap">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shadow-xs">
-                  <Sparkles className="w-5 h-5 text-amber-200" />
-                </div>
-                <div>
-                  <h3 className="font-black text-sm sm:text-base text-slate-900 leading-tight">
-                    மாத முக்கிய விசேஷங்கள் &amp; விரதங்கள்
-                  </h3>
-                  <p className="text-[11px] font-bold text-emerald-800 mt-0.5">
-                    {monthNamesEn[currentMonth]} {currentYear} • {dualTamilMonthTa} ({selectedTamilInfo.tamilYear} வருடம்)
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-3 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-950 text-xs font-black shrink-0">
-                ⭐ {monthImportantEventsList.length} முக்கிய நாட்கள்
-              </div>
+        <div className="space-y-3 animate-in fade-in duration-200">
+          {/* Subheader info for the selected month */}
+          <div className="flex items-center justify-between px-1.5 py-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-base">⭐</span>
+              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                {monthNamesEn[currentMonth]} {currentYear} முக்கிய விசேஷங்கள்
+              </h3>
             </div>
-
-            {/* Category Filter Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 select-none">
-              {[
-                { id: "ALL", label: "அனைத்தும்", count: monthImportantEventsList.length, icon: "📅" },
-                { id: "MUHURTHAM", label: "சுப முகூர்த்தம்", count: muhurthamCount, icon: "💍" },
-                { id: "MOON", label: "பௌர்ணமி / அமாவாசை", count: moonCount, icon: "🌕" },
-                { id: "VRATAM", label: "விரத தினங்கள்", count: vratamCount, icon: "🔱" },
-                { id: "FESTIVAL", label: "பண்டிகைகள்", count: festivalCount, icon: "⭐" },
-              ].map((cat) => {
-                const isActive = eventsFilterCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setEventsFilterCategory(cat.id as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap shrink-0 active:scale-95 cursor-pointer ${
-                      isActive
-                        ? "bg-gradient-to-r from-emerald-900 to-emerald-950 text-white shadow-xs ring-1 ring-emerald-700"
-                        : "bg-slate-100 hover:bg-slate-200/80 text-slate-700"
-                    }`}
-                  >
-                    <span>{cat.icon}</span>
-                    <span>{cat.label}</span>
-                    <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                        isActive
-                          ? "bg-amber-400 text-slate-950"
-                          : "bg-white text-slate-600 border border-slate-200/80"
-                      }`}
-                    >
-                      {cat.count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+              🌾 {dualTamilMonthTa}
+            </span>
           </div>
 
-          {/* Events List */}
-          {displayedImportantEvents.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-300 space-y-3 shadow-xs">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-3xl shadow-inner">
-                ✨
-              </div>
+          {/* 2-Column Responsive List Grid (Exact match of img -2) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {/* Left Card: முக்கிய நாட்கள் */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
               <div>
-                <h4 className="font-bold text-base text-slate-900">
-                  இப்பிரிவில் முக்கிய தினங்கள் ஏதுமில்லை
-                </h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                  தேர்ந்தெடுத்த பிரிவில் இந்நாள்கள் இல்லை. &apos;அனைத்தும்&apos; என்பதைத் தேர்ந்தெடுத்துப் பார்க்கவும்.
-                </p>
-              </div>
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEventsFilterCategory("ALL")}
-                  className="px-4 py-2 bg-emerald-900 hover:bg-emerald-950 text-white rounded-xl text-xs font-bold active:scale-95 transition cursor-pointer"
-                >
-                  அனைத்து நாட்களையும் காட்டு
-                </button>
+                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-2xs">
+                      <CalendarDays className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      முக்கிய நாட்கள்
+                    </h4>
+                  </div>
+                  <span className="text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                    {monthImportantEventsList.length} விசேஷங்கள்
+                  </span>
+                </div>
+
+                <div className="divide-y divide-gray-50 max-h-[520px] overflow-y-auto pr-1 space-y-0.5 mt-1.5 scrollbar-thin">
+                  {monthImportantEventsList.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-slate-400 font-medium">
+                      இம்மாதத்தில் சிறப்பு நாட்கள் ஏதுமில்லை
+                    </div>
+                  ) : (
+                    monthImportantEventsList.map((item, idx) => (
+                      <button
+                        key={`${item.dateStr}-${item.name}-${idx}`}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDate(item.dateStr);
+                          setActiveTab("calendar");
+                          if (typeof window !== "undefined") {
+                            window.scrollTo({ top: 360, behavior: "smooth" });
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between py-2 px-1.5 rounded-lg text-left transition group cursor-pointer ${
+                          selectedDate === item.dateStr
+                            ? "bg-emerald-50/90 text-slate-950 font-bold"
+                            : "hover:bg-slate-50 text-slate-800"
+                        }`}
+                        title="காலண்டரில் பார்க்க தொடுக்கவும்"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-black text-red-600 text-xs sm:text-sm w-6 shrink-0 tracking-tight">
+                            {String(item.day).padStart(2, "0")}
+                          </span>
+                          <span className="text-slate-300 font-bold">-</span>
+                          <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-900 flex items-center gap-1.5 truncate">
+                            <span className="truncate">{item.name}</span>
+                            {item.icon && <span className="shrink-0">{item.icon}</span>}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                          {item.isGovtHoliday && (
+                            <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                              🏖️ விடுமுறை
+                            </span>
+                          )}
+                          {item.category === "MUHURTHAM" && (
+                            <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              💍 முகூர்த்தம்
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="space-y-2.5">
-              {displayedImportantEvents.map((event, idx) => {
-                const isDateToday = event.dateStr === todayStr;
-                const dParts = event.dateStr.split("-").map(Number);
-                const dObj = new Date(dParts[0], dParts[1] - 1, dParts[2]);
-                const dayNameEn = dObj.toLocaleDateString("en-US", { weekday: "short" });
-                const dayMonthEn = dObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-                const dayBookings = filteredBookings.filter((b) => b.date === event.dateStr);
 
-                return (
-                  <div
-                    key={`${event.dateStr}-${event.name}-${idx}`}
-                    className={`bg-white rounded-2xl border transition hover:shadow-xs p-3.5 space-y-2.5 ${
-                      isDateToday
-                        ? "border-amber-400 bg-amber-500/5 shadow-2xs"
-                        : event.category === "MUHURTHAM"
-                        ? "border-emerald-300 hover:border-emerald-500"
-                        : "border-slate-200/90 hover:border-amber-300"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      {/* Left: Date Circle/Box */}
-                      <div className="flex items-start gap-3">
-                        <div
-                          className={`w-11 h-11 rounded-2xl flex flex-col items-center justify-center font-black text-xs shrink-0 shadow-2xs ${
-                            isDateToday
-                              ? "bg-amber-500 text-white"
-                              : event.category === "MUHURTHAM"
-                              ? "bg-emerald-800 text-white"
-                              : "bg-slate-900 text-white"
-                          }`}
-                        >
-                          <span className="text-[15px] leading-none">{event.day}</span>
-                          <span className="text-[9px] uppercase leading-none opacity-85 mt-0.5">{dayNameEn}</span>
-                        </div>
+            {/* Right Card: சந்திர நிலைகள் & விரத தினங்கள் */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
+              <div>
+                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base leading-none">🌙</span>
+                    <h4 className="font-extrabold text-sm text-slate-900">
+                      சந்திர நிலைகள்
+                    </h4>
+                  </div>
+                  <span className="text-xs font-bold text-purple-800">
+                    விரத தினங்கள்
+                  </span>
+                </div>
 
-                        {/* Center: Details */}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-1.5">
-                              <span>{event.icon}</span>
-                              <span>{event.name}</span>
-                            </h4>
-
-                            {isDateToday && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider">
-                                Today
-                              </span>
-                            )}
-
-                            {event.category === "MUHURTHAM" && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-900 text-[9.5px] font-bold border border-emerald-300">
-                                💍 சுப முகூர்த்தம்
-                              </span>
-                            )}
-                            {event.category === "MOON" && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-900 text-[9.5px] font-bold border border-purple-200">
-                                🌕 பௌர்ணமி / அமாவாசை
-                              </span>
-                            )}
-                            {event.category === "VRATAM" && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-900 text-[9.5px] font-bold border border-amber-300/80">
-                                🔱 விரதம்
-                              </span>
-                            )}
-                            {event.category === "FESTIVAL" && (
-                              <span className="px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-900 text-[9.5px] font-bold border border-rose-200">
-                                ⭐ பண்டிகை
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Tamil Solar Date */}
-                          <div className="text-xs font-bold text-amber-900 mt-1 flex items-center gap-1.5">
-                            <span>🌾 {event.tamilDate}</span>
-                            <span className="text-slate-400 font-normal">•</span>
-                            <span className="text-slate-600 font-semibold">{dayMonthEn} {dParts[0]}</span>
-                          </div>
-
-                          {/* Tithi and Nakshatra */}
-                          <div className="text-[11px] text-slate-600 font-medium flex items-center gap-2 mt-1 flex-wrap">
-                            {event.tithi && (
-                              <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70">
-                                திதி: <strong className="text-slate-900">{event.tithi}</strong>
-                              </span>
-                            )}
-                            {event.nakshatra && (
-                              <span className="bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200/70">
-                                நட்சத்திரம்: <strong className="text-slate-900">{event.nakshatra}</strong>
-                              </span>
-                            )}
-                            {dayBookings.length > 0 && (
-                              <span className="bg-amber-100/80 text-amber-950 px-2 py-0.5 rounded-md border border-amber-300 font-bold">
-                                🔥 {dayBookings.length} {dayBookings.length === 1 ? "பூஜை பதிவு" : "பூஜைகள்"}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                <div className="divide-y divide-gray-50 space-y-0.5 mt-1.5 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
+                  {moonAndFastingList.map((item) => (
+                    <div
+                      key={item.title}
+                      className="flex items-center justify-between py-2 px-1.5 text-xs rounded-lg hover:bg-slate-50 transition"
+                    >
+                      <div className="flex items-center gap-2 text-slate-800 font-semibold">
+                        <span className="text-sm leading-none">{item.icon}</span>
+                        <span>{item.title}</span>
                       </div>
 
-                      {/* Right: Quick Action Button */}
-                      <div className="shrink-0 flex items-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedDate(event.dateStr);
-                            setActiveTab("calendar");
-                            if (typeof window !== "undefined") {
-                              window.scrollTo({ top: 360, behavior: "smooth" });
-                            }
-                          }}
-                          className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
-                          title="காலண்டரில் இந்நாளின் நல்ல நேரம் பார்க்க"
-                        >
-                          <CalendarIcon className="w-3.5 h-3.5 text-emerald-700" />
-                          <span className="hidden sm:inline">காலண்டரில் பார்க்க</span>
-                          <span className="sm:hidden">பார்க்க</span>
-                          <ChevronRight className="w-3 h-3 text-emerald-700" />
-                        </button>
+                      <div className="flex items-center gap-1 text-slate-900 font-extrabold text-xs">
+                        {item.dates.map((dObj, dIdx) => (
+                          <button
+                            key={dObj.dateStr}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDate(dObj.dateStr);
+                              setActiveTab("calendar");
+                              if (typeof window !== "undefined") {
+                                window.scrollTo({ top: 360, behavior: "smooth" });
+                              }
+                            }}
+                            className={`hover:text-emerald-700 transition px-1 py-0.5 rounded hover:bg-emerald-50 cursor-pointer ${
+                              selectedDate === dObj.dateStr ? "text-emerald-800 underline decoration-2 font-black" : ""
+                            }`}
+                            title={`தேதி: ${dObj.dayNum} (காலண்டரில் பார்க்க)`}
+                          >
+                            {dObj.dayNum}{dIdx < item.dates.length - 1 ? "," : ""}
+                          </button>
+                        ))}
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
