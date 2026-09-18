@@ -34,8 +34,8 @@ export function formatPoojaItemsWhatsAppMessage(
     })
     .join("\n");
 
-  return `🙏 *${booking.poojaEnglishName}*
-
+  return `🙏 *${booking.poojaEnglishName || booking.poojaTamilName || "Pooja Ceremony"}*
+${booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName ? `(${booking.poojaTamilName})\n` : ""}
 📅 *${tamilInfo.formattedDualDate}*
 🕐 Time: *${booking.startTime}*
 👤 Devotee: *${booking.customerName || "Customer"}*
@@ -63,7 +63,8 @@ export function formatBookingConfirmationWhatsAppMessage(
 
   return `🙏 *Booking Confirmed*
 
-🪔 *${booking.poojaEnglishName}*
+🪔 *${booking.poojaEnglishName || booking.poojaTamilName || "Pooja Ceremony"}*
+${booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName ? `(${booking.poojaTamilName})\n` : ""}
 
 📅 Date: *${tamilInfo.formattedDualDate}* (${tamilInfo.dayOfWeekTa})
 🕐 Time: *${booking.startTime}*

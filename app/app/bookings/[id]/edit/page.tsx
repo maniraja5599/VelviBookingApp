@@ -177,7 +177,7 @@ export default function EditBookingPage() {
           >
             {poojas.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.englishName}
+                {p.tamilName || p.englishName} {p.tamilName && p.englishName && p.tamilName !== p.englishName ? `(${p.englishName})` : ""}
               </option>
             ))}
           </select>

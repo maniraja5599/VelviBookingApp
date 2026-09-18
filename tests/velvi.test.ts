@@ -988,5 +988,49 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(store.getPoojas(bizId).length).toBeGreaterThan(0);
     expect(store.payments.length).toBeGreaterThan(0);
   });
+
+  // TEST CASE 37: Optional Bilingual Names (Either English OR Tamil is sufficient)
+  it("Test 37: Pooja can be created with ONLY Tamil name or ONLY English name without requiring both", () => {
+    const bizId = "biz-venkateswara-01";
+
+    // 1. Create with only Tamil name (no English name)
+    const tamilOnlyPooja = store.createPooja({
+      businessId: bizId,
+      tamilName: "சுதர்சன ஹோமம் மற்றும் அர்ச்சனை",
+      basePrice: 6500,
+    });
+    expect(tamilOnlyPooja.id).toBeDefined();
+    expect(tamilOnlyPooja.tamilName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை");
+    expect(tamilOnlyPooja.englishName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை"); // Graceful fallback
+
+    // 2. Create with only English name (no Tamil name)
+    const englishOnlyPooja = store.createPooja({
+      businessId: bizId,
+      englishName: "Special Dhanvantri Pooja",
+      basePrice: 5500,
+    });
+    expect(englishOnlyPooja.id).toBeDefined();
+    expect(englishOnlyPooja.englishName).toBe("Special Dhanvantri Pooja");
+    expect(englishOnlyPooja.tamilName).toBe("Special Dhanvantri Pooja"); // Graceful fallback
+
+    // 3. Booking creation with only one name
+    const booking = store.createBooking({
+      businessId: bizId,
+      customerId: "c-1",
+      poojaId: tamilOnlyPooja.id,
+      poojaTamilName: "சுதர்சன ஹோமம் மற்றும் அர்ச்சனை",
+      date: "2026-09-25",
+      startTime: "09:00 AM",
+      location: "Namakkal",
+      totalAmount: 6500,
+      advanceAmount: 2000,
+      balanceAmount: 4500,
+      paymentStatus: "PARTIALLY_PAID",
+      status: "CONFIRMED",
+    });
+    expect(booking.id).toBeDefined();
+    expect(booking.poojaTamilName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை");
+    expect(booking.poojaEnglishName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை");
+  });
 });
 

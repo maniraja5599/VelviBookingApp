@@ -73,9 +73,12 @@ export default function SuperAdminDashboardPage() {
 
   const handleSavePlatformSettings = (e: React.FormEvent) => {
     e.preventDefault();
+    const finalAppName = appName.trim() || appTamilName.trim() || "Velvi";
+    const finalAppTamilName = appTamilName.trim() || appName.trim() || "வேள்வி";
+
     db.updatePlatformSettings({
-      appName,
-      appTamilName,
+      appName: finalAppName,
+      appTamilName: finalAppTamilName,
       tagline,
       taglineTamil,
       logoUrl: customLogoUrl,
@@ -329,11 +332,10 @@ export default function SuperAdminDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-700/50">
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                App Name (English) *
+                App Name (English)
               </label>
               <input
                 type="text"
-                required
                 value={appName}
                 onChange={(e) => setAppName(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
@@ -342,16 +344,19 @@ export default function SuperAdminDashboardPage() {
 
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">
-                App Name (Tamil - தமிழ்) *
+                App Name (Tamil - தமிழ்)
               </label>
               <input
                 type="text"
-                required
                 value={appTamilName}
                 onChange={(e) => setAppTamilName(e.target.value)}
                 className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
               />
             </div>
+
+            <p className="text-[10px] text-amber-400/80 font-medium sm:col-span-2">
+              💡 ஏதேனும் ஒரு பெயர் உள்ளிடலாம் (Either English or Tamil name is sufficient).
+            </p>
 
             <div>
               <label className="text-xs font-bold text-gray-300 block mb-1">

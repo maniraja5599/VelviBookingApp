@@ -254,9 +254,9 @@ export default function BookingDetailPage() {
                 Pooja Ceremony (ஹோமம் / பூஜை)
               </span>
               <h2 className="text-xl font-black text-white mt-0.5 leading-tight">
-                {booking.poojaEnglishName}
+                {booking.poojaEnglishName || booking.poojaTamilName}
               </h2>
-              {booking.poojaTamilName && booking.poojaTamilName !== booking.poojaEnglishName && (
+              {booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName && (
                 <div className="text-xs font-bold text-amber-100 mt-0.5">
                   {booking.poojaTamilName}
                 </div>

@@ -172,7 +172,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     if (!cleanQuery) return [];
     return poojas.filter(
       (p) =>
-        p.englishName.toLowerCase().includes(cleanQuery) ||
+        p.englishName?.toLowerCase().includes(cleanQuery) ||
         (p.tamilName && p.tamilName.toLowerCase().includes(cleanQuery)) ||
         (p.description && p.description.toLowerCase().includes(cleanQuery))
     );
@@ -349,7 +349,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setQuery(p.englishName)}
+                    onClick={() => setQuery(p.englishName || p.tamilName || "")}
                     className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
                   >
                     <Flame className="w-3 h-3 text-amber-700" />
@@ -604,9 +604,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-orange-950">
-                                  {p.englishName}
+                                  {p.englishName || p.tamilName}
                                 </h4>
-                                {p.tamilName && (
+                                {p.tamilName && p.tamilName !== p.englishName && p.englishName && (
                                   <span className="text-xs font-bold text-amber-800">
                                     ({p.tamilName})
                                   </span>

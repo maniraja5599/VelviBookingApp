@@ -382,8 +382,8 @@ export default function BookingsListPage() {
                               </div>
                               <p className="text-xs font-bold text-amber-900 mt-0.5 truncate flex items-center gap-1">
                                 <span>🪔</span>
-                                <span>{b.poojaEnglishName}</span>
-                                {b.poojaTamilName && (
+                                <span>{b.poojaEnglishName || b.poojaTamilName}</span>
+                                {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName && (
                                   <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
                                 )}
                               </p>
@@ -530,7 +530,7 @@ export default function BookingsListPage() {
                       <span>{b.customerName}</span>
                     </h3>
                     <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
-                      🪔 {b.poojaEnglishName} {b.poojaTamilName && `(${b.poojaTamilName})`}
+                      🪔 {b.poojaEnglishName || b.poojaTamilName} {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName ? `(${b.poojaTamilName})` : ""}
                     </p>
                   </div>
 

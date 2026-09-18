@@ -381,14 +381,16 @@ export default function PoojasCataloguePage() {
   };
 
   const handleAddItemToForm = () => {
-    if (!newItemEnglish.trim()) {
+    if (!newItemEnglish.trim() && !newItemTamil.trim()) {
       return;
     }
+    const finalItemEn = newItemEnglish.trim() || newItemTamil.trim();
+    const finalItemTa = newItemTamil.trim() || newItemEnglish.trim();
     const item: PoojaItemTemplate = {
       id: `item-${Date.now()}-${formItems.length + 1}`,
       poojaId: editingPoojaId || "",
-      itemEnglishName: newItemEnglish.trim(),
-      itemTamilName: newItemTamil.trim() || newItemEnglish.trim(),
+      itemEnglishName: finalItemEn,
+      itemTamilName: finalItemTa,
       quantity: Number(newItemQty) || 1,
       unit: newItemUnit,
       sortOrder: formItems.length + 1,
@@ -408,15 +410,18 @@ export default function PoojasCataloguePage() {
     e.preventDefault();
     setFormError("");
 
-    if (!formEnglishName.trim()) {
-      setFormError("Pooja English Name is required.");
+    if (!formEnglishName.trim() && !formTamilName.trim()) {
+      setFormError("ஏதேனும் ஒரு பெயர் உள்ளிடவும் (English or Tamil Name is required)");
       return;
     }
 
+    const finalEn = formEnglishName.trim() || formTamilName.trim();
+    const finalTa = formTamilName.trim() || formEnglishName.trim();
+
     if (isEditing && editingPoojaId) {
       const updated = db.updatePooja(editingPoojaId, {
-        englishName: formEnglishName.trim(),
-        tamilName: formTamilName.trim() || formEnglishName.trim(),
+        englishName: finalEn,
+        tamilName: finalTa,
         description: formDescription.trim(),
         durationMinutes: Number(formDuration) || 120,
         basePrice: Number(formBasePrice) || 0,
@@ -429,14 +434,14 @@ export default function PoojasCataloguePage() {
           setSelectedPooja(updated);
         }
         setShowFormModal(false);
-        setStatusMessage(`Updated "${updated.englishName}" successfully!`);
+        setStatusMessage(`Updated "${updated.englishName || updated.tamilName}" successfully!`);
         setTimeout(() => setStatusMessage(""), 4000);
       }
     } else {
       const created = db.createPooja({
         businessId,
-        englishName: formEnglishName.trim(),
-        tamilName: formTamilName.trim() || formEnglishName.trim(),
+        englishName: finalEn,
+        tamilName: finalTa,
         description: formDescription.trim(),
         durationMinutes: Number(formDuration) || 120,
         basePrice: Number(formBasePrice) || 0,
@@ -445,7 +450,7 @@ export default function PoojasCataloguePage() {
 
       setPoojas([...db.getPoojas(businessId)]);
       setShowFormModal(false);
-      setStatusMessage(`Created "${created.englishName}" successfully!`);
+      setStatusMessage(`Created "${created.englishName || created.tamilName}" successfully!`);
       setTimeout(() => setStatusMessage(""), 4000);
     }
   };
@@ -763,34 +768,38 @@ export default function PoojasCataloguePage() {
                 </div>
               </div>
 
-              {/* Names */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">
-                    English Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ganapathi Homam"
-                    value={formEnglishName}
-                    onChange={(e) => setFormEnglishName(e.target.value)}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                    autoFocus
-                  />
+              {/* Names: Either English or Tamil is sufficient */}
+              <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-velvi-brown block mb-1">
+                      English Name (ஆங்கிலப் பெயர்)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ganapathi Homam"
+                      value={formEnglishName}
+                      onChange={(e) => setFormEnglishName(e.target.value)}
+                      className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-velvi-brown block mb-1">
+                      Tamil Name (தமிழ்ப் பெயர்)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. கணபதி ஹோமம்"
+                      value={formTamilName}
+                      onChange={(e) => setFormTamilName(e.target.value)}
+                      className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-velvi-brown block mb-1">
-                    Tamil Name (பூஜை பெயர்)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. கணபதி ஹோமம்"
-                    value={formTamilName}
-                    onChange={(e) => setFormTamilName(e.target.value)}
-                    className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                  />
-                </div>
+                <p className="text-[10px] text-amber-800/80 font-medium">
+                  💡 ஏதேனும் ஒரு பெயர் இருந்தால் போதும் (Either English or Tamil name is sufficient).
+                </p>
               </div>
 
               {/* Price with Quick Chips */}
@@ -1110,7 +1119,7 @@ export default function PoojasCataloguePage() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-[10px] font-bold text-velvi-brown block mb-0.5">
-                        பொருள் பெயர் (தமிழ்) *
+                        பொருள் பெயர் (தமிழ்)
                       </label>
                       <input
                         type="text"
@@ -1133,6 +1142,9 @@ export default function PoojasCataloguePage() {
                       />
                     </div>
                   </div>
+                  <p className="text-[9.5px] text-amber-800/80 font-medium">
+                    (தமிழ் அல்லது ஆங்கிலம் — ஏதேனும் ஒரு பெயர் போதுமானது / Either is sufficient)
+                  </p>
 
                   <div className="flex items-center gap-2">
                     <div className="w-24">

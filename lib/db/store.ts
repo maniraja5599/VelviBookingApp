@@ -825,8 +825,8 @@ export class VelviDatabaseStore {
       customerMobile: params.customerMobile,
       customerAddress: params.customerAddress,
       poojaId: params.poojaId,
-      poojaEnglishName: params.poojaEnglishName,
-      poojaTamilName: params.poojaTamilName,
+      poojaEnglishName: params.poojaEnglishName || params.poojaTamilName,
+      poojaTamilName: params.poojaTamilName || params.poojaEnglishName,
       assignedIyerId: params.assignedIyerId,
       assignedIyerName: params.assignedIyerName,
       date: params.date,
@@ -856,7 +856,7 @@ export class VelviDatabaseStore {
   // -------------------------------------------------------------
   public createPooja(params: {
     businessId: string;
-    englishName: string;
+    englishName?: string;
     tamilName?: string;
     description?: string;
     durationMinutes?: number;
@@ -864,11 +864,14 @@ export class VelviDatabaseStore {
     procedure?: string;
     items?: PoojaItemTemplate[];
   }): Pooja {
+    const finalEn = (params.englishName?.trim() || params.tamilName?.trim() || "Pooja");
+    const finalTa = (params.tamilName?.trim() || params.englishName?.trim() || "பூஜை");
+
     const newPooja: Pooja = {
       id: `p-${Date.now()}`,
       businessId: params.businessId,
-      englishName: params.englishName.trim(),
-      tamilName: params.tamilName?.trim() || params.englishName.trim(),
+      englishName: finalEn,
+      tamilName: finalTa,
       description: params.description?.trim() || "",
       durationMinutes: Number(params.durationMinutes) || 120,
       basePrice: Number(params.basePrice) || 0,

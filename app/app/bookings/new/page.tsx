@@ -620,12 +620,15 @@ _Velvi Booking App_`;
   // Handle Quick Add Pooja
   const handleSavePoojaModal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!poojaModalNameEn.trim()) return;
+    if (!poojaModalNameEn.trim() && !poojaModalNameTa.trim()) return;
+
+    const finalEn = poojaModalNameEn.trim() || poojaModalNameTa.trim();
+    const finalTa = poojaModalNameTa.trim() || poojaModalNameEn.trim();
 
     const created = db.createPooja({
       businessId,
-      englishName: poojaModalNameEn.trim(),
-      tamilName: poojaModalNameTa.trim() || poojaModalNameEn.trim(),
+      englishName: finalEn,
+      tamilName: finalTa,
       basePrice: Number(poojaModalPrice) || 5000,
       durationMinutes: Number(poojaModalDuration) || 120,
       description: poojaModalDesc.trim(),
@@ -652,7 +655,7 @@ _Velvi Booking App_`;
     setSamagriItems((prev) =>
       prev.map((item) => {
         if (item.id === id) {
-          const nextQty = Math.max(1, (Number(item.quantity) || 1) + delta);
+          const nextQty = Math.max(1, item.quantity + delta);
           return { ...item, quantity: nextQty };
         }
         return item;
@@ -676,15 +679,18 @@ _Velvi Booking App_`;
   // Add Custom Samagri Item
   const handleAddCustomSamagri = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSamagriNameEn.trim()) return;
+    if (!newSamagriNameEn.trim() && !newSamagriNameTa.trim()) return;
+
+    const finalEn = newSamagriNameEn.trim() || newSamagriNameTa.trim();
+    const finalTa = newSamagriNameTa.trim() || newSamagriNameEn.trim();
 
     setSamagriItems((prev) => [
       ...prev,
       {
         id: `custom-${Date.now()}`,
         bookingId: "",
-        itemEnglishName: newSamagriNameEn.trim(),
-        itemTamilName: newSamagriNameTa.trim() || newSamagriNameEn.trim(),
+        itemEnglishName: finalEn,
+        itemTamilName: finalTa,
         quantity: Number(newSamagriQty) || 1,
         unit: newSamagriUnit || "units",
         isChecked: true,
@@ -768,8 +774,8 @@ _Velvi Booking App_`;
         customerMobile: selectedCustomer?.mobile || "",
         customerAddress: selectedCustomer?.address || "",
         poojaId,
-        poojaEnglishName: selectedPooja?.englishName || "Pooja",
-        poojaTamilName: selectedPooja?.tamilName || "",
+        poojaEnglishName: selectedPooja?.englishName || selectedPooja?.tamilName || "Pooja",
+        poojaTamilName: selectedPooja?.tamilName || selectedPooja?.englishName || "பூஜை",
         date,
         startTime: selectedTime,
         endTime: selectedTime,
@@ -1549,12 +1555,11 @@ _Velvi Booking App_`;
                 className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2"
               >
                 <span className="text-[11px] font-bold text-slate-700 block">
-                  + Add Custom Samagri Item (புதிய பொருள் சேர்க்க):
+                  + Add Custom Samagri Item (புதிய பொருள் சேர்க்க — ஏதேனும் ஒரு பெயர் போதுமானது):
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <input
                     type="text"
-                    required
                     placeholder="English Name (e.g. Honey)"
                     value={newSamagriNameEn}
                     onChange={(e) => setNewSamagriNameEn(e.target.value)}
@@ -2768,11 +2773,10 @@ _Velvi Booking App_`;
               <form id="quickPoojaForm" onSubmit={handleSavePoojaModal} className="space-y-3.5">
                 <div>
                   <label className="text-xs font-bold text-slate-700 block mb-1">
-                    Pooja English Name * (பூஜை ஆங்கிலப் பெயர்)
+                    Pooja English Name (பூஜை ஆங்கிலப் பெயர்)
                   </label>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. Dhanvantri Homam"
                     value={poojaModalNameEn}
                     onChange={(e) => setPoojaModalNameEn(e.target.value)}
@@ -2791,6 +2795,9 @@ _Velvi Booking App_`;
                     onChange={(e) => setPoojaModalNameTa(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs"
                   />
+                  <p className="text-[10px] text-emerald-800 font-medium mt-1">
+                    💡 ஏதேனும் ஒரு பெயர் போதுமானது (Either English or Tamil name is enough).
+                  </p>
                 </div>
 
                 <div>
