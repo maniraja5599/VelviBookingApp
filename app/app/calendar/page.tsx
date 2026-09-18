@@ -89,8 +89,16 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState<number>(new Date().getMonth()); // 0-11
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
-  const allBookings = React.useMemo(() => db.getBookings(businessId), [businessId]);
-  const members = React.useMemo(() => db.getMembers(businessId), [businessId]);
+  const [dbVersion, setDbVersion] = React.useState(0);
+
+  React.useEffect(() => {
+    const handler = () => setDbVersion((v) => v + 1);
+    window.addEventListener("velvi:db-change", handler);
+    return () => window.removeEventListener("velvi:db-change", handler);
+  }, []);
+
+  const allBookings = React.useMemo(() => db.getBookings(businessId), [businessId, dbVersion]);
+  const members = React.useMemo(() => db.getMembers(businessId), [businessId, dbVersion]);
   const ownerMember = React.useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
 
   // Filter bookings based on Iyer selection

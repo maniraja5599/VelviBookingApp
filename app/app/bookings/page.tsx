@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
@@ -118,8 +118,16 @@ export default function BookingsListPage() {
   const [viewMode, setViewMode] = useState<"timeline" | "list">("timeline");
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
-  const allBookings = useMemo(() => db.getBookings(businessId), [businessId]);
-  const members = useMemo(() => db.getMembers(businessId), [businessId]);
+  const [dbVersion, setDbVersion] = useState(0);
+
+  useEffect(() => {
+    const handler = () => setDbVersion((v) => v + 1);
+    window.addEventListener("velvi:db-change", handler);
+    return () => window.removeEventListener("velvi:db-change", handler);
+  }, []);
+
+  const allBookings = useMemo(() => db.getBookings(businessId), [businessId, dbVersion]);
+  const members = useMemo(() => db.getMembers(businessId), [businessId, dbVersion]);
   const ownerMember = useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
 
   const filteredBookings = useMemo(() => {

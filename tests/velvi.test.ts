@@ -954,4 +954,39 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(customer2.id).toBeDefined();
     expect(customer2.mobile).toBe("");
   });
+
+  // TEST CASE 35: Clear All Data
+  it("Test 35: store.clearAllData() wipes out bookings, customers, payments while keeping user accounts", () => {
+    const bizId = "biz-venkateswara-01";
+    expect(store.getBookings(bizId).length).toBeGreaterThan(0);
+    expect(store.getCustomers(bizId).length).toBeGreaterThan(0);
+    expect(store.getPoojas(bizId).length).toBeGreaterThan(0);
+
+    store.clearAllData();
+
+    expect(store.getBookings(bizId).length).toBe(0);
+    expect(store.getCustomers(bizId).length).toBe(0);
+    expect(store.getPoojas(bizId).length).toBe(0);
+    expect(store.payments.length).toBe(0);
+    expect(store.settlements.length).toBe(0);
+
+    // Users and businesses should remain intact so session isn't lost
+    expect(store.users.length).toBeGreaterThan(0);
+    expect(store.businesses.length).toBeGreaterThan(0);
+  });
+
+  // TEST CASE 36: Load All Data
+  it("Test 36: store.loadAllData() restores full sample data after clear", () => {
+    const bizId = "biz-venkateswara-01";
+    store.clearAllData();
+    expect(store.getBookings(bizId).length).toBe(0);
+
+    store.loadAllData();
+
+    expect(store.getBookings(bizId).length).toBeGreaterThan(0);
+    expect(store.getCustomers(bizId).length).toBeGreaterThan(0);
+    expect(store.getPoojas(bizId).length).toBeGreaterThan(0);
+    expect(store.payments.length).toBeGreaterThan(0);
+  });
 });
+

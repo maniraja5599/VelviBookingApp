@@ -222,6 +222,12 @@ export class VelviDatabaseStore {
     },
   };
 
+  constructor() {
+    if (typeof window !== "undefined") {
+      this.loadFromLocalStorage();
+    }
+  }
+
   // -------------------------------------------------------------
   // TENANT ISOLATION: Strict business_id Filtering
   // -------------------------------------------------------------
@@ -777,6 +783,8 @@ export class VelviDatabaseStore {
       createdAt: new Date().toISOString(),
     };
     this.customers.unshift(newCust);
+    this.saveToLocalStorage();
+    this.notifyListeners();
     return newCust;
   }
 
@@ -838,6 +846,8 @@ export class VelviDatabaseStore {
       updatedAt: new Date().toISOString(),
     };
     this.bookings.unshift(newBooking);
+    this.saveToLocalStorage();
+    this.notifyListeners();
     return newBooking;
   }
 
@@ -868,6 +878,8 @@ export class VelviDatabaseStore {
       createdAt: new Date().toISOString(),
     };
     this.poojas.unshift(newPooja);
+    this.saveToLocalStorage();
+    this.notifyListeners();
     return newPooja;
   }
 
@@ -878,6 +890,8 @@ export class VelviDatabaseStore {
     const pooja = this.poojas.find((p) => p.id === poojaId);
     if (!pooja) return null;
     Object.assign(pooja, updates);
+    this.saveToLocalStorage();
+    this.notifyListeners();
     return pooja;
   }
 
@@ -885,7 +899,168 @@ export class VelviDatabaseStore {
     const idx = this.poojas.findIndex((p) => p.id === poojaId);
     if (idx === -1) return false;
     this.poojas.splice(idx, 1);
+    this.saveToLocalStorage();
+    this.notifyListeners();
     return true;
+  }
+
+  // -------------------------------------------------------------
+  // REACTIVITY & PERSISTENCE
+  // -------------------------------------------------------------
+  private listeners: Array<() => void> = [];
+
+  public subscribe(listener: () => void): () => void {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter((l) => l !== listener);
+    };
+  }
+
+  public notifyListeners(): void {
+    this.listeners.forEach((l) => {
+      try {
+        l();
+      } catch (e) {
+        console.error(e);
+      }
+    });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
+  }
+
+  public saveToLocalStorage(): void {
+    if (typeof window === "undefined") return;
+    try {
+      const state = {
+        isCleared: this.bookings.length === 0 && this.customers.length === 0,
+        customers: this.customers,
+        bookings: this.bookings,
+        poojas: this.poojas,
+        members: this.members,
+        settlements: this.settlements,
+        payments: this.payments,
+        auditLogs: this.auditLogs,
+        referrals: this.referrals,
+        referralRewards: this.referralRewards,
+      };
+      localStorage.setItem("velvi_db_state_v2", JSON.stringify(state));
+    } catch (e) {
+      console.error("Failed to save state to localStorage", e);
+    }
+  }
+
+  public loadFromLocalStorage(): boolean {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = localStorage.getItem("velvi_db_state_v2");
+      if (!raw) return false;
+      const state = JSON.parse(raw);
+      if (state) {
+        if (Array.isArray(state.customers)) this.customers = state.customers;
+        if (Array.isArray(state.bookings)) this.bookings = state.bookings;
+        if (Array.isArray(state.poojas)) this.poojas = state.poojas;
+        if (Array.isArray(state.members)) this.members = state.members;
+        if (Array.isArray(state.settlements)) this.settlements = state.settlements;
+        if (Array.isArray(state.payments)) this.payments = state.payments;
+        if (Array.isArray(state.auditLogs)) this.auditLogs = state.auditLogs;
+        if (Array.isArray(state.referrals)) this.referrals = state.referrals;
+        if (Array.isArray(state.referralRewards)) this.referralRewards = state.referralRewards;
+        return true;
+      }
+    } catch (e) {
+      console.error("Failed to load state from localStorage", e);
+    }
+    return false;
+  }
+
+  // -------------------------------------------------------------
+  // DATA MANAGEMENT: CLEAR ALL & LOAD ALL (Point requested)
+  // -------------------------------------------------------------
+  public clearAllData(options?: { keepCatalog?: boolean }): void {
+    this.bookings = [];
+    this.customers = [];
+    this.settlements = [];
+    this.payments = [];
+    this.bookingAssignments = [];
+    this.referrals = [];
+    this.referralRewards = [];
+    this.auditLogs = [];
+    if (!options?.keepCatalog) {
+      this.poojas = [];
+    }
+
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("velvi_booking_draft_v1");
+      } catch (e) {}
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+  }
+
+  public loadAllData(): void {
+    this.bookings = structuredClone(SEED_BOOKINGS);
+    this.customers = structuredClone(SEED_CUSTOMERS);
+    this.poojas = structuredClone(SEED_POOJAS);
+    this.members = structuredClone(SEED_MEMBERS);
+    this.businesses = structuredClone([SEED_BUSINESS]);
+    this.subscriptions = structuredClone([SEED_SUBSCRIPTION]);
+    this.settlements = [
+      {
+        id: "set-01",
+        businessId: "biz-venkateswara-01",
+        iyerId: "m-suresh-02",
+        iyerName: "Suresh Iyer",
+        amount: 30000,
+        paymentMethod: "UPI",
+        reference: "UPI/39482710/Axis",
+        notes: "August full settlement",
+        settlementDate: "2026-09-01",
+        createdAt: "2026-09-01T18:00:00Z",
+      },
+    ];
+    this.payments = [
+      {
+        id: "pay-sub-01",
+        businessId: "biz-venkateswara-01",
+        userId: "u-ravi-iyer-01",
+        orderId: "order_venk_01",
+        gateway: "CASHFREE",
+        gatewayPaymentId: "cf_pay_918237",
+        amount: 499,
+        currency: "INR",
+        status: "SUCCESS",
+        billingCycle: "MONTHLY",
+        paymentMethod: "UPI",
+        createdAt: "2026-08-31T08:30:00Z",
+      },
+    ];
+    this.referrals = [
+      {
+        id: "ref-01",
+        referrerUserId: "u-ravi-iyer-01",
+        referrerName: "Ravi Iyer",
+        referrerBusinessId: "biz-venkateswara-01",
+        referralCode: "VELVI-RAVI123",
+        refereeUserId: "u-suresh-iyer-02",
+        refereeName: "Suresh",
+        refereeBusinessId: "biz-suresh-99",
+        status: "REWARDED",
+        rewardDaysGranted: 30,
+        createdAt: "2026-08-15T10:00:00Z",
+        qualifiedAt: "2026-08-18T12:00:00Z",
+        rewardedAt: "2026-08-18T12:00:00Z",
+      },
+    ];
+    this.referralRewards = [];
+    this.subscriptionAdjustments = [];
+    this.auditLogs = [];
+
+    if (typeof window !== "undefined") {
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
   }
 }
 

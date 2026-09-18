@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
+import { db } from "@/lib/db/store";
 import Link from "next/link";
 import {
   Building2,
@@ -21,6 +22,12 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
+  Trash2,
+  RefreshCw,
+  AlertTriangle,
+  Database,
+  X,
+  Check,
 } from "lucide-react";
 import { PwaInstallBanner } from "@/components/mobile/PwaInstallBanner";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -31,6 +38,50 @@ import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
 export default function SettingsHubPage() {
   const { currentUser, currentBusiness, subscription, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
+
+  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+
+  // Data management modals and feedback state
+  const [showClearModal, setShowClearModal] = useState(false);
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [dataVersion, setDataVersion] = useState(0);
+
+  // Live Counts
+  const [counts, setCounts] = useState({
+    bookings: db.getBookings(businessId).length,
+    customers: db.getCustomers(businessId).length,
+    poojas: db.getPoojas(businessId).length,
+  });
+
+  useEffect(() => {
+    const updateCounts = () => {
+      setCounts({
+        bookings: db.getBookings(businessId).length,
+        customers: db.getCustomers(businessId).length,
+        poojas: db.getPoojas(businessId).length,
+      });
+      setDataVersion((v) => v + 1);
+    };
+
+    updateCounts();
+    window.addEventListener("velvi:db-change", updateCounts);
+    return () => window.removeEventListener("velvi:db-change", updateCounts);
+  }, [businessId]);
+
+  const handleClearAllData = () => {
+    db.clearAllData();
+    setShowClearModal(false);
+    setToastMessage("All data cleared successfully! Your workspace is completely empty.");
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  const handleLoadSampleData = () => {
+    db.loadAllData();
+    setShowLoadModal(false);
+    setToastMessage("Sample demo data loaded successfully! Full records are ready.");
+    setTimeout(() => setToastMessage(null), 5000);
+  };
 
   const isPro =
     subscription?.status === "ACTIVE" &&
@@ -277,6 +328,81 @@ export default function SettingsHubPage() {
         ))}
       </div>
 
+      {/* ========================================================================= */}
+      {/* DATA & STORAGE CONTROLS (Clear All Data & Load Sample Data)                */}
+      {/* ========================================================================= */}
+      <div className="space-y-2 pt-1">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-[11px] font-bold text-velvi-brown/60 uppercase tracking-wider">
+            Data &amp; Storage Controls / தரவு மேலாண்மை
+          </h3>
+          <span className="text-[10px] font-bold text-slate-500">
+            {counts.bookings} Bookings • {counts.customers} Devotees • {counts.poojas} Poojas
+          </span>
+        </div>
+
+        {/* Action Cards Container */}
+        <div className="bg-white rounded-3xl p-3.5 border border-velvi-gold/20 shadow-sm space-y-2.5">
+          {/* Card 1: Clear All Data (Danger / Wipe Clean) */}
+          <div className="p-3 bg-rose-50/70 border border-rose-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200 mt-0.5">
+                <Trash2 className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-xs text-rose-950 flex items-center gap-1.5">
+                  <span>Clear All Data</span>
+                  <span className="text-[10px] font-bold text-rose-600 bg-rose-100/80 px-1.5 py-0.2 rounded">
+                    அனைத்தையும் அழி
+                  </span>
+                </h4>
+                <p className="text-[11px] text-rose-800/80 mt-0.5 leading-tight">
+                  Permanently erase all bookings, devotees, payments, and custom catalog. Workspace will be completely empty.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowClearModal(true)}
+              className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear All Data</span>
+            </button>
+          </div>
+
+          {/* Card 2: Load All Sample Data (Restore Demo Data) */}
+          <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200 mt-0.5">
+                <RefreshCw className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-xs text-emerald-950 flex items-center gap-1.5">
+                  <span>Load All Sample Data</span>
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded">
+                    மாதிரி தரவை ஏற்று
+                  </span>
+                </h4>
+                <p className="text-[11px] text-emerald-800/80 mt-0.5 leading-tight">
+                  Restore complete demo poojas, September 2026 bookings, devotee directory, and ledgers for testing.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowLoadModal(true)}
+              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Load Sample Data</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Super Admin Portal (ONLY VISIBLE FOR SUPER_ADMIN ROLE) */}
       {currentUser?.role === "SUPER_ADMIN" && (
         <Link
@@ -326,6 +452,154 @@ export default function SettingsHubPage() {
         <LogOut className="w-4 h-4" />
         <span>Sign Out</span>
       </button>
+
+      {/* Toast Notification Banner */}
+      {toastMessage && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 max-w-sm w-[90%] bg-emerald-950 text-white px-4 py-2.5 rounded-2xl shadow-xl border border-emerald-700/80 flex items-center gap-2 text-xs font-bold animate-in fade-in slide-in-from-bottom-2">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="flex-1">{toastMessage}</span>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="p-1 text-slate-400 hover:text-white"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CLEAR ALL DATA WARNING & CONFIRMATION                              */}
+      {/* ========================================================================= */}
+      {showClearModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-rose-200 animate-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200">
+                  <AlertTriangle className="w-5 h-5 text-rose-600" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
+                    Clear All Data?
+                  </h3>
+                  <span className="text-[11px] font-bold text-rose-700">
+                    அனைத்து தரவையும் அழிக்கவா?
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Warning Details Callout */}
+            <div className="bg-rose-50 p-3 rounded-2xl border border-rose-200/90 text-xs text-rose-900 space-y-2">
+              <p className="font-extrabold flex items-center gap-1.5 text-rose-950">
+                <span>⚠️ இந்த செயல் நிரந்தரமானது (Irreversible)</span>
+              </p>
+              <ul className="space-y-1 text-[11px] text-rose-800 list-disc list-inside font-medium leading-tight">
+                <li>அனைத்து முன்பதிவுகளும் ({counts.bookings} bookings) அழிக்கப்படும்.</li>
+                <li>அனைத்து பக்தர்கள் விபரங்களும் ({counts.customers} devotees) நீக்கப்படும்.</li>
+                <li>கட்டணங்கள் மற்றும் நிலுவைத் தொகைகள் ₹0 என மாற்றப்படும்.</li>
+                <li>சேமிக்கப்பட்ட வரைவு (Draft) நீக்கப்படும்.</li>
+              </ul>
+              <p className="text-[10.5px] font-bold text-rose-900/90 pt-1 border-t border-rose-200/70">
+                எந்த தரவும் இருக்காது — முற்றிலும் காலியான புதிய வொர்க்ஸ்பேஸ் கிடைக்கும்.
+              </p>
+            </div>
+
+            {/* Confirmation Buttons */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowClearModal(false)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              >
+                Cancel (ரத்து செய்)
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllData}
+                className="w-full py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Yes, Clear (அழி)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: LOAD SAMPLE DATA CONFIRMATION                                      */}
+      {/* ========================================================================= */}
+      {showLoadModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-emerald-200 animate-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200">
+                  <RefreshCw className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
+                    Load All Sample Data?
+                  </h3>
+                  <span className="text-[11px] font-bold text-emerald-800">
+                    மாதிரி தரவை ஏற்றவா?
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLoadModal(false)}
+                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Info Callout */}
+            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200/90 text-xs text-emerald-950 space-y-2">
+              <p className="font-extrabold flex items-center gap-1.5 text-emerald-950">
+                <span>🔄 மாதிரி தரவு மீட்டமைக்கப்படும் (Restore Demo)</span>
+              </p>
+              <ul className="space-y-1 text-[11px] text-emerald-850 list-disc list-inside font-medium leading-tight">
+                <li>மாதிரி முன்பதிவுகள் (September 2026 பூஜா காலண்டர்) மீண்டும் ஏற்றப்படும்.</li>
+                <li>மாதிரி பக்தர்கள் விபரங்கள் மற்றும் முகவரிகள் கிடைக்கும்.</li>
+                <li>பூஜை பட்டியல் மற்றும் தட்சிணை கட்டண விவரங்கள் மீட்டமைக்கப்படும்.</li>
+                <li>அனைத்து அனலிட்டிக்ஸ் நிதி அறிக்கைகளும் செயல்படும்.</li>
+              </ul>
+            </div>
+
+            {/* Confirmation Buttons */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowLoadModal(false)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              >
+                Cancel (ரத்து செய்)
+              </button>
+              <button
+                type="button"
+                onClick={handleLoadSampleData}
+                className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Yes, Load Data</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

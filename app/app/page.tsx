@@ -59,8 +59,13 @@ export default function HomeDashboardPage() {
   const [activeSubTab, setActiveSubTab] = useState<"analytics" | "payments" | "devotees">("analytics");
 
   useEffect(() => {
-    setBookings(db.getBookings(businessId));
-    setCustomers(db.getCustomers(businessId));
+    const refreshData = () => {
+      setBookings(db.getBookings(businessId));
+      setCustomers(db.getCustomers(businessId));
+    };
+    refreshData();
+    window.addEventListener("velvi:db-change", refreshData);
+    return () => window.removeEventListener("velvi:db-change", refreshData);
   }, [businessId]);
 
   const members = useMemo(() => db.getMembers(businessId), [businessId]);
@@ -332,6 +337,24 @@ export default function HomeDashboardPage() {
 
   // 2026 Monthly Data (Dynamic live bookings for current month Sep & advance Oct)
   const data2026: MonthlyAnalyticsItem[] = useMemo(() => {
+    if (bookings.length === 0) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+      return months.map((m, idx) => ({
+        id: `2026-${String(idx + 1).padStart(2, "0")}`,
+        month: m,
+        fullYear: `${m} 2026${m === "Sep" ? " (Current)" : ""}`,
+        year: "2026",
+        billed: 0,
+        collected: 0,
+        due: 0,
+        bookingsCount: 0,
+        rate: 100,
+        status: "0% Realized",
+        cumulative: 0,
+        isCurrent: m === "Sep",
+      }));
+    }
+
     const currentBilled = totalBilled > 0 ? totalBilled : 75000;
     const currentCollected = totalCollected > 0 ? totalCollected : 66000;
     const currentDue = totalDue;
@@ -381,6 +404,23 @@ export default function HomeDashboardPage() {
 
   // 2025 Historical Full Year Data (12 Months)
   const data2025: MonthlyAnalyticsItem[] = useMemo(() => {
+    if (bookings.length === 0) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months.map((m, idx) => ({
+        id: `2025-${String(idx + 1).padStart(2, "0")}`,
+        month: m,
+        fullYear: `${m} 2025`,
+        year: "2025",
+        billed: 0,
+        collected: 0,
+        due: 0,
+        bookingsCount: 0,
+        rate: 100,
+        status: "0% Realized",
+        cumulative: 0,
+      }));
+    }
+
     const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
       { id: "2025-01", month: "Jan", fullYear: "Jan 2025", year: "2025", billed: 45000, collected: 45000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
       { id: "2025-02", month: "Feb", fullYear: "Feb 2025", year: "2025", billed: 48000, collected: 48000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
@@ -400,10 +440,27 @@ export default function HomeDashboardPage() {
       running += item.collected;
       return { ...item, cumulative: running };
     });
-  }, []);
+  }, [bookings.length]);
 
   // 2024 Historical Full Year Data (12 Months)
   const data2024: MonthlyAnalyticsItem[] = useMemo(() => {
+    if (bookings.length === 0) {
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return months.map((m, idx) => ({
+        id: `2024-${String(idx + 1).padStart(2, "0")}`,
+        month: m,
+        fullYear: `${m} 2024`,
+        year: "2024",
+        billed: 0,
+        collected: 0,
+        due: 0,
+        bookingsCount: 0,
+        rate: 100,
+        status: "0% Realized",
+        cumulative: 0,
+      }));
+    }
+
     const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
       { id: "2024-01", month: "Jan", fullYear: "Jan 2024", year: "2024", billed: 38000, collected: 38000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
       { id: "2024-02", month: "Feb", fullYear: "Feb 2024", year: "2024", billed: 42000, collected: 42000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
@@ -423,7 +480,7 @@ export default function HomeDashboardPage() {
       running += item.collected;
       return { ...item, cumulative: running };
     });
-  }, []);
+  }, [bookings.length]);
 
   // Multi-Year Summary Comparison
   const allYearsSummary = useMemo(() => {
@@ -514,7 +571,7 @@ export default function HomeDashboardPage() {
           </div>
           <div className="text-right">
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 border border-emerald-400/40">
-              {Math.round((multiMonthTotalCollected / multiMonthTotalBilled) * 100)}% Realized
+              {multiMonthTotalBilled > 0 ? `${Math.round((multiMonthTotalCollected / multiMonthTotalBilled) * 100)}% Realized` : "0% Realized"}
             </span>
             <span className="text-[9.5px] text-emerald-300/80 block mt-1">
               {multiMonthTotalBookings} Poojas
@@ -1272,6 +1329,21 @@ export default function HomeDashboardPage() {
         {/* ========================================================================= */}
         {activeSubTab === "analytics" && (
           <div className="space-y-3 animate-in fade-in duration-150">
+            {bookings.length === 0 && (
+              <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-amber-900 font-bold min-w-0">
+                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span className="truncate">Workspace data is cleared (0 bookings). Load sample data from Settings.</span>
+                </div>
+                <Link
+                  href="/app/settings"
+                  className="px-2.5 py-1 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-[10.5px] font-black shrink-0 shadow-2xs"
+                >
+                  Settings
+                </Link>
+              </div>
+            )}
+
             {/* 0. SMART YEAR SELECTOR */}
             <div className="bg-white rounded-2xl p-1.5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-1">
               <div className="flex items-center gap-1 w-full">
