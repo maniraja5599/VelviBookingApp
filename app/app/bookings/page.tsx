@@ -298,9 +298,9 @@ export default function BookingsListPage() {
 
             return (
               <div key={group.monthKey} className="space-y-3 relative">
-                {/* WhatsApp-Style Sticky Floating Month Header */}
+                {/* WhatsApp-Style Sticky Floating Month Header - Rock Solid & Stabilized */}
                 <div
-                  className={`sticky top-[49px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-xs flex items-center justify-between gap-2 transition-all`}
+                  className={`sticky top-[48px] sm:top-[50px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-xs flex items-center justify-between gap-2 transform-gpu will-change-transform [backface-visibility:hidden] [transform:translate3d(0,0,0)] select-none`}
                 >
                   <div className="min-w-0">
                     <h3 className={`font-black text-sm sm:text-base ${theme.headerText} tracking-tight leading-none`}>
@@ -340,7 +340,7 @@ export default function BookingsListPage() {
                         <div className="relative flex flex-col items-center shrink-0 pt-1">
                           {/* Clear Date Node with Weekday and Day Number */}
                           <div
-                            className={`w-10 rounded-2xl ${theme.nodeBg} ${theme.nodeText} flex flex-col items-center justify-center py-1 shadow-xs border-2 border-white ring-1 ring-black/10 z-10 group-hover:scale-105 transition-transform shrink-0`}
+                            className={`w-10 rounded-2xl ${theme.nodeBg} ${theme.nodeText} flex flex-col items-center justify-center py-1 shadow-xs border-2 border-white ring-1 ring-black/10 z-10 sm:group-hover:scale-105 transition-transform duration-200 shrink-0`}
                           >
                             <span className="text-[9px] font-black uppercase tracking-wider opacity-85 leading-none">
                               {dateInfo.dayOfWeekEn.slice(0, 3)}

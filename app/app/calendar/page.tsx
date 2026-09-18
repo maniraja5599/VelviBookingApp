@@ -836,7 +836,21 @@ export default function CalendarPage() {
       {/* 3. MODE 1: TAMIL CALENDAR VIEW */}
       {/* ========================================================= */}
       {activeTab === "calendar" && (
-        <div className="space-y-3.5 animate-in fade-in duration-200">
+        <div className="space-y-2.5 animate-in fade-in duration-200">
+          {/* Cute & Charming Press & Hold Tip Banner */}
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50/95 via-emerald-50/90 to-amber-50/95 rounded-2xl border border-amber-200/80 text-[10.5px] sm:text-[11px] shadow-2xs">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-xs shrink-0 animate-bounce">👆</span>
+              <p className="font-bold text-slate-800 leading-tight">
+                <span className="text-amber-800 font-extrabold">டிப்ஸ்: </span>
+                தேதியை அழுத்திப் பிடித்தால் (<span className="text-emerald-950 font-black">Press &amp; Hold</span>) நாள் விவரங்கள் உடனே விரியும்!
+              </p>
+            </div>
+            <span className="shrink-0 text-[9px] sm:text-[9.5px] font-black text-emerald-900 bg-emerald-100/90 px-1.5 py-0.5 rounded-md border border-emerald-300/80 shadow-2xs">
+              Hold 0.4s
+            </span>
+          </div>
+
           {/* Authentic Tamil Calendar Sheet Card with Left/Right Touch Swipe Navigation */}
           <div
             onTouchStart={handleCalendarTouchStart}

@@ -55,7 +55,7 @@ export class VelviDatabaseStore {
     tagline: "Sacred Ceremonies, Seamless Management",
     taglineTamil: "நல்லதே நம் நோக்கம்",
     logoUrl: "/velvi-sacred-flame.png",
-    appVersion: "1.2.0",
+    appVersion: "2.1.0",
     developerName: "Maniraja",
     developerMobile: "+91-8300030123",
     developerInstagram: "@maniraja__",

@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.0.0";
+export const APP_VERSION = "2.1.0";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "16 Sep 2026, 04:30 PM IST";
+export const BUILD_DATE = "18 Sep 2026, 10:15 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.1.0",
+    releaseDate: "18 Sep 2026",
+    releaseTime: "10:15 AM IST",
+    title: "Cumulative Analytics Line Chart, Multi-Year Breakdown, Calendar Hold Tips & Timeline Stabilization",
+    summary:
+      "Comprehensive performance and analytics update featuring a cumulative progressive collection line chart, smart multi-year monthly breakdown (2026, 2025, 2024 & all-time), quick press-and-hold tip for the calendar, and zero-shake hardware-accelerated timeline scrolling on all mobile screens.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "Feature",
+        description: "Cumulative Monthly Collection Line Chart on Home Dashboard showing steady progressive funds realization over time.",
+      },
+      {
+        category: "Feature",
+        description: "Smart Multi-Year Analytics Breakdown (2026, 2025, 2024 and All Years) allowing priests and administrators to inspect month-wise collections across different years.",
+      },
+      {
+        category: "UI/UX",
+        description: "Added cute, elegant tip pill on Calendar page informing users that long-pressing (press & hold for 0.4s) opens the detailed day and Panchangam view.",
+      },
+      {
+        category: "Fix",
+        description: "Fixed floating month header shaking/jitter during timeline scrolling on Bookings page with zero-lag GPU acceleration across all iOS and Android screen sizes.",
+      },
+    ],
+  },
   {
     version: "2.0.0",
     releaseDate: "16 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "4-Step Pooja Booking Wizard, Standalone Payment Box & Booking Details Overhaul",
     summary:
       "Major upgrade featuring a streamlined 4-step Pooja Booking Wizard with draft auto-save, app-wide duration removal, dedicated standalone payment box with advance shortcuts, instant 1-tap priest selection cards, Step 3 live booking preview, and a completely revamped Booking Details dashboard.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Major",
     changes: [
       {

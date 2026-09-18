@@ -310,70 +310,46 @@ export default function HomeDashboardPage() {
   const totalDue = useMemo(() => bookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0), [bookings]);
   const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 100;
 
-  // Selected Month for drilldown inspection
-  const [selectedAnalyticsMonth, setSelectedAnalyticsMonth] = useState<string>("Sep");
-  const [analyticsHoverIndex, setAnalyticsHoverIndex] = useState<number | null>(4); // Default to current month (Sep)
+  // Selected Year & Month for Analytics drilldown
+  interface MonthlyAnalyticsItem {
+    id: string;
+    month: string;
+    fullYear: string;
+    year: string;
+    billed: number;
+    collected: number;
+    due: number;
+    bookingsCount: number;
+    rate: number;
+    status: string;
+    isCurrent?: boolean;
+    cumulative: number;
+  }
 
-  // 6-Month Collection Trend (May to Oct 2026)
-  const monthlyAnalyticsData = useMemo(() => {
+  const [selectedAnalyticsYear, setSelectedAnalyticsYear] = useState<"2026" | "2025" | "2024" | "ALL">("2026");
+  const [selectedAnalyticsMonth, setSelectedAnalyticsMonth] = useState<string>("Sep");
+  const [analyticsHoverIndex, setAnalyticsHoverIndex] = useState<number | null>(null);
+
+  // 2026 Monthly Data (Dynamic live bookings for current month Sep & advance Oct)
+  const data2026: MonthlyAnalyticsItem[] = useMemo(() => {
     const currentBilled = totalBilled > 0 ? totalBilled : 75000;
     const currentCollected = totalCollected > 0 ? totalCollected : 66000;
     const currentDue = totalDue;
 
-    return [
+    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
+      { id: "2026-01", month: "Jan", fullYear: "Jan 2026", year: "2026", billed: 46000, collected: 46000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
+      { id: "2026-02", month: "Feb", fullYear: "Feb 2026", year: "2026", billed: 52000, collected: 52000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
+      { id: "2026-03", month: "Mar", fullYear: "Mar 2026", year: "2026", billed: 49000, collected: 48000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
+      { id: "2026-04", month: "Apr", fullYear: "Apr 2026", year: "2026", billed: 58000, collected: 56000, due: 2000, bookingsCount: 9, rate: 96, status: "96% Realized" },
+      { id: "2026-05", month: "May", fullYear: "May 2026", year: "2026", billed: 42000, collected: 42000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
+      { id: "2026-06", month: "Jun", fullYear: "Jun 2026", year: "2026", billed: 54000, collected: 54000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
+      { id: "2026-07", month: "Jul", fullYear: "Jul 2026", year: "2026", billed: 48000, collected: 46500, due: 1500, bookingsCount: 7, rate: 97, status: "97% Realized" },
+      { id: "2026-08", month: "Aug", fullYear: "Aug 2026", year: "2026", billed: 68000, collected: 65000, due: 3000, bookingsCount: 10, rate: 96, status: "96% Realized" },
       {
-        id: "may",
-        month: "May",
-        monthTamil: "May",
-        fullYear: "May 2026",
-        billed: 42000,
-        collected: 42000,
-        due: 0,
-        bookingsCount: 6,
-        rate: 100,
-        status: "100% Realized",
-      },
-      {
-        id: "jun",
-        month: "Jun",
-        monthTamil: "Jun",
-        fullYear: "Jun 2026",
-        billed: 54000,
-        collected: 54000,
-        due: 0,
-        bookingsCount: 8,
-        rate: 100,
-        status: "100% Realized",
-      },
-      {
-        id: "jul",
-        month: "Jul",
-        monthTamil: "Jul",
-        fullYear: "Jul 2026",
-        billed: 48000,
-        collected: 46500,
-        due: 1500,
-        bookingsCount: 7,
-        rate: 97,
-        status: "97% Realized",
-      },
-      {
-        id: "aug",
-        month: "Aug",
-        monthTamil: "Aug",
-        fullYear: "Aug 2026",
-        billed: 68000,
-        collected: 65000,
-        due: 3000,
-        bookingsCount: 10,
-        rate: 96,
-        status: "96% Realized",
-      },
-      {
-        id: "sep",
+        id: "2026-09",
         month: "Sep",
-        monthTamil: "Sep",
         fullYear: "Sep 2026 (Current)",
+        year: "2026",
         billed: currentBilled,
         collected: currentCollected,
         due: currentDue,
@@ -383,10 +359,10 @@ export default function HomeDashboardPage() {
         isCurrent: true,
       },
       {
-        id: "oct",
+        id: "2026-10",
         month: "Oct",
-        monthTamil: "Oct",
         fullYear: "Oct 2026 (Advance)",
+        year: "2026",
         billed: 38000,
         collected: 28000,
         due: 10000,
@@ -395,9 +371,82 @@ export default function HomeDashboardPage() {
         status: "74% Advance",
       },
     ];
+
+    let running = 0;
+    return raw.map((item) => {
+      running += item.collected;
+      return { ...item, cumulative: running };
+    });
   }, [totalBilled, totalCollected, totalDue, bookings.length, collectionRate]);
 
-  // Overall 6-Month Stats
+  // 2025 Historical Full Year Data (12 Months)
+  const data2025: MonthlyAnalyticsItem[] = useMemo(() => {
+    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
+      { id: "2025-01", month: "Jan", fullYear: "Jan 2025", year: "2025", billed: 45000, collected: 45000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
+      { id: "2025-02", month: "Feb", fullYear: "Feb 2025", year: "2025", billed: 48000, collected: 48000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
+      { id: "2025-03", month: "Mar", fullYear: "Mar 2025", year: "2025", billed: 52000, collected: 51000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
+      { id: "2025-04", month: "Apr", fullYear: "Apr 2025", year: "2025", billed: 64000, collected: 62000, due: 2000, bookingsCount: 10, rate: 97, status: "97% Realized" },
+      { id: "2025-05", month: "May", fullYear: "May 2025", year: "2025", billed: 40000, collected: 40000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
+      { id: "2025-06", month: "Jun", fullYear: "Jun 2025", year: "2025", billed: 50000, collected: 50000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
+      { id: "2025-07", month: "Jul", fullYear: "Jul 2025", year: "2025", billed: 46000, collected: 45000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
+      { id: "2025-08", month: "Aug", fullYear: "Aug 2025", year: "2025", billed: 62000, collected: 60000, due: 2000, bookingsCount: 9, rate: 97, status: "97% Realized" },
+      { id: "2025-09", month: "Sep", fullYear: "Sep 2025", year: "2025", billed: 58000, collected: 58000, due: 0, bookingsCount: 9, rate: 100, status: "100% Realized" },
+      { id: "2025-10", month: "Oct", fullYear: "Oct 2025", year: "2025", billed: 66000, collected: 64000, due: 2000, bookingsCount: 11, rate: 97, status: "97% Realized" },
+      { id: "2025-11", month: "Nov", fullYear: "Nov 2025", year: "2025", billed: 42000, collected: 42000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
+      { id: "2025-12", month: "Dec", fullYear: "Dec 2025", year: "2025", billed: 55000, collected: 54000, due: 1000, bookingsCount: 9, rate: 98, status: "98% Realized" },
+    ];
+    let running = 0;
+    return raw.map((item) => {
+      running += item.collected;
+      return { ...item, cumulative: running };
+    });
+  }, []);
+
+  // 2024 Historical Full Year Data (12 Months)
+  const data2024: MonthlyAnalyticsItem[] = useMemo(() => {
+    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
+      { id: "2024-01", month: "Jan", fullYear: "Jan 2024", year: "2024", billed: 38000, collected: 38000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
+      { id: "2024-02", month: "Feb", fullYear: "Feb 2024", year: "2024", billed: 42000, collected: 42000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
+      { id: "2024-03", month: "Mar", fullYear: "Mar 2024", year: "2024", billed: 45000, collected: 44000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
+      { id: "2024-04", month: "Apr", fullYear: "Apr 2024", year: "2024", billed: 54000, collected: 53000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
+      { id: "2024-05", month: "May", fullYear: "May 2024", year: "2024", billed: 36000, collected: 36000, due: 0, bookingsCount: 5, rate: 100, status: "100% Realized" },
+      { id: "2024-06", month: "Jun", fullYear: "Jun 2024", year: "2024", billed: 44000, collected: 44000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
+      { id: "2024-07", month: "Jul", fullYear: "Jul 2024", year: "2024", billed: 41000, collected: 40000, due: 1000, bookingsCount: 6, rate: 98, status: "98% Realized" },
+      { id: "2024-08", month: "Aug", fullYear: "Aug 2024", year: "2024", billed: 52000, collected: 51000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
+      { id: "2024-09", month: "Sep", fullYear: "Sep 2024", year: "2024", billed: 48000, collected: 47000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
+      { id: "2024-10", month: "Oct", fullYear: "Oct 2024", year: "2024", billed: 56000, collected: 54000, due: 2000, bookingsCount: 9, rate: 96, status: "96% Realized" },
+      { id: "2024-11", month: "Nov", fullYear: "Nov 2024", year: "2024", billed: 38000, collected: 38000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
+      { id: "2024-12", month: "Dec", fullYear: "Dec 2024", year: "2024", billed: 48000, collected: 47000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
+    ];
+    let running = 0;
+    return raw.map((item) => {
+      running += item.collected;
+      return { ...item, cumulative: running };
+    });
+  }, []);
+
+  // Multi-Year Summary Comparison
+  const allYearsSummary = useMemo(() => {
+    const sum2026 = data2026.reduce((acc, m) => ({ collected: acc.collected + m.collected, billed: acc.billed + m.billed, count: acc.count + m.bookingsCount }), { collected: 0, billed: 0, count: 0 });
+    const sum2025 = data2025.reduce((acc, m) => ({ collected: acc.collected + m.collected, billed: acc.billed + m.billed, count: acc.count + m.bookingsCount }), { collected: 0, billed: 0, count: 0 });
+    const sum2024 = data2024.reduce((acc, m) => ({ collected: acc.collected + m.collected, billed: acc.billed + m.billed, count: acc.count + m.bookingsCount }), { collected: 0, billed: 0, count: 0 });
+
+    return [
+      { year: "2026" as const, label: "2026 (YTD)", billed: sum2026.billed, collected: sum2026.collected, count: sum2026.count, rate: Math.round((sum2026.collected / sum2026.billed) * 100), monthsCount: data2026.length },
+      { year: "2025" as const, label: "2025 (Full Year)", billed: sum2025.billed, collected: sum2025.collected, count: sum2025.count, rate: Math.round((sum2025.collected / sum2025.billed) * 100), monthsCount: 12 },
+      { year: "2024" as const, label: "2024 (Full Year)", billed: sum2024.billed, collected: sum2024.collected, count: sum2024.count, rate: Math.round((sum2024.collected / sum2024.billed) * 100), monthsCount: 12 },
+    ];
+  }, [data2026, data2025, data2024]);
+
+  // Active Monthly Data based on selected year
+  const activeYearMonthlyData = useMemo(() => {
+    if (selectedAnalyticsYear === "2025") return data2025;
+    if (selectedAnalyticsYear === "2024") return data2024;
+    return data2026;
+  }, [selectedAnalyticsYear, data2026, data2025, data2024]);
+
+  // Overall 2026 Stats for Top Pinned Hero
+  const monthlyAnalyticsData = data2026;
   const multiMonthTotalCollected = useMemo(
     () => monthlyAnalyticsData.reduce((sum, m) => sum + m.collected, 0),
     [monthlyAnalyticsData]
@@ -411,11 +460,11 @@ export default function HomeDashboardPage() {
     [monthlyAnalyticsData]
   );
 
-  // Selected Month Object
-  const activeMonthDetail = useMemo(
-    () => monthlyAnalyticsData.find((m) => m.month === selectedAnalyticsMonth) || monthlyAnalyticsData[4],
-    [monthlyAnalyticsData, selectedAnalyticsMonth]
-  );
+  // Selected Month Object in current active year
+  const activeMonthDetail = useMemo(() => {
+    const found = activeYearMonthlyData.find((m) => m.month === selectedAnalyticsMonth);
+    return found || activeYearMonthlyData[activeYearMonthlyData.length - 1];
+  }, [activeYearMonthlyData, selectedAnalyticsMonth]);
 
   const topPoojas = useMemo(() => {
     const map = new Map<string, { name: string; count: number; amount: number }>();
@@ -1219,203 +1268,542 @@ export default function HomeDashboardPage() {
         )}
 
         {/* ========================================================================= */}
-        {/* SUB-TAB: ANALYTICS (Clean Monthly Collections Bar Chart)                  */}
+        {/* SUB-TAB: ANALYTICS (Cumulative Line Chart & Multi-Year Breakdown)         */}
         {/* ========================================================================= */}
         {activeSubTab === "analytics" && (
           <div className="space-y-3 animate-in fade-in duration-150">
-            {/* 1. SMART BAR CHART: Month-Wise Collection Breakdown */}
-            <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <BarChart3 className="w-4 h-4 text-emerald-700" />
-                    <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
-                      Monthly Collection Trend
-                    </h4>
-                  </div>
-                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                    Billed vs Collected Amount (May – Oct 2026)
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 text-[9.5px] font-bold">
-                  <span className="flex items-center gap-1 text-slate-500">
-                    <span className="w-2 h-2 rounded-xs bg-slate-300 inline-block" /> Billed
-                  </span>
-                  <span className="flex items-center gap-1 text-emerald-800">
-                    <span className="w-2 h-2 rounded-xs bg-emerald-600 inline-block" /> Collected
-                  </span>
-                </div>
-              </div>
-
-              {/* Bars Container */}
-              <div className="grid grid-cols-6 gap-1.5 sm:gap-2 pt-2 pb-1 border-b border-slate-100">
-                {monthlyAnalyticsData.map((m, idx) => {
-                  const isSelected = selectedAnalyticsMonth === m.month;
-                  const maxBarVal = 75000;
-                  const billedHeightPct = Math.min(100, Math.round((m.billed / maxBarVal) * 100));
-                  const collectedHeightPct = Math.min(100, Math.round((m.collected / maxBarVal) * 100));
+            {/* 0. SMART YEAR SELECTOR */}
+            <div className="bg-white rounded-2xl p-1.5 border border-slate-200/90 shadow-2xs flex items-center justify-between gap-1">
+              <div className="flex items-center gap-1 w-full">
+                {(["2026", "2025", "2024", "ALL"] as const).map((yr) => {
+                  const isSelected = selectedAnalyticsYear === yr;
+                  const label =
+                    yr === "2026"
+                      ? "2026 (Live)"
+                      : yr === "ALL"
+                      ? "All Years"
+                      : yr;
 
                   return (
                     <button
-                      key={m.month}
+                      key={yr}
                       type="button"
                       onClick={() => {
-                        setSelectedAnalyticsMonth(m.month);
-                        setAnalyticsHoverIndex(idx);
+                        setSelectedAnalyticsYear(yr);
+                        if (yr === "2026") setSelectedAnalyticsMonth("Sep");
+                        else if (yr === "2025" || yr === "2024") setSelectedAnalyticsMonth("Dec");
                       }}
-                      className={`flex flex-col items-center gap-1 p-1 rounded-2xl transition group cursor-pointer ${
+                      className={`flex-1 py-1.5 px-2 rounded-xl transition text-center font-black text-xs cursor-pointer ${
                         isSelected
-                          ? "bg-emerald-50/90 ring-1.5 ring-emerald-600 shadow-2xs"
-                          : "hover:bg-slate-50"
+                          ? "bg-emerald-900 text-white shadow-2xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                       }`}
                     >
-                      {/* Rate Badge on Top */}
-                      <span
-                        className={`text-[8px] font-black px-1 py-0.2 rounded-md ${
-                          isSelected
-                            ? "bg-emerald-700 text-white"
-                            : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
-                        }`}
-                      >
-                        {m.rate}%
-                      </span>
-
-                      {/* Dual Bars */}
-                      <div className="w-full h-24 flex items-end justify-center gap-1 pt-1 pb-0.5">
-                        {/* Billed Bar (Slate) */}
-                        <div
-                          className="w-2.5 sm:w-3.5 bg-slate-300 rounded-t-md transition-all duration-500 group-hover:bg-slate-400"
-                          style={{ height: `${Math.max(12, billedHeightPct)}%` }}
-                          title={`${m.month} Billed: ₹${m.billed.toLocaleString("en-IN")}`}
-                        />
-                        {/* Collected Bar (Emerald) */}
-                        <div
-                          className={`w-2.5 sm:w-3.5 rounded-t-md transition-all duration-500 ${
-                            isSelected ? "bg-emerald-700" : "bg-emerald-600 group-hover:bg-emerald-500"
-                          }`}
-                          style={{ height: `${Math.max(12, collectedHeightPct)}%` }}
-                          title={`${m.month} Collected: ₹${m.collected.toLocaleString("en-IN")}`}
-                        />
-                      </div>
-
-                      {/* Month Info Below Bar */}
-                      <div className="text-center w-full">
-                        <span
-                          className={`text-[10px] font-black block leading-tight ${
-                            isSelected ? "text-emerald-950" : "text-slate-800"
-                          }`}
-                        >
-                          {m.month}
-                        </span>
-                      </div>
+                      {label}
                     </button>
                   );
                 })}
               </div>
+            </div>
 
-              {/* 2. Drilldown: Selected Month Detailed Card */}
-              {activeMonthDetail && (
-                <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/90 space-y-2">
+            {selectedAnalyticsYear !== "ALL" ? (
+              <>
+                {/* 1. CUMULATIVE COLLECTION TREND LINE CHART */}
+                <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-700" />
+                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                          Cumulative Collection Trend ({selectedAnalyticsYear})
+                        </h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                        Progressive cumulative cashflow over the year
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                       <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
-                      <span className="font-extrabold text-xs text-emerald-950">
-                        {activeMonthDetail.fullYear} Collection Details
+                      <span>Cumulative Curve</span>
+                    </div>
+                  </div>
+
+                  {/* Active Tooltip Banner */}
+                  {activeMonthDetail && (
+                    <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-xl px-3 py-1.5 flex items-center justify-between text-xs">
+                      <span className="font-bold text-emerald-950 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                        <span>Up to {activeMonthDetail.month} {selectedAnalyticsYear}:</span>
+                        <span className="font-black text-emerald-900 text-sm">
+                          ₹{activeMonthDetail.cumulative.toLocaleString("en-IN")}
+                        </span>
+                      </span>
+                      <span className="text-[10px] font-extrabold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
+                        +{activeMonthDetail.month}: ₹{activeMonthDetail.collected.toLocaleString("en-IN")}
                       </span>
                     </div>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-emerald-900 border border-emerald-300 shadow-2xs">
-                      {activeMonthDetail.status}
+                  )}
+
+                  {/* SVG Bezier Cumulative Line Chart */}
+                  {(() => {
+                    const chartData = activeYearMonthlyData;
+                    const maxCumul = chartData[chartData.length - 1]?.cumulative || 500000;
+                    const roundedMax = Math.ceil(maxCumul / 100000) * 100000 || 500000;
+                    const svgWidth = 480;
+                    const svgHeight = 150;
+                    const padLeft = 48;
+                    const padRight = 20;
+                    const padTop = 15;
+                    const padBottom = 25;
+                    const plotW = svgWidth - padLeft - padRight;
+                    const plotH = svgHeight - padTop - padBottom;
+
+                    const points = chartData.map((m, idx) => {
+                      const x = padLeft + (idx / Math.max(1, chartData.length - 1)) * plotW;
+                      const y = padTop + plotH - (m.cumulative / roundedMax) * plotH;
+                      return { ...m, x, y };
+                    });
+
+                    const pathD = points.reduce((acc, pt, idx, arr) => {
+                      if (idx === 0) return `M ${pt.x},${pt.y}`;
+                      const prev = arr[idx - 1];
+                      const cp1x = prev.x + (pt.x - prev.x) / 2;
+                      const cp1y = prev.y;
+                      const cp2x = prev.x + (pt.x - prev.x) / 2;
+                      const cp2y = pt.y;
+                      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
+                    }, "");
+
+                    const areaD =
+                      points.length > 0
+                        ? `${pathD} L ${points[points.length - 1].x},${padTop + plotH} L ${points[0].x},${padTop + plotH} Z`
+                        : "";
+
+                    const gridLevels = [
+                      { pct: 1.0, val: roundedMax },
+                      { pct: 0.66, val: Math.round(roundedMax * 0.66) },
+                      { pct: 0.33, val: Math.round(roundedMax * 0.33) },
+                      { pct: 0.0, val: 0 },
+                    ];
+
+                    return (
+                      <div className="relative w-full overflow-hidden">
+                        <svg
+                          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                          className="w-full h-auto overflow-visible select-none"
+                        >
+                          <defs>
+                            <linearGradient id="cumulGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#059669" stopOpacity="0.35" />
+                              <stop offset="100%" stopColor="#059669" stopOpacity="0.02" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Horizontal Grid lines */}
+                          {gridLevels.map((g, i) => {
+                            const yPos = padTop + plotH * (1 - g.pct);
+                            const label =
+                              g.val >= 100000
+                                ? `₹${(g.val / 100000).toFixed(1)}L`
+                                : `₹${Math.round(g.val / 1000)}k`;
+
+                            return (
+                              <g key={i}>
+                                <line
+                                  x1={padLeft}
+                                  y1={yPos}
+                                  x2={svgWidth - padRight}
+                                  y2={yPos}
+                                  stroke="#e2e8f0"
+                                  strokeDasharray="3 3"
+                                  strokeWidth="1"
+                                />
+                                <text
+                                  x={padLeft - 6}
+                                  y={yPos + 3}
+                                  textAnchor="end"
+                                  fontSize="9"
+                                  fontWeight="700"
+                                  fill="#94a3b8"
+                                >
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Gradient Fill under curve */}
+                          {areaD && <path d={areaD} fill="url(#cumulGrad)" />}
+
+                          {/* Main Bezier Line */}
+                          {pathD && (
+                            <path
+                              d={pathD}
+                              fill="none"
+                              stroke="#047857"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          )}
+
+                          {/* Interactive Points */}
+                          {points.map((pt, idx) => {
+                            const isSelected = selectedAnalyticsMonth === pt.month;
+                            return (
+                              <g
+                                key={pt.id}
+                                className="cursor-pointer group"
+                                onClick={() => {
+                                  setSelectedAnalyticsMonth(pt.month);
+                                  setAnalyticsHoverIndex(idx);
+                                }}
+                              >
+                                {isSelected && (
+                                  <circle
+                                    cx={pt.x}
+                                    cy={pt.y}
+                                    r="9"
+                                    fill="#059669"
+                                    fillOpacity="0.25"
+                                  />
+                                )}
+                                <circle
+                                  cx={pt.x}
+                                  cy={pt.y}
+                                  r={isSelected ? "5" : "3.5"}
+                                  fill={isSelected ? "#047857" : "#ffffff"}
+                                  stroke="#047857"
+                                  strokeWidth={isSelected ? "2.5" : "2"}
+                                  className="transition-all duration-150"
+                                />
+                                {/* Bottom X-axis Month label */}
+                                <text
+                                  x={pt.x}
+                                  y={svgHeight - 6}
+                                  textAnchor="middle"
+                                  fontSize="9"
+                                  fontWeight={isSelected ? "900" : "700"}
+                                  fill={isSelected ? "#047857" : "#64748b"}
+                                >
+                                  {pt.month}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* 2. MONTHLY BREAKDOWN: DUAL BAR CHART */}
+                <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <BarChart3 className="w-4 h-4 text-emerald-700" />
+                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                          Monthly Breakdown ({selectedAnalyticsYear})
+                        </h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                        Billed vs Collected Amount per month
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-[9.5px] font-bold">
+                      <span className="flex items-center gap-1 text-slate-500">
+                        <span className="w-2 h-2 rounded-xs bg-slate-300 inline-block" /> Billed
+                      </span>
+                      <span className="flex items-center gap-1 text-emerald-800">
+                        <span className="w-2 h-2 rounded-xs bg-emerald-600 inline-block" /> Collected
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Dual Bars Container */}
+                  <div className={`grid gap-1 sm:gap-1.5 pt-2 pb-1 border-b border-slate-100 ${
+                    activeYearMonthlyData.length > 10 ? "grid-cols-6 sm:grid-cols-12" : "grid-cols-5 sm:grid-cols-10"
+                  }`}>
+                    {activeYearMonthlyData.map((m, idx) => {
+                      const isSelected = selectedAnalyticsMonth === m.month;
+                      const maxBarVal = 75000;
+                      const billedHeightPct = Math.min(100, Math.round((m.billed / maxBarVal) * 100));
+                      const collectedHeightPct = Math.min(100, Math.round((m.collected / maxBarVal) * 100));
+
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAnalyticsMonth(m.month);
+                            setAnalyticsHoverIndex(idx);
+                          }}
+                          className={`flex flex-col items-center gap-1 p-1 rounded-2xl transition group cursor-pointer ${
+                            isSelected
+                              ? "bg-emerald-50/90 ring-1.5 ring-emerald-600 shadow-2xs"
+                              : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <span
+                            className={`text-[7.5px] font-black px-1 py-0.2 rounded-md ${
+                              isSelected
+                                ? "bg-emerald-700 text-white"
+                                : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
+                            }`}
+                          >
+                            {m.rate}%
+                          </span>
+
+                          <div className="w-full h-20 flex items-end justify-center gap-0.5 sm:gap-1 pt-1 pb-0.5">
+                            <div
+                              className="w-2 sm:w-2.5 bg-slate-300 rounded-t-md transition-all duration-500 group-hover:bg-slate-400"
+                              style={{ height: `${Math.max(10, billedHeightPct)}%` }}
+                              title={`${m.month} Billed: ₹${m.billed.toLocaleString("en-IN")}`}
+                            />
+                            <div
+                              className={`w-2 sm:w-2.5 rounded-t-md transition-all duration-500 ${
+                                isSelected ? "bg-emerald-700" : "bg-emerald-600 group-hover:bg-emerald-500"
+                              }`}
+                              style={{ height: `${Math.max(10, collectedHeightPct)}%` }}
+                              title={`${m.month} Collected: ₹${m.collected.toLocaleString("en-IN")}`}
+                            />
+                          </div>
+
+                          <div className="text-center w-full">
+                            <span
+                              className={`text-[9.5px] font-black block leading-tight ${
+                                isSelected ? "text-emerald-950" : "text-slate-700"
+                              }`}
+                            >
+                              {m.month}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* 3. Selected Month Detailed Drilldown Card */}
+                  {activeMonthDetail && (
+                    <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/90 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                          <span className="font-extrabold text-xs text-emerald-950">
+                            {activeMonthDetail.fullYear} Details
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-emerald-900 border border-emerald-300 shadow-2xs">
+                          {activeMonthDetail.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-center text-xs">
+                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
+                          <span className="text-[9px] text-slate-500 font-bold block">Month Collected</span>
+                          <span className="font-black text-emerald-900 text-xs block mt-0.5">
+                            ₹{activeMonthDetail.collected.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
+                          <span className="text-[9px] text-slate-500 font-bold block">Month Billed</span>
+                          <span className="font-black text-slate-800 text-xs block mt-0.5">
+                            ₹{activeMonthDetail.billed.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
+                          <span className="text-[9px] text-slate-500 font-bold block">Remaining Due</span>
+                          <span className="font-black text-amber-900 text-xs block mt-0.5">
+                            {activeMonthDetail.due > 0
+                              ? `₹${activeMonthDetail.due.toLocaleString("en-IN")}`
+                              : "₹0 (Fully Paid)"}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
+                          <span className="text-[9px] text-slate-500 font-bold block">Cumulative to Date</span>
+                          <span className="font-black text-emerald-950 text-xs block mt-0.5">
+                            ₹{activeMonthDetail.cumulative.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Month-Wise Collections Breakdown List */}
+                <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-emerald-700" />
+                      <span>{selectedAnalyticsYear} Month-by-Month Breakdown</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      {activeYearMonthlyData.length} Months
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                    <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                      <span className="text-[9px] text-slate-500 font-bold block">Collected</span>
-                      <span className="font-black text-emerald-900 text-xs block mt-0.5">
-                        ₹{activeMonthDetail.collected.toLocaleString("en-IN")}
+                  <div className="space-y-1.5">
+                    {activeYearMonthlyData.map((m) => (
+                      <div
+                        key={m.id}
+                        onClick={() => setSelectedAnalyticsMonth(m.month)}
+                        className={`p-2.5 rounded-2xl border transition flex items-center justify-between text-xs cursor-pointer ${
+                          selectedAnalyticsMonth === m.month
+                            ? "bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-200"
+                            : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-800 flex flex-col items-center justify-center shrink-0">
+                            <span className="font-black text-xs leading-none">{m.month}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                              <span>{m.fullYear}</span>
+                              {m.isCurrent && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10.5px] text-slate-500 font-semibold mt-0.5">
+                              {m.bookingsCount} Poojas • Billed: ₹{m.billed.toLocaleString("en-IN")} • Cumul: ₹{m.cumulative.toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="font-black text-emerald-800 text-xs block">
+                            ₹{m.collected.toLocaleString("en-IN")}
+                          </span>
+                          <span
+                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
+                              m.rate === 100
+                                ? "bg-emerald-100 text-emerald-800"
+                                : m.rate >= 90
+                                ? "bg-blue-50 text-blue-800"
+                                : "bg-amber-50 text-amber-800"
+                            }`}
+                          >
+                            {m.rate}% Realized
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* ========================================================================= */
+              /* ALL YEARS OVERVIEW & COMPARISON                                           */
+              /* ========================================================================= */
+              <div className="space-y-3">
+                {/* All-Time Grand Summary Card */}
+                <div className="bg-gradient-to-br from-emerald-900 to-slate-900 text-white rounded-3xl p-4 shadow-sm space-y-3 border border-emerald-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-white/10 text-emerald-300 flex items-center justify-center border border-white/20">
+                        <TrendingUp className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider block">
+                          All-Time Total Collections
+                        </span>
+                        <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
+                          ₹{allYearsSummary.reduce((s, y) => s + y.collected, 0).toLocaleString("en-IN")}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-200 border border-emerald-400/30">
+                        {allYearsSummary.reduce((s, y) => s + y.count, 0)} Total Poojas
                       </span>
                     </div>
-                    <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                      <span className="text-[9px] text-slate-500 font-bold block">Total Billed</span>
-                      <span className="font-black text-slate-800 text-xs block mt-0.5">
-                        ₹{activeMonthDetail.billed.toLocaleString("en-IN")}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10 text-center">
+                    <div className="bg-white/10 p-2 rounded-2xl">
+                      <span className="text-[9px] text-emerald-200 font-bold block">2026 YTD</span>
+                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5">
+                        ₹{allYearsSummary[0].collected.toLocaleString("en-IN")}
                       </span>
                     </div>
-                    <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                      <span className="text-[9px] text-slate-500 font-bold block">Remaining Due</span>
-                      <span className="font-black text-amber-900 text-xs block mt-0.5">
-                        {activeMonthDetail.due > 0
-                          ? `₹${activeMonthDetail.due.toLocaleString("en-IN")}`
-                          : "₹0 (Fully Paid)"}
+                    <div className="bg-white/10 p-2 rounded-2xl">
+                      <span className="text-[9px] text-emerald-200 font-bold block">2025 Total</span>
+                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5">
+                        ₹{allYearsSummary[1].collected.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div className="bg-white/10 p-2 rounded-2xl">
+                      <span className="text-[9px] text-emerald-200 font-bold block">2024 Total</span>
+                      <span className="text-xs sm:text-sm font-black text-white block mt-0.5">
+                        ₹{allYearsSummary[2].collected.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* 3. Month-Wise Summary List */}
-            <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-emerald-700" />
-                  <span>Monthly Collections Breakdown</span>
-                </span>
-                <span className="text-[10px] text-slate-500 font-bold">
-                  6 Months Overview
-                </span>
-              </div>
-
-              <div className="space-y-1.5">
-                {monthlyAnalyticsData.map((m) => (
-                  <div
-                    key={m.month}
-                    onClick={() => setSelectedAnalyticsMonth(m.month)}
-                    className={`p-2.5 rounded-2xl border transition flex items-center justify-between text-xs cursor-pointer ${
-                      selectedAnalyticsMonth === m.month
-                        ? "bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-200"
-                        : "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200/80"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-white border border-slate-200 text-slate-800 flex flex-col items-center justify-center shrink-0">
-                        <span className="font-black text-xs leading-none">{m.month}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                          <span>{m.fullYear}</span>
-                          {m.isCurrent && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
-                              Current Month
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[10.5px] text-slate-500 font-semibold mt-0.5">
-                          {m.bookingsCount} Poojas • Billed: ₹{m.billed.toLocaleString("en-IN")}
-                        </div>
-                      </div>
+                {/* Year-by-Year Comparison Cards with drilldown actions */}
+                <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <BarChart3 className="w-4 h-4 text-emerald-700" />
+                      <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                        Year-over-Year Collections
+                      </h4>
                     </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="font-black text-emerald-800 text-xs block">
-                        ₹{m.collected.toLocaleString("en-IN")}
-                      </span>
-                      <span
-                        className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
-                          m.rate === 100
-                            ? "bg-emerald-100 text-emerald-800"
-                            : m.rate >= 90
-                            ? "bg-blue-50 text-blue-800"
-                            : "bg-amber-50 text-amber-800"
-                        }`}
-                      >
-                        {m.rate}% Realized
-                      </span>
-                    </div>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      2024 – 2026
+                    </span>
                   </div>
-                ))}
+
+                  <div className="space-y-2">
+                    {allYearsSummary.map((yr) => (
+                      <div
+                        key={yr.year}
+                        className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-sm text-slate-900">
+                              {yr.label}
+                            </span>
+                            <span className="text-[9.5px] font-bold px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded">
+                              {yr.rate}% Realized
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                            {yr.count} Poojas • Billed: ₹{yr.billed.toLocaleString("en-IN")}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="text-right">
+                            <span className="font-black text-emerald-800 text-xs sm:text-sm block">
+                              ₹{yr.collected.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedAnalyticsYear(yr.year);
+                              if (yr.year === "2026") setSelectedAnalyticsMonth("Sep");
+                              else setSelectedAnalyticsMonth("Dec");
+                            }}
+                            className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-[10.5px] font-bold flex items-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer"
+                          >
+                            <span>Months</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
