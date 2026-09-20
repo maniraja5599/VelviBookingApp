@@ -919,7 +919,7 @@ export default function BookingsListPage() {
             className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs hover:shadow-xs active:scale-95 transition"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>+ New Booking</span>
+            <span>Book</span>
           </Link>
         </div>
       </div>
