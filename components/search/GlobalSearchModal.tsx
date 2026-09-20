@@ -47,12 +47,26 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   const [copiedMobile, setCopiedMobile] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus input on open
+  // Direct keyboard open on open (auto-focus synchronously and via RAF)
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+      const raf = requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      });
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 30);
+      return () => {
+        cancelAnimationFrame(raf);
+        clearTimeout(timer);
+      };
     } else {
       setQuery("");
       setActiveCategory("ALL");
@@ -228,7 +242,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           </div>
           <input
             ref={inputRef}
-            type="text"
+            autoFocus
+            enterKeyHint="search"
+            inputMode="search"
+            type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="தேடுக: பக்தர் பெயர், மொபைல், பூஜை, பதிவு எண்..."

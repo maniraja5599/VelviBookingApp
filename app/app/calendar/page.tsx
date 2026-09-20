@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
@@ -46,6 +47,7 @@ function formatTime12H(t?: string): string {
 }
 
 export default function CalendarPage() {
+  const router = useRouter();
   const { currentBusiness, currentUser } = useAuth();
   const { t } = useLanguage();
 
@@ -63,6 +65,28 @@ export default function CalendarPage() {
   // Long press timer refs for calendar date buttons
   const longPressTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const isLongPressTriggeredRef = React.useRef<boolean>(false);
+
+  // Track double click / double tap to directly open booking page for that date
+  const lastClickRef = React.useRef<{ dateStr: string; time: number } | null>(null);
+
+  const handleDateCellClick = (dateStr: string) => {
+    if (isLongPressTriggeredRef.current) return;
+
+    const now = Date.now();
+    if (
+      lastClickRef.current &&
+      lastClickRef.current.dateStr === dateStr &&
+      now - lastClickRef.current.time < 380
+    ) {
+      // Double click / double tap detected! Directly open booking page for this date
+      lastClickRef.current = null;
+      router.push(`/app/bookings/new?date=${dateStr}`);
+      return;
+    }
+
+    lastClickRef.current = { dateStr, time: now };
+    setSelectedDate(dateStr);
+  };
 
   const handleDatePressStart = (dateStr: string) => {
     isLongPressTriggeredRef.current = false;
@@ -851,11 +875,11 @@ export default function CalendarPage() {
               <span className="text-xs shrink-0 animate-bounce">👆</span>
               <p className="font-bold text-slate-800 leading-tight">
                 <span className="text-amber-800 font-extrabold">டிப்ஸ்: </span>
-                தேதியை அழுத்திப் பிடித்தால் (<span className="text-emerald-950 font-black">Press &amp; Hold</span>) நாள் விவரங்கள் உடனே விரியும்!
+                இருமுறை கிளிக்: <span className="text-emerald-950 font-black">புதிய பதிவு</span> • அழுத்திப் பிடித்தால்: <span className="text-amber-950 font-black">நாள் விவரங்கள்</span>!
               </p>
             </div>
             <span className="shrink-0 text-[9px] sm:text-[9.5px] font-black text-emerald-900 bg-emerald-100/90 px-1.5 py-0.5 rounded-md border border-emerald-300/80 shadow-2xs">
-              Hold 0.4s
+              2x Click / Hold
             </span>
           </div>
 
@@ -950,6 +974,7 @@ export default function CalendarPage() {
                 return (
                   <button
                     key={dateStr}
+                    data-calendar-date={dateStr}
                     onPointerDown={() => handleDatePressStart(dateStr)}
                     onPointerUp={handleDatePressEnd}
                     onPointerLeave={handleDatePressEnd}
@@ -960,12 +985,9 @@ export default function CalendarPage() {
                       setSelectedDate(dateStr);
                       setShowDayDetailsModal(true);
                     }}
-                    onClick={() => {
-                      if (!isLongPressTriggeredRef.current) {
-                        setSelectedDate(dateStr);
-                      }
-                    }}
-                    title="கிளிக் செய்ய: தேர்வு | அழுத்திப் பிடிக்க: பஞ்சாங்க முழு விவரம்"
+                    onClick={() => handleDateCellClick(dateStr)}
+                    onDoubleClick={() => router.push(`/app/bookings/new?date=${dateStr}`)}
+                    title="இருமுறை கிளிக்: புதிய பதிவு | அழுத்திப் பிடிக்க: நாள் விவரங்கள்"
                     className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
                       isSelected
                         ? "bg-amber-100/90 ring-2 ring-amber-600 ring-inset z-10 font-bold shadow-2xs"
@@ -1715,283 +1737,404 @@ export default function CalendarPage() {
       {/* 3. Full Day Details Modal (நாள்காட்டி & பஞ்சாங்கம் முழு விவரம் - Opened by Long-Press on Date or "முழு விவரம் >") */}
       {showDayDetailsModal && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
           onClick={() => setShowDayDetailsModal(false)}
         >
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-5 border border-emerald-950/20 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto animate-in zoom-in-95 duration-150"
+            className="bg-white rounded-3xl max-w-lg w-full border border-amber-300/60 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-white flex items-center justify-center shadow-xs">
-                  <Sparkles className="w-4 h-4 text-amber-300" />
+            {/* Rich Sacred Vedic Header */}
+            <div className="bg-gradient-to-br from-emerald-950 via-[#0a2f18] to-emerald-900 text-white p-4 sm:p-5 border-b border-amber-400/40 relative overflow-hidden shrink-0">
+              {/* Decorative Subtle Glowing Background Pattern */}
+              <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -left-6 -top-6 w-24 h-24 bg-emerald-400/10 rounded-full blur-xl pointer-events-none" />
+
+              <div className="flex items-start justify-between gap-3 relative z-10">
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Glowing Day Number Pill */}
+                  <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-emerald-950 flex flex-col items-center justify-center font-black shadow-md shrink-0 ring-2 ring-amber-300/80">
+                    <span className="text-xl sm:text-2xl leading-none font-black">{selDayNum}</span>
+                    <span className="text-[9px] sm:text-[9.5px] uppercase font-bold tracking-tight mt-0.5">{selMonthEn}</span>
+                  </div>
+
+                  {/* Dual Date Headings */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 leading-tight">
+                      <h3 className="text-base sm:text-lg font-black text-white tracking-tight truncate">
+                        {selDayNum} {selMonthEn} {selYear}
+                      </h3>
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span className="text-xs sm:text-sm font-bold text-amber-200">
+                        {selectedTamilInfo.dayOfWeekTa}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-[13px] font-bold text-amber-300 mt-0.5 truncate">
+                      {selectedTamilInfo.tamilMonth} {selectedTamilInfo.tamilDay} ({selectedTamilInfo.dayOfWeekTa}) • {selectedTamilInfo.tamilYear} வருடம்
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                    நாள் பஞ்சாங்கம் &amp; பூஜைகள்
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {selectedTamilInfo.formattedDualDate} ({selectedTamilInfo.dayOfWeekTa})
-                  </p>
-                </div>
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowDayDetailsModal(false)}
+                  className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition active:scale-95 shrink-0 border border-white/20"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowDayDetailsModal(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-slate-600 flex items-center justify-center transition active:scale-95"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Date Box & Sacred Badges */}
-            <div className="bg-[#fcfbf7] border border-amber-200/80 rounded-2xl p-3 flex items-center justify-between gap-3 flex-wrap">
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-slate-900">
-                    {selDayNum} {selMonthEn} {selYear}
-                  </span>
-                  <span className="text-xs font-bold text-slate-600 uppercase">
-                    {selDayOfWeekEn}
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-amber-950 mt-0.5">
-                  {selectedTamilInfo.tamilMonth} {selectedTamilInfo.tamilDay} ({selectedTamilInfo.dayOfWeekTa}) • {selectedTamilInfo.tamilYear} வருடம்
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Sacred Auspicious Event Chips in Header */}
+              <div className="flex items-center gap-1.5 flex-wrap mt-3 pt-2.5 border-t border-white/15 relative z-10">
                 {selectedTamilInfo.isMuhurtham && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-300">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/90 text-white text-[11px] font-extrabold shadow-2xs flex items-center gap-1 border border-emerald-300/50">
                     💍 சுப முகூர்த்தம்
                   </span>
                 )}
                 {selectedTamilInfo.isPournami && (
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-emerald-950 text-[11px] font-black shadow-2xs flex items-center gap-1">
                     🌕 பௌர்ணமி
                   </span>
                 )}
                 {selectedTamilInfo.isAmavasai && (
-                  <span className="px-2 py-0.5 rounded-full bg-slate-800 text-white text-xs font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-900/90 text-white text-[11px] font-extrabold border border-slate-700 shadow-2xs">
                     🌑 அமாவாசை
                   </span>
                 )}
                 {selectedTamilInfo.isKarinaal && (
-                  <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 text-xs font-bold border border-rose-300">
+                  <span className="px-2.5 py-0.5 rounded-full bg-rose-500/90 text-white text-[11px] font-extrabold shadow-2xs">
                     ⚠️ கரிநாள்
                   </span>
                 )}
                 {selectedTamilInfo.festivalName && (
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 text-xs font-bold border border-purple-200">
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-500/90 text-white text-[11px] font-extrabold shadow-2xs">
                     ⭐ {selectedTamilInfo.festivalName}
                   </span>
+                )}
+                {selectedTamilInfo.isPradosham && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-600/90 text-white text-[11px] font-extrabold shadow-2xs">
+                    🪔 பிரதோஷம்
+                  </span>
+                )}
+                <span className="text-[10px] text-amber-200/90 font-semibold ml-auto flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>வேத பஞ்சாங்கம்</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Scrollable Modal Content */}
+            <div className="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 bg-[#faf9f5]">
+              {/* 1. Complete Panchangam Details Matrix (6 Rich Sacred Cards) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-0.5">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-amber-600">🪔</span>
+                    <span>பஞ்சாங்க அங்கங்கள்</span>
+                  </h4>
+                  <span className="text-[10.5px] font-bold text-slate-500">
+                    சாஸ்திர விவரங்கள்
+                  </span>
+                </div>
+
+                {(() => {
+                  const soolamPariharamMap: Record<number, { soolam: string; pariharam: string }> = {
+                    0: { soolam: "மேற்கு", pariharam: "வெல்லம்" },
+                    1: { soolam: "கிழக்கு", pariharam: "தயிர்" },
+                    2: { soolam: "வடக்கு", pariharam: "பால்" },
+                    3: { soolam: "வடக்கு", pariharam: "பால்" },
+                    4: { soolam: "தெற்கு", pariharam: "தைலம்" },
+                    5: { soolam: "மேற்கு", pariharam: "வெல்லம்" },
+                    6: { soolam: "கிழக்கு", pariharam: "தயிர்" },
+                  };
+                  const sp = soolamPariharamMap[selectedTamilInfo.dayOfWeek] || { soolam: "மேற்கு", pariharam: "வெல்லம்" };
+                  const yogam = selectedTamilInfo.isKarinaal ? "மரண யோகம்" : (selectedTamilInfo.isMuhurtham ? "அமிர்த யோகம்" : "சித்த யோகம்");
+
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                      {/* Tithi Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-amber-900 flex items-center gap-1">
+                          <span>🌔</span> திதி (Tithi)
+                        </span>
+                        <span className="font-black text-slate-900 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          {selectedTamilInfo.tithiNameTa || selectedTamilInfo.tithiTa}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
+                          {selectedTamilInfo.pakshaTa}
+                        </span>
+                      </div>
+
+                      {/* Nakshatram Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-amber-900 flex items-center gap-1">
+                          <span>⭐</span> நட்சத்திரம் (Star)
+                        </span>
+                        <span className="font-black text-slate-900 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          {selectedTamilInfo.nakshatraNameTa}
+                        </span>
+                        <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">
+                          சுப நட்சத்திரம்
+                        </span>
+                      </div>
+
+                      {/* Yogam Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-amber-900 flex items-center gap-1">
+                          <span>🧘</span> யோகம் (Yogam)
+                        </span>
+                        <span className="font-black text-slate-900 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          {yogam}
+                        </span>
+                        <span className={`text-[10px] font-bold block mt-0.5 ${
+                          selectedTamilInfo.isKarinaal ? "text-rose-700" : "text-emerald-700"
+                        }`}>
+                          {selectedTamilInfo.isKarinaal ? "தவிர்க்கவும்" : "சுப யோகம்"}
+                        </span>
+                      </div>
+
+                      {/* Karanam Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                          <span>🏛️</span> கரணம் (Karanam)
+                        </span>
+                        <span className="font-black text-slate-900 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          பாலவம்
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                          சுப கர்மம்
+                        </span>
+                      </div>
+
+                      {/* Soolam & Pariharam Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                          <span>🧭</span> சூலம் &amp; பரிகாரம்
+                        </span>
+                        <span className="font-black text-slate-900 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          {sp.soolam}
+                        </span>
+                        <span className="text-[10px] text-amber-800 font-bold block mt-0.5">
+                          பரிகாரம்: {sp.pariharam}
+                        </span>
+                      </div>
+
+                      {/* Chandrashtamam Card */}
+                      <div className="bg-white border border-amber-200/80 rounded-2xl p-2.5 shadow-2xs hover:border-amber-400 transition">
+                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                          <span>🌓</span> சந்திராஷ்டமம்
+                        </span>
+                        <span className="font-black text-emerald-800 block mt-1 text-xs sm:text-[13px] leading-tight">
+                          சுபம் (இல்லை)
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+                          அனைவருக்கும் நன்று
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* 2. Auspicious & Inauspicious Times (Rich Two-Tone Grid) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-0.5">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span className="text-amber-600">⏱️</span>
+                    <span>நேர அட்டவணை (Daily Timings)</span>
+                  </h4>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  {/* Auspicious Timings Card */}
+                  <div className="bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/50 border border-emerald-300/80 rounded-2xl p-3 shadow-2xs space-y-2">
+                    <span className="text-[11px] font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                      <span>சுப நேரங்கள் (Auspicious Timings)</span>
+                    </span>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between bg-white/90 p-2 rounded-xl border border-emerald-200/70">
+                        <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                          <span>☀️</span> நல்ல நேரம்
+                        </span>
+                        <span className="font-black text-emerald-950 text-right">
+                          காலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}
+                          {selectedTamilInfo.nallaNeramEvening ? ` • மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}` : ""}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white/90 p-2 rounded-xl border border-emerald-200/70">
+                        <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                          <span>✨</span> கௌரி நல்ல நேரம்
+                        </span>
+                        <span className="font-black text-emerald-950 text-right">
+                          காலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}
+                          {selectedTamilInfo.gowriNallaNeramEvening ? ` • மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}` : ""}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-white/90 p-2 rounded-xl border border-emerald-200/70">
+                        <span className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                          <span>🪔</span> பிரம்ம முகூர்த்தம்
+                        </span>
+                        <span className="font-black text-emerald-950 text-right">
+                          காலை: 04:30 AM – 06:00 AM
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Avoid Timings (3 Alert Cards) */}
+                  <div>
+                    <span className="text-[11px] font-bold text-slate-600 block mb-1.5 px-0.5">
+                      தவிர்க்க வேண்டிய காலங்கள் (Inauspicious Periods):
+                    </span>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-rose-50/90 border border-rose-200 rounded-2xl p-2 shadow-2xs">
+                        <span className="text-[10px] font-black text-rose-800 uppercase block">
+                          ராகு காலம்
+                        </span>
+                        <span className="text-[11px] font-black text-slate-900 block mt-0.5">
+                          {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
+                        </span>
+                      </div>
+
+                      <div className="bg-purple-50/90 border border-purple-200 rounded-2xl p-2 shadow-2xs">
+                        <span className="text-[10px] font-black text-purple-800 uppercase block">
+                          எமகண்டம்
+                        </span>
+                        <span className="text-[11px] font-black text-slate-900 block mt-0.5">
+                          {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
+                        </span>
+                      </div>
+
+                      <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-2 shadow-2xs">
+                        <span className="text-[10px] font-black text-amber-800 uppercase block">
+                          குளிகை
+                        </span>
+                        <span className="text-[11px] font-black text-slate-900 block mt-0.5">
+                          {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Day's Scheduled Bookings & Pujas */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-0.5">
+                  <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🔥</span>
+                    <span>அன்றைய பூஜைகள் &amp; முன்பதிவுகள் ({selectedDayBookings.length})</span>
+                  </h4>
+                  <Link
+                    href={`/app/bookings/new?date=${selectedDate}`}
+                    className="text-[11px] font-bold text-amber-800 hover:text-amber-900 flex items-center gap-0.5"
+                  >
+                    <span>+ புதிய பதிவு</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+
+                {selectedDayBookings.length === 0 ? (
+                  <div className="border border-dashed border-amber-300/80 rounded-2xl p-4 text-center text-xs bg-amber-50/50 space-y-2">
+                    <p className="font-extrabold text-amber-950">
+                      இத்தேதியில் இதுவரை முன்பதிவுகள் ஏதுமில்லை (Open for Bookings)
+                    </p>
+                    <p className="text-[11px] text-slate-600">
+                      பக்தர்களுக்கு புதிய பூஜை முன்பதிவு செய்ய கீழேயுள்ள பட்டனை கிளிக் செய்யவும்.
+                    </p>
+                    <Link
+                      href={`/app/bookings/new?date=${selectedDate}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-850 hover:bg-emerald-900 text-white rounded-xl font-bold text-xs shadow-2xs transition active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>+ பூஜை முன்பதிவு செய்ய</span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedDayBookings.map((b) => (
+                      <Link
+                        key={b.id}
+                        href={`/app/bookings/${b.id}`}
+                        className="block p-3 rounded-2xl border border-slate-200/90 bg-white hover:border-amber-400 hover:shadow-xs transition group"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-black text-[10px] text-amber-950 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
+                                {b.bookingNumber}
+                              </span>
+                              <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-amber-950 truncate">
+                                {b.poojaTamilName || b.poojaEnglishName}
+                              </h5>
+                            </div>
+
+                            <div className="text-[11px] text-slate-600 mt-1 flex items-center gap-2 flex-wrap font-medium">
+                              <span className="font-bold text-slate-900">👤 {b.customerName}</span>
+                              <span>•</span>
+                              <span>🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)}</span>
+                              {b.location && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-slate-500">📍 {b.location}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="font-black text-xs sm:text-sm text-slate-900">
+                              ₹{b.totalAmount.toLocaleString("en-IN")}
+                            </div>
+                            <span className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded mt-0.5 inline-block ${
+                              b.paymentStatus === "PAID"
+                                ? "bg-emerald-100 text-emerald-900"
+                                : "bg-rose-100 text-rose-900"
+                            }`}>
+                              {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* 1. Complete Panchangam Details Matrix */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <span>🪔</span>
-                <span>பஞ்சாங்க விபரங்கள்</span>
-              </h4>
-
-              {(() => {
-                const soolamPariharamMap: Record<number, { soolam: string; pariharam: string }> = {
-                  0: { soolam: "மேற்கு", pariharam: "வெல்லம்" },
-                  1: { soolam: "கிழக்கு", pariharam: "தயிர்" },
-                  2: { soolam: "வடக்கு", pariharam: "பால்" },
-                  3: { soolam: "வடக்கு", pariharam: "பால்" },
-                  4: { soolam: "தெற்கு", pariharam: "தைலம்" },
-                  5: { soolam: "மேற்கு", pariharam: "வெல்லம்" },
-                  6: { soolam: "கிழக்கு", pariharam: "தயிர்" },
-                };
-                const sp = soolamPariharamMap[selectedTamilInfo.dayOfWeek] || { soolam: "மேற்கு", pariharam: "வெல்லம்" };
-                const yogam = selectedTamilInfo.isKarinaal ? "மரண யோகம்" : (selectedTamilInfo.isMuhurtham ? "அமிர்த யோகம்" : "சித்த யோகம்");
-
-                return (
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">திதி (Tithi)</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        {selectedTamilInfo.tithiNameTa || selectedTamilInfo.tithiTa} ({selectedTamilInfo.pakshaTa})
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">நட்சத்திரம் (Nakshatram)</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        {selectedTamilInfo.nakshatraNameTa}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">யோகம் (Yogam)</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        {yogam}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">கரணம் (Karanam)</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        பாலவம்
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">சூலம் &amp; பரிகாரம்</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        {sp.soolam} / {sp.pariharam}
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5">
-                      <span className="text-[10px] font-bold text-slate-500 block">சந்திராஷ்டமம்</span>
-                      <span className="font-extrabold text-slate-900 block mt-0.5">
-                        சுபம் (இல்லை)
-                      </span>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* 2. Auspicious & Inauspicious Times */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                <span>⏱️</span>
-                <span>நேர அட்டவணை</span>
-              </h4>
-
-              <div className="space-y-1.5 text-xs">
-                <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-2.5 flex items-center justify-between gap-2">
-                  <span className="font-bold text-emerald-950 flex items-center gap-1">
-                    <span>☀️</span> நல்ல நேரம்
-                  </span>
-                  <span className="font-extrabold text-slate-900 text-right">
-                    காலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}
-                    {selectedTamilInfo.nallaNeramEvening ? ` • மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}` : ""}
-                  </span>
-                </div>
-
-                <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-2.5 flex items-center justify-between gap-2">
-                  <span className="font-bold text-amber-950 flex items-center gap-1">
-                    <span>✨</span> கௌரி நல்ல நேரம்
-                  </span>
-                  <span className="font-extrabold text-slate-900 text-right">
-                    காலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}
-                    {selectedTamilInfo.gowriNallaNeramEvening ? ` • மாலை: ${formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}` : ""}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-                  <div className="bg-rose-50 border border-rose-200/80 rounded-xl p-2">
-                    <span className="text-[10px] font-bold text-rose-800 block">ராகு காலம்</span>
-                    <span className="text-[11px] font-black text-slate-900 block mt-0.5">
-                      {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
-                    </span>
-                  </div>
-                  <div className="bg-indigo-50 border border-indigo-200/80 rounded-xl p-2">
-                    <span className="text-[10px] font-bold text-indigo-800 block">எமகண்டம்</span>
-                    <span className="text-[11px] font-black text-slate-900 block mt-0.5">
-                      {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
-                    </span>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200/80 rounded-xl p-2">
-                    <span className="text-[10px] font-bold text-amber-800 block">குளிகை</span>
-                    <span className="text-[11px] font-black text-slate-900 block mt-0.5">
-                      {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Day's Bookings */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <span>🔥</span>
-                  <span>அன்றைய முன்பதிவு பூஜைகள் ({selectedDayBookings.length})</span>
-                </h4>
-                <Link
-                  href={`/app/bookings/new?date=${selectedDate}`}
-                  className="text-[11px] font-bold text-amber-800 hover:underline"
-                >
-                  + புதிய பதிவு
-                </Link>
-              </div>
-
-              {selectedDayBookings.length === 0 ? (
-                <div className="border border-dashed border-amber-200 rounded-xl p-3 text-center text-xs text-slate-500 bg-amber-50/40">
-                  இத்தேதியில் முன்பதிவுகள் ஏதுமில்லை (Open for Bookings)
-                </div>
-              ) : (
-                <div className="space-y-1.5">
-                  {selectedDayBookings.map((b) => (
-                    <Link
-                      key={b.id}
-                      href={`/app/bookings/${b.id}`}
-                      className="block p-2.5 rounded-xl border border-slate-200 bg-white hover:border-amber-400 transition"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="font-extrabold text-xs text-slate-900 truncate">
-                            👤 {b.customerName} • <span className="text-amber-900 font-bold">{b.poojaEnglishName}</span>
-                          </div>
-                          <div className="text-[10.5px] text-slate-500 mt-0.5">
-                            🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)} • 📍 {b.location}
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <div className="font-black text-xs text-slate-900">
-                            ₹{b.totalAmount.toLocaleString("en-IN")}
-                          </div>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                            b.paymentStatus === "PAID"
-                              ? "bg-emerald-100 text-emerald-900"
-                              : "bg-rose-100 text-rose-900"
-                          }`}>
-                            {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Modal Actions */}
-            <div className="pt-2 border-t border-gray-100 flex items-center gap-2">
+            {/* Smart Action Bar at Bottom */}
+            <div className="p-3.5 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handleShareWhatsApp}
-                className="flex-1 py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer"
+                className="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer"
+                title="Share Panchangam on WhatsApp"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>WhatsApp-ல் பகிர்</span>
+                <span className="hidden sm:inline">வாட்ஸ்அப்</span>
+                <span>பகிர்</span>
               </button>
 
               <Link
                 href={`/app/bookings/new?date=${selectedDate}`}
-                className="flex-1 py-2.5 px-3 bg-gradient-to-r from-amber-700 to-amber-800 hover:opacity-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95"
+                className="flex-1 py-2.5 px-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>புதிய புக்கிங்</span>
+                <Plus className="w-4 h-4" />
+                <span>+ இந்த தேதியில் பூஜை பதிவு</span>
               </Link>
 
               <button
                 type="button"
                 onClick={() => setShowDayDetailsModal(false)}
-                className="py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                className="py-2.5 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition active:scale-95 cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
-                <span>Close</span>
+                Close
               </button>
             </div>
           </div>
