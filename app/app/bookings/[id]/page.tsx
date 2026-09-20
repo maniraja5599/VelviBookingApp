@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
+import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -72,6 +73,7 @@ export default function BookingDetailPage() {
   const [editAdvanceAmount, setEditAdvanceAmount] = useState<number>(booking.advanceAmount || 0);
   const [editPaymentReason, setEditPaymentReason] = useState<string>("Payment adjustment");
   const [paymentError, setPaymentError] = useState<string>("");
+  const [showItemsShareModal, setShowItemsShareModal] = useState(false);
 
   const quickCancelReasons = [
     "Client request",
@@ -540,8 +542,9 @@ export default function BookingDetailPage() {
                 Edit Items →
               </Link>
               <button
-                onClick={handleWhatsAppShare}
-                className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1"
+                type="button"
+                onClick={() => setShowItemsShareModal(true)}
+                className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1 cursor-pointer transition active:scale-95"
               >
                 <Share2 className="w-3 h-3 text-emerald-600" />
                 <span>Share List</span>
@@ -925,6 +928,16 @@ export default function BookingDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Pooja Samagri Items WhatsApp & Image Preview Modal */}
+      {currentBusiness && (
+        <PoojaListShareModal
+          isOpen={showItemsShareModal}
+          onClose={() => setShowItemsShareModal(false)}
+          booking={booking}
+          business={currentBusiness}
+        />
       )}
     </div>
   );

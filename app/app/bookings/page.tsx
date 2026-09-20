@@ -22,6 +22,8 @@ import {
   Phone,
   User,
   X,
+  CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 
 interface MonthTimelineGroup {
@@ -110,6 +112,416 @@ const MONTH_THEMES: MonthTheme[] = [
   },
 ];
 
+interface SwipeableTimelineCardProps {
+  b: Booking;
+  theme: MonthTheme;
+  isSelf: boolean;
+  onToggleComplete: (b: Booking) => void;
+}
+
+const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
+  b,
+  theme,
+  isSelf,
+  onToggleComplete,
+}) => {
+  const [offsetX, setOffsetX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
+
+  const dateInfo = getTamilDate(b.date);
+  const isCompleted = b.status === "COMPLETED";
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const diffX = e.touches[0].clientX - touchStartRef.current.x;
+    const diffY = e.touches[0].clientY - touchStartRef.current.y;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 6) {
+      isDraggingRef.current = true;
+      setIsSwiping(true);
+      setOffsetX(Math.min(115, Math.max(0, diffX)));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (offsetX >= 70) {
+      onToggleComplete(b);
+    }
+    setOffsetX(0);
+    setIsSwiping(false);
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 150);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDraggingRef.current || offsetX > 10) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl flex-1 min-w-0 select-none shadow-2xs"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      {/* Background action revealed on swipe right */}
+      <div
+        className={`absolute inset-0 rounded-2xl flex items-center px-4 transition-colors z-0 ${
+          isCompleted ? "bg-amber-600 text-white" : "bg-emerald-700 text-white"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          {isCompleted ? (
+            <>
+              <RotateCcw className="w-5 h-5 text-white animate-spin" />
+              <span className="font-black text-xs">மறுதொடக்கம் (Reopen)</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
+              <span className="font-black text-xs">பூஜை முடிந்தது (Complete ✅)</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Foreground card */}
+      <div
+        style={{
+          transform: `translateX(${offsetX}px)`,
+          transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
+        }}
+        className="relative z-10 bg-white"
+      >
+        <Link
+          href={`/app/bookings/${b.id}`}
+          onClick={handleClick}
+          className={`block p-3 sm:p-3.5 border rounded-2xl transition hover:shadow-xs space-y-2 ${
+            isCompleted
+              ? "bg-emerald-50/40 border-emerald-300"
+              : "bg-white border-slate-200/90 hover:border-amber-300 shadow-2xs"
+          }`}
+        >
+          {/* Row 1: Customer Name, Status Badge, Time & Chevron */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-400 text-xs">👤</span>
+                <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
+                  {b.customerName}
+                </h4>
+                {isCompleted && (
+                  <span className="text-[9.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none">
+                    முடிந்தது ✅
+                  </span>
+                )}
+              </div>
+              <p className="text-xs font-bold text-amber-900 mt-0.5 truncate flex items-center gap-1">
+                <span>🪔</span>
+                <span>{b.poojaEnglishName || b.poojaTamilName}</span>
+                {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName && (
+                  <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
+                )}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
+                <Clock className="w-3 h-3 text-slate-500" />
+                <span>{b.startTime}</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
+            </div>
+          </div>
+
+          {/* Row 2: Confirmed Date, Location & Fee */}
+          <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5 gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 truncate min-w-0 text-[11px]">
+              <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 flex items-center gap-1 shrink-0">
+                <Calendar className="w-3 h-3 text-slate-500" />
+                <span>{dateInfo.dayOfMonth} {dateInfo.monthNameEn} ({dateInfo.dayOfWeekEn.slice(0, 3)})</span>
+              </span>
+
+              {b.location && (
+                <div className="flex items-center gap-1 font-semibold text-slate-600 truncate">
+                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                  <span className="truncate">{b.location}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="text-right shrink-0">
+              <span className="font-black text-slate-900 text-xs sm:text-sm">
+                ₹{b.totalAmount.toLocaleString("en-IN")}
+              </span>
+              <span
+                className={`text-[10px] font-bold ml-1.5 ${
+                  b.paymentStatus === "PAID"
+                    ? "text-emerald-700"
+                    : "text-rose-700"
+                }`}
+              >
+                {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Row 3: Priest Assignment & 1-tap Actions */}
+          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10.5px]">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-mono text-[9.5px] text-slate-400">
+                {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
+              </span>
+              {isSelf ? (
+                <span className="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
+                  <span>🪔</span> நானே (Self)
+                </span>
+              ) : (
+                <span className="font-semibold text-blue-900 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
+                  <span>👥</span> {b.assignedIyerName || "Team"}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* 1-Tap Quick Complete Toggle */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleComplete(b);
+                }}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95 cursor-pointer ${
+                  isCompleted
+                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                    : "bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200"
+                }`}
+                title={isCompleted ? "முடிந்தது (Click to Reopen)" : "பூஜையை முடித்ததாக குறிக்க"}
+              >
+                <CheckCircle2 className={`w-3 h-3 ${isCompleted ? "text-emerald-700 fill-emerald-200" : "text-slate-400"}`} />
+                <span>{isCompleted ? "முடிந்தது ✅" : "Complete"}</span>
+              </button>
+
+              {b.customerMobile && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.location.href = `tel:${b.customerMobile}`;
+                    }}
+                    className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer"
+                    title="Call Devotee"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.open(`https://wa.me/${b.customerMobile?.replace(/\D/g, "")}`, "_blank");
+                    }}
+                    className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200 cursor-pointer"
+                    title="WhatsApp Devotee"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const SwipeableListCard: React.FC<{
+  b: Booking;
+  isSelf: boolean;
+  onToggleComplete: (b: Booking) => void;
+}> = ({ b, isSelf, onToggleComplete }) => {
+  const [offsetX, setOffsetX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
+
+  const isCompleted = b.status === "COMPLETED";
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const diffX = e.touches[0].clientX - touchStartRef.current.x;
+    const diffY = e.touches[0].clientY - touchStartRef.current.y;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 6) {
+      isDraggingRef.current = true;
+      setIsSwiping(true);
+      setOffsetX(Math.min(115, Math.max(0, diffX)));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (offsetX >= 70) {
+      onToggleComplete(b);
+    }
+    setOffsetX(0);
+    setIsSwiping(false);
+    setTimeout(() => {
+      isDraggingRef.current = false;
+    }, 150);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDraggingRef.current || offsetX > 10) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl select-none shadow-2xs"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
+    >
+      <div
+        className={`absolute inset-0 rounded-2xl flex items-center px-4 transition-colors z-0 ${
+          isCompleted ? "bg-amber-600 text-white" : "bg-emerald-700 text-white"
+        }`}
+      >
+        <div className="flex items-center gap-2">
+          {isCompleted ? (
+            <>
+              <RotateCcw className="w-5 h-5 text-white animate-spin" />
+              <span className="font-black text-xs">மறுதொடக்கம் (Reopen)</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
+              <span className="font-black text-xs">பூஜை முடிந்தது (Complete ✅)</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div
+        style={{
+          transform: `translateX(${offsetX}px)`,
+          transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
+        }}
+        className="relative z-10 bg-white"
+      >
+        <Link
+          href={`/app/bookings/${b.id}`}
+          onClick={handleClick}
+          className={`block p-3 sm:p-3.5 border rounded-2xl transition hover:shadow-xs space-y-1.5 ${
+            isCompleted
+              ? "bg-emerald-50/40 border-emerald-300"
+              : "bg-white border-slate-200/90 hover:border-amber-300 shadow-2xs"
+          }`}
+        >
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/70 px-1.5 py-0.2 rounded border border-amber-200">
+                  {b.bookingNumber}
+                </span>
+                {isSelf ? (
+                  <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
+                    <span>🪔</span> Self
+                  </span>
+                ) : (
+                  <span className="text-[9.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
+                    <span>👥</span> {b.assignedIyerName || "Team"}
+                  </span>
+                )}
+                {isCompleted && (
+                  <span className="text-[9.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none">
+                    முடிந்தது ✅
+                  </span>
+                )}
+                <span className="text-[9.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
+                  {b.date} • {b.startTime}
+                </span>
+              </div>
+              <h3 className="font-black text-sm text-slate-900 mt-1 flex items-center gap-1">
+                <span>👤</span>
+                <span>{b.customerName}</span>
+              </h3>
+              <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
+                🪔 {b.poojaEnglishName || b.poojaTamilName}
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-sm font-black text-slate-900">
+                ₹{b.totalAmount.toLocaleString("en-IN")}
+              </span>
+              <div className="text-[10px] font-bold mt-0.5">
+                {b.paymentStatus === "PAID" ? (
+                  <span className="text-emerald-700">Paid ✅</span>
+                ) : (
+                  <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+            <div className="flex items-center gap-1 text-slate-500 truncate text-[11px]">
+              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="truncate">{b.location || "Namakkal"}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onToggleComplete(b);
+                }}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition cursor-pointer active:scale-95 ${
+                  isCompleted
+                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                    : "bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200"
+                }`}
+                title={isCompleted ? "Completed" : "Mark as Completed"}
+              >
+                <CheckCircle2 className={`w-3 h-3 ${isCompleted ? "text-emerald-700 fill-emerald-200" : "text-slate-400"}`} />
+                <span>{isCompleted ? "முடிந்தது ✅" : "Complete"}</span>
+              </button>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </div>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
+};
+
 export default function BookingsListPage() {
   const { currentBusiness, currentUser } = useAuth();
   const { t } = useLanguage();
@@ -119,6 +531,22 @@ export default function BookingsListPage() {
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
   const [dbVersion, setDbVersion] = useState(0);
+  const [completeToast, setCompleteToast] = useState<{
+    booking: Booking;
+    action: "completed" | "reopened";
+  } | null>(null);
+
+  const handleToggleComplete = (b: Booking) => {
+    const nextStatus = b.status === "COMPLETED" ? "CONFIRMED" : "COMPLETED";
+    db.updateBookingStatus(b.id, nextStatus, currentUser?.name || "Self");
+    setCompleteToast({
+      booking: b,
+      action: nextStatus === "COMPLETED" ? "completed" : "reopened",
+    });
+    setTimeout(() => {
+      setCompleteToast(null);
+    }, 4500);
+  };
 
   useEffect(() => {
     const handler = () => setDbVersion((v) => v + 1);
@@ -280,6 +708,19 @@ export default function BookingsListPage() {
         ))}
       </div>
 
+      {/* Swipe Tip Banner */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 text-xs shadow-2xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-base shrink-0">👉</span>
+          <p className="text-[11px] sm:text-xs text-emerald-950 font-bold leading-snug truncate">
+            <span className="text-emerald-800 font-extrabold">டிப்ஸ்:</span> முன்பதிவை வலதுபுறம் ஸ்வைப் செய்து <span className="underline decoration-emerald-500 font-extrabold">&apos;பூஜை முடிந்தது&apos; (Complete ✅)</span> என மாற்றலாம்!
+          </p>
+        </div>
+        <span className="shrink-0 text-[10px] font-black bg-emerald-700 text-white px-2 py-0.5 rounded-full shadow-2xs">
+          Swipe 👉
+        </span>
+      </div>
+
       {/* No Bookings Empty State */}
       {filteredBookings.length === 0 ? (
         <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-2xs space-y-3">
@@ -366,120 +807,13 @@ export default function BookingsListPage() {
                           )}
                         </div>
 
-                        {/* Right: Rich Booking Card Aligned Exactly with the Date */}
-                        <Link
-                          href={`/app/bookings/${b.id}`}
-                          className="flex-1 min-w-0 bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs hover:border-amber-300 hover:shadow-xs transition active:scale-[0.99] space-y-2"
-                        >
-                          {/* Row 1: Customer / Devotee Name FIRST, Time Badge & Chevron */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-slate-400 text-xs">👤</span>
-                                <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
-                                  {b.customerName}
-                                </h4>
-                              </div>
-                              <p className="text-xs font-bold text-amber-900 mt-0.5 truncate flex items-center gap-1">
-                                <span>🪔</span>
-                                <span>{b.poojaEnglishName || b.poojaTamilName}</span>
-                                {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName && (
-                                  <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
-                                )}
-                              </p>
-                            </div>
-
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
-                                <Clock className="w-3 h-3 text-slate-500" />
-                                <span>{b.startTime}</span>
-                              </div>
-                              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
-                            </div>
-                          </div>
-
-                          {/* Row 2: Confirmed Date, Location & Fee */}
-                          <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5 gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 truncate min-w-0 text-[11px]">
-                              {/* Confirmed Date Badge */}
-                              <span className="font-bold text-slate-800 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 flex items-center gap-1 shrink-0">
-                                <Calendar className="w-3 h-3 text-slate-500" />
-                                <span>{dateInfo.dayOfMonth} {dateInfo.monthNameEn} ({dateInfo.dayOfWeekEn.slice(0, 3)})</span>
-                              </span>
-
-                              {b.location && (
-                                <div className="flex items-center gap-1 font-semibold text-slate-600 truncate">
-                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                                  <span className="truncate">{b.location}</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <div className="text-right shrink-0">
-                              <span className="font-black text-slate-900 text-xs sm:text-sm">
-                                ₹{b.totalAmount.toLocaleString("en-IN")}
-                              </span>
-                              <span
-                                className={`text-[10px] font-bold ml-1.5 ${
-                                  b.paymentStatus === "PAID"
-                                    ? "text-emerald-700"
-                                    : "text-rose-700"
-                                }`}
-                              >
-                                {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Row 3: Priest Assignment & 1-tap Actions */}
-                          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10.5px]">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-mono text-[9.5px] text-slate-400">
-                                {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
-                              </span>
-                              {isSelf ? (
-                                <span className="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
-                                  <span>🪔</span> நானே (Self)
-                                </span>
-                              ) : (
-                                <span className="font-semibold text-blue-900 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
-                                  <span>👥</span> {b.assignedIyerName || "Team"}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="flex items-center gap-1 shrink-0">
-                              {b.customerMobile && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      window.location.href = `tel:${b.customerMobile}`;
-                                    }}
-                                    className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
-                                    title="Call Devotee"
-                                  >
-                                    <Phone className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      window.open(`https://wa.me/${b.customerMobile?.replace(/\D/g, "")}`, "_blank");
-                                    }}
-                                    className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
-                                    title="WhatsApp Devotee"
-                                  >
-                                    <MessageCircle className="w-3.5 h-3.5" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
+                        {/* Right: Rich Swipeable Booking Card Aligned Exactly with the Date */}
+                        <SwipeableTimelineCard
+                          b={b}
+                          theme={theme}
+                          isSelf={isSelf}
+                          onToggleComplete={handleToggleComplete}
+                        />
                       </div>
                     );
                   })}
@@ -494,75 +828,81 @@ export default function BookingsListPage() {
         /* =================================================================== */
         <div className="space-y-2">
           {filteredBookings.map((b) => {
-            const dateInfo = getTamilDate(b.date);
             const isSelf =
               b.assignedIyerId === ownerMember?.id ||
               b.assignedIyerName === currentUser?.name ||
-              b.assignedIyerName === "Ravi Iyer";
+              b.assignedIyerName === "Ravi Iyer" ||
+              !b.assignedIyerName ||
+              b.assignedIyerName.toLowerCase() === "self";
 
             return (
-              <Link
+              <SwipeableListCard
                 key={b.id}
-                href={`/app/bookings/${b.id}`}
-                className="block bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition relative space-y-1.5"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/70 px-1.5 py-0.2 rounded border border-amber-200">
-                        {b.bookingNumber}
-                      </span>
-                      {isSelf ? (
-                        <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
-                          <span>🪔</span> Self
-                        </span>
-                      ) : (
-                        <span className="text-[9.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
-                          <span>👥</span> {b.assignedIyerName || "Team"}
-                        </span>
-                      )}
-                      <span className="text-[9.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.2 rounded">
-                        {b.date} • {b.startTime}
-                      </span>
-                    </div>
-                    <h3 className="font-black text-sm text-slate-900 mt-1 flex items-center gap-1">
-                      <span>👤</span>
-                      <span>{b.customerName}</span>
-                    </h3>
-                    <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
-                      🪔 {b.poojaEnglishName || b.poojaTamilName} {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName ? `(${b.poojaTamilName})` : ""}
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-sm font-black text-slate-900">
-                      ₹{b.totalAmount.toLocaleString("en-IN")}
-                    </span>
-                    <div className="text-[10px] font-bold mt-0.5">
-                      {b.paymentStatus === "PAID" ? (
-                        <span className="text-emerald-700">Paid ✅</span>
-                      ) : (
-                        <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                  <div className="flex items-center gap-1 text-slate-500 truncate">
-                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                    <span className="truncate">
-                      {b.location || "Namakkal"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center text-slate-400 shrink-0">
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </Link>
+                b={b}
+                isSelf={isSelf}
+                onToggleComplete={handleToggleComplete}
+              />
             );
           })}
+        </div>
+      )}
+
+      {/* Complete/Reopen Toast with Undo Action */}
+      {completeToast && (
+        <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in slide-in-from-bottom-3 duration-200 pointer-events-auto">
+          <div className="bg-slate-900/95 text-white rounded-2xl p-3 shadow-2xl border border-slate-700 flex items-center justify-between gap-3 backdrop-blur-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                  completeToast.action === "completed" ? "bg-emerald-500 text-white" : "bg-amber-500 text-white"
+                }`}
+              >
+                {completeToast.action === "completed" ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold leading-tight truncate">
+                  {completeToast.booking.customerName} -{" "}
+                  {completeToast.action === "completed"
+                    ? "பூஜை முடிந்தது! ✅"
+                    : "மீண்டும் திறக்கப்பட்டது (Reopened)"}
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  {completeToast.booking.poojaEnglishName || completeToast.booking.poojaTamilName}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const revertStatus =
+                    completeToast.action === "completed" ? "CONFIRMED" : "COMPLETED";
+                  db.updateBookingStatus(
+                    completeToast.booking.id,
+                    revertStatus,
+                    currentUser?.name || "Self"
+                  );
+                  setCompleteToast(null);
+                }}
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-amber-400 text-[11px] font-bold rounded-lg border border-slate-600 transition flex items-center gap-1 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Undo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCompleteToast(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

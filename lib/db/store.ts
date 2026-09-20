@@ -540,6 +540,7 @@ export class VelviDatabaseStore {
       durationMinutes?: number;
       location?: string;
       notes?: string;
+      status?: BookingStatus;
     };
   }): { success: boolean; booking?: Booking; error?: string } {
     const booking = this.bookings.find((b) => b.id === params.bookingId);
@@ -582,6 +583,42 @@ export class VelviDatabaseStore {
       reason: "Booking details edited",
       createdAt: new Date().toISOString(),
     });
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
+
+    return { success: true, booking };
+  }
+
+  public updateBookingStatus(
+    bookingId: string,
+    status: BookingStatus,
+    updatedBy: string = "User"
+  ): { success: boolean; booking?: Booking; error?: string } {
+    const booking = this.bookings.find((b) => b.id === bookingId);
+    if (!booking) return { success: false, error: "Booking not found" };
+
+    const oldStatus = booking.status;
+    booking.status = status;
+    booking.updatedAt = new Date().toISOString();
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      businessId: booking.businessId,
+      actorName: updatedBy,
+      action: "BOOKING_STATUS_CHANGED",
+      targetType: "BOOKING",
+      targetId: booking.id,
+      oldValue: { status: oldStatus },
+      newValue: { status },
+      reason: `Booking status changed to ${status}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
 
     return { success: true, booking };
   }

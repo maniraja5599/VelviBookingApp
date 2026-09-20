@@ -8,6 +8,7 @@ import { db } from "@/lib/db/store";
 import { BookingItem } from "@/lib/types";
 import { generatePoojaFlyer } from "@/lib/flyer/canvas-generator";
 import { formatPoojaItemsWhatsAppMessage } from "@/lib/whatsapp/formatter";
+import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -37,6 +38,8 @@ export default function BookingItemsPage() {
   const [newItemUnit, setNewItemUnit] = useState("nos");
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Share preview modal state
+  const [showShareModal, setShowShareModal] = useState(false);
   // Flyer preview state
   const [flyerDataUrl, setFlyerDataUrl] = useState<string | null>(null);
   const [isGeneratingFlyer, setIsGeneratingFlyer] = useState(false);
@@ -382,70 +385,34 @@ export default function BookingItemsPage() {
           {/* 2 Primary Actions: Share List & Save as Image */}
           <div className="grid grid-cols-2 gap-2.5 pt-2">
             <button
-              onClick={handleShareWhatsApp}
-              className="py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition"
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              className="py-3 bg-gradient-to-r from-emerald-800 to-emerald-900 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition cursor-pointer"
             >
-              <Share2 className="w-4 h-4" />
-              <span>Share List</span>
+              <Share2 className="w-4 h-4 text-amber-300" />
+              <span>வாட்ஸ்அப் பகிர் (Share)</span>
             </button>
 
             <button
-              onClick={handleGenerateFlyer}
-              disabled={isGeneratingFlyer}
-              className="py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition"
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              className="py-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-[0.99] transition cursor-pointer"
             >
-              <ImageIcon className="w-4 h-4 text-velvi-goldLight" />
-              <span>{isGeneratingFlyer ? "Rendering..." : "Save as Image"}</span>
+              <ImageIcon className="w-4 h-4 text-emerald-800" />
+              <span>படம் பதிவிறக்கம் (PNG)</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Generated Canvas Flyer Preview Modal */}
-      {flyerDataUrl && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-4 max-w-sm w-full space-y-3 shadow-2xl border border-velvi-gold">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-sm text-velvi-brown flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-velvi-gold" /> Generated WhatsApp Flyer
-              </h3>
-              <button
-                onClick={() => setFlyerDataUrl(null)}
-                className="text-xs text-velvi-brown/60 hover:text-velvi-brown"
-              >
-                ✕ Close
-              </button>
-            </div>
-
-            <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-velvi-gold/30">
-              <img
-                src={flyerDataUrl}
-                alt="Pooja Item List Flyer"
-                className="w-full h-auto object-contain rounded-xl"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-1">
-              <a
-                href={flyerDataUrl}
-                download={`Pooja_Items_${booking.bookingNumber}.png`}
-                className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <Download className="w-4 h-4 text-velvi-goldLight" />
-                <span>Download PNG</span>
-              </a>
-
-              <button
-                onClick={() => {
-                  window.open(flyerDataUrl, "_blank");
-                }}
-                className="px-3 py-2.5 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown text-xs font-bold rounded-xl border border-velvi-gold/30"
-              >
-                View Full
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Pooja List WhatsApp & Image Preview Modal */}
+      {currentBusiness && (
+        <PoojaListShareModal
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          booking={booking}
+          business={currentBusiness}
+        />
       )}
     </div>
   );
