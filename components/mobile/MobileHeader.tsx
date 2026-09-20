@@ -154,7 +154,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                   : "bg-white hover:bg-amber-50/80 border-slate-200 text-slate-800 shadow-2xs"
               }`}
-              title="சுயவிவரம் & அமைப்புகள் (User Profile)"
+              title="User Profile & Settings"
               aria-expanded={isProfileMenuOpen}
             >
               {/* Clearly Visible Priest Avatar Icon Badge with Sacred Colors */}
@@ -210,7 +210,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-900 flex items-center justify-center">
                         <Pencil className="w-3.5 h-3.5 text-amber-800" />
                       </div>
-                      <span>சுயவிவரம் & லோகோ (Edit Profile)</span>
+                      <span>Edit Profile & Logo</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -224,7 +224,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
                         <Settings className="w-3.5 h-3.5" />
                       </div>
-                      <span>அமைப்புகள் (Settings)</span>
+                      <span>Settings</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -238,7 +238,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-pink-100 text-pink-700 flex items-center justify-center">
                         <Palette className="w-3.5 h-3.5" />
                       </div>
-                      <span>வண்ண தீம்கள் (Sacred Themes)</span>
+                      <span>Sacred Themes</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -252,7 +252,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                     className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-red-200/80 active:scale-98 cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>வெளியேறு (Sign Out)</span>
+                    <span>Sign Out</span>
                   </button>
                 </div>
               </div>
