@@ -1004,7 +1004,7 @@ export default function BookingsListPage() {
       <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 text-xs shadow-2xs">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-base shrink-0">👈</span>
-          <p className="text-[11px] sm:text-xs text-emerald-950 font-bold leading-snug truncate">
+          <p className="text-[11px] sm:text-xs text-emerald-950 font-bold leading-tight">
             <span className="text-emerald-800 font-extrabold">Tip:</span> Swipe left on any booking card to mark <span className="underline decoration-emerald-500 font-extrabold">&apos;Complete ✅&apos;</span>!
           </p>
         </div>
