@@ -30,6 +30,7 @@ export const SEED_BUSINESS: Business = {
   id: "biz-venkateswara-01",
   ownerId: "u-ravi-iyer-01",
   name: "",
+  serviceName: "Pooja • Homam • Seva",
   iyerName: "",
   logoUrl: "",
   phone: "+919876543210",

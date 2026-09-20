@@ -11,7 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 export const FirstTimeInstallPopup: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(10);
+  const [secondsLeft, setSecondsLeft] = useState(6);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
@@ -26,7 +26,7 @@ export const FirstTimeInstallPopup: React.FC = () => {
 
     if (isStandalone) return;
 
-    // 2. Check if first-time user has already seen this popup
+    // 2. Check if first-time user has already seen this popup (only once)
     const hasSeenPrompt = localStorage.getItem("velvi_first_install_prompt_seen");
     if (hasSeenPrompt) return;
 
@@ -42,12 +42,13 @@ export const FirstTimeInstallPopup: React.FC = () => {
     };
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    // Show popup for first-time user and mark as seen (strictly only once)
+    // Show popup strictly after 10 seconds for new users ("10s kalichici")
     const delayTimer = setTimeout(() => {
       setShowPopup(true);
       localStorage.setItem("velvi_first_install_prompt_seen", "true");
 
-      // Auto-close countdown (10 seconds)
+      // Auto-close countdown (6 seconds: "6 sec la maraiyanum")
+      setSecondsLeft(6);
       countdownIntervalRef.current = setInterval(() => {
         setSecondsLeft((prev) => {
           if (prev <= 1) {
@@ -59,11 +60,11 @@ export const FirstTimeInstallPopup: React.FC = () => {
         });
       }, 1000);
 
-      // Auto-close after exactly 10 seconds
+      // Auto-close after exactly 6 seconds (6000ms)
       timerRef.current = setTimeout(() => {
         setShowPopup(false);
-      }, 10000);
-    }, 400);
+      }, 6000);
+    }, 10000);
 
     return () => {
       clearTimeout(delayTimer);
@@ -110,7 +111,7 @@ export const FirstTimeInstallPopup: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-white/10">
               <div
                 className="h-full bg-gradient-to-r from-velvi-gold to-amber-300 transition-all duration-1000 ease-linear"
-                style={{ width: `${(secondsLeft / 10) * 100}%` }}
+                style={{ width: `${(secondsLeft / 6) * 100}%` }}
               />
             </div>
 

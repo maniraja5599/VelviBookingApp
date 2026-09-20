@@ -18,34 +18,39 @@ export default function ThemeSettingsPage() {
     tamilName: string;
     colors: string[];
     description: string;
+    tagline: string;
   }> = [
     {
       id: "traditional",
-      name: "Traditional",
-      tamilName: "பாரம்பரியம்",
+      name: "Traditional Vedic",
+      tamilName: "வேத பாரம்பரியம் (சந்தனம் & பொன்)",
       colors: ["#FAF7F2", "#4A2E18", "#C89234"],
-      description: "Warm Cream + Deep Brown + Temple Gold",
+      description: "Warm Cream + Deep Sacred Brown + Temple Gold",
+      tagline: "அமைதியான சாந்தமான மரபுவழி தோற்றம்",
     },
     {
       id: "classic",
-      name: "Classic",
-      tamilName: "செம்மொழி பசுமை",
+      name: "Sacred Bilva Green",
+      tamilName: "வில்வ தள பசுமை (புனித பச்சையும் தங்கமும்)",
       colors: ["#F4F7F4", "#1B4324", "#C89234"],
-      description: "White + Sacred Bilva Green + Gold",
+      description: "White + Sacred Bilva Green + Radiant Gold",
+      tagline: "மங்கலகரமான பசுமை மற்றும் கோவில் பொன் நிறம்",
     },
     {
       id: "royal",
-      name: "Royal",
-      tamilName: "ராஜகம்பீரம்",
+      name: "Royal Kumkum",
+      tamilName: "ராஜ குங்குமம் (மரூன் & பிரகாச தங்கம்)",
       colors: ["#FAF5F6", "#6B1724", "#D4AF37"],
-      description: "Cream + Sacred Kumkum Maroon + Gold",
+      description: "Cream + Sacred Kumkum Maroon + Deep Gold",
+      tagline: "கம்பீரமான திருக்கோவில் திருவிழா தோற்றம்",
     },
     {
       id: "modern",
-      name: "Modern",
-      tamilName: "நவீன வடிவம்",
-      colors: ["#FFFFFF", "#3D3835", "#B8860B"],
-      description: "Crisp White + Earth Brown + Soft Gold",
+      name: "Modern Vedic",
+      tamilName: "நவீன வேத பாணி (சாம்பல் & பொன்)",
+      colors: ["#FFFFFF", "#2D2825", "#B8860B"],
+      description: "Crisp Slate White + Earth Charcoal + Ochre Gold",
+      tagline: "தெளிவான நவீன வடிவமைப்பு",
     },
   ];
 
@@ -133,26 +138,31 @@ export default function ThemeSettingsPage() {
             <div
               key={p.id}
               onClick={() => handleSelectPreset(p.id)}
-              className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+              className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                 isSelected
-                  ? "bg-velvi-gold/10 border-velvi-gold shadow-sm ring-2 ring-velvi-gold/30"
-                  : "bg-white border-velvi-gold/20 hover:border-velvi-gold/50"
+                  ? "bg-amber-50/80 border-velvi-gold shadow-md ring-2 ring-velvi-gold/40"
+                  : "bg-white border-velvi-gold/20 hover:border-velvi-gold/50 shadow-xs"
               }`}
             >
-              <div className="space-y-1">
+              <div className="space-y-0.5 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-sm text-velvi-brownDark">{p.name}</h4>
-                  {isSelected && <Check className="w-4 h-4 text-velvi-gold stroke-[3]" />}
+                  <h4 className="font-extrabold text-xs text-velvi-brownDark">{p.name}</h4>
+                  {isSelected && (
+                    <span className="px-1.5 py-0.2 bg-velvi-gold text-velvi-brownDark text-[9px] font-black rounded-full uppercase flex items-center gap-1">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" /> Active
+                    </span>
+                  )}
                 </div>
-                <p className="text-[11px] text-velvi-brown/60">{p.description}</p>
+                <p className="text-[11px] font-bold text-velvi-goldDark">{p.tamilName}</p>
+                <p className="text-[10px] text-velvi-brown/70 leading-tight">{p.tagline}</p>
               </div>
 
               {/* Color Swatch Circles */}
-              <div className="flex -space-x-1.5 shrink-0">
+              <div className="flex -space-x-2 shrink-0">
                 {p.colors.map((c, idx) => (
                   <div
                     key={idx}
-                    className="w-6 h-6 rounded-full border-2 border-white shadow-sm"
+                    className="w-7 h-7 rounded-full border-2 border-white shadow-sm ring-1 ring-black/5"
                     style={{ backgroundColor: c }}
                   />
                 ))}

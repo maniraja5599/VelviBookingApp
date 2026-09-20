@@ -11,6 +11,8 @@ interface AuthContextType {
   subscription: Subscription | null;
   isLoading: boolean;
   loginWithGoogle: (email?: string, name?: string) => Promise<User>;
+  loginWithCredentials: (name: string, mobile: string) => Promise<User>;
+  loginDemo: () => Promise<User>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
   lookupAccountsByMobile: (mobile: string) => Promise<{
@@ -46,6 +48,8 @@ const AuthContext = createContext<AuthContextType>({
   subscription: null,
   isLoading: true,
   loginWithGoogle: async () => db.users[0],
+  loginWithCredentials: async () => db.users[0],
+  loginDemo: async () => db.users[0],
   logout: () => {},
   switchRole: () => {},
   lookupAccountsByMobile: async () => ({ success: false, users: [] }),
@@ -66,11 +70,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const syncState = React.useCallback(() => {
     const savedUserId = typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null;
 
-    // Automatically set default user so any visitor arrives already logged in
-    const user =
-      (savedUserId && savedUserId !== "LOGGED_OUT"
-        ? db.users.find((u) => u.id === savedUserId)
-        : null) || db.users[0];
+    if (!savedUserId || savedUserId === "LOGGED_OUT") {
+      setCurrentUser(null);
+      setCurrentBusiness(null);
+      setSubscription(null);
+      return;
+    }
+
+    const user = db.users.find((u) => u.id === savedUserId);
+    if (!user) {
+      setCurrentUser(null);
+      setCurrentBusiness(null);
+      setSubscription(null);
+      return;
+    }
 
     setCurrentUser(user);
 
@@ -91,6 +104,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (typeof window !== "undefined") {
       (window as any).velviDb = db;
     }
+  }, [syncState]);
+
+  const loginWithCredentials = React.useCallback(
+    async (name: string, mobile: string): Promise<User> => {
+      setIsLoading(true);
+      const cleanDigits = mobile.replace(/\D/g, "");
+      const normalized = normalizeIndianMobile(cleanDigits);
+
+      let user = db.users.find((u) => u.mobile && normalizeIndianMobile(u.mobile) === normalized);
+      if (!user) {
+        const trimmedName = name.trim() || "Vedic Priest";
+        const sanitizedName = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, "") || "priest";
+        user = {
+          id: `u-${Date.now()}`,
+          googleId: `phone-${Date.now()}`,
+          email: `${sanitizedName}@velvi.app`,
+          name: trimmedName,
+          mobile: normalized,
+          mobileVerified: true,
+          role: "OWNER",
+          referralCode: `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
+          createdAt: new Date().toISOString(),
+        };
+        db.users.push(user);
+
+        // Also create a business profile for this priest
+        const bizId = `biz-${Date.now()}`;
+        const newBiz: Business = {
+          id: bizId,
+          ownerId: user.id,
+          name: trimmedName,
+          serviceName: "Pooja • Homam • Seva",
+          iyerName: trimmedName,
+          phone: normalized,
+          whatsapp: normalized,
+          address: "தமிழ்நாடு, இந்தியா",
+          showWatermark: true,
+          createdAt: new Date().toISOString(),
+        };
+        db.businesses.push(newBiz);
+
+        // Assign 30-day Pro subscription
+        const now = new Date();
+        const end = new Date(Date.now() + 30 * 86400000);
+        db.subscriptions.push({
+          id: `sub-${Date.now()}`,
+          businessId: bizId,
+          planName: "Velvi Pro Monthly",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: now.toISOString(),
+          trialEnd: end.toISOString(),
+          currentPeriodStart: now.toISOString(),
+          currentPeriodEnd: end.toISOString(),
+          billingCycle: "MONTHLY",
+          autoRenew: true,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        });
+      } else {
+        if (name.trim()) {
+          user.name = name.trim();
+        }
+        user.mobileVerified = true;
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("velvi_active_user_id", user.id);
+      }
+      db.saveToLocalStorage();
+      syncState();
+      setIsLoading(false);
+      return user;
+    },
+    [syncState]
+  );
+
+  const loginDemo = React.useCallback(async (): Promise<User> => {
+    setIsLoading(true);
+    const demoUser = db.users[0]; // Ravi Iyer
+    if (typeof window !== "undefined") {
+      localStorage.setItem("velvi_active_user_id", demoUser.id);
+    }
+    syncState();
+    setIsLoading(false);
+    return demoUser;
   }, [syncState]);
 
   const loginWithGoogle = React.useCallback(async (email?: string, name?: string): Promise<User> => {
@@ -290,6 +389,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription,
       isLoading,
       loginWithGoogle,
+      loginWithCredentials,
+      loginDemo,
       logout,
       switchRole,
       lookupAccountsByMobile,
@@ -306,6 +407,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription,
       isLoading,
       loginWithGoogle,
+      loginWithCredentials,
+      loginDemo,
       logout,
       switchRole,
       lookupAccountsByMobile,

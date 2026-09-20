@@ -19,13 +19,53 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.2.0";
+export const APP_VERSION = "2.3.0";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "20 Sep 2026, 11:00 AM IST";
+export const BUILD_DATE = "20 Sep 2026, 02:00 PM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.3.0",
+    releaseDate: "20 Sep 2026",
+    releaseTime: "02:00 PM IST",
+    title: "Branding Split, 10MB Media, Smart Install Popup, State Restoration & Undo Recovery",
+    summary:
+      "Comprehensive priest empowerment update: Split Business and Service names with live sample card previews, 10MB image uploads, 10s wait / 6s auto-dismiss install popup, automatic page scroll position preservation, global Undo recovery for deleted items, and safe sample data removal protecting real records.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "Feature",
+        description: "Split Business Name (defaults to vadhyar/user name) & Service Name (defaults to 'Pooja • Homam • Seva') with live receipt flyer preview.",
+      },
+      {
+        category: "Enhancement",
+        description: "Increased business logo/media upload limit to 10MB with instant preview and priest guidance tips.",
+      },
+      {
+        category: "UI/UX",
+        description: "Smart Install Velvi App popup configured for first-time users with 10s delay and 6s auto-dismiss progress bar.",
+      },
+      {
+        category: "UI/UX",
+        description: "Automatic page scroll position and working state preservation across all tabs.",
+      },
+      {
+        category: "Feature",
+        description: "Instant Undo floating toast to recover deleted bookings, customers, and poojas with single tap.",
+      },
+      {
+        category: "Security",
+        description: "Permanent removal of destructive 'Clear All Data' button in Settings, replaced with safe 'Remove Sample Data' that only purges mock records.",
+      },
+      {
+        category: "Feature",
+        description: "Data Import & Export gated to active paid subscribers with automated expiry notice banner and 1-tap UPI renewal flow.",
+      },
+    ],
+  },
   {
     version: "2.2.0",
     releaseDate: "20 Sep 2026",
@@ -33,7 +73,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Interactive Pooja Creation Wizard, Samagri Checklist & Booking UX Overhaul",
     summary:
       "Major UX upgrade introducing a 3-step Pooja creation wizard with Quick Templates, full-length samagri checklist library with 1-click toggles, smart action buttons, and streamlined 4-step booking workflow with real-time Nalla Neram guidance.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {

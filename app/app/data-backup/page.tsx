@@ -20,7 +20,9 @@ export default function DataBackupPage() {
   const { currentBusiness, subscription } = useAuth();
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
-  const isPaidUser = subscription?.status === "ACTIVE";
+  const isPaidUser =
+    subscription?.status === "ACTIVE" &&
+    Boolean(subscription.currentPeriodEnd && new Date(subscription.currentPeriodEnd) > new Date());
 
   const [exportMessage, setExportMessage] = useState("");
   const [importPreview, setImportPreview] = useState<any | null>(null);
@@ -188,69 +190,92 @@ export default function DataBackupPage() {
 
       {/* Data Import with Preview (Point 56) */}
       <div className="bg-white rounded-3xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
-        <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
-          <Upload className="w-4 h-4 text-velvi-gold" /> Import Data
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
+            <Upload className="w-4 h-4 text-velvi-gold" /> Import Data
+          </h3>
+          {!isPaidUser && (
+            <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+              <Lock className="w-3 h-3" /> Paid Plan Only
+            </span>
+          )}
+        </div>
         <p className="text-xs text-velvi-brown/70">
           Upload customer spreadsheets (Excel/CSV) with automatic duplicate phone detection.
         </p>
 
-        <button
-          onClick={handleSimulateUpload}
-          className="w-full py-3 bg-velvi-cream hover:bg-velvi-gold/20 border border-dashed border-velvi-gold/50 rounded-2xl text-xs font-bold text-velvi-brown flex items-center justify-center gap-1.5 transition"
-        >
-          <Upload className="w-4 h-4 text-velvi-gold" />
-          <span>Upload Sample Excel / CSV File</span>
-        </button>
+        {isPaidUser ? (
+          <>
+            <button
+              onClick={handleSimulateUpload}
+              className="w-full py-3 bg-velvi-cream hover:bg-velvi-gold/20 border border-dashed border-velvi-gold/50 rounded-2xl text-xs font-bold text-velvi-brown flex items-center justify-center gap-1.5 transition cursor-pointer"
+            >
+              <Upload className="w-4 h-4 text-velvi-gold" />
+              <span>Upload Sample Excel / CSV File</span>
+            </button>
 
-        {/* Validation Preview Modal (Point 56: Never import without preview) */}
-        {importPreview && (
-          <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/30 space-y-2 text-xs">
-            <h4 className="font-bold text-xs text-velvi-brown">Import Validation Report</h4>
+            {/* Validation Preview Modal (Point 56: Never import without preview) */}
+            {importPreview && (
+              <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/30 space-y-2 text-xs">
+                <h4 className="font-bold text-xs text-velvi-brown">Import Validation Report</h4>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
-                <div className="font-bold text-velvi-brownDark">
-                  {importPreview.validCustomers.length}
-                </div>
-                <div className="text-[10px] text-velvi-brown/60">Valid Rows</div>
-              </div>
-              <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
-                <div className="font-bold text-amber-700">{importPreview.duplicateCount}</div>
-                <div className="text-[10px] text-velvi-brown/60">Duplicates</div>
-              </div>
-              <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
-                <div className="font-bold text-red-600">{importPreview.invalidPhoneCount}</div>
-                <div className="text-[10px] text-velvi-brown/60">Invalid Phone</div>
-              </div>
-            </div>
-
-            {importPreview.errors.length > 0 && (
-              <div className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-xl max-h-24 overflow-y-auto space-y-0.5">
-                {importPreview.errors.map((err: string, i: number) => (
-                  <div key={i} className="flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
-                    <span>{err}</span>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
+                    <div className="font-bold text-velvi-brownDark">
+                      {importPreview.validCustomers.length}
+                    </div>
+                    <div className="text-[10px] text-velvi-brown/60">Valid Rows</div>
                   </div>
-                ))}
+                  <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
+                    <div className="font-bold text-amber-700">{importPreview.duplicateCount}</div>
+                    <div className="text-[10px] text-velvi-brown/60">Duplicates</div>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-velvi-gold/20">
+                    <div className="font-bold text-red-600">{importPreview.invalidPhoneCount}</div>
+                    <div className="text-[10px] text-velvi-brown/60">Invalid Phone</div>
+                  </div>
+                </div>
+
+                {importPreview.errors.length > 0 && (
+                  <div className="text-[11px] text-amber-800 bg-amber-50 p-2 rounded-xl max-h-24 overflow-y-auto space-y-0.5">
+                    {importPreview.errors.map((err: string, i: number) => (
+                      <div key={i} className="flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3 text-amber-600 shrink-0" />
+                        <span>{err}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={() => setImportPreview(null)}
+                    className="flex-1 py-2 bg-velvi-cream text-velvi-brown font-bold rounded-xl text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={importPreview.validCustomers.length === 0}
+                    className="flex-1 py-2 bg-velvi-brown text-white font-bold rounded-xl text-xs shadow-sm hover:bg-velvi-brownLight cursor-pointer"
+                  >
+                    Confirm Import ({importPreview.validCustomers.length})
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="flex gap-2 pt-1">
-              <button
-                onClick={() => setImportPreview(null)}
-                className="flex-1 py-2 bg-velvi-cream text-velvi-brown font-bold rounded-xl text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmImport}
-                disabled={importPreview.validCustomers.length === 0}
-                className="flex-1 py-2 bg-velvi-brown text-white font-bold rounded-xl text-xs shadow-sm hover:bg-velvi-brownLight"
-              >
-                Confirm Import ({importPreview.validCustomers.length})
-              </button>
-            </div>
+          </>
+        ) : (
+          <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 text-center space-y-2">
+            <p className="text-xs text-amber-800 font-medium">
+              Data Import is unlocked on active paid plans.
+            </p>
+            <Link
+              href="/app/subscription"
+              className="inline-block px-4 py-2 bg-velvi-brown text-white text-xs font-bold rounded-xl shadow-sm"
+            >
+              Upgrade to Velvi Pro
+            </Link>
           </div>
         )}
       </div>

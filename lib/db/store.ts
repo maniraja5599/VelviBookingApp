@@ -19,6 +19,7 @@ import {
   BookingItem,
   BookingStatus,
   PaymentStatus,
+  SamagriCategory,
 } from "@/lib/types";
 import {
   SEED_USER,
@@ -48,6 +49,17 @@ export interface PlatformSettings {
   maintenanceMode: boolean;
 }
 
+export const DEFAULT_SAMAGRI_CATEGORIES: SamagriCategory[] = [
+  { id: "essentials", labelTa: "அடிப்படை & பழங்கள்", labelEn: "Basics & Fruits", icon: "🥥", isDefault: true },
+  { id: "ghee_oils", labelTa: "நெய் & எண்ணெய்கள்", labelEn: "Ghee & Oils", icon: "🪔", isDefault: true },
+  { id: "homam", labelTa: "சமித்து & ஹோம திரவியம்", labelEn: "Homam Samagri", icon: "🪵", isDefault: true },
+  { id: "powders", labelTa: "பொடிகள் & நறுமணம்", labelEn: "Powders & Fragrance", icon: "🌿", isDefault: true },
+  { id: "flowers", labelTa: "பூக்கள் & இலைகள்", labelEn: "Flowers & Leaves", icon: "🌺", isDefault: true },
+  { id: "vastram", labelTa: "வஸ்திரம் & செட்", labelEn: "Vastram & Sets", icon: "🪙", isDefault: true },
+  { id: "fruits_prasad", labelTa: "பழங்கள் & பிரசாதம்", labelEn: "Fruits & Prasad", icon: "🍎", isDefault: true },
+  { id: "vessels_items", labelTa: "பாத்திரங்கள் & இதர", labelEn: "Vessels & Others", icon: "🏺", isDefault: true },
+];
+
 export class VelviDatabaseStore {
   public platformSettings: PlatformSettings = {
     appName: "Velvi",
@@ -55,7 +67,7 @@ export class VelviDatabaseStore {
     tagline: "Sacred Ceremonies, Seamless Management",
     taglineTamil: "நல்லதே நம் நோக்கம்",
     logoUrl: "/velvi-sacred-flame.png",
-    appVersion: "2.1.0",
+    appVersion: "2.3.0",
     developerName: "Maniraja",
     developerMobile: "+91-8300030123",
     developerInstagram: "@maniraja__",
@@ -63,6 +75,8 @@ export class VelviDatabaseStore {
     announcementMessage: "System operational. All bookings and reminders running on schedule.",
     maintenanceMode: false,
   };
+
+  public samagriCategories: SamagriCategory[] = structuredClone(DEFAULT_SAMAGRI_CATEGORIES);
 
   public users: User[] = [
     SEED_USER,
@@ -115,9 +129,15 @@ export class VelviDatabaseStore {
   public businesses: Business[] = structuredClone([SEED_BUSINESS]);
   public members: BusinessMember[] = structuredClone(SEED_MEMBERS);
   public subscriptions: Subscription[] = structuredClone([SEED_SUBSCRIPTION]);
-  public customers: Customer[] = structuredClone(SEED_CUSTOMERS);
-  public poojas: Pooja[] = structuredClone(SEED_POOJAS);
-  public bookings: Booking[] = structuredClone(SEED_BOOKINGS);
+  public customers: Customer[] = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
+  public poojas: Pooja[] = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
+  public bookings: Booking[] = structuredClone(SEED_BOOKINGS).map((b) => ({ ...b, isSample: true }));
+  public recentlyDeleted: Array<{
+    id: string;
+    type: "booking" | "customer" | "pooja";
+    item: any;
+    deletedAt: string;
+  }> = [];
   public bookingAssignments: BookingAssignment[] = [];
   public settlements: IyerSettlement[] = [
     {
@@ -455,7 +475,27 @@ export class VelviDatabaseStore {
     if (index === -1) return { success: false, error: "Booking not found" };
 
     const deleted = this.bookings[index];
+    this.recentlyDeleted.push({
+      id: deleted.id,
+      type: "booking",
+      item: structuredClone(deleted),
+      deletedAt: new Date().toISOString(),
+    });
     this.bookings.splice(index, 1);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:deleted-item", {
+          detail: {
+            type: "booking",
+            name: `${deleted.bookingNumber} (${deleted.poojaEnglishName || deleted.poojaTamilName || "Booking"})`,
+            id: deleted.id,
+          },
+        })
+      );
+    }
 
     // Audit log
     this.auditLogs.push({
@@ -813,6 +853,34 @@ export class VelviDatabaseStore {
     return newCust;
   }
 
+  public deleteCustomer(customerId: string): boolean {
+    const idx = this.customers.findIndex((c) => c.id === customerId);
+    if (idx === -1) return false;
+    const deleted = this.customers[idx];
+    this.recentlyDeleted.push({
+      id: deleted.id,
+      type: "customer",
+      item: structuredClone(deleted),
+      deletedAt: new Date().toISOString(),
+    });
+    this.customers.splice(idx, 1);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:deleted-item", {
+          detail: {
+            type: "customer",
+            name: deleted.name || "Customer",
+            id: deleted.id,
+          },
+        })
+      );
+    }
+    return true;
+  }
+
   // -------------------------------------------------------------
   // BOOKING MANAGEMENT (Create, Get, List)
   // -------------------------------------------------------------
@@ -926,10 +994,50 @@ export class VelviDatabaseStore {
   public deletePooja(poojaId: string): boolean {
     const idx = this.poojas.findIndex((p) => p.id === poojaId);
     if (idx === -1) return false;
+    const deleted = this.poojas[idx];
+    this.recentlyDeleted.push({
+      id: deleted.id,
+      type: "pooja",
+      item: structuredClone(deleted),
+      deletedAt: new Date().toISOString(),
+    });
     this.poojas.splice(idx, 1);
     this.saveToLocalStorage();
     this.notifyListeners();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:deleted-item", {
+          detail: {
+            type: "pooja",
+            name: deleted.tamilName || deleted.englishName || "Pooja",
+            id: deleted.id,
+          },
+        })
+      );
+    }
     return true;
+  }
+
+  public undoLastDelete(): { success: boolean; type?: string; name?: string; message?: string } {
+    if (this.recentlyDeleted.length === 0) {
+      return { success: false, message: "மீட்டெடுக்க எதுவும் இல்லை (Nothing to undo)" };
+    }
+    const last = this.recentlyDeleted.pop()!;
+    let name = "";
+    if (last.type === "booking") {
+      this.bookings.unshift(last.item);
+      name = `${last.item.bookingNumber} (${last.item.poojaEnglishName || last.item.poojaTamilName || "Booking"})`;
+    } else if (last.type === "pooja") {
+      this.poojas.unshift(last.item);
+      name = last.item.tamilName || last.item.englishName || "Pooja";
+    } else if (last.type === "customer") {
+      this.customers.unshift(last.item);
+      name = last.item.name || "Customer";
+    }
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return { success: true, type: last.type, name };
   }
 
   // -------------------------------------------------------------
@@ -971,6 +1079,8 @@ export class VelviDatabaseStore {
         auditLogs: this.auditLogs,
         referrals: this.referrals,
         referralRewards: this.referralRewards,
+        samagriCategories: this.samagriCategories,
+        recentlyDeleted: this.recentlyDeleted,
       };
       localStorage.setItem("velvi_db_state_v2", JSON.stringify(state));
     } catch (e) {
@@ -994,12 +1104,58 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.auditLogs)) this.auditLogs = state.auditLogs;
         if (Array.isArray(state.referrals)) this.referrals = state.referrals;
         if (Array.isArray(state.referralRewards)) this.referralRewards = state.referralRewards;
+        if (Array.isArray(state.recentlyDeleted)) this.recentlyDeleted = state.recentlyDeleted;
+        if (Array.isArray(state.samagriCategories) && state.samagriCategories.length > 0) {
+          this.samagriCategories = state.samagriCategories;
+        }
         return true;
       }
     } catch (e) {
       console.error("Failed to load state from localStorage", e);
     }
     return false;
+  }
+
+  // -------------------------------------------------------------
+  // SAMAGRI CATEGORIES MANAGEMENT (Add, Edit, Delete)
+  // -------------------------------------------------------------
+  public getSamagriCategories(): SamagriCategory[] {
+    if (!this.samagriCategories || this.samagriCategories.length === 0) {
+      this.samagriCategories = structuredClone(DEFAULT_SAMAGRI_CATEGORIES);
+    }
+    return this.samagriCategories;
+  }
+
+  public addSamagriCategory(cat: Omit<SamagriCategory, "id">): SamagriCategory {
+    const id = `cat-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+    const newCat: SamagriCategory = {
+      ...cat,
+      id,
+      isDefault: false,
+    };
+    this.samagriCategories.push(newCat);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return newCat;
+  }
+
+  public updateSamagriCategory(id: string, updates: Partial<SamagriCategory>): boolean {
+    const idx = this.samagriCategories.findIndex((c) => c.id === id);
+    if (idx === -1) return false;
+    this.samagriCategories[idx] = { ...this.samagriCategories[idx], ...updates };
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return true;
+  }
+
+  public deleteSamagriCategory(id: string): boolean {
+    const idx = this.samagriCategories.findIndex((c) => c.id === id);
+    if (idx === -1) return false;
+    if (this.samagriCategories.length <= 1) return false;
+    this.samagriCategories.splice(idx, 1);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return true;
   }
 
   // -------------------------------------------------------------
@@ -1027,10 +1183,86 @@ export class VelviDatabaseStore {
     this.notifyListeners();
   }
 
+  public removeSampleData(businessId?: string): {
+    removedBookings: number;
+    removedCustomers: number;
+    removedPoojas: number;
+  } {
+    const isSampleBooking = (b: Booking) =>
+      b.isSample === true ||
+      b.id.startsWith("b-sample-") ||
+      ["b-101", "b-102", "b-103", "b-104", "b-105", "b-106"].includes(b.id);
+
+    const isSampleCustomer = (c: Customer) =>
+      c.isSample === true ||
+      c.id.startsWith("c-sample-") ||
+      ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-anand-05", "c-priya-06"].includes(c.id);
+
+    const isSamplePooja = (p: Pooja) =>
+      p.isSample === true ||
+      p.id.startsWith("p-sample-") ||
+      ["p-ganapathi-01", "p-navagraha-02", "p-sudarshana-03", "p-lakshmi-04", "p-vastu-05", "p-rudra-06", "p-satya-07", "p-ayush-08"].includes(p.id);
+
+    const prevBCount = this.bookings.length;
+    const prevCCount = this.customers.length;
+    const prevPCount = this.poojas.length;
+
+    this.bookings = this.bookings.filter((b) => !isSampleBooking(b));
+    this.customers = this.customers.filter((c) => !isSampleCustomer(c));
+    this.poojas = this.poojas.filter((p) => !isSamplePooja(p));
+
+    const removedBookings = prevBCount - this.bookings.length;
+    const removedCustomers = prevCCount - this.customers.length;
+    const removedPoojas = prevPCount - this.poojas.length;
+
+    if (typeof window !== "undefined") {
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+
+    return { removedBookings, removedCustomers, removedPoojas };
+  }
+
+  public loadSampleData(): { addedBookings: number; addedCustomers: number; addedPoojas: number } {
+    const sampleBookings = structuredClone(SEED_BOOKINGS).map((b) => ({ ...b, isSample: true }));
+    const sampleCustomers = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
+    const samplePoojas = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
+
+    let addedBookings = 0;
+    let addedCustomers = 0;
+    let addedPoojas = 0;
+
+    sampleBookings.forEach((sb) => {
+      if (!this.bookings.some((b) => b.id === sb.id)) {
+        this.bookings.push(sb);
+        addedBookings++;
+      }
+    });
+    sampleCustomers.forEach((sc) => {
+      if (!this.customers.some((c) => c.id === sc.id)) {
+        this.customers.push(sc);
+        addedCustomers++;
+      }
+    });
+    samplePoojas.forEach((sp) => {
+      if (!this.poojas.some((p) => p.id === sp.id)) {
+        this.poojas.push(sp);
+        addedPoojas++;
+      }
+    });
+
+    if (typeof window !== "undefined") {
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+
+    return { addedBookings, addedCustomers, addedPoojas };
+  }
+
   public loadAllData(): void {
-    this.bookings = structuredClone(SEED_BOOKINGS);
-    this.customers = structuredClone(SEED_CUSTOMERS);
-    this.poojas = structuredClone(SEED_POOJAS);
+    this.bookings = structuredClone(SEED_BOOKINGS).map((b) => ({ ...b, isSample: true }));
+    this.customers = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
+    this.poojas = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
     this.members = structuredClone(SEED_MEMBERS);
     this.businesses = structuredClone([SEED_BUSINESS]);
     this.subscriptions = structuredClone([SEED_SUBSCRIPTION]);

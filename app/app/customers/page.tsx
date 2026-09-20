@@ -24,6 +24,7 @@ import {
   Clipboard,
   AlertTriangle,
   CheckCircle2,
+  Trash2,
 } from "lucide-react";
 
 export default function CustomersPage() {
@@ -125,6 +126,13 @@ export default function CustomersPage() {
     setMobile("");
     setAddress("");
     setNotes("");
+  };
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    if (confirm(`Delete devotee "${customer.name}"? (பக்தர் "${customer.name}" விபரத்தை நீக்கவா?)`)) {
+      db.deleteCustomer(customer.id);
+      setSelectedCustomer(null);
+    }
   };
 
   return (
@@ -450,12 +458,23 @@ export default function CustomersPage() {
               )}
             </div>
 
-            <button
-              onClick={() => setSelectedCustomer(null)}
-              className="w-full py-3 bg-velvi-brown text-white text-xs font-bold rounded-xl shadow-sm"
-            >
-              Close
-            </button>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => handleDeleteCustomer(selectedCustomer)}
+                className="py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition border border-rose-200/80 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Delete</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCustomer(null)}
+                className="flex-1 py-3 bg-velvi-brown text-white text-xs font-bold rounded-xl shadow-sm hover:bg-velvi-brownLight transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

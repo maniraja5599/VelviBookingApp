@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Calendar as CalendarIcon, BookOpen, Flame, Menu } from "lucide-react";
+import { Home, Calendar as CalendarIcon, BookOpen, Flame, Settings } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageContext";
 
 export const BottomNav: React.FC = React.memo(() => {
@@ -16,7 +16,7 @@ export const BottomNav: React.FC = React.memo(() => {
     { href: "/app/calendar", label: t("calendar"), icon: CalendarIcon },
     { href: "/app/bookings", label: t("bookings"), icon: BookOpen },
     { href: "/app/poojas", label: t("poojaNav"), icon: Flame },
-    { href: "/app/more", label: t("more"), icon: Menu },
+    { href: "/app/settings", label: t("settings") || "Settings", icon: Settings },
   ];
 
   return (

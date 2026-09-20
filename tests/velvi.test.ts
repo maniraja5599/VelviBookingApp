@@ -528,13 +528,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("2.2.0");
+    expect(APP_VERSION).toBe("2.3.0");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("2.2.0");
+    expect(latest.version).toBe("2.3.0");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
     expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
@@ -1031,6 +1031,63 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(booking.id).toBeDefined();
     expect(booking.poojaTamilName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை");
     expect(booking.poojaEnglishName).toBe("சுதர்சன ஹோமம் மற்றும் அர்ச்சனை");
+  });
+
+  it("Test 38: removeSampleData removes only sample records while protecting custom user records", () => {
+    const store = new VelviDatabaseStore();
+    // Initially has sample records
+    expect(store.bookings.length).toBeGreaterThan(0);
+    expect(store.customers.length).toBeGreaterThan(0);
+
+    // Create a real custom user booking and customer
+    const userCustomer = store.createCustomer({
+      businessId: "biz-venkateswara-01",
+      name: "Custom Real Customer",
+      mobile: "+919944112233",
+    });
+    const userBooking = store.createBooking({
+      businessId: "biz-venkateswara-01",
+      customerId: userCustomer.id,
+      customerName: userCustomer.name,
+      poojaId: "custom-p-1",
+      poojaEnglishName: "Custom Real Pooja",
+      date: "2026-10-01",
+      startTime: "10:00 AM",
+      location: "Chennai",
+      totalAmount: 5000,
+      advanceAmount: 1000,
+      balanceAmount: 4000,
+      paymentStatus: "PENDING",
+      status: "CONFIRMED",
+    });
+
+    const result = store.removeSampleData();
+    expect(result.removedBookings).toBeGreaterThan(0);
+    expect(result.removedCustomers).toBeGreaterThan(0);
+
+    // User's custom customer and booking MUST still exist!
+    expect(store.customers.some((c) => c.id === userCustomer.id)).toBe(true);
+    expect(store.bookings.some((b) => b.id === userBooking.id)).toBe(true);
+  });
+
+  it("Test 39: undoLastDelete restores deleted booking, pooja, or customer", () => {
+    const store = new VelviDatabaseStore();
+    const pooja = store.createPooja({
+      businessId: "biz-venkateswara-01",
+      englishName: "Undo Test Pooja",
+      basePrice: 3000,
+    });
+    expect(store.poojas.some((p) => p.id === pooja.id)).toBe(true);
+
+    // Delete pooja
+    store.deletePooja(pooja.id);
+    expect(store.poojas.some((p) => p.id === pooja.id)).toBe(false);
+
+    // Undo delete
+    const undoRes = store.undoLastDelete();
+    expect(undoRes.success).toBe(true);
+    expect(undoRes.type).toBe("pooja");
+    expect(store.poojas.some((p) => p.id === pooja.id)).toBe(true);
   });
 });
 

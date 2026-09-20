@@ -17,6 +17,7 @@ export interface Business {
   id: string;
   ownerId: string;
   name: string;
+  serviceName?: string;
   iyerName: string;
   logoUrl?: string;
   phone: string;
@@ -138,7 +139,16 @@ export interface Customer {
   address?: string;
   city?: string;
   notes?: string;
+  isSample?: boolean;
   createdAt: string;
+}
+
+export interface SamagriCategory {
+  id: string;
+  labelTa: string;
+  labelEn: string;
+  icon: string;
+  isDefault?: boolean;
 }
 
 export interface PoojaItemTemplate {
@@ -148,6 +158,7 @@ export interface PoojaItemTemplate {
   itemTamilName: string;
   quantity: number;
   unit: "pcs" | "nos" | "kg" | "g" | "litre" | "ml" | "packet" | "bundle" | "set" | "dozen";
+  category?: string;
   isCustom?: boolean;
   sortOrder: number;
 }
@@ -164,6 +175,7 @@ export interface Pooja {
   active: boolean;
   imageUrl?: string;
   items: PoojaItemTemplate[];
+  isSample?: boolean;
   createdAt: string;
 }
 
@@ -208,6 +220,7 @@ export interface Booking {
   notes?: string;
   items: BookingItem[];
   cancellationReason?: string;
+  isSample?: boolean;
   cancelledAt?: string;
   refundDecision?: "REFUNDED" | "RETAINED" | "NO_PAYMENT";
   refundAmount?: number;
