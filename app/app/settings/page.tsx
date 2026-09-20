@@ -35,6 +35,7 @@ import {
   Calendar,
   Download,
   Info,
+  BookOpen,
 } from "lucide-react";
 import { PwaInstallBanner } from "@/components/mobile/PwaInstallBanner";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -136,104 +137,112 @@ export default function SettingsHubPage() {
 
   const allSettingSections: SettingSection[] = [
     {
-      title: "Business & Profile / வணிகம் & சுயவிவரம்",
+      title: "Business & Profile",
       items: [
         {
           href: "/app/settings/branding",
-          label: "Business Profile & Branding (சுயவிவரம்)",
-          desc: currentBusiness?.name || "Logo, vadhyar name, service name & receipt watermark",
+          label: "Business Profile & Branding",
+          desc: currentBusiness?.name || "Logo, vadhyar name, service title & receipt watermark",
           icon: Building2,
           badge: currentBusiness?.logoUrl ? "Custom Logo" : "Default Logo",
           highlight: true,
-          keywords: "profile branding vadhyar name logo watermark business பெயர் லோகோ",
+          keywords: "profile branding vadhyar name logo watermark business",
         },
         {
           href: "/app/poojas",
-          label: "Pooja & Seva Catalog (பூஜா பட்டியல்)",
+          label: "Pooja & Seva Catalog",
           desc: "Manage rituals, dakshina fees & item checklists",
           icon: Flame,
-          keywords: "pooja homam seva dakshina fee samagri checklist பூஜை தட்சிணை ஹோமம்",
+          keywords: "pooja homam seva dakshina fee samagri checklist",
         },
         {
           onClick: () => setShowCategoryModal(true),
-          label: "பொருட்கள் வகைகள் (Samagri Categories)",
+          label: "Samagri Categories",
           desc: "Create, edit & manage pooja items categories & icons",
           icon: Tag,
-          keywords: "category categories samagri items பொருட்கள் வகைகள் மலர் மளிகை பழங்கள்",
+          keywords: "category categories samagri items fruits flowers ghee vastram",
         },
         {
           href: "/app/customers",
-          label: "Devotees & Clients (பக்தர்கள் பட்டியல்)",
+          label: "Devotees & Clients",
           desc: "Manage devotee directory, star nakshatram & history",
           icon: Users,
-          keywords: "customer devotee client phone mobile nakshatram rasi பக்தர்கள் வாடிக்கையாளர்",
+          keywords: "customer devotee client phone mobile nakshatram rasi gothram",
         },
         {
           href: "/app/team",
-          label: "Team & Purohits (உதவி புரோகிதர்கள்)",
-          desc: "Manage assistants, schedules & assignments",
+          label: "Team & Assistant Priests",
+          desc: "Manage purohits, schedules & assignments",
           icon: UserCheck,
-          keywords: "team assistant purohit vadhyar staff purohits புரோகிதர் குழு",
+          keywords: "team assistant purohit vadhyar staff purohits iyer",
         },
       ],
     },
     {
-      title: "Data & Safety / தரவு & மீட்டெடுப்பு",
-      items: [
-        {
-          onClick: () => setShowTrashModal(true),
-          label: "Recycle Bin & Restore Log (நீக்கப்பட்டவை & மீட்டெடுப்பு)",
-          desc: `${recentlyDeleted.length} deleted item(s) • View changes & restore records`,
-          icon: RotateCcw,
-          badge: recentlyDeleted.length > 0 ? `${recentlyDeleted.length} in trash` : undefined,
-          keywords: "trash restore recycle bin delete undo recover change log மீட்டெடு நீக்கப்பட்டவை",
-        },
-        {
-          href: "/app/data-backup",
-          label: "Data & Cloud Backup (தரவு பேக்கப்)",
-          desc: "Excel export, contacts import & safe backup",
-          icon: Cloud,
-          keywords: "backup export excel csv import restore cloud தரவு பேக்கப் எக்செல்",
-        },
-      ],
-    },
-    {
-      title: "Billing & Growth / சந்தா & வளர்ச்சி",
+      title: "Plan & Rewards",
       items: [
         {
           href: "/app/subscription",
-          label: "Subscription & Plan (திட்டம் & சந்தா)",
+          label: "Subscription & Plan",
           desc: isPro ? "Velvi Pro Active • Auto-renews" : "30-Day Free Trial • Upgrade to Pro",
           icon: Sparkles,
           badge: isPro ? "Pro Active" : "Free Trial",
-          keywords: "subscription plan pro trial billing upi payment renew சந்தா கட்டணம்",
+          keywords: "subscription plan pro trial billing upi payment renew validity",
         },
         {
           href: "/app/referrals",
-          label: "Referral & Free Days (பரிந்துரை)",
+          label: "Referral & Earn Free Days",
           desc: "Invite colleagues, earn +30 days free per referral",
           icon: Gift,
-          keywords: "referral invite reward free days நண்பர்கள் பரிந்துரை",
+          keywords: "referral invite reward free days friend earn code",
         },
       ],
     },
     {
-      title: "Preferences & System / விருப்பங்கள் & அமைப்புகள்",
+      title: "Data & Security",
       items: [
         {
+          onClick: () => setShowTrashModal(true),
+          label: "Recycle Bin & Restore Log",
+          desc: `${recentlyDeleted.length} deleted item(s) • View changes & restore records`,
+          icon: RotateCcw,
+          badge: recentlyDeleted.length > 0 ? `${recentlyDeleted.length} in trash` : undefined,
+          keywords: "trash restore recycle bin delete undo recover change log history",
+        },
+        {
+          href: "/app/data-backup",
+          label: "Data & Cloud Backup",
+          desc: "Excel export, contacts import & safe backup",
+          icon: Cloud,
+          keywords: "backup export excel csv import restore cloud data",
+        },
+      ],
+    },
+    {
+      title: "Preferences & System",
+      items: [
+        {
+          href: "/app/settings/guide",
+          label: "App Guide & Documentation",
+          desc: "Comprehensive A to Z user manual with examples",
+          icon: BookOpen,
+          badge: "A-Z Guide",
+          keywords: "guide manual help docs tutorial how to use walkthrough panchangam",
+        },
+        {
           href: "/app/settings/theme",
-          label: "Theme & Sacred Colors (வண்ண தீம்கள்)",
+          label: "Theme & Sacred Colors",
           desc: "Traditional, Bilva Green, Royal Kumkum & Modern palettes",
           icon: Palette,
-          keywords: "theme color style palette sacred dark light பச்சை குங்குமம் தீம்",
+          keywords: "theme color style palette sacred dark light green kumkum",
         },
         {
           href: "/app/settings/version",
-          label: "Version & Release Notes (பதிப்பு)",
+          label: "Version & Release Notes",
           desc: `v${APP_VERSION} Stable • View changelog & updates`,
           icon: Sparkles,
           badge: `v${APP_VERSION}`,
-          keywords: "version release notes changelog update பதிப்பு புதியவை",
+          keywords: "version release notes changelog update",
         },
       ],
     },
@@ -258,13 +267,16 @@ export default function SettingsHubPage() {
 
   // Quick chips for common settings
   const quickSettings = [
-    { label: "சுயவிவரம் (Profile)", icon: Pencil, action: () => (window.location.href = "/app/settings/branding") },
-    { label: "வகைகள் (Categories)", icon: Tag, action: () => setShowCategoryModal(true) },
-    { label: "மீட்டெடுப்பு (Trash)", icon: RotateCcw, action: () => setShowTrashModal(true) },
-    { label: "பக்தர்கள் (Devotees)", icon: Users, action: () => (window.location.href = "/app/customers") },
-    { label: "பூஜைகள் (Poojas)", icon: Flame, action: () => (window.location.href = "/app/poojas") },
-    { label: "தீம்கள் (Themes)", icon: Palette, action: () => (window.location.href = "/app/settings/theme") },
-    { label: "பேக்கப் (Backup)", icon: Cloud, action: () => (window.location.href = "/app/data-backup") },
+    { label: "Profile", icon: Pencil, action: () => (window.location.href = "/app/settings/branding") },
+    { label: "Plan & Pro", icon: Sparkles, action: () => (window.location.href = "/app/subscription") },
+    { label: "Refer & Earn", icon: Gift, action: () => (window.location.href = "/app/referrals") },
+    { label: "App Guide", icon: BookOpen, action: () => (window.location.href = "/app/settings/guide") },
+    { label: "Categories", icon: Tag, action: () => setShowCategoryModal(true) },
+    { label: "Trash & Undo", icon: RotateCcw, action: () => setShowTrashModal(true) },
+    { label: "Devotees", icon: Users, action: () => (window.location.href = "/app/customers") },
+    { label: "Poojas", icon: Flame, action: () => (window.location.href = "/app/poojas") },
+    { label: "Themes", icon: Palette, action: () => (window.location.href = "/app/settings/theme") },
+    { label: "Backup", icon: Cloud, action: () => (window.location.href = "/app/data-backup") },
   ];
 
   return (
@@ -311,7 +323,7 @@ export default function SettingsHubPage() {
                 <Link
                   href="/app/settings/branding"
                   className="p-1 text-slate-500 hover:text-emerald-800 hover:bg-amber-200/50 rounded-lg transition"
-                  title="சுயவிவரத்தைத் திருத்து (Edit Profile)"
+                  title="Edit Profile"
                 >
                   <Pencil className="w-3.5 h-3.5 text-amber-700" />
                 </Link>
@@ -366,7 +378,7 @@ export default function SettingsHubPage() {
           <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-medium">
             <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span>
-              <strong>செல்லுபடியாகும் காலம்:</strong> {validityText}
+              <strong>Plan Validity:</strong> {validityText}
             </span>
           </div>
 
@@ -374,7 +386,7 @@ export default function SettingsHubPage() {
             href="/app/settings/branding"
             className="text-xs font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-xl border border-amber-300/80 shadow-2xs transition group"
           >
-            <span>சுயவிவரம் திருத்து</span>
+            <span>Edit Profile</span>
             <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
@@ -390,7 +402,7 @@ export default function SettingsHubPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="அமைப்புகளைத் தேடுக... (Search Settings e.g. profile, pooja, trash)"
+            placeholder="Search settings (e.g. profile, plan, catalog, backup)..."
             className="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 transition"
           />
           {searchQuery && (
@@ -404,11 +416,11 @@ export default function SettingsHubPage() {
           )}
         </div>
 
-        {/* Quick Recommendation Chips (சமீபத்திய அமைப்புகள்) */}
+        {/* Quick Recommendation Chips */}
         {!searchQuery && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-0.5">
             <span className="text-[10.5px] font-bold text-slate-500 whitespace-nowrap pl-1">
-              பரிந்துரைகள்:
+              Quick Access:
             </span>
             {quickSettings.map((chip, idx) => {
               const ChipIcon = chip.icon;
@@ -551,7 +563,7 @@ export default function SettingsHubPage() {
           </span>
         </Link>
         <p className="text-[10.5px] text-slate-500 font-medium">
-          வேத ஜோதிட, பூஜை மற்றும் ஹோம முன்பதிவு செயலி
+          Dedicated Vedic Astrological, Pooja & Homam ERP
         </p>
         <DeveloperCredit />
       </div>
@@ -562,7 +574,7 @@ export default function SettingsHubPage() {
         className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-red-200/80 active:scale-98 cursor-pointer"
       >
         <LogOut className="w-4 h-4" />
-        <span>வெளியேறு (Sign Out)</span>
+        <span>Sign Out</span>
       </button>
 
       {/* Toast Notification Banner */}
