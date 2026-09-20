@@ -194,14 +194,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = React.useCallback(async (email?: string, name?: string): Promise<User> => {
     setIsLoading(true);
+    const targetEmail = email || "ravi.iyer@gmail.com";
+    const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
+
     // Find existing or mock new Google user
-    let user = db.users.find((u) => u.email === (email || "ravi.iyer@gmail.com"));
+    let user = db.users.find((u) => u.email === targetEmail);
     if (!user) {
       user = {
         id: `u-${Date.now()}`,
         googleId: `google-${Date.now()}`,
-        email: email || "new.iyer@gmail.com",
-        name: name || "New Iyer",
+        email: targetEmail,
+        name: targetName,
         mobile: "",
         mobileVerified: false,
         role: "OWNER",
@@ -211,9 +214,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       db.users.push(user);
     }
 
+    // Ensure business profile exists for this user
+    let biz = db.businesses.find((b) => b.ownerId === user.id);
+    if (!biz) {
+      const bizId = `biz-${Date.now()}`;
+      biz = {
+        id: bizId,
+        ownerId: user.id,
+        name: user.name || "Pooja Services",
+        serviceName: "Pooja • Homam • Seva",
+        iyerName: user.name || "Vadhyar",
+        phone: user.mobile || "",
+        whatsapp: user.mobile || "",
+        address: "தமிழ்நாடு, இந்தியா",
+        showWatermark: true,
+        createdAt: new Date().toISOString(),
+      };
+      db.businesses.push(biz);
+
+      const now = new Date();
+      const end = new Date(Date.now() + 30 * 86400000);
+      db.subscriptions.push({
+        id: `sub-${Date.now()}`,
+        businessId: bizId,
+        planName: "Velvi Pro Monthly",
+        planCode: "VELVI_PRO",
+        status: "ACTIVE",
+        trialStart: now.toISOString(),
+        trialEnd: end.toISOString(),
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: end.toISOString(),
+        billingCycle: "MONTHLY",
+        autoRenew: true,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      });
+    }
+
     if (typeof window !== "undefined") {
       localStorage.setItem("velvi_active_user_id", user.id);
     }
+    db.saveToLocalStorage();
     syncState();
     setIsLoading(false);
     return user;
@@ -369,6 +410,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const bizIndex = db.businesses.findIndex((b) => b.id === currentBusiness.id);
     if (bizIndex >= 0) {
       db.businesses[bizIndex] = { ...db.businesses[bizIndex], ...updates };
+      db.saveToLocalStorage();
       setCurrentBusiness({ ...db.businesses[bizIndex] });
     }
   }, [currentBusiness]);
@@ -378,6 +420,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userIndex = db.users.findIndex((u) => u.id === currentUser.id);
     if (userIndex >= 0) {
       db.users[userIndex] = { ...db.users[userIndex], ...updates };
+      db.saveToLocalStorage();
       setCurrentUser({ ...db.users[userIndex] });
     }
   }, [currentUser]);
