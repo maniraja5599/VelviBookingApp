@@ -25,8 +25,7 @@ import {
   CheckCircle2,
   RotateCcw,
   AlertTriangle,
-  Zap,
-  CalendarDays,
+  History,
 } from "lucide-react";
 
 const getTodayStr = () => {
@@ -135,7 +134,6 @@ interface SwipeableTimelineCardProps {
   isSelf: boolean;
   todayStr: string;
   onToggleComplete: (b: Booking) => void;
-  onOpenQuickUpdate: (b: Booking) => void;
 }
 
 const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
@@ -144,12 +142,12 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   isSelf,
   todayStr,
   onToggleComplete,
-  onOpenQuickUpdate,
 }) => {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
+  const currentOffsetRef = React.useRef(0);
 
   const dateInfo = getTamilDate(b.date);
   const isCompleted = b.status === "COMPLETED";
@@ -166,26 +164,79 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
 
-    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 6) {
-      isDraggingRef.current = true;
-      setIsSwiping(true);
-      setOffsetX(Math.min(115, Math.max(0, diffX)));
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.min(130, Math.max(0, diffX));
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      } else if (currentOffsetRef.current > 0 && diffX < -6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.max(0, 130 + diffX);
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    if (offsetX >= 70) {
-      onToggleComplete(b);
+    if (currentOffsetRef.current >= 50) {
+      currentOffsetRef.current = 130;
+      setOffsetX(130);
+    } else {
+      currentOffsetRef.current = 0;
+      setOffsetX(0);
     }
-    setOffsetX(0);
     setIsSwiping(false);
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 150);
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    touchStartRef.current = { x: e.clientX, y: e.clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!touchStartRef.current) return;
+    const diffX = e.clientX - touchStartRef.current.x;
+    const diffY = e.clientY - touchStartRef.current.y;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.min(130, Math.max(0, diffX));
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      } else if (currentOffsetRef.current > 0 && diffX < -6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.max(0, 130 + diffX);
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!touchStartRef.current) return;
+    touchStartRef.current = null;
+    handleTouchEnd();
+  };
+
   const handleClick = (e: React.MouseEvent) => {
-    if (isDraggingRef.current || offsetX > 10) {
+    if (currentOffsetRef.current > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      currentOffsetRef.current = 0;
+      setOffsetX(0);
+      return;
+    }
+    if (isDraggingRef.current) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -198,27 +249,45 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
     >
-      {/* Background action revealed on swipe right */}
-      <div
-        className={`absolute inset-0 rounded-2xl flex items-center px-4 transition-colors z-0 ${
+      {/* Background action revealed on swipe right - Clickable button to complete */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleComplete(b);
+          setOffsetX(0);
+        }}
+        className={`absolute inset-0 rounded-2xl flex items-center px-4 transition-colors z-0 cursor-pointer text-left ${
           isCompleted ? "bg-amber-600 text-white" : "bg-emerald-700 text-white"
         }`}
+        title={isCompleted ? "மீட்டெடுக்க தட்டவும்" : "பூஜையை முடிக்க தட்டவும்"}
       >
         <div className="flex items-center gap-2">
           {isCompleted ? (
             <>
-              <RotateCcw className="w-5 h-5 text-white animate-spin" />
-              <span className="font-black text-xs">மறுதொடக்கம் (Reopen)</span>
+              <RotateCcw className="w-5 h-5 text-white shrink-0" />
+              <div className="leading-tight">
+                <span className="font-black text-xs block">மறுதொடக்கம் (Reopen)</span>
+                <span className="text-[10px] text-amber-200 block font-semibold">தட்டவும் (Tap to Reopen)</span>
+              </div>
             </>
           ) : (
             <>
-              <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
-              <span className="font-black text-xs">பூஜை முடிந்தது (Complete ✅)</span>
+              <CheckCircle2 className="w-5 h-5 text-white shrink-0" />
+              <div className="leading-tight">
+                <span className="font-black text-xs block">பூஜை முடிந்தது ✅</span>
+                <span className="text-[10px] text-emerald-200 block font-semibold">தட்டவும் (Tap to Complete)</span>
+              </div>
             </>
           )}
         </div>
-      </div>
+      </button>
 
       {/* Foreground card */}
       <div
@@ -231,6 +300,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
         <Link
           href={`/app/bookings/${b.id}`}
           onClick={handleClick}
+          draggable={false}
           className={`block p-3 sm:p-3.5 border rounded-2xl transition hover:shadow-xs space-y-2 ${
             isCompleted
               ? "bg-emerald-50/40 border-emerald-300"
@@ -331,23 +401,6 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
-              {/* Overdue Quick Update Button */}
-              {isOverdue && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onOpenQuickUpdate(b);
-                  }}
-                  className="px-2 py-0.5 rounded-lg text-[10px] font-black flex items-center gap-1 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white shadow-2xs transition active:scale-95 cursor-pointer"
-                  title="Overdue - புதுப்பிக்கவும் (Reschedule / Complete)"
-                >
-                  <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
-                  <span>புதுப்பி ⚡</span>
-                </button>
-              )}
-
               {/* 1-Tap Quick Complete Toggle */}
               <button
                 type="button"
@@ -405,17 +458,24 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   );
 };
 
-const SwipeableListCard: React.FC<{
+interface LineByLineBookingRowProps {
   b: Booking;
   isSelf: boolean;
   todayStr: string;
   onToggleComplete: (b: Booking) => void;
-  onOpenQuickUpdate: (b: Booking) => void;
-}> = ({ b, isSelf, todayStr, onToggleComplete, onOpenQuickUpdate }) => {
+}
+
+const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
+  b,
+  isSelf,
+  todayStr,
+  onToggleComplete,
+}) => {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
+  const currentOffsetRef = React.useRef(0);
 
   const isCompleted = b.status === "COMPLETED";
   const isOverdue = !isCompleted && b.status !== "CANCELLED" && b.date < todayStr;
@@ -431,26 +491,79 @@ const SwipeableListCard: React.FC<{
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
 
-    if (Math.abs(diffX) > Math.abs(diffY) && diffX > 6) {
-      isDraggingRef.current = true;
-      setIsSwiping(true);
-      setOffsetX(Math.min(115, Math.max(0, diffX)));
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.min(130, Math.max(0, diffX));
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      } else if (currentOffsetRef.current > 0 && diffX < -6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.max(0, 130 + diffX);
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      }
     }
   };
 
   const handleTouchEnd = () => {
-    if (offsetX >= 70) {
-      onToggleComplete(b);
+    if (currentOffsetRef.current >= 50) {
+      currentOffsetRef.current = 130;
+      setOffsetX(130);
+    } else {
+      currentOffsetRef.current = 0;
+      setOffsetX(0);
     }
-    setOffsetX(0);
     setIsSwiping(false);
     setTimeout(() => {
       isDraggingRef.current = false;
     }, 150);
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    touchStartRef.current = { x: e.clientX, y: e.clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!touchStartRef.current) return;
+    const diffX = e.clientX - touchStartRef.current.x;
+    const diffY = e.clientY - touchStartRef.current.y;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.min(130, Math.max(0, diffX));
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      } else if (currentOffsetRef.current > 0 && diffX < -6) {
+        isDraggingRef.current = true;
+        setIsSwiping(true);
+        const nextX = Math.max(0, 130 + diffX);
+        currentOffsetRef.current = nextX;
+        setOffsetX(nextX);
+      }
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!touchStartRef.current) return;
+    touchStartRef.current = null;
+    handleTouchEnd();
+  };
+
   const handleClick = (e: React.MouseEvent) => {
-    if (isDraggingRef.current || offsetX > 10) {
+    if (currentOffsetRef.current > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      currentOffsetRef.current = 0;
+      setOffsetX(0);
+      return;
+    }
+    if (isDraggingRef.current) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -458,32 +571,52 @@ const SwipeableListCard: React.FC<{
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl select-none shadow-2xs"
+      className="relative overflow-hidden rounded-xl select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
     >
-      <div
-        className={`absolute inset-0 rounded-2xl flex items-center px-4 transition-colors z-0 ${
+      {/* Background action revealed on swipe right - Clickable button to complete */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleComplete(b);
+          setOffsetX(0);
+        }}
+        className={`absolute inset-0 rounded-xl flex items-center px-4 transition-colors z-0 cursor-pointer text-left ${
           isCompleted ? "bg-amber-600 text-white" : "bg-emerald-700 text-white"
         }`}
+        title={isCompleted ? "மீட்டெடுக்க தட்டவும்" : "பூஜையை முடிக்க தட்டவும்"}
       >
         <div className="flex items-center gap-2">
           {isCompleted ? (
             <>
-              <RotateCcw className="w-5 h-5 text-white animate-spin" />
-              <span className="font-black text-xs">மறுதொடக்கம் (Reopen)</span>
+              <RotateCcw className="w-4 h-4 text-white shrink-0" />
+              <div className="leading-tight">
+                <span className="font-black text-xs block">மறுதொடக்கம்</span>
+                <span className="text-[9.5px] text-amber-200 block font-semibold">தட்டவும் ↩️</span>
+              </div>
             </>
           ) : (
             <>
-              <CheckCircle2 className="w-5 h-5 text-white animate-bounce" />
-              <span className="font-black text-xs">பூஜை முடிந்தது (Complete ✅)</span>
+              <CheckCircle2 className="w-4 h-4 text-white shrink-0" />
+              <div className="leading-tight">
+                <span className="font-black text-xs block">பூஜை முடிந்தது ✅</span>
+                <span className="text-[9.5px] text-emerald-200 block font-semibold">தட்டவும்</span>
+              </div>
             </>
           )}
         </div>
-      </div>
+      </button>
 
+      {/* Foreground compact row */}
       <div
         style={{
           transform: `translateX(${offsetX}px)`,
@@ -494,95 +627,76 @@ const SwipeableListCard: React.FC<{
         <Link
           href={`/app/bookings/${b.id}`}
           onClick={handleClick}
-          className={`block p-3 sm:p-3.5 border rounded-2xl transition hover:shadow-xs space-y-1.5 ${
+          draggable={false}
+          className={`block p-2.5 sm:px-3.5 sm:py-2.5 border rounded-xl transition hover:shadow-2xs ${
             isCompleted
-              ? "bg-emerald-50/40 border-emerald-300"
+              ? "bg-emerald-50/30 border-emerald-200"
               : isOverdue
-              ? "bg-gradient-to-r from-rose-50/80 via-amber-50/40 to-white border-rose-300 shadow-2xs hover:border-rose-400 ring-1 ring-rose-200/80"
-              : "bg-white border-slate-200/90 hover:border-amber-300 shadow-2xs"
+              ? "bg-gradient-to-r from-rose-50/70 via-amber-50/30 to-white border-rose-300 ring-1 ring-rose-200/80"
+              : "bg-white border-slate-200 hover:border-slate-300"
           }`}
         >
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Booking info line */}
+            <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-extrabold text-amber-900 bg-amber-100/70 px-1.5 py-0.2 rounded border border-amber-200">
+                <span className="font-mono text-[10px] font-extrabold text-slate-500 bg-slate-100 px-1 py-0.2 rounded border border-slate-200 shrink-0">
                   {b.bookingNumber}
                 </span>
-                {isSelf ? (
-                  <span className="text-[9.5px] font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
-                    <span>🪔</span> Self
-                  </span>
-                ) : (
-                  <span className="text-[9.5px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
-                    <span>👥</span> {b.assignedIyerName || "Team"}
-                  </span>
-                )}
+                <span className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                  {b.customerName}
+                </span>
                 {isCompleted && (
-                  <span className="text-[9.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none">
+                  <span className="text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none shrink-0">
                     முடிந்தது ✅
                   </span>
                 )}
                 {isOverdue && (
-                  <span className="text-[9.5px] font-black bg-rose-100 text-rose-900 border border-rose-300 px-2 py-0.5 rounded-full leading-none flex items-center gap-1 shadow-2xs">
-                    <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
+                  <span className="text-[9px] font-black bg-rose-100 text-rose-900 border border-rose-300 px-1.5 py-0.2 rounded-full leading-none flex items-center gap-1 shrink-0">
+                    <AlertTriangle className="w-2.5 h-2.5 text-rose-600 shrink-0" />
                     <span>{diffDays}d Overdue</span>
                   </span>
                 )}
-                <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded border ${
-                  isOverdue
-                    ? "bg-rose-100/90 text-rose-950 border-rose-300"
-                    : "text-slate-700 bg-slate-100 border-slate-200/80"
-                }`}>
+                {isSelf ? (
+                  <span className="text-[9px] font-bold text-emerald-900 bg-emerald-100/70 px-1.5 py-0.2 rounded-full border border-emerald-200 hidden sm:inline-flex shrink-0">
+                    Self
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.2 rounded-full border border-blue-200 hidden sm:inline-flex shrink-0">
+                    {b.assignedIyerName || "Team"}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 text-[10.5px] text-slate-500 mt-0.5 truncate">
+                <span className="font-bold text-amber-900 truncate">
+                  🪔 {b.poojaEnglishName || b.poojaTamilName}
+                </span>
+                <span>•</span>
+                <span className="font-semibold text-slate-700 shrink-0">
                   {b.date} • {b.startTime}
                 </span>
-              </div>
-              <h3 className="font-black text-sm text-slate-900 mt-1 flex items-center gap-1">
-                <span>👤</span>
-                <span>{b.customerName}</span>
-              </h3>
-              <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
-                🪔 {b.poojaEnglishName || b.poojaTamilName}
-              </p>
-            </div>
-
-            <div className="text-right">
-              <span className="text-sm font-black text-slate-900">
-                ₹{b.totalAmount.toLocaleString("en-IN")}
-              </span>
-              <div className="text-[10px] font-bold mt-0.5">
-                {b.paymentStatus === "PAID" ? (
-                  <span className="text-emerald-700">Paid ✅</span>
-                ) : (
-                  <span className="text-rose-700">Due: ₹{b.balanceAmount}</span>
+                {b.location && (
+                  <>
+                    <span className="hidden xs:inline">•</span>
+                    <span className="hidden xs:inline text-slate-600 truncate">{b.location}</span>
+                  </>
                 )}
               </div>
             </div>
-          </div>
 
-          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-            <div className="flex items-center gap-1 text-slate-500 truncate text-[11px]">
-              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-              <span className="truncate">{b.location || "Namakkal"}</span>
-            </div>
+            {/* Right: Amount & Quick Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="text-right">
+                <div className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
+                  ₹{b.totalAmount.toLocaleString("en-IN")}
+                </div>
+                <div className={`text-[9.5px] font-bold leading-none mt-0.5 ${b.paymentStatus === "PAID" ? "text-emerald-700" : "text-rose-700"}`}>
+                  {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                </div>
+              </div>
 
-            <div className="flex items-center gap-2">
-              {/* Overdue Quick Update Button */}
-              {isOverdue && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onOpenQuickUpdate(b);
-                  }}
-                  className="px-2 py-0.5 rounded-lg text-[10px] font-black flex items-center gap-1 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white shadow-2xs transition active:scale-95 cursor-pointer"
-                  title="Overdue - புதுப்பிக்கவும்"
-                >
-                  <Zap className="w-3 h-3 fill-amber-300 text-amber-300" />
-                  <span>புதுப்பி ⚡</span>
-                </button>
-              )}
-
+              {/* Complete Toggle Button */}
               <button
                 type="button"
                 onClick={(e) => {
@@ -590,19 +704,19 @@ const SwipeableListCard: React.FC<{
                   e.stopPropagation();
                   onToggleComplete(b);
                 }}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition cursor-pointer active:scale-95 ${
+                className={`p-1.5 rounded-lg transition active:scale-95 cursor-pointer ${
                   isCompleted
                     ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
                     : isOverdue
-                    ? "bg-amber-100 hover:bg-emerald-100 text-amber-900 hover:text-emerald-900 border border-amber-300"
+                    ? "bg-amber-100 hover:bg-emerald-100 text-amber-900 border border-amber-300"
                     : "bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200"
                 }`}
-                title={isCompleted ? "Completed" : "Mark as Completed"}
+                title={isCompleted ? "முடிந்தது (Click to Reopen)" : "பூஜையை முடிக்க"}
               >
-                <CheckCircle2 className={`w-3 h-3 ${isCompleted ? "text-emerald-700 fill-emerald-200" : isOverdue ? "text-amber-600" : "text-slate-400"}`} />
-                <span>{isCompleted ? "முடிந்தது ✅" : "Complete"}</span>
+                <CheckCircle2 className={`w-3.5 h-3.5 ${isCompleted ? "text-emerald-700 fill-emerald-200" : isOverdue ? "text-amber-600" : "text-slate-400"}`} />
               </button>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
+
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             </div>
           </div>
         </Link>
@@ -619,8 +733,8 @@ export default function BookingsListPage() {
   const [viewMode, setViewMode] = useState<"timeline" | "list">("timeline");
 
   const todayStr = useMemo(() => getTodayStr(), []);
-  const [quickUpdateBooking, setQuickUpdateBooking] = useState<Booking | null>(null);
-  const [rescheduleDate, setRescheduleDate] = useState<string>("");
+  const [showRecentChanges, setShowRecentChanges] = useState(false);
+  const [recentChangesTab, setRecentChangesTab] = useState<"completed" | "activity">("completed");
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
   const [dbVersion, setDbVersion] = useState(0);
@@ -650,6 +764,19 @@ export default function BookingsListPage() {
   const allBookings = useMemo(() => db.getBookings(businessId), [businessId, dbVersion]);
   const members = useMemo(() => db.getMembers(businessId), [businessId, dbVersion]);
   const ownerMember = useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
+
+  const recentCompletedBookings = useMemo(() => {
+    return allBookings
+      .filter((b) => b.status === "COMPLETED")
+      .sort((a, b) => (b.updatedAt || b.createdAt).localeCompare(a.updatedAt || a.createdAt));
+  }, [allBookings]);
+
+  const bookingAuditLogs = useMemo(() => {
+    return (db.auditLogs || [])
+      .filter((log) => log.targetType === "BOOKING")
+      .slice(-25)
+      .reverse();
+  }, [dbVersion]);
 
   const pendingCount = useMemo(
     () => allBookings.filter((b) => b.status !== "COMPLETED" && b.status !== "CANCELLED").length,
@@ -746,13 +873,13 @@ export default function BookingsListPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {/* View Mode Switcher */}
           <div className="bg-white rounded-xl border border-slate-200 p-0.5 flex items-center shadow-2xs">
             <button
               onClick={() => setViewMode("timeline")}
               title="Month Timeline View"
-              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold ${
+              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold cursor-pointer ${
                 viewMode === "timeline"
                   ? "bg-slate-900 text-white shadow-2xs"
                   : "text-slate-600 hover:bg-slate-100"
@@ -763,8 +890,8 @@ export default function BookingsListPage() {
             </button>
             <button
               onClick={() => setViewMode("list")}
-              title="Compact List View"
-              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold ${
+              title="Line-by-Line List View"
+              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold cursor-pointer ${
                 viewMode === "list"
                   ? "bg-slate-900 text-white shadow-2xs"
                   : "text-slate-600 hover:bg-slate-100"
@@ -774,6 +901,18 @@ export default function BookingsListPage() {
               <span>List</span>
             </button>
           </div>
+
+          {/* Recent Changes Button */}
+          <button
+            type="button"
+            onClick={() => setShowRecentChanges(true)}
+            className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
+            title="சமீபத்திய மாற்றங்கள் (Recent Changes & Completed Bookings)"
+          >
+            <History className="w-3.5 h-3.5 text-amber-700" />
+            <span className="hidden sm:inline">Recent Changes</span>
+            <span className="sm:hidden">History</span>
+          </button>
 
           <Link
             href="/app/bookings/new"
@@ -839,7 +978,7 @@ export default function BookingsListPage() {
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-base shrink-0">⚠️</span>
             <p className="text-[11px] sm:text-xs text-rose-950 font-bold leading-snug">
-              <span className="text-rose-800 font-extrabold">{overdueCount} பூஜைகள் காலாவதியாகி உள்ளன (Overdue):</span> உடனடியாக முடிக்கவும் அல்லது தேதியை மாற்றவும்.
+              <span className="text-rose-800 font-extrabold">{overdueCount} பூஜைகள் காலாவதியாகி உள்ளன (Overdue):</span> பூஜை முடிந்திருந்தால் &apos;Complete&apos; என குறிக்கவும்.
             </p>
           </div>
           <span className="shrink-0 text-[10px] font-black bg-rose-700 text-white px-2 py-0.5 rounded-full shadow-2xs">
@@ -853,7 +992,7 @@ export default function BookingsListPage() {
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-base shrink-0">👉</span>
           <p className="text-[11px] sm:text-xs text-emerald-950 font-bold leading-snug truncate">
-            <span className="text-emerald-800 font-extrabold">டிப்ஸ்:</span> முன்பதிவை வலதுபுறம் ஸ்வைப் செய்து <span className="underline decoration-emerald-500 font-extrabold">&apos;பூஜை முடிந்தது&apos; (Complete ✅)</span> என மாற்றலாம்!
+            <span className="text-emerald-800 font-extrabold">டிப்ஸ்:</span> முன்பதிவை வலதுபுறம் ஸ்வைப் செய்து <span className="underline decoration-emerald-500 font-extrabold">&apos;பூஜை முடிந்தது&apos; (Complete ✅)</span> பொத்தானை தட்டலாம்!
           </p>
         </div>
         <span className="shrink-0 text-[10px] font-black bg-emerald-700 text-white px-2 py-0.5 rounded-full shadow-2xs">
@@ -887,7 +1026,7 @@ export default function BookingsListPage() {
 
             return (
               <div key={group.monthKey} className="relative pb-6">
-                {/* WhatsApp-Style Sticky Floating Month Header - Rock Solid & Stabilized */}
+                {/* WhatsApp-Style Sticky Floating Month Header */}
                 <div
                   className={`sticky top-[56px] sm:top-[58px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-sm flex items-center justify-between gap-2 mb-3 select-none`}
                 >
@@ -954,10 +1093,6 @@ export default function BookingsListPage() {
                           isSelf={isSelf}
                           todayStr={todayStr}
                           onToggleComplete={handleToggleComplete}
-                          onOpenQuickUpdate={(booking) => {
-                            setQuickUpdateBooking(booking);
-                            setRescheduleDate(todayStr);
-                          }}
                         />
                       </div>
                     );
@@ -969,9 +1104,9 @@ export default function BookingsListPage() {
         </div>
       ) : (
         /* =================================================================== */
-        /* COMPACT LIST VIEW                                                  */
+        /* COMPACT LINE-BY-LINE LIST VIEW                                     */
         /* =================================================================== */
-        <div className="space-y-2">
+        <div className="space-y-1.5 bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs">
           {filteredBookings.map((b) => {
             const isSelf =
               b.assignedIyerId === ownerMember?.id ||
@@ -981,191 +1116,187 @@ export default function BookingsListPage() {
               b.assignedIyerName.toLowerCase() === "self";
 
             return (
-              <SwipeableListCard
+              <LineByLineBookingRow
                 key={b.id}
                 b={b}
                 isSelf={isSelf}
                 todayStr={todayStr}
                 onToggleComplete={handleToggleComplete}
-                onOpenQuickUpdate={(booking) => {
-                  setQuickUpdateBooking(booking);
-                  setRescheduleDate(todayStr);
-                }}
               />
             );
           })}
         </div>
       )}
 
-      {/* Quick Update Overdue Modal */}
-      {quickUpdateBooking && (
+      {/* Recent Changes & Completed Bookings Modal */}
+      {showRecentChanges && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150">
-          <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-200 shadow-2xl p-5 space-y-4 max-h-[85vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3 text-rose-600" />
-                    Overdue ({getDiffDays(quickUpdateBooking.date, todayStr)}d)
-                  </span>
-                  <span className="text-xs font-mono font-bold text-slate-400">
-                    {quickUpdateBooking.bookingNumber}
-                  </span>
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center border border-amber-300 shadow-2xs">
+                  <History className="w-4 h-4 text-amber-800" />
                 </div>
-                <h3 className="text-base font-black text-slate-900 mt-1">
-                  {quickUpdateBooking.customerName}
-                </h3>
-                <p className="text-xs font-bold text-amber-900">
-                  🪔 {quickUpdateBooking.poojaEnglishName || quickUpdateBooking.poojaTamilName}
-                </p>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    சமீபத்திய மாற்றங்கள் (Recent Changes)
+                  </h3>
+                  <p className="text-[11px] font-bold text-slate-500">
+                    முடிந்த பூஜைகள் & வரலாற்றுப் பதிவுகள் (Completed & Activity History)
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => setQuickUpdateBooking(null)}
+                onClick={() => setShowRecentChanges(false)}
                 className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Details Snapshot */}
-            <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200 text-xs space-y-1.5">
-              <div className="flex items-center justify-between text-slate-600">
-                <span className="font-semibold">பதிவு செய்யப்பட்ட தேதி:</span>
-                <span className="font-bold text-rose-700">
-                  {quickUpdateBooking.date} • {quickUpdateBooking.startTime}
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-slate-600">
-                <span className="font-semibold">பூஜை கட்டணம்:</span>
-                <span className="font-bold text-slate-900">
-                  ₹{quickUpdateBooking.totalAmount.toLocaleString("en-IN")}{" "}
-                  <span className="text-[11px] text-amber-800 font-bold">
-                    (நிலுவை: ₹{quickUpdateBooking.balanceAmount})
-                  </span>
-                </span>
-              </div>
-              {quickUpdateBooking.location && (
-                <div className="flex items-center justify-between text-slate-600">
-                  <span className="font-semibold">இடம்:</span>
-                  <span className="font-medium text-slate-800">{quickUpdateBooking.location}</span>
-                </div>
+            {/* Modal Tabs: Completed vs All Activity Logs */}
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold shrink-0">
+              <button
+                type="button"
+                onClick={() => setRecentChangesTab("completed")}
+                className={`flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  recentChangesTab === "completed"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>முடிந்தவை ({recentCompletedBookings.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecentChangesTab("activity")}
+                className={`flex-1 py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                  recentChangesTab === "activity"
+                    ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>மாற்றங்கள் ({bookingAuditLogs.length})</span>
+              </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto flex-1 space-y-2.5 pr-0.5">
+              {recentChangesTab === "completed" ? (
+                recentCompletedBookings.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-xs">
+                    முடிந்த பூஜைகள் எதுவும் இல்லை (No completed bookings yet)
+                  </div>
+                ) : (
+                  recentCompletedBookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-2xl transition space-y-2"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono text-[10px] font-bold text-slate-600 bg-white px-1.5 py-0.2 rounded border border-slate-200">
+                              {b.bookingNumber}
+                            </span>
+                            <span className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                              {b.customerName}
+                            </span>
+                            <span className="text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full">
+                              முடிந்தது ✅
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-bold text-amber-900 mt-0.5 truncate">
+                            🪔 {b.poojaEnglishName || b.poojaTamilName}
+                          </p>
+                          <p className="text-[10.5px] text-slate-500 mt-0.5">
+                            📅 {b.date} • {b.startTime} • ₹{b.totalAmount.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        {/* Revert & Edit Action Buttons */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* Revert to Booking Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              db.updateBookingStatus(b.id, "CONFIRMED", currentUser?.name || "Self");
+                              setCompleteToast({ booking: b, action: "reopened" });
+                            }}
+                            className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-black flex items-center gap-1 transition active:scale-95 cursor-pointer shadow-2xs"
+                            title="மீண்டும் முன்பதிவாக்கு (Revert to Active Booking)"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                            <span>மீட்டெடு ↩️</span>
+                          </button>
+
+                          {/* Edit Link */}
+                          <Link
+                            href={`/app/bookings/${b.id}`}
+                            onClick={() => setShowRecentChanges(false)}
+                            className="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition active:scale-95"
+                            title="விவரங்கள் / திருத்து"
+                          >
+                            <span>விவரங்கள் ✏️</span>
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )
+              ) : (
+                /* Activity Log Tab */
+                bookingAuditLogs.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 text-xs">
+                    மாற்ற பதிவுகள் எதுவும் இல்லை (No recent activity logs)
+                  </div>
+                ) : (
+                  bookingAuditLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1"
+                    >
+                      <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
+                        <span className="font-bold text-slate-800 flex items-center gap-1">
+                          <span>👤</span> {log.actorName || "User"}
+                        </span>
+                        <span>{new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                      <p className="font-semibold text-slate-800 text-[11px]">
+                        {log.reason || log.action}
+                      </p>
+                      {log.targetId && (
+                        <div className="flex items-center justify-between text-[10.5px] text-slate-500 pt-0.5 border-t border-slate-200/60">
+                          <span className="font-mono">{log.targetId}</span>
+                          <Link
+                            href={`/app/bookings/${log.targetId}`}
+                            onClick={() => setShowRecentChanges(false)}
+                            className="text-amber-800 font-bold hover:underline"
+                          >
+                            திறக்க ↗
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )
               )}
             </div>
 
-            {/* Action Options */}
-            <div className="space-y-2.5">
-              <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wide">
-                விரைவு நடவடிக்கை (Quick Action):
-              </p>
-
-              {/* 1. Mark Complete Now */}
+            {/* Footer Notice */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 shrink-0">
+              <span>தவறுதலாக முடித்தவற்றை &apos;மீட்டெடு ↩️&apos; மூலம் மீண்டும் ஆக்டிவாக்கலாம்.</span>
               <button
                 type="button"
-                onClick={() => {
-                  db.updateBookingStatus(quickUpdateBooking.id, "COMPLETED", currentUser?.name || "Self");
-                  setCompleteToast({ booking: quickUpdateBooking, action: "completed" });
-                  setQuickUpdateBooking(null);
-                }}
-                className="w-full py-2.5 px-3.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-black text-xs flex items-center justify-between shadow-xs transition active:scale-[0.98] cursor-pointer"
+                onClick={() => setShowRecentChanges(false)}
+                className="px-3 py-1 bg-slate-900 text-white rounded-lg font-bold text-xs cursor-pointer"
               >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-200" />
-                  <span>பூஜை முடிந்தது (Mark as Completed)</span>
-                </div>
-                <span className="text-[10px] bg-emerald-800 px-2 py-0.5 rounded-lg">1-Tap ✅</span>
+                சரி (Close)
               </button>
-
-              {/* 2. Reschedule to Today */}
-              <button
-                type="button"
-                onClick={() => {
-                  const res = db.updateBooking({
-                    bookingId: quickUpdateBooking.id,
-                    updatedBy: currentUser?.name || "Self",
-                    updates: { date: todayStr },
-                  });
-                  if (res.success) {
-                    setQuickUpdateBooking(null);
-                  } else {
-                    alert(res.error || "Failed to update date");
-                  }
-                }}
-                className="w-full py-2.5 px-3.5 bg-amber-600 hover:bg-amber-700 text-white rounded-2xl font-black text-xs flex items-center justify-between shadow-xs transition active:scale-[0.98] cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-amber-200" />
-                  <span>இன்றைய தேதிக்கு மாற்று ({todayStr})</span>
-                </div>
-                <span className="text-[10px] bg-amber-700 px-2 py-0.5 rounded-lg">இன்று 🗓️</span>
-              </button>
-
-              {/* 3. Pick Custom Date */}
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
-                <label className="text-xs font-bold text-slate-700 block">
-                  வேறு புதிய தேதி தேர்வு செய்க (Reschedule Date):
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="date"
-                    value={rescheduleDate}
-                    onChange={(e) => setRescheduleDate(e.target.value)}
-                    className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!rescheduleDate) return;
-                      const res = db.updateBooking({
-                        bookingId: quickUpdateBooking.id,
-                        updatedBy: currentUser?.name || "Self",
-                        updates: { date: rescheduleDate },
-                      });
-                      if (res.success) {
-                        setQuickUpdateBooking(null);
-                      } else {
-                        alert(res.error || "Failed to update date");
-                      }
-                    }}
-                    className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black shrink-0 transition active:scale-95 cursor-pointer"
-                  >
-                    மாற்று
-                  </button>
-                </div>
-              </div>
-
-              {/* 4. WhatsApp / Phone Follow-up */}
-              {quickUpdateBooking.customerMobile && (
-                <div className="pt-1 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const cleanPhone = quickUpdateBooking.customerMobile?.replace(/\D/g, "") || "";
-                      const msg = encodeURIComponent(
-                        `வணக்கம் ${quickUpdateBooking.customerName} அவர்களே, தாங்கள் முன்பதிவு செய்த ${
-                          quickUpdateBooking.poojaTamilName || quickUpdateBooking.poojaEnglishName
-                        } (${quickUpdateBooking.date}) தொடர்பாக தொடர்புகொள்கிறோம்.`
-                      );
-                      window.open(`https://wa.me/${cleanPhone}?text=${msg}`, "_blank");
-                    }}
-                    className="flex-1 py-2 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
-                  >
-                    <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>WhatsApp Reminder</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.location.href = `tel:${quickUpdateBooking.customerMobile}`;
-                    }}
-                    className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                    title="Call"
-                  >
-                    <Phone className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
