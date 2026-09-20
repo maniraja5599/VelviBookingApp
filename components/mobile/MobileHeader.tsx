@@ -123,7 +123,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         App
                       </span>
                     </div>
-                    <p className="text-[10.5px] font-semibold text-emerald-850 truncate max-w-[170px] leading-tight mt-0.5">
+                    <p className="text-[10.5px] font-semibold text-emerald-900 truncate max-w-[170px] leading-tight mt-0.5">
                       {subtitle || currentBusiness?.name || "Pooja • Homam • Seva"}
                     </p>
                   </div>
@@ -145,24 +145,32 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <Search className="w-4 h-4 text-amber-800 group-hover:scale-110 transition-transform" />
             </button>
 
-            {/* Profile Button with User Name (Vanakkam removed, shows user name) */}
+            {/* Profile Button with User Name & Clearly Visible Sacred Icon */}
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl transition active:scale-95 border ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-xl transition active:scale-95 border ${
                 isProfileMenuOpen
-                  ? "bg-amber-100 border-amber-400 text-amber-950 shadow-xs"
-                  : "bg-slate-50 hover:bg-amber-50 border-slate-200 text-slate-800"
+                  ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
+                  : "bg-white hover:bg-amber-50/80 border-slate-200 text-slate-800 shadow-2xs"
               }`}
               title="சுயவிவரம் & அமைப்புகள் (User Profile)"
               aria-expanded={isProfileMenuOpen}
             >
-              <span className="text-xs font-black truncate max-w-[85px] sm:max-w-[120px] text-left">
+              {/* Clearly Visible Priest Avatar Icon Badge with Sacred Colors */}
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                <User className="w-3.5 h-3.5 text-amber-300 stroke-[2.5]" />
+              </div>
+
+              <span className="text-xs font-black truncate max-w-[85px] sm:max-w-[120px] text-slate-900 text-left">
                 {displayName}
               </span>
-              <div className="w-6 h-6 rounded-lg bg-emerald-850 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-                {initial}
-              </div>
+
+              <ChevronRight
+                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
+                  isProfileMenuOpen ? "rotate-90 text-amber-800" : ""
+                }`}
+              />
             </button>
 
             {/* Profile Dropdown Menu */}

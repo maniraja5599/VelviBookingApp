@@ -238,7 +238,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         {/* Sticky Search Header */}
         <div className="p-3 sm:p-3.5 border-b border-slate-200/80 flex items-center gap-2.5 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-300/80 flex items-center justify-center shrink-0 shadow-2xs">
-            <Search className="w-4 h-4 text-emerald-850" />
+            <Search className="w-4 h-4 text-emerald-900" />
           </div>
           <input
             ref={inputRef}
@@ -637,7 +637,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                               )}
 
                               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                                <span className="font-extrabold text-xs text-emerald-850 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                <span className="font-extrabold text-xs text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                   ₹{p.basePrice?.toLocaleString()}
                                 </span>
                                 <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">

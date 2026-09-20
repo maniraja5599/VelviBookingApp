@@ -2050,7 +2050,7 @@ export default function CalendarPage() {
                     </p>
                     <Link
                       href={`/app/bookings/new?date=${selectedDate}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-850 hover:bg-emerald-900 text-white rounded-xl font-bold text-xs shadow-2xs transition active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900 hover:bg-emerald-950 text-white rounded-xl font-bold text-xs shadow-2xs transition active:scale-95"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>+ பூஜை முன்பதிவு செய்ய</span>

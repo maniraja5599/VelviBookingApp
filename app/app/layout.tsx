@@ -37,14 +37,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Scroll listener saving position for current page ("return antha page pona athe place la irukanum")
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
     const handleScroll = () => {
       if (typeof window !== "undefined" && pathname) {
-        sessionStorage.setItem(`velvi_scroll_${pathname}`, window.scrollY.toString());
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          sessionStorage.setItem(`velvi_scroll_${pathname}`, window.scrollY.toString());
+        }, 150);
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [pathname]);
 
   // Restore scroll position when returning to page

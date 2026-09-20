@@ -300,15 +300,15 @@ export default function BookingsListPage() {
         /* =================================================================== */
         /* WHATSAPP-STYLE MONTH TIMELINE VIEW                                 */
         /* =================================================================== */
-        <div className="space-y-6 pt-1">
+        <div className="pt-1">
           {monthGroups.map((group, groupIdx) => {
             const theme = MONTH_THEMES[groupIdx % MONTH_THEMES.length];
 
             return (
-              <div key={group.monthKey} className="space-y-3 relative">
+              <div key={group.monthKey} className="relative pb-6">
                 {/* WhatsApp-Style Sticky Floating Month Header - Rock Solid & Stabilized */}
                 <div
-                  className={`sticky top-[48px] sm:top-[50px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-xs flex items-center justify-between gap-2 transform-gpu will-change-transform [backface-visibility:hidden] [transform:translate3d(0,0,0)] select-none`}
+                  className={`sticky top-[56px] sm:top-[58px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-sm flex items-center justify-between gap-2 mb-3 select-none`}
                 >
                   <div className="min-w-0">
                     <h3 className={`font-black text-sm sm:text-base ${theme.headerText} tracking-tight leading-none`}>
