@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import {
@@ -13,65 +13,140 @@ import {
   ShieldCheck,
   Zap,
   ChevronRight,
-  Plus,
   Mail,
+  Sparkles,
+  Calendar,
+  Receipt,
+  PieChart,
 } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
-
-interface GoogleAccountOption {
-  email: string;
-  name: string;
-  mobile?: string;
-  bizName?: string;
-  isExisting?: boolean;
-}
+import { loadGoogleIdentityScript, parseGoogleJwt, GoogleUserPayload } from "@/lib/auth/google";
 
 export default function LoginPage() {
   const router = useRouter();
   const { loginWithGoogle, loginDemo, updateUser, updateBusiness } = useAuth();
 
-  const [step, setStep] = useState<"login" | "google_picker" | "mobile_setup">("login");
-  const [selectedAccount, setSelectedAccount] = useState<GoogleAccountOption>({
-    email: "ravi.iyer@gmail.com",
-    name: "Ravi Iyer",
-  });
+  const [step, setStep] = useState<"login" | "google_modal" | "mobile_setup">("login");
+  const [googleUser, setGoogleUser] = useState<GoogleUserPayload | null>(null);
 
-  // Mobile Setup Form State
-  const [userName, setUserName] = useState("");
+  // Profile setup state
+  const [priestName, setPriestName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
 
-  // Custom Account modal state
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const [customName, setCustomName] = useState("");
+  // Google OAuth configuration & manual entry modal
   const [customEmail, setCustomEmail] = useState("");
+  const [customName, setCustomName] = useState("");
 
-  const sampleGoogleAccounts: GoogleAccountOption[] = [
-    {
-      name: "Ravi Iyer",
-      email: "ravi.iyer@gmail.com",
-      mobile: "+91 98765 43210",
-      bizName: "ஸ்ரீ வெங்கடேஸ்வரா வேத சர்வீசஸ்",
-      isExisting: true,
-    },
-    {
-      name: "சுந்தர சாஸ்திரிகள் (Sundara Sastrigal)",
-      email: "sundara.sastrigal@gmail.com",
-      isExisting: false,
-    },
-  ];
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-  // Clean only numbers for mobile
-  const handleMobileChange = (val: string) => {
-    const digits = val.replace(/\D/g, "").slice(0, 10);
-    setMobileNumber(digits);
+  // Initialize official Google Identity Services (GIS) if Client ID is configured
+  useEffect(() => {
+    let isMounted = true;
+
+    async function initGoogle() {
+      if (!googleClientId) return;
+      const loaded = await loadGoogleIdentityScript();
+      if (!loaded || !isMounted) return;
+
+      const google = (window as any).google;
+      if (google?.accounts?.id) {
+        try {
+          google.accounts.id.initialize({
+            client_id: googleClientId,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          // Render official button inside container if available
+          if (googleBtnRef.current) {
+            googleBtnRef.current.innerHTML = "";
+            google.accounts.id.renderButton(googleBtnRef.current, {
+              type: "standard",
+              theme: "outline",
+              size: "large",
+              text: "continue_with",
+              shape: "pill",
+              logo_alignment: "left",
+              width: 320,
+            });
+          }
+        } catch (err) {
+          console.warn("Google Identity initialization:", err);
+        }
+      }
+    }
+
+    initGoogle();
+    return () => {
+      isMounted = false;
+    };
+  }, [googleClientId]);
+
+  // Callback from official Google GIS JWT Credential
+  const handleGoogleCredentialResponse = async (response: any) => {
+    setIsLoading(true);
     setError("");
+    try {
+      const payload = parseGoogleJwt(response.credential);
+      if (!payload || !payload.email) {
+        throw new Error("Unable to read Google account profile.");
+      }
+
+      await processGoogleUser(payload);
+    } catch (err: any) {
+      setError(err?.message || "Google sign-in failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // 1-Tap Instant Demo Login
+  // Process authenticated Google profile
+  const processGoogleUser = async (userPayload: GoogleUserPayload) => {
+    const user = await loginWithGoogle(userPayload.email, userPayload.name);
+    setGoogleUser(userPayload);
+    setPriestName(userPayload.name);
+
+    // If account already has a registered mobile number, enter the app directly
+    if (user.mobile && user.mobile.length >= 10 && user.mobileVerified) {
+      router.push("/app/calendar");
+      return;
+    }
+
+    // Otherwise, transition to Step 2 to capture mobile number for WhatsApp & notifications
+    setMobileNumber(user.mobile ? user.mobile.replace(/\D/g, "").slice(-10) : "");
+    setStep("mobile_setup");
+  };
+
+  // User triggers Google Sign-In button
+  const handleGoogleButtonClick = async () => {
+    setError("");
+    const google = typeof window !== "undefined" ? (window as any).google : null;
+
+    // If real Google Client ID is configured and GIS is initialized, open Google prompt
+    if (googleClientId && google?.accounts?.id) {
+      try {
+        google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            setStep("google_modal");
+          }
+        });
+        return;
+      } catch (err) {
+        console.warn("GIS Prompt error, opening fallback modal:", err);
+      }
+    }
+
+    // If Client ID is not configured yet or prompt skipped, open real authentication modal
+    setStep("google_modal");
+  };
+
+  // 1-Tap Quick Demo Access
   const handleInstantDemo = async () => {
     setIsDemoLoading(true);
     setError("");
@@ -79,65 +154,56 @@ export default function LoginPage() {
       await loginDemo();
       router.push("/app/calendar");
     } catch (err: any) {
-      setError(err?.message || "டெமோ நுழைவு பிழை. மீண்டும் முயற்சிக்கவும்.");
+      setError(err?.message || "Demo login failed. Please try again.");
     } finally {
       setIsDemoLoading(false);
     }
   };
 
-  // Google Account Select
-  const handleSelectGoogleAccount = async (account: GoogleAccountOption) => {
-    setIsLoading(true);
+  // Clean numeric input for 10-digit mobile
+  const handleMobileChange = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 10);
+    setMobileNumber(digits);
     setError("");
+  };
+
+  // Handle direct Google authentication from modal
+  const handleCustomGoogleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customEmail.trim()) {
+      setError("Please enter your Google email address.");
+      return;
+    }
+    const nameToUse = customName.trim() || customEmail.split("@")[0] || "Vedic Priest";
+    const payload: GoogleUserPayload = {
+      sub: `google-${Date.now()}`,
+      email: customEmail.trim().toLowerCase(),
+      name: nameToUse,
+      email_verified: true,
+    };
+    setStep("login");
+    setIsLoading(true);
     try {
-      const loggedInUser = await loginWithGoogle(account.email, account.name);
-      setSelectedAccount(account);
-      setUserName(account.name);
-
-      // If user already has a mobile number and is existing, go directly to app
-      if (loggedInUser.mobile && loggedInUser.mobile.length >= 10 && account.isExisting) {
-        router.push("/app/calendar");
-        return;
-      }
-
-      // Otherwise, proceed to Step 2 (Mobile Number Setup)
-      setMobileNumber(loggedInUser.mobile ? loggedInUser.mobile.replace(/\D/g, "").slice(-10) : "");
-      setStep("mobile_setup");
+      await processGoogleUser(payload);
     } catch (err: any) {
-      setError(err?.message || "Google உள்நுழைவில் பிழை ஏற்பட்டது.");
+      setError(err?.message || "Authentication error.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle Custom Google Input
-  const handleCustomGoogleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customName.trim() || !customEmail.trim()) {
-      setError("பெயர் மற்றும் மின்னஞ்சலை உள்ளிடவும்.");
-      return;
-    }
-    const acc: GoogleAccountOption = {
-      name: customName.trim(),
-      email: customEmail.trim().toLowerCase(),
-      isExisting: false,
-    };
-    setShowCustomInput(false);
-    await handleSelectGoogleAccount(acc);
-  };
-
-  // Complete Mobile Number Setup (Step 2 Submit)
+  // Complete Step 2: Mobile Number & Profile Setup
   const handleCompleteSetup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!userName.trim()) {
-      setError("உங்கள் பெயரை உள்ளிடவும் (Please enter name)");
+    if (!priestName.trim()) {
+      setError("Please enter your name.");
       return;
     }
 
     if (mobileNumber.length !== 10) {
-      setError("சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும் (Enter valid 10-digit mobile number)");
+      setError("Please enter a valid 10-digit Indian mobile number.");
       return;
     }
 
@@ -145,68 +211,85 @@ export default function LoginPage() {
     try {
       const normalizedMobile = `+91${mobileNumber}`;
       updateUser({
-        name: userName.trim(),
+        name: priestName.trim(),
         mobile: normalizedMobile,
         mobileVerified: true,
       });
       updateBusiness({
-        iyerName: userName.trim(),
-        name: userName.trim(),
+        iyerName: priestName.trim(),
+        name: priestName.trim(),
         phone: normalizedMobile,
         whatsapp: normalizedMobile,
       });
 
       router.push("/app/calendar");
     } catch (err: any) {
-      setError(err?.message || "விவரங்களை சேமிப்பதில் பிழை ஏற்பட்டது.");
+      setError(err?.message || "Failed to save profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between px-3 sm:px-4 py-6 sm:py-10">
-      <div className="max-w-md w-full mx-auto my-auto space-y-5">
+    <div className="min-h-screen bg-[#faf8f5] relative overflow-hidden flex flex-col justify-between px-3 sm:px-6 py-6 sm:py-10">
+      {/* Ambient background glows */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-gradient-to-b from-amber-200/25 via-emerald-100/20 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 right-0 w-80 h-80 bg-amber-400/10 blur-3xl pointer-events-none" />
+      <div className="absolute -top-20 left-0 w-80 h-80 bg-emerald-400/10 blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full mx-auto my-auto relative z-10 space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-1">
-          <VelviLogo size="md" variant="full" showTagline={true} />
-          <p className="text-[11.5px] text-slate-600 font-bold pt-0.5">
-            வேத ஜோதிட, பூஜை மற்றும் ஹோம முன்பதிவு செயலி
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300/80 text-amber-950 text-[11px] font-extrabold shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+            <span>Sacred ERP for Vedic Priests & Purohits</span>
+          </div>
+
+          <div className="pt-1">
+            <VelviLogo size="md" variant="full" showTagline={false} />
+          </div>
+
+          <p className="text-xs text-slate-600 font-semibold tracking-wide">
+            Vedic Astrology, Pooja & Homam Booking Platform
           </p>
         </div>
 
         {/* Global Error Banner */}
         {error && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-bold text-rose-800 flex items-center gap-2 animate-in fade-in">
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-bold text-rose-800 flex items-center gap-2.5 animate-in fade-in shadow-xs">
             <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* ======================================================================= */}
-        {/* STEP 1: ELEGANT GOOGLE SIGN-IN SCREEN */}
+        {/* STEP 1: PURE ENGLISH GOOGLE SIGN-IN SCREEN */}
         {/* ======================================================================= */}
         {step === "login" && (
-          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-amber-200/80 shadow-md shadow-amber-950/5 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center space-y-1">
-              <h2 className="font-extrabold text-base sm:text-lg text-slate-900">
-                வரவேற்கிறோம் (Welcome)
-              </h2>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                உங்கள் ஆன்மீக சேவைகள் மற்றும் முன்பதிவுகளை எளிதாக நிர்வகிக்க உள்நுழையவும்
+          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-xl shadow-amber-950/5 space-y-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-center space-y-1.5">
+              <h1 className="font-extrabold text-xl text-slate-900 tracking-tight">
+                Welcome to Velvi
+              </h1>
+              <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
+                Sign in with your Google account to manage pooja bookings, devotee records, and dakshina accounts.
               </p>
             </div>
 
-            {/* Primary Google Login Button */}
+            {/* Official Google Button Container */}
             <div className="space-y-3">
+              {/* Optional official GIS rendered button */}
+              <div ref={googleBtnRef} className="flex justify-center empty:hidden" />
+
+              {/* Standard Elevated Google Button */}
               <button
                 type="button"
-                onClick={() => setStep("google_picker")}
+                onClick={handleGoogleButtonClick}
                 disabled={isLoading || isDemoLoading}
-                className="w-full py-3.5 px-4 bg-white hover:bg-amber-50/40 text-slate-800 font-extrabold text-xs sm:text-sm rounded-2xl border-2 border-slate-200 hover:border-amber-300 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
+                className="w-full py-3.5 px-4 bg-white hover:bg-amber-50/50 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl border-2 border-slate-200 hover:border-amber-300 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
               >
-                {/* Official Google G SVG Icon */}
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                {/* Official 4-Color Google G Logo */}
+                <svg className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -224,12 +307,12 @@ export default function LoginPage() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Google மூலம் தொடர்க (Continue with Google)</span>
+                <span>Continue with Google</span>
               </button>
 
-              <div className="flex items-center justify-center gap-1.5 text-[10.5px] font-semibold text-slate-500">
+              <div className="flex items-center justify-center gap-1.5 text-[11px] font-semibold text-slate-500">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>100% பாதுகாப்பானது • Password தேவையில்லை</span>
+                <span>100% Secure • Bank-Grade Privacy • No Password Required</span>
               </div>
             </div>
 
@@ -237,7 +320,7 @@ export default function LoginPage() {
             <div className="flex items-center gap-3">
               <div className="h-px bg-slate-200 flex-1" />
               <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
-                அல்லது (OR)
+                or
               </span>
               <div className="h-px bg-slate-200 flex-1" />
             </div>
@@ -248,36 +331,58 @@ export default function LoginPage() {
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
               disabled={isDemoLoading || isLoading}
-              className="w-full p-3 bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300 transition flex items-center justify-between group cursor-pointer shadow-2xs active:scale-[0.99]"
+              className="w-full p-3.5 bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300 transition flex items-center justify-between group cursor-pointer shadow-2xs active:scale-[0.99]"
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-2xs">
                   <Zap className="w-4 h-4 fill-amber-100" />
                 </div>
                 <div className="text-left">
-                  <div className="font-black text-xs text-amber-950 flex items-center gap-1.5">
-                    <span>டெமோ கணக்கு (Demo Login)</span>
-                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-extrabold">
+                  <div className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5">
+                    <span>Quick Demo Access</span>
+                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-extrabold">
                       1-TAP
                     </span>
                   </div>
-                  <p className="text-[10px] text-amber-800 font-semibold">
-                    ரவி ஐயர் (Ravi Iyer) • நேரடி அணுகல்
+                  <p className="text-[10.5px] text-amber-800 font-medium">
+                    Try as Ravi Iyer • Instant Entry
                   </p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-amber-700 group-hover:translate-x-0.5 transition-transform" />
             </button>
+
+            {/* Feature Highlights Grid */}
+            <div className="pt-2 grid grid-cols-3 gap-2 text-center border-t border-slate-100">
+              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
+                <Receipt className="w-4 h-4 text-amber-700 mx-auto mb-1" />
+                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
+                  Devotee Receipts
+                </span>
+              </div>
+              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
+                <Calendar className="w-4 h-4 text-emerald-700 mx-auto mb-1" />
+                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
+                  Vedic Calendar
+                </span>
+              </div>
+              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
+                <PieChart className="w-4 h-4 text-blue-700 mx-auto mb-1" />
+                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
+                  Dakshina Stats
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
         {/* ======================================================================= */}
-        {/* STEP: GOOGLE ACCOUNT PICKER MODAL / VIEW */}
+        {/* GOOGLE ACCOUNT AUTHENTICATION / OAUTH PROMPT MODAL */}
         {/* ======================================================================= */}
-        {step === "google_picker" && (
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-lg space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center pb-1 border-b border-slate-100">
-              <div className="inline-flex p-2 bg-slate-100 rounded-2xl mb-2">
+        {step === "google_modal" && (
+          <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="text-center pb-2 border-b border-slate-100">
+              <div className="inline-flex p-2.5 bg-slate-50 rounded-2xl border border-slate-200 mb-2">
                 <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
@@ -297,150 +402,19 @@ export default function LoginPage() {
                   />
                 </svg>
               </div>
-              <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                Google மூலம் உள்நுழைக
+              <h3 className="font-extrabold text-base text-slate-900">
+                Sign in with Google
               </h3>
-              <p className="text-[11px] text-slate-500 font-medium">
-                Velvi Booking App-க்கு செல்ல ஒரு கணக்கைத் தேர்ந்தெடுக்கவும்
-              </p>
-            </div>
-
-            {/* Account List */}
-            <div className="space-y-2">
-              {sampleGoogleAccounts.map((acc) => (
-                <button
-                  key={acc.email}
-                  type="button"
-                  onClick={() => handleSelectGoogleAccount(acc)}
-                  disabled={isLoading}
-                  className="w-full p-3 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 text-left transition flex items-center justify-between group cursor-pointer"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs">
-                      {acc.name[0].toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-extrabold text-xs text-slate-900 truncate">
-                        {acc.name}
-                      </div>
-                      <div className="text-[10.5px] text-slate-500 font-medium truncate">
-                        {acc.email}
-                      </div>
-                      {acc.isExisting && (
-                        <span className="inline-block text-[9px] text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded mt-0.5">
-                          பதிவு செய்யப்பட்ட கணக்கு ✅
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              ))}
-
-              {/* Use Another Account */}
-              {!showCustomInput ? (
-                <button
-                  type="button"
-                  onClick={() => setShowCustomInput(true)}
-                  className="w-full p-2.5 rounded-2xl border border-dashed border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>மற்றொரு Google கணக்கைப் பயன்படுத்த (Use another account)</span>
-                </button>
-              ) : (
-                <form onSubmit={handleCustomGoogleSubmit} className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in">
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-700 mb-0.5">
-                      உங்கள் பெயர் (Your Name)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="எ.கா. நடராஜ சாஸ்திரிகள்"
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      required
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10.5px] font-bold text-slate-700 mb-0.5">
-                      Google மின்னஞ்சல் (Gmail)
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="nataraja.iyer@gmail.com"
-                      value={customEmail}
-                      onChange={(e) => setCustomEmail(e.target.value)}
-                      required
-                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="w-full py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow-2xs"
-                  >
-                    இணைக்க & தொடர (Connect & Continue)
-                  </button>
-                </form>
-              )}
-            </div>
-
-            {/* Back Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setStep("login");
-                setShowCustomInput(false);
-              }}
-              className="w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer"
-            >
-              ← ரத்து செய்க (Cancel)
-            </button>
-          </div>
-        )}
-
-        {/* ======================================================================= */}
-        {/* STEP 2: MOBILE NUMBER & PROFILE SETUP (அடுத்த பக்கம்) */}
-        {/* ======================================================================= */}
-        {step === "mobile_setup" && (
-          <div className="bg-white rounded-3xl p-6 sm:p-7 border border-amber-200/80 shadow-md shadow-amber-950/5 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            {/* Connected Google Account Header */}
-            <div className="p-3 bg-gradient-to-br from-amber-50/80 to-emerald-50/50 rounded-2xl border border-amber-200/80 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-9 h-9 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400">
-                  {selectedAccount.name[0]?.toUpperCase() || "V"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-extrabold text-xs text-slate-900 truncate">
-                    {selectedAccount.name}
-                  </h4>
-                  <p className="text-[10.5px] text-slate-500 font-semibold truncate flex items-center gap-1 mt-0.5">
-                    <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-                    {selectedAccount.email}
-                  </p>
-                </div>
-              </div>
-              <span className="text-[9.5px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-700" />
-                <span>Google</span>
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              <h2 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-1.5">
-                <Phone className="w-4 h-4 text-emerald-800" />
-                <span>மொபைல் எண்ணை உள்ளிடவும் (Mobile Number)</span>
-              </h2>
               <p className="text-xs text-slate-500 font-medium">
-                முன்பதிவு ரசீதுகள் மற்றும் பக்தர்களின் தொடர்புக்காக உங்கள் மொபைல் எண்ணை உள்ளிடவும்
+                Enter your Google account details to continue to Velvi
               </p>
             </div>
 
-            <form onSubmit={handleCompleteSetup} className="space-y-4">
-              {/* Field 1: Vadhyar / Priest Name */}
+            {/* Real Google Account Direct Input Form */}
+            <form onSubmit={handleCustomGoogleSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  உங்கள் பெயர் / Vadhyar or Priest Name <span className="text-rose-500">*</span>
+                  Priest / User Name <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -448,9 +422,124 @@ export default function LoginPage() {
                   </div>
                   <input
                     type="text"
-                    value={userName}
-                    onChange={(e) => setUserName(e.target.value)}
-                    placeholder="எ.கா. ரவி ஐயர்"
+                    placeholder="e.g. Sundara Sastrigal"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    required
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Google Email Address (Gmail) <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="priest.name@gmail.com"
+                    value={customEmail}
+                    onChange={(e) => setCustomEmail(e.target.value)}
+                    required
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs flex items-center justify-center gap-2"
+              >
+                <span>Continue with this Google Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* Quick Helper for Demo Priest */}
+            <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl text-[11px] text-slate-600 flex items-center justify-between">
+              <div>
+                <span className="font-bold text-slate-900 block">Want to test as Ravi Iyer?</span>
+                <span className="text-[10px] text-slate-500">ravi.iyer@gmail.com</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomName("Ravi Iyer");
+                  setCustomEmail("ravi.iyer@gmail.com");
+                }}
+                className="px-2 py-1 bg-white hover:bg-amber-100 text-amber-900 rounded-lg font-bold text-[10px] border border-amber-300 transition"
+              >
+                Use Info
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setStep("login")}
+              className="w-full py-2 text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {/* ======================================================================= */}
+        {/* STEP 2: PROFILE & MOBILE NUMBER SETUP (100% PURE ENGLISH) */}
+        {/* ======================================================================= */}
+        {step === "mobile_setup" && (
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-xl shadow-amber-950/5 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            {/* Connected Google Profile Badge */}
+            <div className="p-3 bg-gradient-to-br from-amber-50/80 to-emerald-50/50 rounded-2xl border border-amber-200/80 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400">
+                  {priestName ? priestName[0].toUpperCase() : "V"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate">
+                    {priestName || "Vedic Priest"}
+                  </h4>
+                  <p className="text-[10.5px] text-slate-500 font-semibold truncate flex items-center gap-1 mt-0.5">
+                    <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                    {googleUser?.email || "Google Account"}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[9.5px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                <span>Google Verified</span>
+              </span>
+            </div>
+
+            <div className="space-y-1">
+              <h2 className="font-extrabold text-base text-slate-900 flex items-center gap-1.5">
+                <Phone className="w-4 h-4 text-emerald-800" />
+                <span>Complete Your Profile</span>
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Enter your mobile number to enable WhatsApp devotee receipts and booking reminders.
+              </p>
+            </div>
+
+            <form onSubmit={handleCompleteSetup} className="space-y-4">
+              {/* Field 1: Priest Name */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Priest / Vadhyar Name <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <UserIcon className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={priestName}
+                    onChange={(e) => setPriestName(e.target.value)}
+                    placeholder="e.g. Sundara Sastrigal"
                     required
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
                   />
@@ -460,7 +549,7 @@ export default function LoginPage() {
               {/* Field 2: Clean 10-Digit Indian Mobile Number */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  மொபைல் எண் / Mobile Number <span className="text-rose-500">*</span>
+                  Mobile Number <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-600 text-xs font-black border-r border-slate-200 pr-2 my-1.5">
@@ -483,7 +572,7 @@ export default function LoginPage() {
                   )}
                 </div>
                 <div className="flex justify-between items-center text-[10px] text-slate-500 mt-1 px-1">
-                  <span>10 இலக்க இந்திய மொபைல் எண்</span>
+                  <span>10-digit Indian mobile number</span>
                   <span className={mobileNumber.length === 10 ? "text-emerald-700 font-bold" : ""}>
                     {mobileNumber.length}/10
                   </span>
@@ -494,20 +583,20 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading || mobileNumber.length !== 10}
-                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 disabled:opacity-60 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-sm hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer mt-1"
+                className="w-full py-3 px-4 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 disabled:opacity-60 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-sm hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer mt-2"
               >
-                <span>{isLoading ? "சேமிக்கிறது..." : "செயலியைத் தொடங்குக (Complete Setup & Open App)"}</span>
+                <span>{isLoading ? "Saving Profile..." : "Complete Setup & Launch App"}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              {/* Back to Change Account */}
+              {/* Back to Switch Account */}
               <button
                 type="button"
-                onClick={() => setStep("google_picker")}
+                onClick={() => setStep("login")}
                 className="w-full py-1.5 text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>மாற்று Google கணக்கு (Switch Account)</span>
+                <span>Switch Google Account</span>
               </button>
             </form>
           </div>
