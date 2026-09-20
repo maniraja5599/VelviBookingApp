@@ -99,29 +99,31 @@ export const PwaInstallBanner: React.FC<{
     return null;
   }
 
-  // Button Mode (for settings or more page)
+  // Button Mode (for settings or more page - subtle & compact)
   if (mode === "button") {
     return (
       <>
         <button
           onClick={handleInstallClick}
-          className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-velvi-brown via-velvi-brownDark to-velvi-brown text-white shadow-sacred hover:opacity-95 transition"
+          className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-amber-50/70 via-white to-emerald-50/40 hover:bg-amber-100/60 border border-amber-200/80 text-slate-800 shadow-2xs transition group cursor-pointer"
         >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-velvi-gold/20 flex items-center justify-center text-velvi-goldLight">
-              <Download className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <Download className="w-4 h-4 text-amber-800" />
             </div>
-            <div className="text-left">
-              <h4 className="font-bold text-xs flex items-center gap-1.5">
-                Install Velvi App
-                <span className="px-1.5 py-0.2 bg-velvi-gold text-velvi-brownDark text-[9px] font-black rounded-full uppercase">
-                  Mobile App
+            <div className="text-left min-w-0">
+              <h4 className="font-extrabold text-xs text-slate-900 flex items-center gap-1.5">
+                <span>Install Velvi Mobile App</span>
+                <span className="px-1.5 py-0.2 bg-amber-200 text-amber-950 text-[9px] font-black rounded-md uppercase">
+                  PWA
                 </span>
               </h4>
-              <p className="text-[11px] text-white/70">Add to home screen for 1-tap quick access</p>
+              <p className="text-[11px] text-slate-500 truncate">
+                Add to phone home screen for 1-tap fast access
+              </p>
             </div>
           </div>
-          <Download className="w-4 h-4 text-velvi-gold shrink-0" />
+          <Download className="w-4 h-4 text-amber-800 shrink-0 group-hover:translate-y-0.5 transition-transform" />
         </button>
 
         {/* iOS Instruction Modal */}

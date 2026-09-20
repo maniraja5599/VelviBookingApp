@@ -59,7 +59,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await loginWithCredentials(name.trim(), mobile);
-      router.push("/app");
+      router.push("/app/calendar");
     } catch (err: any) {
       setError(err?.message || "உள்நுழைவதில் பிழை ஏற்பட்டது. மீண்டும் முயற்சிக்கவும்.");
     } finally {
@@ -72,7 +72,7 @@ export default function LoginPage() {
     setError("");
     try {
       await loginDemo();
-      router.push("/app");
+      router.push("/app/calendar");
     } catch (err: any) {
       setError(err?.message || "டெமோ நுழைவு பிழை. மீண்டும் முயற்சிக்கவும்.");
     } finally {
@@ -84,7 +84,7 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await loginWithGoogle("ravi.iyer@gmail.com", "Ravi Iyer");
-      router.push("/app");
+      router.push("/app/calendar");
     } catch (err: any) {
       setError(err?.message || "Google உள்நுழைவு பிழை.");
     } finally {

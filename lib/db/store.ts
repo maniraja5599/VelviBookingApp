@@ -1040,6 +1040,75 @@ export class VelviDatabaseStore {
     return { success: true, type: last.type, name };
   }
 
+  public getRecentlyDeleted(): Array<{
+    id: string;
+    type: "booking" | "pooja" | "customer";
+    item: any;
+    deletedAt: string;
+    title: string;
+    subtitle: string;
+  }> {
+    return [...this.recentlyDeleted].reverse().map((entry) => {
+      let title = "";
+      let subtitle = "";
+      if (entry.type === "booking") {
+        title = `${entry.item.bookingNumber || "#"} - ${entry.item.poojaTamilName || entry.item.poojaEnglishName || "பூஜா முன்பதிவு"}`;
+        subtitle = `${entry.item.customerName || "பக்தர்"} • ${entry.item.date || ""} • ₹${entry.item.totalAmount?.toLocaleString("en-IN") || 0}`;
+      } else if (entry.type === "pooja") {
+        title = entry.item.tamilName || entry.item.englishName || "பூஜா வகை";
+        subtitle = `கட்டணம்: ₹${entry.item.basePrice?.toLocaleString("en-IN") || 0} • ${entry.item.items?.length || 0} பொருட்கள்`;
+      } else if (entry.type === "customer") {
+        title = entry.item.name || "பக்தர்";
+        subtitle = `${entry.item.mobile || ""} • ${entry.item.city || ""}`;
+      }
+      return {
+        ...entry,
+        title,
+        subtitle,
+      };
+    });
+  }
+
+  public restoreDeletedItem(id: string): { success: boolean; type?: string; name?: string; message?: string } {
+    const idx = this.recentlyDeleted.findIndex((d) => d.id === id);
+    if (idx === -1) {
+      return { success: false, message: "பதிவு கிடைக்கவில்லை (Item not found in trash)" };
+    }
+    const [entry] = this.recentlyDeleted.splice(idx, 1);
+    let name = "";
+    if (entry.type === "booking") {
+      this.bookings.unshift(entry.item);
+      name = `${entry.item.bookingNumber} (${entry.item.poojaEnglishName || entry.item.poojaTamilName || "Booking"})`;
+    } else if (entry.type === "pooja") {
+      this.poojas.unshift(entry.item);
+      name = entry.item.tamilName || entry.item.englishName || "Pooja";
+    } else if (entry.type === "customer") {
+      this.customers.unshift(entry.item);
+      name = entry.item.name || "Customer";
+    }
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      businessId: entry.item.businessId || "biz-venkateswara-01",
+      actorName: "Priest",
+      action: "RESTORE_ITEM",
+      targetType: entry.type.toUpperCase() as any,
+      targetId: entry.id,
+      newValue: { name },
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return { success: true, type: entry.type, name };
+  }
+
+  public clearRecentlyDeleted(): void {
+    this.recentlyDeleted = [];
+    this.saveToLocalStorage();
+    this.notifyListeners();
+  }
+
   // -------------------------------------------------------------
   // REACTIVITY & PERSISTENCE
   // -------------------------------------------------------------

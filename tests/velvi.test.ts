@@ -1089,5 +1089,36 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(undoRes.type).toBe("pooja");
     expect(store.poojas.some((p) => p.id === pooja.id)).toBe(true);
   });
+
+  it("Test 40: getRecentlyDeleted and restoreDeletedItem allow selective trash recovery in Settings", () => {
+    const store = new VelviDatabaseStore();
+    const customer = store.createCustomer({
+      businessId: "biz-venkateswara-01",
+      name: "Trash Test Devotee",
+      mobile: "+919876599999",
+      city: "Madurai",
+    });
+    expect(store.customers.some((c) => c.id === customer.id)).toBe(true);
+
+    // Delete customer
+    store.deleteCustomer(customer.id);
+    expect(store.customers.some((c) => c.id === customer.id)).toBe(false);
+
+    // Verify it appears in recentlyDeleted list
+    const trashList = store.getRecentlyDeleted();
+    expect(trashList.length).toBeGreaterThanOrEqual(1);
+    const foundInTrash = trashList.find((t) => t.id === customer.id);
+    expect(foundInTrash).toBeDefined();
+    expect(foundInTrash?.title).toBe("Trash Test Devotee");
+
+    // Restore specific item
+    const restoreRes = store.restoreDeletedItem(customer.id);
+    expect(restoreRes.success).toBe(true);
+    expect(store.customers.some((c) => c.id === customer.id)).toBe(true);
+
+    // Verify removed from trash
+    const updatedTrash = store.getRecentlyDeleted();
+    expect(updatedTrash.some((t) => t.id === customer.id)).toBe(false);
+  });
 });
 

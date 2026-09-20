@@ -10,8 +10,8 @@ export default function PublicLandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Automatically transition into the live app already logged in
-    router.replace("/app");
+    // Automatically transition into the live app on the Calendar page
+    router.replace("/app/calendar");
   }, [router]);
 
   return (
@@ -27,14 +27,14 @@ export default function PublicLandingPage() {
             Opening Velvi App...
           </h2>
           <p className="text-xs text-velvi-brown/70 leading-relaxed">
-            Connecting directly to your active dashboard without login.
+            Connecting directly to your calendar schedule and bookings.
           </p>
 
           <a
-            href="/app"
+            href="/app/calendar"
             className="block w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl font-bold text-xs shadow-sm transition"
           >
-            Enter Dashboard Directly →
+            Enter Calendar Directly →
           </a>
         </div>
 

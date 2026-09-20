@@ -24,6 +24,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, currentUser, router]);
 
+  // First time app open: Default landing page is Calendar (/app/calendar)
+  useEffect(() => {
+    if (typeof window !== "undefined" && pathname === "/app") {
+      const hasLanded = sessionStorage.getItem("velvi_session_landed");
+      if (!hasLanded) {
+        sessionStorage.setItem("velvi_session_landed", "true");
+        router.replace("/app/calendar");
+      }
+    }
+  }, [pathname, router]);
+
   // Scroll listener saving position for current page ("return antha page pona athe place la irukanum")
   useEffect(() => {
     const handleScroll = () => {

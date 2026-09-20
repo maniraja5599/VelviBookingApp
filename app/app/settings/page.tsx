@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
@@ -24,12 +24,18 @@ import {
   Clock,
   ArrowUpRight,
   Trash2,
-  RefreshCw,
+  RotateCcw,
   AlertTriangle,
   Database,
   X,
   Check,
   Tag,
+  Search,
+  Pencil,
+  History,
+  Calendar,
+  Download,
+  Info,
 } from "lucide-react";
 import { PwaInstallBanner } from "@/components/mobile/PwaInstallBanner";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -46,6 +52,7 @@ interface SettingItem {
   icon: any;
   badge?: string;
   highlight?: boolean;
+  keywords?: string;
 }
 
 interface SettingSection {
@@ -59,19 +66,22 @@ export default function SettingsHubPage() {
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
-  // Data management modals and feedback state
-  const [showRemoveSampleModal, setShowRemoveSampleModal] = useState(false);
+  // State
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showTrashModal, setShowTrashModal] = useState(false);
+  const [trashTab, setTrashTab] = useState<"deleted" | "history">("deleted");
+  const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
 
-  // Live Counts
+  // Live Counts & Deleted Items
   const [counts, setCounts] = useState({
     bookings: db.getBookings(businessId).length,
     customers: db.getCustomers(businessId).length,
     poojas: db.getPoojas(businessId).length,
   });
+  const [recentlyDeleted, setRecentlyDeleted] = useState(db.getRecentlyDeleted());
+  const [auditLogs, setAuditLogs] = useState(db.auditLogs || []);
 
   useEffect(() => {
     const updateCounts = () => {
@@ -80,6 +90,8 @@ export default function SettingsHubPage() {
         customers: db.getCustomers(businessId).length,
         poojas: db.getPoojas(businessId).length,
       });
+      setRecentlyDeleted(db.getRecentlyDeleted());
+      setAuditLogs([...(db.auditLogs || [])].reverse().slice(0, 25));
       setDataVersion((v) => v + 1);
     };
 
@@ -88,192 +100,342 @@ export default function SettingsHubPage() {
     return () => window.removeEventListener("velvi:db-change", updateCounts);
   }, [businessId]);
 
-  const handleRemoveSampleData = () => {
-    const res = db.removeSampleData(businessId);
-    setShowRemoveSampleModal(false);
-    setToastMessage(`மாதிரி தரவு (${res.removedBookings} முன்பதிவுகள், ${res.removedCustomers} பக்தர்கள்) நீக்கப்பட்டது! உங்கள் சொந்த தரவுகள் பாதுகாப்பாக உள்ளன.`);
-    setTimeout(() => setToastMessage(null), 5000);
-  };
-
-  const handleLoadSampleData = () => {
-    db.loadSampleData();
-    setShowLoadModal(false);
-    setToastMessage("மாதிரி தரவு வெற்றிகரமாக ஏற்றப்பட்டது (Sample demo data loaded)!");
-    setTimeout(() => setToastMessage(null), 5000);
+  // Restore deleted record
+  const handleRestoreItem = (id: string) => {
+    const result = db.restoreDeletedItem(id);
+    if (result.success) {
+      setToastMessage(`'${result.name}' வெற்றிகரமாக மீட்டெடுக்கப்பட்டது (Restored)!`);
+      setRecentlyDeleted(db.getRecentlyDeleted());
+    } else {
+      setToastMessage(result.message || "மீட்டெடுப்பதில் பிழை.");
+    }
+    setTimeout(() => setToastMessage(null), 4500);
   };
 
   const isPro =
     subscription?.status === "ACTIVE" &&
     subscription?.planCode === "VELVI_PRO";
 
-  const settingSections: SettingSection[] = [
+  // Format validity
+  const validityText = useMemo(() => {
+    if (subscription?.currentPeriodEnd) {
+      const end = new Date(subscription.currentPeriodEnd);
+      const now = new Date();
+      const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const formattedDate = end.toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      if (diffDays > 0) {
+        return `${formattedDate} (${diffDays} days left)`;
+      }
+      return `Expired on ${formattedDate}`;
+    }
+    return "30-Day Free Trial";
+  }, [subscription]);
+
+  const allSettingSections: SettingSection[] = [
     {
-      title: "Business & Services",
+      title: "Business & Profile / வணிகம் & சுயவிவரம்",
       items: [
         {
           href: "/app/settings/branding",
-          label: "Business Profile & Branding",
-          desc: currentBusiness?.name || "Logo, vadhyar name & receipt watermark",
+          label: "Business Profile & Branding (சுயவிவரம்)",
+          desc: currentBusiness?.name || "Logo, vadhyar name, service name & receipt watermark",
           icon: Building2,
           badge: currentBusiness?.logoUrl ? "Custom Logo" : "Default Logo",
           highlight: true,
+          keywords: "profile branding vadhyar name logo watermark business பெயர் லோகோ",
         },
         {
           href: "/app/poojas",
-          label: "Pooja & Seva Catalog",
+          label: "Pooja & Seva Catalog (பூஜா பட்டியல்)",
           desc: "Manage rituals, dakshina fees & item checklists",
           icon: Flame,
+          keywords: "pooja homam seva dakshina fee samagri checklist பூஜை தட்சிணை ஹோமம்",
         },
         {
           onClick: () => setShowCategoryModal(true),
           label: "பொருட்கள் வகைகள் (Samagri Categories)",
           desc: "Create, edit & manage pooja items categories & icons",
           icon: Tag,
+          keywords: "category categories samagri items பொருட்கள் வகைகள் மலர் மளிகை பழங்கள்",
         },
         {
           href: "/app/customers",
           label: "Devotees & Clients (பக்தர்கள் பட்டியல்)",
           desc: "Manage devotee directory, star nakshatram & history",
           icon: Users,
+          keywords: "customer devotee client phone mobile nakshatram rasi பக்தர்கள் வாடிக்கையாளர்",
         },
         {
           href: "/app/team",
-          label: "Team & Purohits",
+          label: "Team & Purohits (உதவி புரோகிதர்கள்)",
           desc: "Manage assistants, schedules & assignments",
           icon: UserCheck,
+          keywords: "team assistant purohit vadhyar staff purohits புரோகிதர் குழு",
         },
       ],
     },
     {
-      title: "Billing & Growth",
+      title: "Data & Safety / தரவு & மீட்டெடுப்பு",
       items: [
         {
-          href: "/app/subscription",
-          label: "Subscription & Plan",
-          desc: isPro ? "Velvi Pro Active • Auto-renews monthly" : "30-Day Free Trial • Upgrade to Pro",
-          icon: Sparkles,
-          badge: isPro ? "Pro Active" : "Free Trial",
-        },
-        {
-          href: "/app/referrals",
-          label: "Referral & Free Days",
-          desc: "Invite colleagues, earn +30 days free per referral",
-          icon: Gift,
-        },
-      ],
-    },
-    {
-      title: "Preferences & System",
-      items: [
-        {
-          href: "/app/settings/theme",
-          label: "Theme & Sacred Colors",
-          desc: "Traditional, Classic, Royal & Modern palettes",
-          icon: Palette,
+          onClick: () => setShowTrashModal(true),
+          label: "Recycle Bin & Restore Log (நீக்கப்பட்டவை & மீட்டெடுப்பு)",
+          desc: `${recentlyDeleted.length} deleted item(s) • View changes & restore records`,
+          icon: RotateCcw,
+          badge: recentlyDeleted.length > 0 ? `${recentlyDeleted.length} in trash` : undefined,
+          keywords: "trash restore recycle bin delete undo recover change log மீட்டெடு நீக்கப்பட்டவை",
         },
         {
           href: "/app/data-backup",
-          label: "Data & Cloud Backup",
+          label: "Data & Cloud Backup (தரவு பேக்கப்)",
           desc: "Excel export, contacts import & safe backup",
           icon: Cloud,
+          keywords: "backup export excel csv import restore cloud தரவு பேக்கப் எக்செல்",
+        },
+      ],
+    },
+    {
+      title: "Billing & Growth / சந்தா & வளர்ச்சி",
+      items: [
+        {
+          href: "/app/subscription",
+          label: "Subscription & Plan (திட்டம் & சந்தா)",
+          desc: isPro ? "Velvi Pro Active • Auto-renews" : "30-Day Free Trial • Upgrade to Pro",
+          icon: Sparkles,
+          badge: isPro ? "Pro Active" : "Free Trial",
+          keywords: "subscription plan pro trial billing upi payment renew சந்தா கட்டணம்",
+        },
+        {
+          href: "/app/referrals",
+          label: "Referral & Free Days (பரிந்துரை)",
+          desc: "Invite colleagues, earn +30 days free per referral",
+          icon: Gift,
+          keywords: "referral invite reward free days நண்பர்கள் பரிந்துரை",
+        },
+      ],
+    },
+    {
+      title: "Preferences & System / விருப்பங்கள் & அமைப்புகள்",
+      items: [
+        {
+          href: "/app/settings/theme",
+          label: "Theme & Sacred Colors (வண்ண தீம்கள்)",
+          desc: "Traditional, Bilva Green, Royal Kumkum & Modern palettes",
+          icon: Palette,
+          keywords: "theme color style palette sacred dark light பச்சை குங்குமம் தீம்",
         },
         {
           href: "/app/settings/version",
-          label: "Version & Release Notes",
+          label: "Version & Release Notes (பதிப்பு)",
           desc: `v${APP_VERSION} Stable • View changelog & updates`,
           icon: Sparkles,
           badge: `v${APP_VERSION}`,
+          keywords: "version release notes changelog update பதிப்பு புதியவை",
         },
       ],
     },
   ];
 
+  // Search filtering
+  const filteredSections = useMemo(() => {
+    if (!searchQuery.trim()) return allSettingSections;
+    const q = searchQuery.toLowerCase().trim();
+    return allSettingSections
+      .map((sec) => ({
+        ...sec,
+        items: sec.items.filter(
+          (item) =>
+            item.label.toLowerCase().includes(q) ||
+            item.desc.toLowerCase().includes(q) ||
+            (item.keywords && item.keywords.toLowerCase().includes(q))
+        ),
+      }))
+      .filter((sec) => sec.items.length > 0);
+  }, [searchQuery, allSettingSections]);
+
+  // Quick chips for common settings
+  const quickSettings = [
+    { label: "சுயவிவரம் (Profile)", icon: Pencil, action: () => (window.location.href = "/app/settings/branding") },
+    { label: "வகைகள் (Categories)", icon: Tag, action: () => setShowCategoryModal(true) },
+    { label: "மீட்டெடுப்பு (Trash)", icon: RotateCcw, action: () => setShowTrashModal(true) },
+    { label: "பக்தர்கள் (Devotees)", icon: Users, action: () => (window.location.href = "/app/customers") },
+    { label: "பூஜைகள் (Poojas)", icon: Flame, action: () => (window.location.href = "/app/poojas") },
+    { label: "தீம்கள் (Themes)", icon: Palette, action: () => (window.location.href = "/app/settings/theme") },
+    { label: "பேக்கப் (Backup)", icon: Cloud, action: () => (window.location.href = "/app/data-backup") },
+  ];
+
   return (
     <div className="space-y-4 pb-8 animate-in fade-in duration-200">
-      {/* Header */}
+      {/* Header & Page Title */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-velvi-brownDark">{t("settings")}</h2>
-          <p className="text-xs text-velvi-brown/60">Configure your business profile & preferences</p>
+          <p className="text-xs text-velvi-brown/60">Manage your business profile, rituals & preferences</p>
         </div>
       </div>
 
-      {/* Hero Profile & Subscription Card */}
-      <div className="bg-gradient-to-br from-velvi-creamLight via-white to-amber-50/60 p-4 rounded-3xl border border-velvi-gold/30 shadow-sacred relative overflow-hidden space-y-3">
+      {/* ========================================================================= */}
+      {/* 1. HERO NAME & BRANDING CARD (Prominent & Elegant with Pencil Icon)       */}
+      {/* ========================================================================= */}
+      <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 p-4 sm:p-5 rounded-3xl border-2 border-amber-300/80 shadow-sacred relative overflow-hidden space-y-3.5">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <BrandLogo
-              size="lg"
-              variant="icon"
-              customLogoUrl={currentBusiness?.logoUrl}
-              businessName={currentBusiness?.name}
-            />
-            <div>
-              <h3 className="font-bold text-sm text-velvi-brownDark">
-                {currentBusiness?.name || currentUser?.name || "Velvi Pooja Services"}
-              </h3>
-              {currentBusiness?.iyerName && (
-                <p className="text-xs text-velvi-brown/80 font-medium">
-                  {currentBusiness.iyerName}
-                </p>
-              )}
-              <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar / Logo with quick edit badge */}
+            <div className="relative shrink-0">
+              <BrandLogo
+                size="lg"
+                variant="icon"
+                customLogoUrl={currentBusiness?.logoUrl}
+                businessName={currentBusiness?.name}
+                className="ring-2 ring-amber-400/40 shadow-xs"
+              />
+              <Link
+                href="/app/settings/branding"
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-md hover:bg-emerald-900 transition active:scale-95 border-2 border-white"
+                title="Edit Profile Picture / Logo"
+                aria-label="Edit Profile"
+              >
+                <Pencil className="w-3 h-3 text-amber-300" />
+              </Link>
+            </div>
+
+            {/* Name & Service Title */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-extrabold text-base text-slate-900 tracking-tight truncate max-w-[200px] sm:max-w-xs">
+                  {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
+                </h3>
+                <Link
+                  href="/app/settings/branding"
+                  className="p-1 text-slate-500 hover:text-emerald-800 hover:bg-amber-200/50 rounded-lg transition"
+                  title="சுயவிவரத்தைத் திருத்து (Edit Profile)"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-amber-700" />
+                </Link>
+              </div>
+
+              {/* Service Name */}
+              <p className="text-xs font-semibold text-emerald-900 truncate max-w-[240px] mt-0.5">
+                {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
+              </p>
+
+              {/* Phone & Role */}
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {currentUser?.mobile && (
-                  <span className="text-[11px] text-velvi-brown/60 flex items-center gap-1 font-semibold">
+                  <span className="text-[11px] text-slate-700 flex items-center gap-1 font-bold bg-white/80 px-2 py-0.5 rounded-md border border-amber-200/60 shadow-2xs">
                     <Phone className="w-3 h-3 text-emerald-600" />
                     {currentUser.mobile}
                   </span>
                 )}
-                <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-velvi-brown/10 text-velvi-brown">
-                  {currentUser?.role}
+                <span className="text-[10px] px-2 py-0.5 rounded-md font-extrabold bg-amber-200/70 text-amber-950 border border-amber-300/80">
+                  {currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Vadhyar"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Subscription Status Pill */}
+          {/* Compact Validity Pill (Kutty a show pannu) */}
           <Link
             href="/app/subscription"
-            className={`px-2.5 py-1 rounded-full text-[10px] font-black border flex items-center gap-1 transition ${
+            className={`shrink-0 px-2.5 py-1.5 rounded-2xl text-[10.5px] font-black border flex items-center gap-1.5 transition active:scale-95 shadow-2xs ${
               isPro
-                ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200"
-                : "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200"
+                ? "bg-emerald-100/90 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
+                : "bg-amber-100/90 text-amber-900 border-amber-300 hover:bg-amber-200"
             }`}
+            title="Subscription Validity"
           >
             {isPro ? (
               <>
-                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> PRO
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                <span>Pro Active</span>
               </>
             ) : (
               <>
-                <Clock className="w-3 h-3 text-amber-600" /> TRIAL
+                <Clock className="w-3 h-3 text-amber-700" />
+                <span>Trial</span>
               </>
             )}
           </Link>
         </div>
 
-        {/* Quick Edit Branding Bar */}
-        <div className="pt-2 border-t border-velvi-gold/20 flex items-center justify-between text-xs">
-          <span className="text-[11px] text-velvi-brown/70 font-medium">
-            Branding & Receipt Watermark
-          </span>
+        {/* Compact Validity Details & Edit Profile Link */}
+        <div className="pt-2.5 border-t border-amber-200/70 flex items-center justify-between text-xs flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-medium">
+            <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+            <span>
+              <strong>செல்லுபடியாகும் காலம்:</strong> {validityText}
+            </span>
+          </div>
+
           <Link
             href="/app/settings/branding"
-            className="text-xs font-bold text-velvi-goldDark hover:text-velvi-brown flex items-center gap-1 transition"
+            className="text-xs font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-xl border border-amber-300/80 shadow-2xs transition group"
           >
-            Edit Profile
-            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>சுயவிவரம் திருத்து</span>
+            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
       </div>
 
+      {/* ========================================================================= */}
+      {/* 2. COMPACT SETTINGS SEARCH BAR & QUICK SUGGESTIONS                        */}
+      {/* ========================================================================= */}
+      <div className="space-y-2">
+        <div className="relative">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="அமைப்புகளைத் தேடுக... (Search Settings e.g. profile, pooja, trash)"
+            className="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 transition"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Quick Recommendation Chips (சமீபத்திய அமைப்புகள்) */}
+        {!searchQuery && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-0.5">
+            <span className="text-[10.5px] font-bold text-slate-500 whitespace-nowrap pl-1">
+              பரிந்துரைகள்:
+            </span>
+            {quickSettings.map((chip, idx) => {
+              const ChipIcon = chip.icon;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={chip.action}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100/80 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/80 active:scale-95"
+                >
+                  <ChipIcon className="w-3 h-3 text-amber-800" />
+                  <span>{chip.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Language Switcher Card */}
-      <div className="bg-white rounded-2xl p-3.5 border border-velvi-gold/20 shadow-sm flex items-center justify-between">
+      <div className="bg-white rounded-2xl p-3 border border-velvi-gold/20 shadow-xs flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <Globe className="w-4 h-4 text-velvi-gold" />
           <div>
-            <div className="font-bold text-xs text-velvi-brownDark">Language / மொழி</div>
-            <div className="text-[11px] text-velvi-brown/60">Display language preference</div>
+            <div className="font-bold text-xs text-slate-900">Language / மொழி</div>
+            <div className="text-[11px] text-slate-500">English அல்லது தமிழ்</div>
           </div>
         </div>
 
@@ -282,8 +444,8 @@ export default function SettingsHubPage() {
             onClick={() => setLanguage("en")}
             className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
               language === "en"
-                ? "bg-velvi-brown text-white shadow-sm"
-                : "bg-velvi-cream text-velvi-brown"
+                ? "bg-emerald-900 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             English
@@ -292,8 +454,8 @@ export default function SettingsHubPage() {
             onClick={() => setLanguage("ta")}
             className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
               language === "ta"
-                ? "bg-velvi-brown text-white shadow-sm"
-                : "bg-velvi-cream text-velvi-brown"
+                ? "bg-emerald-900 text-white shadow-xs"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
             தமிழ்
@@ -301,17 +463,21 @@ export default function SettingsHubPage() {
         </div>
       </div>
 
-      {/* Mobile App Install Action Banner */}
+      {/* ========================================================================= */}
+      {/* 3. SUBTLE INSTALL APP (Romba highlight venam - neat & compact)           */}
+      {/* ========================================================================= */}
       <PwaInstallBanner mode="button" />
 
-      {/* Categorized Settings Groups */}
+      {/* ========================================================================= */}
+      {/* 4. CATEGORIZED SETTINGS GROUPS (With Live Counts & Search Matches)        */}
+      {/* ========================================================================= */}
       <div className="space-y-3.5">
-        {settingSections.map((section) => (
+        {filteredSections.map((section) => (
           <div key={section.title} className="space-y-1.5">
-            <h3 className="text-[11px] font-bold text-velvi-brown/60 uppercase tracking-wider px-1">
+            <h3 className="text-[11px] font-extrabold text-slate-600 uppercase tracking-wider px-1">
               {section.title}
             </h3>
-            <div className="bg-white rounded-3xl border border-velvi-gold/20 shadow-sm divide-y divide-velvi-creamDark overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 if (item.onClick) {
@@ -320,33 +486,27 @@ export default function SettingsHubPage() {
                       key={item.label}
                       type="button"
                       onClick={item.onClick}
-                      className="w-full text-left p-3.5 flex items-center justify-between hover:bg-velvi-cream/40 transition group cursor-pointer"
+                      className="w-full text-left p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group cursor-pointer"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-velvi-gold/10 text-velvi-brown flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                           <Icon className="w-4 h-4" />
                         </div>
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <h4 className="font-bold text-xs text-velvi-brownDark">{item.label}</h4>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-xs text-slate-900">{item.label}</h4>
                             {item.badge && (
-                              <span
-                                className={`px-1.5 py-0.2 text-[9px] font-black rounded-full ${
-                                  item.badge.includes("Pro")
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : "bg-amber-100 text-amber-800"
-                                }`}
-                              >
+                              <span className="px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-emerald-100 text-emerald-800">
                                 {item.badge}
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-velvi-brown/60 leading-tight mt-0.5">
+                          <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">
                             {item.desc}
                           </p>
                         </div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-velvi-brown/40 group-hover:text-velvi-brown transition-colors shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
                     </button>
                   );
                 }
@@ -355,33 +515,33 @@ export default function SettingsHubPage() {
                   <Link
                     key={item.href || item.label}
                     href={item.href || "#"}
-                    className="p-3.5 flex items-center justify-between hover:bg-velvi-cream/40 transition group"
+                    className="p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-velvi-gold/10 text-velvi-brown flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                         <Icon className="w-4 h-4" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-xs text-velvi-brownDark">{item.label}</h4>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-bold text-xs text-slate-900">{item.label}</h4>
                           {item.badge && (
                             <span
-                              className={`px-1.5 py-0.2 text-[9px] font-black rounded-full ${
+                              className={`px-1.5 py-0.2 text-[9px] font-extrabold rounded-full ${
                                 item.badge.includes("Pro")
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : "bg-amber-100 text-amber-800"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-amber-100 text-amber-800"
                               }`}
                             >
                               {item.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-velvi-brown/60 leading-tight mt-0.5">
+                        <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">
                           {item.desc}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-velvi-brown/40 group-hover:text-velvi-brown transition-colors shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
                   </Link>
                 );
               })}
@@ -390,90 +550,15 @@ export default function SettingsHubPage() {
         ))}
       </div>
 
-      {/* ========================================================================= */}
-      {/* DATA & STORAGE CONTROLS (Clear All Data & Load Sample Data)                */}
-      {/* ========================================================================= */}
-      <div className="space-y-2 pt-1">
-        <div className="flex items-center justify-between px-1">
-          <h3 className="text-[11px] font-bold text-velvi-brown/60 uppercase tracking-wider">
-            Data &amp; Storage Controls / தரவு மேலாண்மை
-          </h3>
-          <span className="text-[10px] font-bold text-slate-500">
-            {counts.bookings} Bookings • {counts.customers} Devotees • {counts.poojas} Poojas
-          </span>
-        </div>
-
-        {/* Action Cards Container */}
-        <div className="bg-white rounded-3xl p-3.5 border border-velvi-gold/20 shadow-sm space-y-2.5">
-          {/* Card 1: Remove Sample Data Only (Safe Purge of Mock Records) */}
-          <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200 mt-0.5">
-                <Trash2 className="w-4 h-4 text-amber-700" />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5">
-                  <span>Remove Sample Data</span>
-                  <span className="text-[10px] font-bold text-amber-800 bg-amber-100/90 px-1.5 py-0.2 rounded">
-                    மாதிரி தரவை மட்டும் நீக்கு
-                  </span>
-                </h4>
-                <p className="text-[11px] text-amber-900/80 mt-0.5 leading-tight">
-                  Safely purge only demo bookings, sample devotees, and default catalog. Your real customer records and poojas are completely preserved.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowRemoveSampleModal(true)}
-              className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Remove Sample Data</span>
-            </button>
-          </div>
-
-          {/* Card 2: Load All Sample Data (Restore Demo Data) */}
-          <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-start gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200 mt-0.5">
-                <RefreshCw className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-xs text-emerald-950 flex items-center gap-1.5">
-                  <span>Load All Sample Data</span>
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded">
-                    மாதிரி தரவை ஏற்று
-                  </span>
-                </h4>
-                <p className="text-[11px] text-emerald-800/80 mt-0.5 leading-tight">
-                  Restore complete demo poojas, September 2026 bookings, devotee directory, and ledgers for testing.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setShowLoadModal(true)}
-              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Load Sample Data</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Super Admin Portal (ONLY VISIBLE FOR SUPER_ADMIN ROLE) */}
       {currentUser?.role === "SUPER_ADMIN" && (
         <Link
           href="/admin"
-          className="block bg-gradient-to-r from-velvi-brown to-velvi-brownLight p-3.5 rounded-2xl text-white shadow-sacred hover:opacity-95 transition"
+          className="block bg-gradient-to-r from-emerald-950 via-[#0d3b1e] to-emerald-950 p-3.5 rounded-2xl text-white shadow-md hover:opacity-95 transition"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <Shield className="w-5 h-5 text-velvi-goldLight" />
+              <Shield className="w-5 h-5 text-amber-400" />
               <div>
                 <h4 className="font-bold text-xs">Super Admin Portal</h4>
                 <p className="text-[11px] text-white/70">
@@ -481,27 +566,27 @@ export default function SettingsHubPage() {
                 </p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-velvi-goldLight" />
+            <ChevronRight className="w-4 h-4 text-amber-400" />
           </div>
         </Link>
       )}
 
-      {/* App Branding, Version & Developer Footer */}
+      {/* Developer Footer */}
       <div className="text-center pt-2 pb-1 space-y-1.5">
         <Link
           href="/app/settings/version"
-          className="inline-flex items-center gap-2 px-3 py-1 bg-velvi-gold/15 hover:bg-velvi-gold/25 border border-velvi-gold/30 rounded-full transition"
+          className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100/70 hover:bg-amber-200/70 border border-amber-300/80 rounded-full transition"
         >
           <VelviLogo size="sm" variant="icon" />
-          <span className="text-[11px] font-bold text-velvi-brownDark">
+          <span className="text-[11px] font-bold text-amber-950">
             Velvi v{APP_VERSION}
           </span>
-          <span className="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-600 text-white rounded-full">
-            Latest
+          <span className="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-700 text-white rounded-full">
+            Stable
           </span>
         </Link>
-        <p className="text-[10px] text-velvi-brown/50">
-          Pooja • Homam • Seva Management
+        <p className="text-[10.5px] text-slate-500 font-medium">
+          வேத ஜோதிட, பூஜை மற்றும் ஹோம முன்பதிவு செயலி
         </p>
         <DeveloperCredit />
       </div>
@@ -509,10 +594,10 @@ export default function SettingsHubPage() {
       {/* Logout Action */}
       <button
         onClick={logout}
-        className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-red-200/60"
+        className="w-full py-3 bg-red-50 hover:bg-red-100 text-red-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition border border-red-200/80 active:scale-98 cursor-pointer"
       >
         <LogOut className="w-4 h-4" />
-        <span>Sign Out</span>
+        <span>வெளியேறு (Sign Out)</span>
       </button>
 
       {/* Toast Notification Banner */}
@@ -531,131 +616,178 @@ export default function SettingsHubPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: REMOVE SAMPLE DATA ONLY WARNING & CONFIRMATION                     */}
+      {/* MODAL: RECYCLE BIN & CHANGE HISTORY LOG (நீக்கப்பட்டவை & மீட்டெடுப்பு)     */}
       {/* ========================================================================= */}
-      {showRemoveSampleModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-amber-200 animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+      {showTrashModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-amber-50 to-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold">
+                  <RotateCcw className="w-5 h-5 text-amber-800" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
-                    Remove Sample Data Only?
+                    Recycle Bin &amp; Change Log
                   </h3>
-                  <span className="text-[11px] font-bold text-amber-800">
-                    மாதிரி தரவை மட்டும் நீக்கவா?
-                  </span>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    நீக்கப்பட்டவை மற்றும் சமீபத்திய மாற்றங்கள் வரலாறு
+                  </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowRemoveSampleModal(false)}
-                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 transition"
+                onClick={() => setShowTrashModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-slate-100 transition"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Warning Details Callout */}
-            <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200/90 text-xs text-amber-950 space-y-2">
-              <p className="font-extrabold flex items-center gap-1.5 text-amber-950">
-                <span>🛡️ உங்கள் சொந்த பதிவுகள் பாதுகாப்பாக இருக்கும்!</span>
-              </p>
-              <ul className="space-y-1 text-[11px] text-amber-900 list-disc list-inside font-medium leading-tight">
-                <li>மாதிரி முன்பதிவுகள் மற்றும் மாதிரி காலண்டர் பதிவுகள் மட்டுமே நீக்கப்படும்.</li>
-                <li>மாதிரி பக்தர்கள் (Demo devotees) நீக்கப்படும்.</li>
-                <li>நீங்கள் கைப்பட சேர்த்த வாடிக்கையாளர்கள், தனிப்பயன் பூஜைகள் <strong>பாதுகாப்பாக இருக்கும்</strong>.</li>
-              </ul>
-              <p className="text-[10.5px] font-bold text-amber-900/90 pt-1 border-t border-amber-200/70">
-                டெமோ மாதிரி தரவு மட்டுமே நீக்கப்படும் — உங்கள் உண்மையான பதிவுகள் அழியாது.
-              </p>
-            </div>
-
-            {/* Confirmation Buttons */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            {/* Modal Tabs */}
+            <div className="flex border-b border-slate-200 px-4 pt-2 gap-2 bg-slate-50/70">
               <button
                 type="button"
-                onClick={() => setShowRemoveSampleModal(false)}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
-              >
-                Cancel (ரத்து செய்)
-              </button>
-              <button
-                type="button"
-                onClick={handleRemoveSampleData}
-                className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={() => setTrashTab("deleted")}
+                className={`pb-2 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
+                  trashTab === "deleted"
+                    ? "border-emerald-800 text-emerald-900"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Remove Sample Data</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL: LOAD SAMPLE DATA CONFIRMATION                                      */}
-      {/* ========================================================================= */}
-      {showLoadModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-emerald-200 animate-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 border border-emerald-200">
-                  <RefreshCw className="w-5 h-5 text-emerald-700" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 leading-tight">
-                    Load All Sample Data?
-                  </h3>
-                  <span className="text-[11px] font-bold text-emerald-800">
-                    மாதிரி தரவை ஏற்றவா?
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowLoadModal(false)}
-                className="p-1 hover:bg-slate-100 rounded-full text-slate-400 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Info Callout */}
-            <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200/90 text-xs text-emerald-950 space-y-2">
-              <p className="font-extrabold flex items-center gap-1.5 text-emerald-950">
-                <span>🔄 மாதிரி தரவு மீட்டமைக்கப்படும் (Restore Demo)</span>
-              </p>
-              <ul className="space-y-1 text-[11px] text-emerald-850 list-disc list-inside font-medium leading-tight">
-                <li>மாதிரி முன்பதிவுகள் (September 2026 பூஜா காலண்டர்) மீண்டும் ஏற்றப்படும்.</li>
-                <li>மாதிரி பக்தர்கள் விபரங்கள் மற்றும் முகவரிகள் கிடைக்கும்.</li>
-                <li>பூஜை பட்டியல் மற்றும் தட்சிணை கட்டண விவரங்கள் மீட்டமைக்கப்படும்.</li>
-                <li>அனைத்து அனலிட்டிக்ஸ் நிதி அறிக்கைகளும் செயல்படும்.</li>
-              </ul>
-            </div>
-
-            {/* Confirmation Buttons */}
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setShowLoadModal(false)}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
-              >
-                Cancel (ரத்து செய்)
+                <span>நீக்கப்பட்டவை ({recentlyDeleted.length})</span>
               </button>
               <button
                 type="button"
-                onClick={handleLoadSampleData}
-                className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                onClick={() => setTrashTab("history")}
+                className={`pb-2 px-3 text-xs font-bold transition border-b-2 flex items-center gap-1.5 ${
+                  trashTab === "history"
+                    ? "border-emerald-800 text-emerald-900"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
               >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Yes, Load Data</span>
+                <History className="w-3.5 h-3.5" />
+                <span>மாற்றங்கள் வரலாறு ({auditLogs.length})</span>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto flex-1 space-y-2.5">
+              {trashTab === "deleted" ? (
+                recentlyDeleted.length === 0 ? (
+                  <div className="py-12 text-center space-y-2">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <h4 className="font-bold text-xs text-slate-800">
+                      நீக்கப்பட்ட பதிவுகள் எதுவும் இல்லை
+                    </h4>
+                    <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                      நீங்கள் நீக்கும் முன்பதிவுகள், பூஜைகள் அல்லது பக்தர்கள் இங்கு பட்டியலிடப்பட்டு மீட்டெடுக்க முடியும்.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 pb-1">
+                      <span>மொத்தம்: {recentlyDeleted.length} பதிவுகள்</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm("குப்பைத் தொட்டியில் உள்ள அனைத்து பதிவுகளையும் நிரந்தரமாக அழிக்கவா?")) {
+                            db.clearRecentlyDeleted();
+                            setRecentlyDeleted([]);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-700 font-bold"
+                      >
+                        Clear Trash
+                      </button>
+                    </div>
+
+                    {recentlyDeleted.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="p-3 bg-slate-50 hover:bg-amber-50/50 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3 transition"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded-md ${
+                                entry.type === "booking"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : entry.type === "customer"
+                                  ? "bg-purple-100 text-purple-800"
+                                  : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              {entry.type}
+                            </span>
+                            <h5 className="font-extrabold text-xs text-slate-900 truncate max-w-[180px]">
+                              {entry.title}
+                            </h5>
+                          </div>
+                          <p className="text-[11px] text-slate-600 truncate mt-0.5">
+                            {entry.subtitle}
+                          </p>
+                          <span className="text-[9.5px] text-slate-400 mt-1 block">
+                            Deleted: {new Date(entry.deletedAt).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreItem(entry.id)}
+                          className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
+                          title="Restore Record"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>மீட்டெடு</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                /* History Tab */
+                auditLogs.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs">
+                    பதிவுகள் எதுவும் இல்லை (No change logs)
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {auditLogs.map((log: any) => (
+                      <div
+                        key={log.id}
+                        className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/70 text-xs space-y-1"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900">
+                            {log.action}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {new Date(log.createdAt || log.timestamp || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600">
+                          Actor: <strong>{log.actorName || "Priest"}</strong> • Target: {log.targetType || "System"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setShowTrashModal(false)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition"
+              >
+                Close (மூடு)
               </button>
             </div>
           </div>
