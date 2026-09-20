@@ -11,9 +11,16 @@ export default function TeamPage() {
   const { currentBusiness } = useAuth();
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
-  const [members, setMembers] = useState<BusinessMember[]>(db.getMembers(businessId));
+  const [members, setMembers] = useState<BusinessMember[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedIyer, setSelectedIyer] = useState<BusinessMember | null>(null);
+
+  React.useEffect(() => {
+    setMembers(db.getMembers(businessId));
+    const handleDbChange = () => setMembers([...db.getMembers(businessId)]);
+    window.addEventListener("velvi:db-change", handleDbChange);
+    return () => window.removeEventListener("velvi:db-change", handleDbChange);
+  }, [businessId]);
 
   // New Iyer form
   const [name, setName] = useState("");

@@ -33,6 +33,8 @@ import {
   Check,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   ShieldCheck,
   CheckSquare,
   Square,
@@ -44,6 +46,8 @@ import {
   Share2,
   Copy,
   RotateCcw,
+  Wallet,
+  CreditCard,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -52,6 +56,41 @@ import {
   getLocalDateString,
   TamilDateInfo,
 } from "@/lib/calendar/tamil";
+import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
+import { BusinessMember } from "@/lib/types";
+
+const TIME_BANDS = [
+  {
+    period: "காலை (Morning)",
+    icon: "🌅",
+    slots: [
+      { time: "06:00 AM", label: "06:00 AM", tag: "பிரம்ம முகூர்த்தம்" },
+      { time: "07:00 AM", label: "07:00 AM", tag: "காலை பூஜை" },
+      { time: "07:15 AM", label: "07:15 AM", tag: "சுப வேளை" },
+      { time: "08:30 AM", label: "08:30 AM", tag: "நற்பொழுது" },
+      { time: "09:30 AM", label: "09:30 AM", tag: "முற்பகல்" },
+    ],
+  },
+  {
+    period: "நண்பகல் (Noon)",
+    icon: "☀️",
+    slots: [
+      { time: "10:30 AM", label: "10:30 AM", tag: "நண்பகல்" },
+      { time: "11:15 AM", label: "11:15 AM", tag: "உச்சிக்காலம்" },
+      { time: "12:00 PM", label: "12:00 PM", tag: "மத்தியானம்" },
+    ],
+  },
+  {
+    period: "மாலை (Evening)",
+    icon: "🌆",
+    slots: [
+      { time: "04:30 PM", label: "04:30 PM", tag: "சாயரட்சை" },
+      { time: "05:30 PM", label: "05:30 PM", tag: "மாலை பூஜை" },
+      { time: "06:00 PM", label: "06:00 PM", tag: "சந்தியா காலம்" },
+      { time: "07:15 PM", label: "07:15 PM", tag: "இரவு பூஜை" },
+    ],
+  },
+];
 
 const TIME_PRESETS = [
   { time: "06:00 AM", label: "06:00 AM", tag: "Brahma Muhurtham" },
@@ -152,13 +191,16 @@ function NewBookingWizardForm() {
   // Data store state
   const [poojas, setPoojas] = useState<Pooja[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const members = useMemo(() => db.getMembers(businessId), [businessId]);
+  const [allMembers, setAllMembers] = useState<BusinessMember[]>([]);
   const existingBookings = useMemo(() => db.getBookings(businessId), [businessId]);
 
   useEffect(() => {
     setPoojas(db.getPoojas(businessId));
     setCustomers(db.getCustomers(businessId));
+    setAllMembers(db.getMembers(businessId));
   }, [businessId]);
+
+  const members = allMembers.length > 0 ? allMembers : db.getMembers(businessId);
 
   // Multi-step Wizard Navigation (1, 2, 3, 4)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
@@ -193,11 +235,56 @@ function NewBookingWizardForm() {
   // Step 4: Pricing, Assignment & Notes
   const [amount, setAmount] = useState<number>(5000);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
-  const [paymentMode, setPaymentMode] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
+  const [paymentChoice, setPaymentChoice] = useState<"UNPAID" | "ADVANCE" | "FULL">("UNPAID");
+  const [paymentMode, setPaymentMode] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("CASH");
   const [upiRefId, setUpiRefId] = useState<string>("");
   const [assignedIyerId, setAssignedIyerId] = useState<string>("self"); // Default to Self (நானே செய்கிறேன்)
   const [location, setLocation] = useState<string>("Namakkal");
   const [notes, setNotes] = useState<string>("");
+
+  // Step 4 UI toggles & Instant Add Assistant
+  const [showPreviewItemsList, setShowPreviewItemsList] = useState<boolean>(false);
+  const [isAddingAssistant, setIsAddingAssistant] = useState<boolean>(false);
+  const [newAssistantName, setNewAssistantName] = useState<string>("");
+  const [newAssistantMobile, setNewAssistantMobile] = useState<string>("");
+  const [assistantError, setAssistantError] = useState<string>("");
+
+  // Successful Booking Celebratory Modal State
+  const [createdBookingResult, setCreatedBookingResult] = useState<Booking | null>(null);
+
+  const handleCreateAssistant = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAssistantName.trim()) {
+      setAssistantError("Please enter assistant priest name");
+      return;
+    }
+    try {
+      const created = db.createMember({
+        businessId,
+        name: newAssistantName.trim(),
+        mobile: newAssistantMobile.trim(),
+        role: "IYER",
+        specialization: "உதவி குருக்கள் (Assistant Priest)",
+      });
+      setAllMembers(db.getMembers(businessId));
+      setAssignedIyerId(created.id);
+      setNewAssistantName("");
+      setNewAssistantMobile("");
+      setIsAddingAssistant(false);
+      setAssistantError("");
+    } catch (err: any) {
+      setAssistantError(err.message || "Failed to add assistant");
+    }
+  };
+
+  const handleShareCreatedWhatsApp = () => {
+    if (!createdBookingResult || !currentBusiness) return;
+    const msg = formatBookingConfirmationWhatsAppMessage(createdBookingResult, currentBusiness);
+    const phone = createdBookingResult.customerMobile
+      ? createdBookingResult.customerMobile.replace(/\D/g, "")
+      : "";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
 
   // Tamil Priest Names and Roles Mapping
   const getPriestTamilName = (m: any) => {
@@ -233,7 +320,7 @@ function NewBookingWizardForm() {
   const [showPoojaModal, setShowPoojaModal] = useState<boolean>(false);
   const [poojaModalNameEn, setPoojaModalNameEn] = useState<string>("");
   const [poojaModalNameTa, setPoojaModalNameTa] = useState<string>("");
-  const [poojaModalPrice, setPoojaModalPrice] = useState<number>(5000);
+  const [poojaModalPrice, setPoojaModalPrice] = useState<number | string>("");
   const [poojaModalDuration, setPoojaModalDuration] = useState<number>(120);
   const [poojaModalDesc, setPoojaModalDesc] = useState<string>("");
 
@@ -805,7 +892,9 @@ _Velvi Booking App_`;
         }
       } catch (e) {}
 
-      router.push(`/app/bookings/${createdBooking.id}?created=true`);
+      // Open celebratory confirmation window / modal
+      setIsSubmitting(false);
+      setCreatedBookingResult(createdBooking);
     } catch (err: any) {
       console.error(err);
       setStepError(err.message || "Failed to create booking. Please try again.");
@@ -955,19 +1044,12 @@ _Velvi Booking App_`;
             </button>
           </div>
 
-          {/* Contextual Smart Tip for Step 1 */}
-          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-emerald-700 text-white flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
-              💡
-            </div>
-            <div className="space-y-0.5">
-              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
-                ஸ்மார்ட் குறிப்பு (Devotee Tip):
-              </span>
-              <p className="text-[11px] text-emerald-900/90 leading-relaxed font-medium">
-                பக்தரின் மொபைல் எண் மற்றும் ஊரைச் சேர்த்தால், வாட்ஸ்அப் மூலம் பூஜை விவரங்கள் மற்றும் சாமான்கள் பட்டியலை 1-தட்டில் அனுப்பலாம். சங்கல்பத்திற்கான கோத்திரம்/நட்சத்திரத்தை குறித்துக் கொள்வது நல்லது.
-              </p>
-            </div>
+          {/* Smart Tip for Step 1 - Cute & Compact */}
+          <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <span className="text-base shrink-0">💡</span>
+            <p className="text-[11px] text-emerald-900 leading-tight">
+              <span className="font-bold">பக்தர் குறிப்பு:</span> பக்தரின் மொபைல் எண் சேர்த்தால் வாட்ஸ்அப்பில் பூஜை விவரங்கள் மற்றும் சாமான்கள் பட்டியலை 1-கிளிக்கில் அனுப்பலாம்.
+            </p>
           </div>
 
           {/* If Devotee is Selected: Detailed Showcase Card */}
@@ -1047,20 +1129,20 @@ _Velvi Booking App_`;
           ) : (
             /* Search and Devotee Pick Grid */
             <div className="space-y-3">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <div className="relative group">
+                <Search className="w-4 h-4 text-emerald-600 group-focus-within:text-emerald-800 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition" />
                 <input
                   type="text"
                   value={customerSearchQuery}
                   onChange={(e) => setCustomerSearchQuery(e.target.value)}
-                  placeholder="Search devotee by name, mobile, city, gothram..."
-                  className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 shadow-2xs"
+                  placeholder="Search devotee by name, mobile (+91), city, gothram..."
+                  className="w-full pl-10 pr-9 py-3 bg-white border-2 border-emerald-400/80 focus:border-emerald-700 focus:ring-4 focus:ring-emerald-500/15 rounded-2xl text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 shadow-xs transition"
                 />
                 {customerSearchQuery && (
                   <button
                     type="button"
                     onClick={() => setCustomerSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1191,23 +1273,16 @@ _Velvi Booking App_`;
               className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
             >
               <Plus className="w-3.5 h-3.5 text-emerald-700" />
-              <span>+ Add Custom Pooja</span>
+              <span>+ Add Pooja</span>
             </button>
           </div>
 
-          {/* Contextual Smart Tip for Step 2 */}
-          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
-              💡
-            </div>
-            <div className="space-y-0.5">
-              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
-                பூஜை &amp; சாமான்கள் குறிப்பு (Pooja &amp; Samagri Tip):
-              </span>
-              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
-                ஹோமத்திற்கான பொருட்கள் பட்டியலை இங்கேயே சரிபார்த்து டிக் செய்யலாம். தேவைப்படாத பொருட்களை அன்-டிக் செய்யவும், அல்லது புதிய பொருட்களை எளிதாகச் சேர்த்துக் கொள்ளலாம். பக்தருக்கு அனுப்பும் பட்டியலும் இதன்படி மாறும்.
-              </p>
-            </div>
+          {/* Smart Tip for Step 2 - Cute & Compact */}
+          <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 text-xs text-emerald-950 shadow-2xs">
+            <span className="text-base shrink-0">💡</span>
+            <p className="text-[11px] text-emerald-900 leading-tight">
+              <span className="font-bold">பூஜை குறிப்பு:</span> புதிய பூஜைகளை உருவாக்க மற்றும் முழுமையான பட்டியல் நிர்வாகத்தை <Link href="/app/poojas" className="underline font-bold text-emerald-800 hover:text-emerald-950">&quot;பூஜைகள்&quot; (Poojas)</Link> பக்கத்தில் செய்யலாம்.
+            </p>
           </div>
 
           {/* Popular / Frequent Poojas: Instant 1-Tap Numbered Cards */}
@@ -1749,18 +1824,50 @@ _Velvi Booking App_`;
             </p>
           </div>
 
-          {/* Contextual Smart Tip for Step 3 */}
-          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
-              💡
+          {/* Auspicious Timings (Nalla Neram) for Selected Date placed right above Calendar */}
+          <div className="bg-gradient-to-r from-amber-50 via-emerald-50/40 to-amber-50/70 p-3.5 rounded-2xl border-2 border-amber-300/90 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                  🪔
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 block">
+                    தேர்ந்தெடுத்த நாளின் சுப நேரம் (Auspicious Timings)
+                  </span>
+                  <div className="font-black text-xs sm:text-sm text-slate-900">
+                    {selectedDateInfo.formattedDualDate} ({selectedDateInfo.dayOfWeekEn})
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[10px] font-extrabold text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">
+                  {selectedDateInfo.tithiTa}
+                </span>
+                <span className="text-[10px] font-extrabold text-slate-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200 shadow-2xs">
+                  {selectedDateInfo.nakshatraNameTa}
+                </span>
+              </div>
             </div>
-            <div className="space-y-0.5">
-              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
-                சுப முகூர்த்த நேரக் குறிப்பு (Muhurtham &amp; Timings Tip):
-              </span>
-              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
-                தேர்ந்தெடுத்த நாளின் நல்ல நேரம் மற்றும் கௌரி நல்ல நேரத்தைக் கவனித்து பூஜை நேரத்தை முடிவு செய்யவும். ராகு காலம் மற்றும் எமகண்ட நேரங்களில் பூஜை துவங்குவதைத் தவிர்க்கலாம்.
-              </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
+              <div className="bg-white/95 p-2 rounded-xl border border-amber-200 shadow-2xs">
+                <span className="text-[9.5px] text-amber-800 font-extrabold block">✨ நல்ல நேரம்</span>
+                <span className="text-xs font-black text-slate-900">{selectedDateInfo.nallaNeram}</span>
+              </div>
+              <div className="bg-white/95 p-2 rounded-xl border border-emerald-200 shadow-2xs">
+                <span className="text-[9.5px] text-emerald-800 font-extrabold block">🪔 கௌரி நல்ல நேரம்</span>
+                <span className="text-xs font-black text-slate-900">{selectedDateInfo.gowriNallaNeram}</span>
+              </div>
+              <div className="bg-white/95 p-2 rounded-xl border border-rose-200 shadow-2xs">
+                <span className="text-[9.5px] text-rose-700 font-extrabold block">⛔ ராகு காலம்</span>
+                <span className="text-xs font-bold text-slate-700">{selectedDateInfo.rahuKalam}</span>
+              </div>
+              <div className="bg-white/95 p-2 rounded-xl border border-purple-200 shadow-2xs">
+                <span className="text-[9.5px] text-purple-700 font-extrabold block">⌛ குளிகை</span>
+                <span className="text-xs font-bold text-slate-700">{selectedDateInfo.kuligai}</span>
+              </div>
             </div>
           </div>
 
@@ -1893,117 +2000,134 @@ _Velvi Booking App_`;
             </div>
           </div>
 
-          {/* TIME SELECTION WITH 15-MINUTE INTERVALS & AM/PM */}
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-            <label className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-emerald-700" />
-              <span>Select Start Time (15-Min Intervals):</span>
-            </label>
-
-            {/* Structured Time Picker (Hours, Minutes, Meridiem) */}
-            <div className="grid grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-              {/* Hour Dropdown */}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 block mb-1">Hour</label>
-                <select
-                  value={timeHour}
-                  onChange={(e) => setTimeHour(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600"
-                >
-                  {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map(
-                    (h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div>
-
-              {/* 15-Minute Interval Dropdown */}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 block mb-1">
-                  Minutes (15-min)
-                </label>
-                <select
-                  value={timeMinute}
-                  onChange={(e) => setTimeMinute(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600"
-                >
-                  {["00", "15", "30", "45"].map((m) => (
-                    <option key={m} value={m}>
-                      :{m} mins
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* AM / PM Toggle */}
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 block mb-1">AM / PM</label>
-                <div className="grid grid-cols-2 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setTimeMeridiem("AM")}
-                    className={`py-2 rounded-xl text-xs font-black transition cursor-pointer active:scale-95 ${
-                      timeMeridiem === "AM"
-                        ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-xs"
-                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    AM
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTimeMeridiem("PM")}
-                    className={`py-2 rounded-xl text-xs font-black transition cursor-pointer active:scale-95 ${
-                      timeMeridiem === "PM"
-                        ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-xs"
-                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    PM
-                  </button>
-                </div>
+          {/* TIME SELECTION WITH FAST TIME-BANDS & 15-MINUTE INTERVALS */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-emerald-700" />
+                <span>பூஜை தொடங்கும் நேரம் (Select Ceremony Start Time):</span>
+              </label>
+              <div className="flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
+                <span className="text-[10.5px] font-bold text-emerald-950">தேர்ந்தெடுத்த நேரம்:</span>
+                <span className="text-xs font-black text-emerald-950">{selectedTime}</span>
               </div>
             </div>
 
-            {/* Quick 1-Tap Preset Chips */}
-            <div className="space-y-1.5 pt-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase block">
-                Quick Preset Chips
+            {/* 3 Fast Time Bands: Morning, Noon, Evening */}
+            <div className="space-y-2.5">
+              {TIME_BANDS.map((band) => (
+                <div key={band.period} className="bg-slate-50/70 p-2.5 rounded-2xl border border-slate-200/80 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-slate-700">
+                    <span>{band.icon}</span>
+                    <span>{band.period}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                    {band.slots.map((s) => {
+                      const isMatch = selectedTime === s.time;
+                      return (
+                        <button
+                          key={s.time}
+                          type="button"
+                          onClick={() => {
+                            const [hMin, mer] = s.time.split(" ");
+                            const [h, m] = hMin.split(":");
+                            setTimeHour(h);
+                            setTimeMinute(m);
+                            setTimeMeridiem(mer as any);
+                          }}
+                          className={`p-2 rounded-xl border text-left transition cursor-pointer active:scale-95 ${
+                            isMatch
+                              ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs ring-2 ring-emerald-600/30"
+                              : "bg-white hover:bg-emerald-50/50 border-slate-200 text-slate-800 hover:border-emerald-300"
+                          }`}
+                        >
+                          <div className="text-xs font-black">{s.label}</div>
+                          <div
+                            className={`text-[9px] truncate mt-0.5 ${
+                              isMatch ? "text-amber-300 font-bold" : "text-slate-500 font-medium"
+                            }`}
+                          >
+                            {s.tag}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Custom Time Fine-Tuner (Hour, 15-Min Minutes, AM/PM) */}
+            <div className="pt-1">
+              <span className="text-[10.5px] font-bold text-slate-500 block mb-1.5">
+                நேரத்தை மாற்றியமைக்க (Custom Time Adjuster):
               </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                {TIME_PRESETS.map((p) => {
-                  const isMatch = selectedTime === p.time;
-                  return (
+              <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                {/* Hour */}
+                <div>
+                  <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">Hour</label>
+                  <select
+                    value={timeHour}
+                    onChange={(e) => setTimeHour(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600 cursor-pointer"
+                  >
+                    {["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map(
+                      (h) => (
+                        <option key={h} value={h}>
+                          {h}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
+
+                {/* Minutes (15-min) */}
+                <div>
+                  <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">
+                    Minutes (15-min)
+                  </label>
+                  <select
+                    value={timeMinute}
+                    onChange={(e) => setTimeMinute(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600 cursor-pointer"
+                  >
+                    {["00", "15", "30", "45"].map((m) => (
+                      <option key={m} value={m}>
+                        :{m} mins
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* AM / PM */}
+                <div>
+                  <label className="text-[9.5px] font-bold text-slate-500 block mb-0.5">AM / PM</label>
+                  <div className="grid grid-cols-2 gap-1">
                     <button
-                      key={p.time}
                       type="button"
-                      onClick={() => {
-                        const [hMin, mer] = p.time.split(" ");
-                        const [h, m] = hMin.split(":");
-                        setTimeHour(h);
-                        setTimeMinute(m);
-                        setTimeMeridiem(mer as any);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer active:scale-95 ${
-                        isMatch
-                          ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-2xs"
-                          : "bg-slate-50 border-slate-200 text-slate-800 hover:bg-emerald-50/40 hover:border-emerald-300"
+                      onClick={() => setTimeMeridiem("AM")}
+                      className={`py-1.5 rounded-lg text-xs font-black transition cursor-pointer active:scale-95 ${
+                        timeMeridiem === "AM"
+                          ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-2xs"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                       }`}
                     >
-                      <div className="text-xs font-black">{p.label}</div>
-                      <div
-                        className={`text-[9.5px] truncate ${
-                          isMatch ? "text-amber-300 font-bold" : "text-slate-500"
-                        }`}
-                      >
-                        {p.tag}
-                      </div>
+                      AM
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      onClick={() => setTimeMeridiem("PM")}
+                      className={`py-1.5 rounded-lg text-xs font-black transition cursor-pointer active:scale-95 ${
+                        timeMeridiem === "PM"
+                          ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white shadow-2xs"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      PM
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2057,74 +2181,42 @@ _Velvi Booking App_`;
             </div>
           )}
 
-          {/* Rich Panchangam Card for Selected Date */}
-          <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/50 p-4 rounded-2xl border border-emerald-300 space-y-2">
-            <div className="flex items-center justify-between text-xs font-black text-slate-900">
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-                {selectedDateInfo.formattedDualDate} ({selectedDateInfo.dayOfWeekEn})
-              </span>
-              <span className="text-[11px] text-emerald-950 font-bold bg-emerald-100/90 px-2.5 py-0.5 rounded-xl border border-emerald-300">
-                {selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                <span className="text-emerald-800 font-bold block">✨ நல்ல நேரம் (Nalla Neram):</span>
-                <span className="font-semibold text-slate-800">{selectedDateInfo.nallaNeram}</span>
-              </div>
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                <span className="text-amber-800 font-bold block">🪔 கௌரி (Gowri Nalla Neram):</span>
-                <span className="font-semibold text-slate-800">{selectedDateInfo.gowriNallaNeram}</span>
-              </div>
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                <span className="text-rose-700 font-bold block">⛔ ராகு காலம் (Rahu Kalam):</span>
-                <span className="font-semibold text-slate-800">{selectedDateInfo.rahuKalam}</span>
-              </div>
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200">
-                <span className="text-purple-700 font-bold block">⌛ குளிகை (Kuligai):</span>
-                <span className="font-semibold text-slate-800">{selectedDateInfo.kuligai}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* QUICK BOOKING PREVIEW CARD (டேட், டைம், கஸ்டமரோட நேம் உடனடி பார்வை) */}
-          <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/50 p-4 rounded-2xl border-2 border-emerald-300 shadow-2xs space-y-2.5 animate-in fade-in">
+          {/* STEP 3 QUICK BOOKING PREVIEW CARD */}
+          <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/50 p-4 rounded-2xl border-2 border-emerald-300/90 shadow-2xs space-y-3 animate-in fade-in">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-emerald-700" />
-                <span>தேர்ந்தெடுக்கப்பட்ட விவரங்கள் (Booking Quick Preview)</span>
+                <span>தேர்ந்தெடுக்கப்பட்ட முன்பதிவு விவரங்கள் (Step 3 Summary)</span>
               </span>
-              <span className="text-[10px] font-bold text-emerald-900 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
-                Step 3 Ready ✓
+              <span className="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                Ready for Review ✓
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block">📅 தேர்ந்தெடுக்கப்பட்ட தேதி</span>
-                <div className="font-black text-slate-900 mt-0.5">{selectedDateInfo.formattedDualDate}</div>
-                <div className="text-[10px] text-emerald-900 font-bold truncate">
+              <div className="bg-white p-3 rounded-xl border border-emerald-200/90 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">📅 நாள் &amp; முகூர்த்தம்</span>
+                <div className="font-black text-slate-900 leading-tight">{selectedDateInfo.formattedDualDate}</div>
+                <div className="text-[10.5px] text-emerald-900 font-bold">
                   {selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}
                 </div>
               </div>
 
-              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block">⏰ பூஜை நேரம்</span>
-                <div className="font-black text-emerald-950 mt-0.5 text-sm">{selectedTime}</div>
-                <div className="text-[10px] text-slate-600 font-semibold">
+              <div className="bg-white p-3 rounded-xl border border-emerald-200/90 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">⏰ பூஜை தொடங்கும் நேரம்</span>
+                <div className="font-black text-emerald-950 text-base leading-tight">{selectedTime}</div>
+                <div className="text-[10.5px] text-slate-600 font-bold">
                   {selectedDateInfo.dayOfWeekTa} ({selectedDateInfo.dayOfWeekEn})
                 </div>
               </div>
 
-              <div className="bg-white/95 p-2.5 rounded-xl border border-emerald-200/90 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block">👤 பக்தர் & பூஜை</span>
-                <div className="font-black text-slate-900 truncate mt-0.5">
-                  {selectedCustomer?.name || "பக்தர் தேர்வு செய்யப்படவில்லை"}
+              <div className="bg-white p-3 rounded-xl border border-emerald-200/90 shadow-2xs space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">👤 பக்தர் &amp; சடங்கு</span>
+                <div className="font-black text-slate-900 truncate leading-tight">
+                  {selectedCustomer?.name || "பக்தர் தேர்வு தேவை"}
                 </div>
-                <div className="text-[10px] text-emerald-900 font-extrabold truncate">
-                  {selectedPooja?.englishName || "பூஜை தேர்வு செய்யப்படவில்லை"}
+                <div className="text-[10.5px] text-emerald-900 font-extrabold truncate">
+                  {selectedPooja?.englishName || "பூஜை தேர்வு தேவை"}
                 </div>
               </div>
             </div>
@@ -2168,236 +2260,359 @@ _Velvi Booking App_`;
             </p>
           </div>
 
-          {/* Contextual Smart Tip for Step 4 */}
-          <div className="bg-gradient-to-r from-emerald-50/90 via-white to-emerald-50/60 border border-emerald-200/90 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <div className="w-6 h-6 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5 shadow-2xs">
-              💡
-            </div>
-            <div className="space-y-0.5">
-              <span className="font-extrabold block text-emerald-950 text-[11px] sm:text-xs">
-                கட்டணம் &amp; குருக்கள் ஒதுக்கீடு குறிப்பு (Payment &amp; Priest Tip):
-              </span>
-              <p className="text-[11px] text-emerald-900/90 leading-relaxed">
-                முன்பணம் (Advance) பெற்றிருந்தால் உடனே குறித்துக் கொள்ளுங்கள்; மீதமுள்ள தொகையை பூஜை முடிந்ததும் எளிதாகப் பெற்றுக்கொள்ளலாம். நீங்கள் அல்லது உங்கள் உதவி குருக்களை இங்கு எளிதாக ஒதுக்கீடு செய்யலாம்.
-              </p>
-            </div>
-          </div>
-
-          {/* 1. HERO CEREMONY & DEVOTEE OVERVIEW CARD */}
-          <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/50 p-4 rounded-2xl border border-emerald-300 shadow-2xs space-y-3">
-            <div className="flex items-start justify-between border-b border-emerald-200/60 pb-2.5">
-              <div className="min-w-0">
-                <span className="text-[10px] text-emerald-900 font-black uppercase tracking-wider block">
-                  Pooja Ceremony
+          {/* 1. FULL LINE-BY-LINE CEREMONY & DEVOTEE PREVIEW CARD */}
+          <div className="bg-white rounded-2xl border-2 border-emerald-300/90 shadow-xs overflow-hidden divide-y divide-slate-100">
+            <div className="p-3.5 bg-gradient-to-r from-emerald-50 via-white to-emerald-50/60 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-700" />
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  முன்பதிவு முழு விவரங்கள் (Booking Full Review)
                 </span>
-                <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                  <h3 className="font-black text-base text-slate-900">
-                    {selectedPooja?.englishName}
-                  </h3>
-                  {selectedPooja?.tamilName && (
-                    <span className="text-xs font-bold text-emerald-950 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
-                      {selectedPooja.tamilName}
-                    </span>
-                  )}
+              </div>
+              <span className="text-[10px] font-black text-emerald-950 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                Ready to Confirm ✓
+              </span>
+            </div>
+
+            {/* Line 1: Pooja Ceremony */}
+            <div className="p-3 flex items-center justify-between text-xs gap-3">
+              <span className="text-slate-500 font-bold flex items-center gap-1.5 shrink-0">
+                <Flame className="w-3.5 h-3.5 text-emerald-700" />
+                பூஜை சடங்கு (Pooja):
+              </span>
+              <div className="text-right font-black text-slate-900">
+                <span>{selectedPooja?.englishName}</span>
+                {selectedPooja?.tamilName && (
+                  <span className="text-emerald-800 font-bold ml-1.5">
+                    ({selectedPooja.tamilName})
+                  </span>
+                )}
+                <span className="text-[10.5px] text-slate-400 font-medium ml-1.5">
+                  • {selectedPooja?.durationMinutes || 120} mins
+                </span>
+              </div>
+            </div>
+
+            {/* Line 2: Devotee */}
+            <div className="p-3 flex items-center justify-between text-xs gap-3">
+              <span className="text-slate-500 font-bold flex items-center gap-1.5 shrink-0">
+                <User className="w-3.5 h-3.5 text-amber-600" />
+                பக்தர் (Devotee):
+              </span>
+              <div className="text-right font-bold text-slate-900">
+                <span>{selectedCustomer?.name}</span>
+                {selectedCustomer?.mobile && (
+                  <span className="text-slate-500 text-[11px] ml-1.5 font-normal">
+                    📱 {selectedCustomer.mobile}
+                  </span>
+                )}
+                <span className="text-[11px] text-slate-400 ml-1.5">
+                  📍 {selectedCustomer?.city || "Namakkal"}
+                </span>
+              </div>
+            </div>
+
+            {/* Line 3: Date & Auspicious Time */}
+            <div className="p-3 flex items-center justify-between text-xs gap-3">
+              <span className="text-slate-500 font-bold flex items-center gap-1.5 shrink-0">
+                <CalendarIcon className="w-3.5 h-3.5 text-emerald-700" />
+                நாள் &amp; நேரம்:
+              </span>
+              <div className="text-right font-black text-slate-900">
+                <span>{selectedDateInfo.formattedDualDate}</span>
+                <span className="text-emerald-950 font-black ml-2 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  ⏰ {selectedTime} ({selectedDateInfo.dayOfWeekTa})
+                </span>
+              </div>
+            </div>
+
+            {/* Line 4: Venue */}
+            <div className="p-3 flex items-center justify-between text-xs gap-3">
+              <span className="text-slate-500 font-bold flex items-center gap-1.5 shrink-0">
+                <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                இடம் (Venue):
+              </span>
+              <div className="text-right font-bold text-slate-800 truncate max-w-[240px]">
+                {location || selectedCustomer?.city || "Namakkal"}
+              </div>
+            </div>
+
+            {/* Line 5: Sankalpam Notes */}
+            {notes && (
+              <div className="p-3 flex items-center justify-between text-xs gap-3">
+                <span className="text-slate-500 font-bold flex items-center gap-1.5 shrink-0">
+                  📜 சங்கல்பம்:
+                </span>
+                <div className="text-right font-semibold text-emerald-950 truncate max-w-[240px]">
+                  {notes}
                 </div>
               </div>
+            )}
 
-              <div className="text-right shrink-0">
-                <span className="text-lg font-black text-emerald-950">
-                  ₹{Number(amount || 0).toLocaleString("en-IN")}
+            {/* Line 6: Samagri Checklist with Expand/Collapse */}
+            <div className="p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-bold flex items-center gap-1.5">
+                  <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
+                  பூஜைப் பொருட்கள் (Samagri Checklist):
                 </span>
-                <div className="text-[10px] text-slate-500 font-semibold">Total Fee</div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-                <span className="text-[10px] text-slate-400 font-bold block">👤 Devotee Details (பக்தர்)</span>
-                <div className="font-extrabold text-slate-900 mt-0.5">{selectedCustomer?.name}</div>
-                <div className="text-[11px] text-slate-600">📱 {selectedCustomer?.mobile || "No phone"}</div>
-                <div className="text-[11px] text-slate-500">📍 {selectedCustomer?.city || "Namakkal"}</div>
-              </div>
-
-              <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
-                <span className="text-[10px] text-slate-400 font-bold block">📅 Date & Time (தேதி & நேரம்)</span>
-                <div className="font-extrabold text-slate-900 mt-0.5">{selectedDateInfo.formattedDualDate}</div>
-                <div className="text-[11px] text-slate-800 font-bold">⏰ {selectedTime} ({selectedDateInfo.dayOfWeekTa})</div>
-                <div className="text-[10px] text-emerald-900 font-semibold">{selectedDateInfo.tithiTa} • {selectedDateInfo.nakshatraNameTa}</div>
-              </div>
-            </div>
-
-            <div className="bg-emerald-50/80 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
-              <span className="font-bold text-emerald-950 flex items-center gap-1.5">
-                <CheckSquare className="w-4 h-4 text-emerald-700" />
-                {samagriItems.filter((i) => i.isChecked !== false).length} Samagri Checklist Items Included
-              </span>
-
-              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  onClick={handleShareWhatsApp}
-                  className="text-[11px] font-bold text-emerald-950 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-xl border border-emerald-300 flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95"
-                  title="Share details with devotee on WhatsApp"
+                  onClick={() => setShowPreviewItemsList((prev) => !prev)}
+                  className="text-[11px] font-bold text-emerald-900 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1 transition cursor-pointer shadow-2xs"
                 >
-                  <MessageCircle className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>WhatsApp List</span>
+                  <span>
+                    {samagriItems.filter((i) => i.isChecked !== false).length} பொருட்கள் சேர்க்கப்பட்டது
+                  </span>
+                  {showPreviewItemsList ? (
+                    <ChevronUp className="w-3.5 h-3.5 text-emerald-700" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 text-emerald-700" />
+                  )}
                 </button>
-                <span className="text-[11px] font-bold text-emerald-900 hidden sm:inline">
-                  Ready for Pooja ✓
-                </span>
               </div>
+
+              {/* Expandable Line-by-Line Items View */}
+              {showPreviewItemsList && (
+                <div className="mt-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1 max-h-52 overflow-y-auto animate-in fade-in duration-150">
+                  {samagriItems.filter((i) => i.isChecked !== false).map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="flex items-center justify-between text-[11px] py-1 border-b border-slate-100 last:border-0"
+                    >
+                      <span className="font-semibold text-slate-800">
+                        {idx + 1}. {item.itemTamilName || item.itemEnglishName}
+                      </span>
+                      <span className="font-bold text-emerald-900 bg-white px-2 py-0.2 rounded border border-slate-200 text-[10px]">
+                        {item.quantity} {item.unit}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* 2. DEDICATED STANDALONE PAYMENT BOX (தனியா ஒரு பாக்ஸ்) */}
-          <div className="bg-gradient-to-br from-white via-emerald-50/20 to-emerald-50/50 rounded-2xl p-4 border-2 border-emerald-300/90 shadow-sm space-y-3.5">
-            <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
+          {/* 2. DEDICATED CLEAN & SIMPLE PAYMENT BOX */}
+          <div className="bg-white rounded-2xl p-4 border-2 border-emerald-300/90 shadow-2xs space-y-3.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#0b2b17] to-[#123e24] text-amber-300 flex items-center justify-center font-black shadow-2xs">
                   <IndianRupee className="w-4 h-4" />
                 </div>
                 <div>
                   <h4 className="text-xs font-black text-slate-900">
-                    Payment & Fee Calculation (கட்டண விவரம்)
+                    கட்டண விவரம் (Pooja Payment Setup)
                   </h4>
-                  <p className="text-[10px] text-slate-500">Configure pooja fee, advance received & balance</p>
+                  <p className="text-[10px] text-slate-500">Simple payment and advance recording</p>
                 </div>
               </div>
 
-              <span className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-950 border border-emerald-300">
-                Direct Settlement
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-                <label className="text-[10px] font-bold text-slate-600 block mb-1">
-                  Total Pooja Fee (மொத்த கட்டணம் ₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={amount}
-                    onChange={(e) => setAmount(Number(e.target.value))}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 shadow-2xs">
-                <label className="text-[10px] font-bold text-emerald-950 block mb-1">
-                  Advance Received (முன்பணம் ₹)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">₹</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={amount}
-                    value={advanceAmount}
-                    onChange={(e) => setAdvanceAmount(Number(e.target.value))}
-                    className="w-full bg-white border border-emerald-300 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-emerald-900 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/70 p-3 rounded-xl border border-emerald-300 shadow-2xs flex flex-col justify-between">
-                <label className="text-[10px] font-bold text-emerald-950 block">
-                  Balance Due (மீதமுள்ள தொகை)
-                </label>
-                <div className="text-lg font-black text-emerald-950 py-0.5">
-                  ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
-                </div>
+              <div className="text-right">
+                <span className="text-[10px] text-slate-400 font-bold block">மொத்த கட்டணம்</span>
+                <span className="text-base font-black text-emerald-950">
+                  ₹{Number(amount || 0).toLocaleString("en-IN")}
+                </span>
               </div>
             </div>
 
-            {/* Quick Advance Percentage Shortcuts */}
-            <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
-              <span className="text-[11px] text-slate-600 font-black mr-1">Advance Quick:</span>
-              <button
-                type="button"
-                onClick={() => setAdvanceAmount(0)}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
-                  advanceAmount === 0
-                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs"
-                    : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
-                }`}
-              >
-                ₹0 (Nil)
-              </button>
-              <button
-                type="button"
-                onClick={() => setAdvanceAmount(Math.round(amount * 0.25))}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
-                  advanceAmount === Math.round(amount * 0.25) && amount > 0
-                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-amber-300 border-emerald-900 shadow-xs"
-                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
-                }`}
-              >
-                25% (₹{Math.round(amount * 0.25)})
-              </button>
-              <button
-                type="button"
-                onClick={() => setAdvanceAmount(Math.round(amount * 0.5))}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
-                  advanceAmount === Math.round(amount * 0.5) && amount > 0
-                    ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-amber-300 border-emerald-900 shadow-xs"
-                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
-                }`}
-              >
-                50% (₹{Math.round(amount * 0.5)})
-              </button>
-              <button
-                type="button"
-                onClick={() => setAdvanceAmount(amount)}
-                className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition cursor-pointer active:scale-95 ${
-                  advanceAmount === amount && amount > 0
-                    ? "bg-gradient-to-r from-emerald-700 to-emerald-800 text-white border-emerald-800 shadow-xs"
-                    : "bg-white hover:bg-emerald-50 text-emerald-950 border-emerald-200 shadow-2xs"
-                }`}
-              >
-                100% Full Paid
-              </button>
+            {/* Total Fee Quick Adjuster */}
+            <div className="flex items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+              <span className="text-slate-600 font-bold text-[11px]">Pooja Fee Amount:</span>
+              <div className="relative w-36">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={amount}
+                  onChange={(e) => {
+                    const newTotal = Number(e.target.value);
+                    setAmount(newTotal);
+                    if (paymentChoice === "FULL") {
+                      setAdvanceAmount(newTotal);
+                    }
+                  }}
+                  className="w-full bg-white border border-slate-200 rounded-lg pl-6 pr-2 py-1 text-xs font-black text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
             </div>
 
-            {/* Payment Method & Reference */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-emerald-100">
-              <div>
-                <label className="text-[10px] font-bold text-slate-700 block mb-1">
-                  Payment Method (செலுத்தும் முறை)
-                </label>
-                <select
-                  value={paymentMode}
-                  onChange={(e) => setPaymentMode(e.target.value as any)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-600 shadow-2xs"
+            {/* Simple Advance Payment Choice: Unpaid vs Advance vs Full */}
+            <div className="space-y-1.5">
+              <label className="text-[10.5px] font-extrabold text-slate-700 block">
+                முன்பணம் நிலை (Advance Payment):
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentChoice("UNPAID");
+                    setAdvanceAmount(0);
+                  }}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center ${
+                    paymentChoice === "UNPAID" || (advanceAmount === 0 && paymentChoice !== "ADVANCE")
+                      ? "bg-slate-800 text-white border-slate-800 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
                 >
-                  <option value="UPI">UPI (Google Pay / PhonePe / Paytm)</option>
-                  <option value="CASH">Cash in Hand (ரொக்கம்)</option>
-                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
-                </select>
+                  <span>நிலுவை (Unpaid)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentChoice("ADVANCE");
+                    if (advanceAmount === 0 || advanceAmount === amount) {
+                      setAdvanceAmount(Math.round(amount * 0.25));
+                    }
+                  }}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center ${
+                    paymentChoice === "ADVANCE"
+                      ? "bg-emerald-700 text-white border-emerald-700 shadow-xs"
+                      : "bg-emerald-50 text-emerald-950 border-emerald-200 hover:bg-emerald-100"
+                  }`}
+                >
+                  <span>+ முன்பணம் (Advance)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentChoice("FULL");
+                    setAdvanceAmount(amount);
+                  }}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center ${
+                    paymentChoice === "FULL" || (advanceAmount === amount && amount > 0)
+                      ? "bg-gradient-to-r from-amber-600 to-amber-700 text-white border-amber-700 shadow-xs"
+                      : "bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100"
+                  }`}
+                >
+                  <span>முழுவதும் (100% Paid)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Advance Amount Input & Shortcuts (Shown when ADVANCE is chosen) */}
+            {paymentChoice === "ADVANCE" && (
+              <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-2.5 animate-in fade-in">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <label className="text-[10.5px] font-extrabold text-emerald-950 block">
+                      பெற்ற முன்பணம் (Advance Received ₹):
+                    </label>
+                    <span className="text-[10px] text-emerald-800">Enter amount received from devotee</span>
+                  </div>
+
+                  <div className="relative w-36">
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-700">₹</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={amount}
+                      value={advanceAmount}
+                      onChange={(e) => setAdvanceAmount(Number(e.target.value))}
+                      className="w-full bg-white border border-emerald-300 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-emerald-900 focus:outline-none focus:border-emerald-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Advance % Chips */}
+                <div className="flex items-center gap-1.5 text-xs flex-wrap pt-0.5">
+                  <span className="text-[10px] text-slate-500 font-bold mr-1">Quick:</span>
+                  <button
+                    type="button"
+                    onClick={() => setAdvanceAmount(Math.round(amount * 0.25))}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition cursor-pointer ${
+                      advanceAmount === Math.round(amount * 0.25)
+                        ? "bg-emerald-800 text-white border-emerald-800"
+                        : "bg-white text-emerald-950 border-emerald-200 hover:bg-emerald-50"
+                    }`}
+                  >
+                    25% (₹{Math.round(amount * 0.25)})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdvanceAmount(Math.round(amount * 0.5))}
+                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-bold border transition cursor-pointer ${
+                      advanceAmount === Math.round(amount * 0.5)
+                        ? "bg-emerald-800 text-white border-emerald-800"
+                        : "bg-white text-emerald-950 border-emerald-200 hover:bg-emerald-50"
+                    }`}
+                  >
+                    50% (₹{Math.round(amount * 0.5)})
+                  </button>
+                </div>
+
+                {/* Balance Due Display */}
+                <div className="flex items-center justify-between pt-1 border-t border-emerald-200/80 text-xs">
+                  <span className="font-bold text-emerald-950">மீதமுள்ள தொகை (Balance Due):</span>
+                  <span className="font-black text-emerald-950 text-sm">
+                    ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Payment Method Pills (NO DROPDOWN!) */}
+            <div className="space-y-1.5 pt-1 border-t border-slate-100">
+              <label className="text-[10.5px] font-extrabold text-slate-700 block">
+                செலுத்தும் முறை (Payment Method):
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("CASH")}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 ${
+                    paymentMode === "CASH"
+                      ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>💵 Cash (ரொக்கம்)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("UPI")}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 ${
+                    paymentMode === "UPI"
+                      ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>📱 UPI (GPay/PhonePe)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPaymentMode("BANK_TRANSFER")}
+                  className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer active:scale-95 text-center flex items-center justify-center gap-1 ${
+                    paymentMode === "BANK_TRANSFER"
+                      ? "bg-gradient-to-r from-[#0b2b17] to-[#123e24] text-white border-emerald-900 shadow-xs"
+                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>🏦 Bank Transfer</span>
+                </button>
               </div>
 
+              {/* UPI Reference Input */}
               {paymentMode === "UPI" && (
-                <div>
-                  <label className="text-[10px] font-bold text-slate-700 block mb-1">
-                    UPI Ref / UTR (விருப்பத் தேர்வு)
-                  </label>
+                <div className="pt-1.5 animate-in fade-in">
                   <input
                     type="text"
-                    placeholder="e.g. UPI/4098231"
+                    placeholder="UPI Transaction ID / Ref (e.g. UPI/4098231)"
                     value={upiRefId}
                     onChange={(e) => setUpiRefId(e.target.value)}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
                   />
                 </div>
               )}
             </div>
           </div>
 
-          {/* 3. ASSIGN PRIEST (SELF vs OTHERS TOGGLE WITH OTHERS DROPDOWN) */}
+          {/* 3. ASSIGN PRIEST & ASSISTANT WITH INSTANT ADD */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <div>
@@ -2408,17 +2623,20 @@ _Velvi Booking App_`;
                   Choose Self or assign to an associate priest
                 </p>
               </div>
+
               <span className="text-[10px] font-bold text-emerald-950 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300">
                 {assignedIyerId === "self" ? "Self (நானே செய்கிறேன்)" : "Assigned to Assistant"}
               </span>
             </div>
 
-            {/* 2 Primary Toggle Buttons: Self vs Others */}
+            {/* 2 Primary Toggle Buttons: Self vs Assistant */}
             <div className="grid grid-cols-2 gap-2">
-              {/* Button 1: Self */}
               <button
                 type="button"
-                onClick={() => setAssignedIyerId("self")}
+                onClick={() => {
+                  setAssignedIyerId("self");
+                  setIsAddingAssistant(false);
+                }}
                 className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2 shadow-2xs cursor-pointer active:scale-95 ${
                   assignedIyerId === "self"
                     ? "bg-gradient-to-r from-emerald-50 via-white to-emerald-100/80 border-emerald-600 ring-2 ring-emerald-500/30 shadow-xs"
@@ -2436,12 +2654,8 @@ _Velvi Booking App_`;
                     🪔
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-black text-slate-900 truncate">
-                      Self
-                    </div>
-                    <div className="text-[10px] text-emerald-950 font-bold truncate">
-                      நானே செய்கிறேன்
-                    </div>
+                    <div className="text-xs font-black text-slate-900 truncate">Self</div>
+                    <div className="text-[10px] text-emerald-950 font-bold truncate">நானே செய்கிறேன்</div>
                   </div>
                 </div>
                 {assignedIyerId === "self" && (
@@ -2449,7 +2663,6 @@ _Velvi Booking App_`;
                 )}
               </button>
 
-              {/* Button 2: Others */}
               <button
                 type="button"
                 onClick={() => {
@@ -2467,20 +2680,14 @@ _Velvi Booking App_`;
                 <div className="flex items-center gap-2 min-w-0">
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
-                      assignedIyerId !== "self"
-                        ? "bg-slate-800 text-white"
-                        : "bg-slate-200 text-slate-700"
+                      assignedIyerId !== "self" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-700"
                     }`}
                   >
                     👥
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-black text-slate-900 truncate">
-                      Others
-                    </div>
-                    <div className="text-[10px] text-slate-700 font-bold truncate">
-                      மற்ற குருக்கள்
-                    </div>
+                    <div className="text-xs font-black text-slate-900 truncate">Others / Assistant</div>
+                    <div className="text-[10px] text-slate-700 font-bold truncate">உதவி குருக்கள்</div>
                   </div>
                 </div>
                 {assignedIyerId !== "self" && (
@@ -2489,27 +2696,119 @@ _Velvi Booking App_`;
               </button>
             </div>
 
-            {/* When "Others" is Selected: Show Elegant Priest Dropdown / Selector */}
+            {/* When "Assistant / Others" is Selected: Modern Grid Cards + Instant Add */}
             {assignedIyerId !== "self" && (
-              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-300 space-y-2 animate-in fade-in">
-                <label className="text-xs font-black text-slate-900 block">
-                  Select Assistant Priest (உதவி குருக்கள் தேர்வு செய்க):
-                </label>
-                <select
-                  value={assignedIyerId}
-                  onChange={(e) => setAssignedIyerId(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-black text-slate-900 focus:outline-none focus:border-slate-700 shadow-2xs"
-                >
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {getPriestTamilName(m)} ({getPriestTamilRole(m)}) {m.specialization ? `— ${m.specialization}` : ""}
-                    </option>
-                  ))}
-                </select>
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-800">
+                    உதவி குருக்கள் பட்டியல் (Select Assistant):
+                  </label>
 
-                <p className="text-[10.5px] text-slate-600 leading-tight">
-                  தேர்ந்தெடுக்கப்பட்ட குருக்களுக்கு பூஜை விவரங்கள் ஒதுக்கப்பட்டு அவரது அட்டவணையில் பதியப்படும்.
-                </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingAssistant((prev) => !prev)}
+                    className="text-[11px] font-extrabold text-emerald-900 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300 flex items-center gap-1 transition cursor-pointer shadow-2xs"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>+ Instant Add</span>
+                  </button>
+                </div>
+
+                {/* Inline Instant Add Assistant Form */}
+                {isAddingAssistant && (
+                  <div className="p-3 bg-white rounded-xl border-2 border-emerald-300 shadow-xs space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-900">
+                      <span>புதிய உதவி குருக்கள் விவரம் (Quick Add Priest):</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingAssistant(false)}
+                        className="text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Priest Name (e.g. ஸ்ரீதர் சாஸ்திரி)"
+                        value={newAssistantName}
+                        onChange={(e) => setNewAssistantName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Mobile (e.g. 9876543210)"
+                        value={newAssistantMobile}
+                        onChange={(e) => setNewAssistantMobile(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+                      />
+                    </div>
+
+                    {assistantError && (
+                      <p className="text-[10px] text-rose-600 font-bold">{assistantError}</p>
+                    )}
+
+                    <div className="flex justify-end gap-1.5 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingAssistant(false)}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCreateAssistant}
+                        className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition"
+                      >
+                        Save &amp; Assign
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Stylish Assistant Cards Grid (Replacing ugly native select dropdown) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {members.map((m) => {
+                    const isSelected = assignedIyerId === m.id;
+                    return (
+                      <div
+                        key={m.id}
+                        onClick={() => setAssignedIyerId(m.id)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2 shadow-2xs ${
+                          isSelected
+                            ? "bg-white border-slate-800 ring-2 ring-slate-700/30 shadow-xs"
+                            : "bg-white/80 hover:bg-white border-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
+                              isSelected ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600"
+                            }`}
+                          >
+                            👤
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-black text-slate-900 truncate">
+                              {getPriestTamilName(m)}
+                            </div>
+                            <div className="text-[10px] text-slate-500 truncate">
+                              {getPriestTamilRole(m)} {m.specialization ? `• ${m.specialization}` : ""}
+                            </div>
+                          </div>
+                        </div>
+
+                        {isSelected ? (
+                          <span className="text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md">
+                            Selected ✓
+                          </span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -2751,10 +3050,10 @@ _Velvi Booking App_`;
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
-                    Add Custom Pooja (புதிய பூஜை)
+                    Add Pooja (புதிய பூஜை)
                   </h3>
                   <p className="text-[10.5px] text-slate-500 font-medium">
-                    Creates custom ritual ceremony with samagri checklist
+                    Creates ritual ceremony with samagri checklist
                   </p>
                 </div>
               </div>
@@ -2808,8 +3107,11 @@ _Velvi Booking App_`;
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
                     <input
                       type="number"
+                      placeholder="5000"
                       value={poojaModalPrice}
-                      onChange={(e) => setPoojaModalPrice(Number(e.target.value))}
+                      onChange={(e) =>
+                        setPoojaModalPrice(e.target.value === "" ? "" : Number(e.target.value))
+                      }
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition shadow-2xs"
                     />
                   </div>
@@ -2846,6 +3148,143 @@ _Velvi Booking App_`;
               >
                 Save &amp; Select (சேமி)
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* CELEBRATORY BOOKING CONFIRMATION MODAL / WINDOW                           */}
+      {/* ========================================================================= */}
+      {createdBookingResult && (
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-emerald-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Sacred Celebration Header */}
+            <div className="bg-gradient-to-br from-[#0b2b17] via-emerald-800 to-[#0b2b17] p-5 sm:p-6 text-white text-center relative overflow-hidden">
+              <div className="absolute -top-10 -right-10 w-28 h-28 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-emerald-400/20 rounded-full blur-xl pointer-events-none" />
+
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 text-[#0b2b17] flex items-center justify-center mx-auto mb-2.5 shadow-lg ring-4 ring-white/20">
+                <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+              </div>
+
+              <span className="text-[10px] font-black uppercase tracking-widest text-amber-300 block mb-0.5">
+                முன்பதிவு உறுதியானது • Booking Confirmed
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-white">
+                பூஜை முன்பதிவு வெற்றிகரமாக முடிந்தது!
+              </h2>
+              <div className="inline-block mt-2 px-3 py-0.5 bg-white/15 backdrop-blur-md rounded-full border border-white/20 text-xs font-mono font-bold tracking-wider text-amber-200">
+                {createdBookingResult.bookingNumber}
+              </div>
+            </div>
+
+            {/* Content Summary Card */}
+            <div className="p-4 sm:p-5 space-y-3.5">
+              <div className="bg-emerald-50/70 rounded-2xl p-3.5 border border-emerald-200/90 space-y-2 text-xs">
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1">
+                    <Flame className="w-3.5 h-3.5 text-emerald-700" /> பூஜை (Ritual):
+                  </span>
+                  <span className="font-black text-slate-900 text-right truncate max-w-[200px]">
+                    {createdBookingResult.poojaEnglishName}
+                    {createdBookingResult.poojaTamilName && ` (${createdBookingResult.poojaTamilName})`}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1">
+                    <User className="w-3.5 h-3.5 text-amber-600" /> பக்தர் (Devotee):
+                  </span>
+                  <span className="font-bold text-slate-900 text-right">
+                    {createdBookingResult.customerName}
+                    {createdBookingResult.customerMobile && ` • ${createdBookingResult.customerMobile}`}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1">
+                    <CalendarIcon className="w-3.5 h-3.5 text-emerald-700" /> நாள் &amp; நேரம்:
+                  </span>
+                  <span className="font-black text-slate-900 text-right">
+                    {createdBookingResult.date} • {createdBookingResult.startTime}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between border-b border-emerald-200/60 pb-1.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1">
+                    🪔 குருக்கள்:
+                  </span>
+                  <span className="font-bold text-emerald-950 text-right">
+                    {createdBookingResult.assignedIyerName}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-0.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1">
+                    <IndianRupee className="w-3.5 h-3.5 text-slate-700" /> கட்டணம்:
+                  </span>
+                  <div className="text-right flex items-center gap-1.5">
+                    <span className="font-black text-slate-900">
+                      ₹{createdBookingResult.totalAmount.toLocaleString("en-IN")}
+                    </span>
+                    <span
+                      className={`text-[9.5px] font-black px-2 py-0.5 rounded-full ${
+                        createdBookingResult.paymentStatus === "PAID"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                          : createdBookingResult.paymentStatus === "PARTIALLY_PAID"
+                          ? "bg-amber-100 text-amber-900 border border-amber-300"
+                          : "bg-slate-100 text-slate-700 border border-slate-300"
+                      }`}
+                    >
+                      {createdBookingResult.paymentStatus === "PAID"
+                        ? "Paid ✓"
+                        : createdBookingResult.paymentStatus === "PARTIALLY_PAID"
+                        ? `Advance ₹${createdBookingResult.advanceAmount}`
+                        : "Pending"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleShareCreatedWhatsApp}
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 shadow-sm transition active:scale-98 cursor-pointer"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                  <span>பக்தருக்கு வாட்ஸ்அப்பில் உறுதிசெய்தி அனுப்பு</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/app/bookings/${createdBookingResult.id}?created=true`)}
+                    className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-black transition active:scale-98 cursor-pointer text-center"
+                  >
+                    முழு விவரம் பார்க்க
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreatedBookingResult(null);
+                      setCurrentStep(1);
+                      setCustomerId("");
+                      setPoojaId("");
+                      setSamagriItems([]);
+                      setAdvanceAmount(0);
+                      setPaymentChoice("UNPAID");
+                      setNotes("");
+                    }}
+                    className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl text-xs font-bold transition active:scale-98 cursor-pointer text-center"
+                  >
+                    + புதிய முன்பதிவு
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.1.0";
+export const APP_VERSION = "2.2.0";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "18 Sep 2026, 10:15 AM IST";
+export const BUILD_DATE = "20 Sep 2026, 11:00 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.2.0",
+    releaseDate: "20 Sep 2026",
+    releaseTime: "11:00 AM IST",
+    title: "Interactive Pooja Creation Wizard, Samagri Checklist & Booking UX Overhaul",
+    summary:
+      "Major UX upgrade introducing a 3-step Pooja creation wizard with Quick Templates, full-length samagri checklist library with 1-click toggles, smart action buttons, and streamlined 4-step booking workflow with real-time Nalla Neram guidance.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "Feature",
+        description: "Interactive 3-Step Pooja Creation Modal (Details & Dakshina, Samagri Checklist, Review & Confirm) with zero keyboard pop-up disturbance.",
+      },
+      {
+        category: "UI/UX",
+        description: "Quick Templates with Ganapathi Homam, Gruhapravesam, and Vastu Homam presets and cross-clear selection button.",
+      },
+      {
+        category: "UI/UX",
+        description: "Step 2 Smart Icon Buttons (Clear All & Items Count), full-length added items view, and 1-click interactive Samagri checklist library with quantity steppers.",
+      },
+      {
+        category: "UI/UX",
+        description: "Streamlined 4-Step Booking Wizard with compact smart tips, highlighted devotee search, contextual Nalla Neram placement, and flexible advance payment selector.",
+      },
+    ],
+  },
   {
     version: "2.1.0",
     releaseDate: "18 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Cumulative Analytics Line Chart, Multi-Year Breakdown, Calendar Hold Tips & Timeline Stabilization",
     summary:
       "Comprehensive performance and analytics update featuring a cumulative progressive collection line chart, smart multi-year monthly breakdown (2026, 2025, 2024 & all-time), quick press-and-hold tip for the calendar, and zero-shake hardware-accelerated timeline scrolling on all mobile screens.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
@@ -176,8 +176,60 @@ export default function BookingDetailPage() {
   const derivedBalance = Math.max(0, editTotalAmount - editAdvanceAmount);
   const derivedStatus = derivedBalance === 0 ? "PAID" : editAdvanceAmount > 0 ? "PARTIALLY_PAID" : "PENDING";
 
+  const [showCreatedBanner, setShowCreatedBanner] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("created") === "true") {
+        setShowCreatedBanner(true);
+      }
+    }
+  }, []);
+
   return (
     <div className="space-y-3.5 pb-8 animate-in fade-in duration-200">
+      {/* Celebratory Just Created Banner */}
+      {showCreatedBanner && (
+        <div className="bg-gradient-to-r from-emerald-700 via-emerald-800 to-[#0b2b17] text-white p-4 rounded-2xl shadow-md border border-emerald-600 flex items-center justify-between gap-3 animate-in slide-in-from-top-3 duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-900 flex items-center justify-center shrink-0 font-bold shadow-sm">
+              <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+            </div>
+            <div>
+              <div className="font-extrabold text-sm flex items-center gap-1.5 flex-wrap">
+                <span>🎉 பூஜை முன்பதிவு வெற்றிகரமாக உறுதியானது!</span>
+                <span className="text-[10px] bg-white/20 px-2 py-0.2 rounded-full font-mono text-amber-200">
+                  {booking.bookingNumber}
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-100 mt-0.5">
+                Pooja is confirmed. You can share confirmation directly with devotee on WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={handleWhatsAppShare}
+              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition active:scale-95 cursor-pointer"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-white text-emerald-500" />
+              <span className="hidden sm:inline">WhatsApp Share</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowCreatedBanner(false)}
+              className="p-1.5 text-emerald-200 hover:text-white rounded-lg transition"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar with Edit & Back */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

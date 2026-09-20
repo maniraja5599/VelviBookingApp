@@ -251,6 +251,31 @@ export class VelviDatabaseStore {
     return this.subscriptions.find((s) => s.businessId === businessId);
   }
 
+  public createMember(params: {
+    businessId: string;
+    name: string;
+    mobile?: string;
+    role?: "OWNER" | "IYER" | "STAFF";
+    specialization?: string;
+  }): BusinessMember {
+    const newMember: BusinessMember = {
+      id: `m-${Date.now()}`,
+      businessId: params.businessId,
+      userId: `u-${Date.now()}`,
+      name: params.name.trim(),
+      mobile: params.mobile?.trim() || "",
+      role: params.role || "IYER",
+      active: true,
+      specialization: params.specialization?.trim() || "உதவி குருக்கள் (Assistant Priest)",
+      bookingCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    this.members.push(newMember);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return newMember;
+  }
+
   // -------------------------------------------------------------
   // DOUBLE BOOKING PREVENTION ENGINE (Point 33)
   // -------------------------------------------------------------
