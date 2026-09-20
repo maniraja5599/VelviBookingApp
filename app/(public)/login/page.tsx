@@ -247,11 +247,6 @@ export default function LoginPage() {
       <div className="max-w-md w-full mx-auto my-auto relative z-10 space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300/80 text-amber-950 text-[11px] font-extrabold shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-            <span>Sacred ERP for Vedic Priests & Purohits</span>
-          </div>
-
           <div className="pt-1">
             <VelviLogo size="md" variant="full" showTagline={false} />
           </div>
