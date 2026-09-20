@@ -13,7 +13,6 @@ import {
   CreditCard,
   Gift,
   Cloud,
-  Globe,
   Palette,
   ChevronRight,
   LogOut,
@@ -62,7 +61,7 @@ interface SettingSection {
 
 export default function SettingsHubPage() {
   const { currentUser, currentBusiness, subscription, logout } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
 
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
@@ -427,40 +426,6 @@ export default function SettingsHubPage() {
             })}
           </div>
         )}
-      </div>
-
-      {/* Language Switcher Card */}
-      <div className="bg-white rounded-2xl p-3 border border-velvi-gold/20 shadow-xs flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <Globe className="w-4 h-4 text-velvi-gold" />
-          <div>
-            <div className="font-bold text-xs text-slate-900">Language / மொழி</div>
-            <div className="text-[11px] text-slate-500">English அல்லது தமிழ்</div>
-          </div>
-        </div>
-
-        <div className="flex gap-1">
-          <button
-            onClick={() => setLanguage("en")}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
-              language === "en"
-                ? "bg-emerald-900 text-white shadow-xs"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            English
-          </button>
-          <button
-            onClick={() => setLanguage("ta")}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
-              language === "ta"
-                ? "bg-emerald-900 text-white shadow-xs"
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-            }`}
-          >
-            தமிழ்
-          </button>
-        </div>
       </div>
 
       {/* ========================================================================= */}
