@@ -41,6 +41,7 @@ import {
   User,
   ArrowRight,
   ArrowUpDown,
+  Trash2,
 } from "lucide-react";
 
 export default function HomeDashboardPage() {
@@ -167,9 +168,15 @@ export default function HomeDashboardPage() {
 
   // Sub-Tab 3: Payments & Receipts Filter & Modal
   // 2 Clean Filter Options: ALL or PENDING (as requested by user)
-  const [paymentFilter, setPaymentFilter] = useState<"ALL" | "PENDING">("PENDING");
+  const [paymentFilter, setPaymentFilter] = useState<"ALL" | "PENDING">("ALL");
   const [pendingDueSubTab, setPendingDueSubTab] = useState<"ALL_DUES" | "OVERDUE" | "UPCOMING">("OVERDUE");
   const [pendingSortBy, setPendingSortBy] = useState<"recent" | "date" | "amount">("recent");
+  
+  // All Payments Controls (Sort: Recent Changes default, Date & Time wise, Bill wise, Amount wise; Filter: All, Paid, Partial, Pending)
+  const [allPaymentSortBy, setAllPaymentSortBy] = useState<"recent" | "datetime" | "bill" | "amount">("recent");
+  const [allPaymentStatusFilter, setAllPaymentStatusFilter] = useState<"ALL" | "PAID" | "PARTIAL" | "PENDING">("ALL");
+  const [resetPaymentConfirmBooking, setResetPaymentConfirmBooking] = useState<Booking | null>(null);
+
   const [paymentSearch, setPaymentSearch] = useState("");
   const [recordPaymentBooking, setRecordPaymentBooking] = useState<Booking | null>(null);
   const [paymentAmountInput, setPaymentAmountInput] = useState<number>(0);
@@ -204,8 +211,38 @@ export default function HomeDashboardPage() {
 
     if (paymentFilter === "ALL") {
       list = [...bookings];
-      // When showing All, default sort by date descending
-      list.sort((a, b) => b.date.localeCompare(a.date));
+
+      // 1. Status Filter
+      if (allPaymentStatusFilter === "PAID") {
+        list = list.filter((b) => b.paymentStatus === "PAID" || b.balanceAmount === 0);
+      } else if (allPaymentStatusFilter === "PARTIAL") {
+        list = list.filter((b) => (b.advanceAmount || 0) > 0 && (b.balanceAmount || 0) > 0);
+      } else if (allPaymentStatusFilter === "PENDING") {
+        list = list.filter((b) => (b.advanceAmount || 0) === 0 && (b.balanceAmount || 0) > 0);
+      }
+
+      // 2. 4-Way Sorting
+      if (allPaymentSortBy === "datetime") {
+        // Date & Time wise: compare date, and if same date, compare start time
+        list.sort((a, b) => {
+          const dateComp = b.date.localeCompare(a.date);
+          if (dateComp !== 0) return dateComp;
+          return (b.startTime || "").localeCompare(a.startTime || "");
+        });
+      } else if (allPaymentSortBy === "bill") {
+        // Bill / Booking Number wise descending
+        list.sort((a, b) => {
+          const numA = parseInt(a.bookingNumber?.replace(/\D/g, "") || "0", 10);
+          const numB = parseInt(b.bookingNumber?.replace(/\D/g, "") || "0", 10);
+          return numB - numA;
+        });
+      } else if (allPaymentSortBy === "amount") {
+        // Bill Amount wise descending
+        list.sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+      } else {
+        // "recent" (Default): Recent Changes first (updatedAt / createdAt / date)
+        list.sort((a, b) => (b.updatedAt || b.createdAt || b.date).localeCompare(a.updatedAt || a.createdAt || a.date));
+      }
     } else {
       // PENDING dues filter
       if (pendingDueSubTab === "OVERDUE") {
@@ -244,6 +281,8 @@ export default function HomeDashboardPage() {
     return list;
   }, [
     paymentFilter,
+    allPaymentSortBy,
+    allPaymentStatusFilter,
     pendingDueSubTab,
     pendingSortBy,
     bookings,
@@ -262,17 +301,38 @@ export default function HomeDashboardPage() {
     e.preventDefault();
     if (!recordPaymentBooking || paymentAmountInput <= 0) return;
 
-    const target = db.bookings.find((b) => b.id === recordPaymentBooking.id);
-    if (target) {
-      target.advanceAmount = (target.advanceAmount || 0) + Number(paymentAmountInput);
-      target.balanceAmount = Math.max(0, target.totalAmount - target.advanceAmount);
-      target.paymentStatus = target.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
-      target.updatedAt = new Date().toISOString();
+    const res = db.recordBookingPayment({
+      bookingId: recordPaymentBooking.id,
+      amount: Number(paymentAmountInput),
+      paymentMethod: paymentMethodInput,
+      recordedBy: currentUser?.name || "Ravi Iyer",
+      notes: `Direct collection via ${paymentMethodInput}`,
+    });
+
+    if (res.success) {
       setBookings([...db.getBookings(businessId)]);
+      setPaymentSuccessMessage(`₹${Number(paymentAmountInput).toLocaleString("en-IN")} கட்டணம் பெறப்பட்டது (${recordPaymentBooking.customerName})!`);
     }
 
-    setPaymentSuccessMessage(`₹${paymentAmountInput.toLocaleString("en-IN")} கட்டணம் பெறப்பட்டது (${recordPaymentBooking.customerName})!`);
     setRecordPaymentBooking(null);
+    setTimeout(() => setPaymentSuccessMessage(""), 4000);
+  };
+
+  const handleConfirmResetPayment = () => {
+    if (!resetPaymentConfirmBooking) return;
+
+    const res = db.resetBookingPayment({
+      bookingId: resetPaymentConfirmBooking.id,
+      deletedBy: currentUser?.name || "Ravi Iyer",
+      reason: "Payment reset from home payments tab",
+    });
+
+    if (res.success) {
+      setBookings([...db.getBookings(businessId)]);
+      setPaymentSuccessMessage(`பதிவு #${resetPaymentConfirmBooking.bookingNumber} கட்டணம் நீக்கப்பட்டு ₹${resetPaymentConfirmBooking.totalAmount.toLocaleString("en-IN")} நிலுவையாக மாற்றப்பட்டது.`);
+    }
+
+    setResetPaymentConfirmBooking(null);
     setTimeout(() => setPaymentSuccessMessage(""), 4000);
   };
 
@@ -1168,6 +1228,120 @@ export default function HomeDashboardPage() {
               </div>
             )}
 
+            {/* 3. All Payments Controls: Filter by Status & 4-Way Sorting */}
+            {paymentFilter === "ALL" && (
+              <div className="space-y-2">
+                {/* Status Filter Pills */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5 text-[11px] no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => setAllPaymentStatusFilter("ALL")}
+                    className={`px-2.5 py-1 rounded-xl font-bold transition shrink-0 ${
+                      allPaymentStatusFilter === "ALL"
+                        ? "bg-slate-900 text-white shadow-2xs font-black"
+                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    All ({bookings.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllPaymentStatusFilter("PAID")}
+                    className={`px-2.5 py-1 rounded-xl font-bold transition shrink-0 flex items-center gap-1 ${
+                      allPaymentStatusFilter === "PAID"
+                        ? "bg-emerald-800 text-white shadow-2xs font-black"
+                        : "bg-white text-emerald-800 border border-emerald-200 hover:bg-emerald-50"
+                    }`}
+                  >
+                    <span>Full Paid ✅</span>
+                    <span>({bookings.filter((b) => b.paymentStatus === "PAID" || b.balanceAmount === 0).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllPaymentStatusFilter("PARTIAL")}
+                    className={`px-2.5 py-1 rounded-xl font-bold transition shrink-0 flex items-center gap-1 ${
+                      allPaymentStatusFilter === "PARTIAL"
+                        ? "bg-amber-800 text-white shadow-2xs font-black"
+                        : "bg-white text-amber-800 border border-amber-200 hover:bg-amber-50"
+                    }`}
+                  >
+                    <span>Advance ⏳</span>
+                    <span>({bookings.filter((b) => (b.advanceAmount || 0) > 0 && (b.balanceAmount || 0) > 0).length})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAllPaymentStatusFilter("PENDING")}
+                    className={`px-2.5 py-1 rounded-xl font-bold transition shrink-0 flex items-center gap-1 ${
+                      allPaymentStatusFilter === "PENDING"
+                        ? "bg-rose-800 text-white shadow-2xs font-black"
+                        : "bg-white text-rose-800 border border-rose-200 hover:bg-rose-50"
+                    }`}
+                  >
+                    <span>Unpaid 🚨</span>
+                    <span>({bookings.filter((b) => (b.advanceAmount || 0) === 0 && (b.balanceAmount || 0) > 0).length})</span>
+                  </button>
+                </div>
+
+                {/* Sorting Controls */}
+                <div className="flex items-center justify-between gap-1 text-[11px] pt-0.5">
+                  <span className="text-slate-500 font-bold flex items-center gap-1 text-[10.5px]">
+                    <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                    <span>வரிசை (Sort):</span>
+                  </span>
+                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+                    <button
+                      type="button"
+                      onClick={() => setAllPaymentSortBy("recent")}
+                      className={`px-2 py-0.5 rounded-lg font-bold transition text-[10px] shrink-0 ${
+                        allPaymentSortBy === "recent"
+                          ? "bg-slate-900 text-white shadow-2xs font-black"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                      title="Default: Recent Changes first"
+                    >
+                      🕒 Recent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAllPaymentSortBy("datetime")}
+                      className={`px-2 py-0.5 rounded-lg font-bold transition text-[10px] shrink-0 ${
+                        allPaymentSortBy === "datetime"
+                          ? "bg-slate-900 text-white shadow-2xs font-black"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                      title="Date wise (If same date, ordered by start time)"
+                    >
+                      📅 Date & Time
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAllPaymentSortBy("bill")}
+                      className={`px-2 py-0.5 rounded-lg font-bold transition text-[10px] shrink-0 ${
+                        allPaymentSortBy === "bill"
+                          ? "bg-slate-900 text-white shadow-2xs font-black"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                      title="Bill wise / Booking Number order"
+                    >
+                      🧾 Bill Wise
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAllPaymentSortBy("amount")}
+                      className={`px-2 py-0.5 rounded-lg font-bold transition text-[10px] shrink-0 ${
+                        allPaymentSortBy === "amount"
+                          ? "bg-slate-900 text-white shadow-2xs font-black"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                      }`}
+                      title="Bill Total Amount wise"
+                    >
+                      💰 Bill Total
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Search Input */}
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -1300,6 +1474,17 @@ export default function HomeDashboardPage() {
                             >
                               <IndianRupee className="w-3 h-3" />
                               <span>Collect</span>
+                            </button>
+                          )}
+                          {(b.advanceAmount || 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setResetPaymentConfirmBooking(b)}
+                              className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
+                              title="கட்டணத்தை நீக்க/மீட்டமைக்க (Reset Payment)"
+                            >
+                              <Trash2 className="w-3 h-3 text-rose-600" />
+                              <span className="hidden sm:inline">கட்டணம் நீக்கு</span>
                             </button>
                           )}
                           <button
@@ -2137,6 +2322,47 @@ export default function HomeDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: RESET / DELETE PAYMENT CONFIRMATION                                */}
+      {/* ========================================================================= */}
+      {resetPaymentConfirmBooking && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-3.5 shadow-2xl border border-rose-200">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-extrabold text-base text-slate-900">
+                கட்டணத்தை நீக்கவா? (Delete Payment)
+              </h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                பதிவு <strong>#{resetPaymentConfirmBooking.bookingNumber}</strong> ({resetPaymentConfirmBooking.customerName}) பெற்ற தொகை <strong>₹{(resetPaymentConfirmBooking.advanceAmount || 0).toLocaleString("en-IN")}</strong> நீக்கப்பட்டு, நிலுவைத் தொகை மீண்டும் <strong>₹{resetPaymentConfirmBooking.totalAmount.toLocaleString("en-IN")}</strong> ஆக மாற்றப்படும்.
+              </p>
+              <div className="text-[11px] bg-rose-50 text-rose-900 font-semibold p-2.5 rounded-xl border border-rose-200">
+                ⚠️ நிலைமை "PENDING" (Unpaid) என மீண்டும் மாற்றப்படும்.
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setResetPaymentConfirmBooking(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                ரத்து (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetPayment}
+                className="flex-1 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer"
+              >
+                ஆம், நீக்கு (Delete)
+              </button>
+            </div>
           </div>
         </div>
       )}

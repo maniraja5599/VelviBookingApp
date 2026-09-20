@@ -66,6 +66,7 @@ export default function BookingDetailPage() {
 
   // Deletion state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showResetPaymentModal, setShowResetPaymentModal] = useState(false);
 
   // Controlled Payment Edit states
   const [showEditPaymentModal, setShowEditPaymentModal] = useState(false);
@@ -91,11 +92,36 @@ export default function BookingDetailPage() {
 
   const handleRecordPayment = () => {
     if (paymentAmount <= 0) return;
-    booking.advanceAmount += paymentAmount;
-    booking.balanceAmount = Math.max(0, booking.totalAmount - booking.advanceAmount);
-    booking.paymentStatus = booking.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
-    booking.updatedAt = new Date().toISOString();
+    const res = db.recordBookingPayment({
+      bookingId: booking.id,
+      amount: paymentAmount,
+      recordedBy: currentUser?.name || "Ravi Iyer",
+      notes: "Direct payment recorded from booking screen",
+    });
+    if (res.success && res.booking) {
+      booking.advanceAmount = res.booking.advanceAmount;
+      booking.balanceAmount = res.booking.balanceAmount;
+      booking.paymentStatus = res.booking.paymentStatus;
+      booking.updatedAt = res.booking.updatedAt;
+    }
     setShowPaymentModal(false);
+    router.refresh();
+  };
+
+  const handleConfirmResetPayment = () => {
+    const res = db.resetBookingPayment({
+      bookingId: booking.id,
+      deletedBy: currentUser?.name || "Ravi Iyer",
+      reason: "Manual payment reset from booking details screen",
+    });
+    if (res.success && res.booking) {
+      booking.advanceAmount = res.booking.advanceAmount;
+      booking.balanceAmount = res.booking.balanceAmount;
+      booking.paymentStatus = res.booking.paymentStatus;
+      booking.updatedAt = res.booking.updatedAt;
+    }
+    setShowResetPaymentModal(false);
+    router.refresh();
   };
 
   const handleConfirmEditPayment = (e: React.FormEvent) => {
@@ -430,6 +456,17 @@ export default function BookingDetailPage() {
                 <Edit className="w-3 h-3 text-amber-700" />
                 <span>Edit</span>
               </button>
+
+              {booking.advanceAmount > 0 && (
+                <button
+                  onClick={() => setShowResetPaymentModal(true)}
+                  className="text-[11px] font-bold text-rose-800 hover:text-rose-950 underline flex items-center gap-0.5 ml-1"
+                  title="Reset or Delete Collected Payment"
+                >
+                  <Trash2 className="w-3 h-3 text-rose-600" />
+                  <span>கட்டணம் நீக்கு</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -908,6 +945,22 @@ export default function BookingDetailPage() {
               <div className="text-[11px] bg-red-50 p-2 rounded-xl text-red-800 font-semibold border border-red-100">
                 ⚠️ Warning: This action cannot be undone!
               </div>
+
+              {/* Explicit Payment Impact Warning as requested */}
+              {booking.advanceAmount > 0 && (
+                <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-left space-y-1">
+                  <div className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>கட்டண எச்சரிக்கை (Payment Warning):</span>
+                  </div>
+                  <p className="text-[11px] text-amber-900 leading-tight font-medium">
+                    இந்த முன்பதிவில் பெறப்பட்ட கட்டணத் தொகை <strong className="text-amber-950 underline">₹{booking.advanceAmount.toLocaleString("en-IN")}</strong> மற்றும் அனைத்து கணக்கு விவரங்களும் நிரந்தரமாக நீக்கப்படும்!
+                  </p>
+                  <span className="text-[10px] text-amber-800 block font-semibold">
+                    (Associated collected payments of ₹{booking.advanceAmount.toLocaleString("en-IN")} will also be permanently deleted!)
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 pt-2">
@@ -924,6 +977,45 @@ export default function BookingDetailPage() {
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm"
               >
                 Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Reset Payment Confirmation Modal */}
+      {showResetPaymentModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-rose-200">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-rose-950">
+                கட்டணத்தை நீக்கவா? (Delete/Reset Payment)
+              </h3>
+              <p className="text-xs text-rose-800 leading-relaxed">
+                பதிவு #{booking.bookingNumber}-ல் பெறப்பட்ட கட்டணம் <strong>₹{booking.advanceAmount.toLocaleString("en-IN")}</strong> நீக்கப்பட்டு, மீதமுள்ள நிலுவைத் தொகை <strong>₹{booking.totalAmount.toLocaleString("en-IN")}</strong> ஆக மாற்றப்படும்.
+              </p>
+              <div className="text-[11px] bg-amber-50 p-2 rounded-xl text-amber-900 font-semibold border border-amber-200">
+                Payment status will change back to PENDING.
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowResetPaymentModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200"
+              >
+                ரத்து (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetPayment}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm"
+              >
+                ஆம், நீக்கு (Reset Payment)
               </button>
             </div>
           </div>

@@ -510,6 +510,9 @@ export class VelviDatabaseStore {
         customerName: deleted.customerName,
         pooja: deleted.poojaEnglishName,
         date: deleted.date,
+        totalAmount: deleted.totalAmount,
+        deletedPaymentAmount: deleted.advanceAmount || 0,
+        paymentStatus: deleted.paymentStatus,
       },
       reason: params.reason || "Manual deletion by owner",
       createdAt: new Date().toISOString(),
@@ -679,6 +682,101 @@ export class VelviDatabaseStore {
       reason: params.reason || "Payment details adjusted",
       createdAt: new Date().toISOString(),
     });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return { success: true, booking };
+  }
+
+  public recordBookingPayment(params: {
+    bookingId: string;
+    amount: number;
+    paymentMethod?: string;
+    recordedBy?: string;
+    notes?: string;
+  }): { success: boolean; booking?: Booking; error?: string } {
+    const booking = this.bookings.find((b) => b.id === params.bookingId);
+    if (!booking) return { success: false, error: "Booking not found" };
+
+    if (params.amount <= 0) {
+      return { success: false, error: "Payment amount must be greater than zero." };
+    }
+
+    const previousFinancials = {
+      advanceAmount: booking.advanceAmount || 0,
+      balanceAmount: booking.balanceAmount,
+      paymentStatus: booking.paymentStatus,
+    };
+
+    booking.advanceAmount = (booking.advanceAmount || 0) + params.amount;
+    booking.balanceAmount = Math.max(0, booking.totalAmount - booking.advanceAmount);
+    booking.paymentStatus = booking.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
+    booking.updatedAt = new Date().toISOString();
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      businessId: booking.businessId,
+      actorName: params.recordedBy || "User",
+      action: "PAYMENT_COLLECTED",
+      targetType: "BOOKING",
+      targetId: booking.id,
+      oldValue: previousFinancials,
+      newValue: {
+        collectedAdded: params.amount,
+        advanceAmount: booking.advanceAmount,
+        balanceAmount: booking.balanceAmount,
+        paymentStatus: booking.paymentStatus,
+        paymentMethod: params.paymentMethod || "CASH",
+      },
+      reason: params.notes || `Payment of ₹${params.amount} collected`,
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return { success: true, booking };
+  }
+
+  public resetBookingPayment(params: {
+    bookingId: string;
+    deletedBy?: string;
+    reason?: string;
+  }): { success: boolean; booking?: Booking; error?: string } {
+    const booking = this.bookings.find((b) => b.id === params.bookingId);
+    if (!booking) return { success: false, error: "Booking not found" };
+
+    const previousFinancials = {
+      advanceAmount: booking.advanceAmount || 0,
+      balanceAmount: booking.balanceAmount,
+      paymentStatus: booking.paymentStatus,
+    };
+
+    booking.advanceAmount = 0;
+    booking.balanceAmount = booking.totalAmount;
+    booking.paymentStatus = "PENDING";
+    booking.updatedAt = new Date().toISOString();
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      businessId: booking.businessId,
+      actorName: params.deletedBy || "User",
+      action: "PAYMENT_DELETED",
+      targetType: "BOOKING",
+      targetId: booking.id,
+      oldValue: previousFinancials,
+      newValue: {
+        advanceAmount: 0,
+        balanceAmount: booking.totalAmount,
+        paymentStatus: "PENDING",
+      },
+      reason: params.reason || `Payment of ₹${previousFinancials.advanceAmount} deleted/reset`,
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
 
     return { success: true, booking };
   }
