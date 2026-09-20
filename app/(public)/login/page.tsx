@@ -18,6 +18,9 @@ import {
   Calendar,
   Receipt,
   PieChart,
+  Flame,
+  CalendarDays,
+  Wallet,
 } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
@@ -294,8 +297,12 @@ export default function LoginPage() {
         {/* ======================================================================= */}
         {step === "login" && (
           <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-xl shadow-amber-950/5 space-y-6 animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center space-y-1.5">
-              <h1 className="font-extrabold text-xl text-slate-900 tracking-tight">
+            <div className="text-center space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-50 to-orange-50/80 border border-amber-200/90 text-amber-900 text-[10px] font-extrabold tracking-wider uppercase shadow-2xs">
+                <Flame className="w-3 h-3 text-amber-600 fill-amber-500/30 animate-pulse" />
+                <span>Sacred ERP for Priests</span>
+              </div>
+              <h1 className="font-extrabold text-2xl text-slate-900 tracking-tight">
                 Welcome to Velvi
               </h1>
               <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
@@ -319,7 +326,7 @@ export default function LoginPage() {
                   id="google-continue-btn"
                   onClick={handleGoogleButtonClick}
                   disabled={isLoading || isDemoLoading}
-                  className="w-full py-3.5 px-4 bg-white hover:bg-amber-50/50 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl border-2 border-slate-200 hover:border-amber-300 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
+                  className="w-full py-3.5 px-4 bg-white hover:bg-amber-50/40 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl border-2 border-slate-200 hover:border-amber-400 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
                 >
                   {/* Official 4-Color Google G Logo */}
                   <svg className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
@@ -347,12 +354,12 @@ export default function LoginPage() {
               <div className="flex items-center justify-between px-1 text-[11px] text-slate-500 font-semibold">
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>100% Secure • One-Tap Entry</span>
+                  <span>100% Secure • Official Google Sign-In</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setStep("google_modal")}
-                  className="text-amber-800 hover:text-amber-950 font-bold underline underline-offset-2 cursor-pointer"
+                  className="text-amber-800 hover:text-amber-950 font-bold underline underline-offset-2 cursor-pointer transition hover:opacity-80"
                 >
                   Custom Email
                 </button>
@@ -374,45 +381,60 @@ export default function LoginPage() {
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
               disabled={isDemoLoading || isLoading}
-              className="w-full p-3.5 bg-gradient-to-r from-amber-50 via-amber-100/60 to-amber-50 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300 transition flex items-center justify-between group cursor-pointer shadow-2xs active:scale-[0.99]"
+              className="w-full p-3.5 bg-gradient-to-r from-amber-50/90 via-amber-100/50 to-amber-50/90 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300/80 transition-all flex items-center justify-between group cursor-pointer shadow-xs hover:shadow-md active:scale-[0.99]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-2xs">
-                  <Zap className="w-4 h-4 fill-amber-100" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
+                  <Zap className="w-4 h-4 fill-amber-100 text-amber-100" />
                 </div>
                 <div className="text-left">
                   <div className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5">
                     <span>Quick Demo Access</span>
-                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-extrabold">
+                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-extrabold shadow-2xs">
                       1-TAP
                     </span>
                   </div>
-                  <p className="text-[10.5px] text-amber-800 font-medium">
-                    Try as Ravi Iyer • Instant Entry
+                  <p className="text-[10.5px] text-amber-800/90 font-medium">
+                    Try as Ravi Iyer • Instant Priest Entry
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-amber-700 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-4 h-4 text-amber-700 group-hover:translate-x-1 transition-transform" />
             </button>
 
             {/* Feature Highlights Grid */}
-            <div className="pt-2 grid grid-cols-3 gap-2 text-center border-t border-slate-100">
-              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
-                <Receipt className="w-4 h-4 text-amber-700 mx-auto mb-1" />
-                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
-                  Devotee Receipts
+            <div className="pt-2 grid grid-cols-3 gap-2.5 text-center border-t border-slate-100">
+              <div className="p-2.5 bg-gradient-to-b from-amber-50/60 to-white rounded-2xl border border-amber-100/80 hover:border-amber-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-amber-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500/20" />
+                </div>
+                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                  Pooja Slips
+                </span>
+                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
+                  Devotee PDF
                 </span>
               </div>
-              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
-                <Calendar className="w-4 h-4 text-emerald-700 mx-auto mb-1" />
-                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
-                  Vedic Calendar
+              <div className="p-2.5 bg-gradient-to-b from-emerald-50/60 to-white rounded-2xl border border-emerald-100/80 hover:border-emerald-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-emerald-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <CalendarDays className="w-3.5 h-3.5 text-emerald-700" />
+                </div>
+                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                  Panchangam
+                </span>
+                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
+                  Thithi Calendar
                 </span>
               </div>
-              <div className="p-2 bg-slate-50/80 rounded-xl border border-slate-100">
-                <PieChart className="w-4 h-4 text-blue-700 mx-auto mb-1" />
-                <span className="text-[10px] font-bold text-slate-700 block leading-tight">
-                  Dakshina Stats
+              <div className="p-2.5 bg-gradient-to-b from-blue-50/60 to-white rounded-2xl border border-blue-100/80 hover:border-blue-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-blue-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Wallet className="w-3.5 h-3.5 text-blue-700" />
+                </div>
+                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                  Dakshina
+                </span>
+                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
+                  Smart Accounts
                 </span>
               </div>
             </div>
