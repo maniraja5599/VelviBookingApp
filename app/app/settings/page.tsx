@@ -36,6 +36,7 @@ import {
   Download,
   Info,
   BookOpen,
+  Mail,
 } from "lucide-react";
 import { PwaInstallBanner } from "@/components/mobile/PwaInstallBanner";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -296,14 +297,23 @@ export default function SettingsHubPage() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {/* Avatar / Logo with quick edit badge */}
+            {/* Avatar / Logo with quick edit badge */}
             <div className="relative shrink-0">
-              <BrandLogo
-                size="lg"
-                variant="icon"
-                customLogoUrl={currentBusiness?.logoUrl}
-                businessName={currentBusiness?.name}
-                className="ring-2 ring-amber-400/40 shadow-xs"
-              />
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={currentBusiness?.name || currentUser?.name || "Priest"}
+                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-amber-400/60 shadow-xs"
+                />
+              ) : (
+                <BrandLogo
+                  size="lg"
+                  variant="icon"
+                  customLogoUrl={currentBusiness?.logoUrl}
+                  businessName={currentBusiness?.name}
+                  className="ring-2 ring-amber-400/40 shadow-xs"
+                />
+              )}
               <Link
                 href="/app/settings/branding"
                 className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-md hover:bg-emerald-900 transition active:scale-95 border-2 border-white"
@@ -329,10 +339,18 @@ export default function SettingsHubPage() {
                 </Link>
               </div>
 
-              {/* Service Name */}
-              <p className="text-xs font-semibold text-emerald-900 truncate max-w-[240px] mt-0.5">
-                {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
-              </p>
+              {/* Service Name & Google Email */}
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                <p className="text-xs font-semibold text-emerald-900 truncate max-w-[200px]">
+                  {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
+                </p>
+                {currentUser?.email && (
+                  <span className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                    {currentUser.email}
+                  </span>
+                )}
+              </div>
 
               {/* Phone & Role */}
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">

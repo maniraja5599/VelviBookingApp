@@ -108,7 +108,7 @@ export default function LoginPage() {
 
   // Process authenticated Google profile
   const processGoogleUser = async (userPayload: GoogleUserPayload) => {
-    const user = await loginWithGoogle(userPayload.email, userPayload.name);
+    const user = await loginWithGoogle(userPayload.email, userPayload.name, userPayload.picture);
     setGoogleUser(userPayload);
     setPriestName(userPayload.name);
 
@@ -175,10 +175,15 @@ export default function LoginPage() {
       return;
     }
     const nameToUse = customName.trim() || customEmail.split("@")[0] || "Vedic Priest";
+    const avatarToUse = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+      nameToUse
+    )}&backgroundColor=064e3b,047857,0f766e&textColor=fef3c7`;
+
     const payload: GoogleUserPayload = {
       sub: `google-${Date.now()}`,
       email: customEmail.trim().toLowerCase(),
       name: nameToUse,
+      picture: avatarToUse,
       email_verified: true,
     };
     setStep("login");
@@ -212,12 +217,14 @@ export default function LoginPage() {
       const normalizedMobile = `+91${mobileNumber}`;
       updateUser({
         name: priestName.trim(),
+        avatarUrl: googleUser?.picture || undefined,
         mobile: normalizedMobile,
         mobileVerified: true,
       });
       updateBusiness({
         iyerName: priestName.trim(),
         name: priestName.trim(),
+        logoUrl: googleUser?.picture || undefined,
         phone: normalizedMobile,
         whatsapp: normalizedMobile,
       });
@@ -284,6 +291,7 @@ export default function LoginPage() {
               {/* Standard Elevated Google Button */}
               <button
                 type="button"
+                id="google-continue-btn"
                 onClick={handleGoogleButtonClick}
                 disabled={isLoading || isDemoLoading}
                 className="w-full py-3.5 px-4 bg-white hover:bg-amber-50/50 text-slate-800 font-bold text-xs sm:text-sm rounded-2xl border-2 border-slate-200 hover:border-amber-300 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
@@ -496,9 +504,17 @@ export default function LoginPage() {
             {/* Connected Google Profile Badge */}
             <div className="p-3 bg-gradient-to-br from-amber-50/80 to-emerald-50/50 rounded-2xl border border-amber-200/80 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400">
-                  {priestName ? priestName[0].toUpperCase() : "V"}
-                </div>
+                {googleUser?.picture ? (
+                  <img
+                    src={googleUser.picture}
+                    alt={priestName}
+                    className="w-10 h-10 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400">
+                    {priestName ? priestName[0].toUpperCase() : "V"}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate">
                     {priestName || "Vedic Priest"}

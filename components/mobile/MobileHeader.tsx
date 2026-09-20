@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   ChevronRight,
   X,
+  Mail,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
@@ -157,10 +158,18 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               title="User Profile & Settings"
               aria-expanded={isProfileMenuOpen}
             >
-              {/* Clearly Visible Priest Avatar Icon Badge with Sacred Colors */}
-              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
-                <User className="w-3.5 h-3.5 text-amber-300 stroke-[2.5]" />
-              </div>
+              {/* Priest Avatar with Google Profile Picture or Sacred Icon Badge */}
+              {currentUser?.avatarUrl ? (
+                <img
+                  src={currentUser.avatarUrl}
+                  alt={displayName}
+                  className="w-6 h-6 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                  <User className="w-3.5 h-3.5 text-amber-300 stroke-[2.5]" />
+                </div>
+              )}
 
               <span className="text-xs font-black truncate max-w-[85px] sm:max-w-[120px] text-slate-900 text-left">
                 {displayName}
@@ -179,20 +188,41 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 {/* User Info Header */}
                 <div className="p-3 bg-gradient-to-br from-amber-50/90 to-amber-100/40 rounded-2xl border border-amber-200/70">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-900 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs ring-2 ring-amber-300">
-                      {initial}
-                    </div>
+                    {currentUser?.avatarUrl ? (
+                      <img
+                        src={currentUser.avatarUrl}
+                        alt={displayName}
+                        className="w-11 h-11 rounded-2xl object-cover shrink-0 shadow-xs ring-2 ring-amber-300"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-900 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs ring-2 ring-amber-300">
+                        {initial}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                        {displayName}
-                      </h4>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="font-extrabold text-sm text-slate-900 truncate max-w-[140px]">
+                          {displayName}
+                        </h4>
+                        {currentUser?.email && (
+                          <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 rounded-full shrink-0">
+                            Google
+                          </span>
+                        )}
+                      </div>
+                      {currentUser?.email && (
+                        <p className="text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
+                          <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                          {currentUser.email}
+                        </p>
+                      )}
                       {currentUser?.mobile && (
-                        <p className="text-[11px] text-slate-600 font-semibold flex items-center gap-1 mt-0.5">
-                          <Phone className="w-3 h-3 text-emerald-600" />
+                        <p className="text-[11px] text-slate-700 font-bold flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
                           {currentUser.mobile}
                         </p>
                       )}
-                      <p className="text-[10.5px] font-medium text-emerald-900 truncate mt-0.5">
+                      <p className="text-[10px] font-medium text-emerald-900 truncate mt-0.5">
                         {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
                       </p>
                     </div>

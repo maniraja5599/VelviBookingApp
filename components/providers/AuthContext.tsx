@@ -10,7 +10,7 @@ interface AuthContextType {
   currentBusiness: Business | null;
   subscription: Subscription | null;
   isLoading: boolean;
-  loginWithGoogle: (email?: string, name?: string) => Promise<User>;
+  loginWithGoogle: (email?: string, name?: string, avatarUrl?: string) => Promise<User>;
   loginWithCredentials: (name: string, mobile: string) => Promise<User>;
   loginDemo: () => Promise<User>;
   logout: () => void;
@@ -192,64 +192,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return demoUser;
   }, [syncState]);
 
-  const loginWithGoogle = React.useCallback(async (email?: string, name?: string): Promise<User> => {
-    setIsLoading(true);
-    const targetEmail = email || "ravi.iyer@gmail.com";
-    const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
+  const loginWithGoogle = React.useCallback(
+    async (email?: string, name?: string, avatarUrl?: string): Promise<User> => {
+      setIsLoading(true);
+      const targetEmail = email || "ravi.iyer@gmail.com";
+      const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
 
-    // Find existing or mock new Google user
-    let user = db.users.find((u) => u.email === targetEmail);
-    if (!user) {
-      user = {
-        id: `u-${Date.now()}`,
-        googleId: `google-${Date.now()}`,
-        email: targetEmail,
-        name: targetName,
-        mobile: "",
-        mobileVerified: false,
-        role: "OWNER",
-        referralCode: `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
-        createdAt: new Date().toISOString(),
-      };
-      db.users.push(user);
-    }
+      // Find existing or mock new Google user
+      let user = db.users.find((u) => u.email === targetEmail);
+      if (!user) {
+        user = {
+          id: `u-${Date.now()}`,
+          googleId: `google-${Date.now()}`,
+          email: targetEmail,
+          name: targetName,
+          avatarUrl: avatarUrl || undefined,
+          mobile: "",
+          mobileVerified: false,
+          role: "OWNER",
+          referralCode: `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
+          createdAt: new Date().toISOString(),
+        };
+        db.users.push(user);
+      } else {
+        if (avatarUrl) {
+          user.avatarUrl = avatarUrl;
+        }
+        if (name && name.trim()) {
+          user.name = name.trim();
+        }
+      }
 
-    // Ensure business profile exists for this user
-    let biz = db.businesses.find((b) => b.ownerId === user.id);
-    if (!biz) {
-      const bizId = `biz-${Date.now()}`;
-      biz = {
-        id: bizId,
-        ownerId: user.id,
-        name: user.name || "Pooja Services",
-        serviceName: "Pooja • Homam • Seva",
-        iyerName: user.name || "Vadhyar",
-        phone: user.mobile || "",
-        whatsapp: user.mobile || "",
-        address: "தமிழ்நாடு, இந்தியா",
-        showWatermark: true,
-        createdAt: new Date().toISOString(),
-      };
-      db.businesses.push(biz);
+      // Ensure business profile exists for this user
+      let biz = db.businesses.find((b) => b.ownerId === user.id);
+      if (!biz) {
+        const bizId = `biz-${Date.now()}`;
+        biz = {
+          id: bizId,
+          ownerId: user.id,
+          name: user.name || "Pooja Services",
+          serviceName: "Pooja • Homam • Seva",
+          iyerName: user.name || "Vadhyar",
+          logoUrl: user.avatarUrl || undefined,
+          phone: user.mobile || "",
+          whatsapp: user.mobile || "",
+          address: "தமிழ்நாடு, இந்தியா",
+          showWatermark: true,
+          createdAt: new Date().toISOString(),
+        };
+        db.businesses.push(biz);
 
-      const now = new Date();
-      const end = new Date(Date.now() + 30 * 86400000);
-      db.subscriptions.push({
-        id: `sub-${Date.now()}`,
-        businessId: bizId,
-        planName: "Velvi Pro Monthly",
-        planCode: "VELVI_PRO",
-        status: "ACTIVE",
-        trialStart: now.toISOString(),
-        trialEnd: end.toISOString(),
-        currentPeriodStart: now.toISOString(),
-        currentPeriodEnd: end.toISOString(),
-        billingCycle: "MONTHLY",
-        autoRenew: true,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-      });
-    }
+        const now = new Date();
+        const end = new Date(Date.now() + 30 * 86400000);
+        db.subscriptions.push({
+          id: `sub-${Date.now()}`,
+          businessId: bizId,
+          planName: "Velvi Pro Monthly",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: now.toISOString(),
+          trialEnd: end.toISOString(),
+          currentPeriodStart: now.toISOString(),
+          currentPeriodEnd: end.toISOString(),
+          billingCycle: "MONTHLY",
+          autoRenew: true,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        });
+      } else {
+        if (!biz.logoUrl && user.avatarUrl) {
+          biz.logoUrl = user.avatarUrl;
+        }
+        if (!biz.iyerName && user.name) {
+          biz.iyerName = user.name;
+        }
+      }
 
     if (typeof window !== "undefined") {
       localStorage.setItem("velvi_active_user_id", user.id);
