@@ -7,6 +7,7 @@ import { db } from "@/lib/db/store";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
+import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -75,6 +76,7 @@ export default function BookingDetailPage() {
   const [editPaymentReason, setEditPaymentReason] = useState<string>("Payment adjustment");
   const [paymentError, setPaymentError] = useState<string>("");
   const [showItemsShareModal, setShowItemsShareModal] = useState(false);
+  const [showPoojaSlipModal, setShowPoojaSlipModal] = useState(false);
 
   const quickCancelReasons = [
     "Client request",
@@ -273,6 +275,16 @@ export default function BookingDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowPoojaSlipModal(true)}
+            className="p-1.5 bg-gradient-to-r from-amber-100 to-amber-200 hover:from-amber-200 hover:to-amber-300 text-amber-950 rounded-lg text-xs font-black flex items-center gap-1 border border-amber-300 shadow-2xs transition active:scale-95 cursor-pointer"
+            title="Pooja Slip & Samagri PDF"
+          >
+            <span>🪔</span>
+            <span>Pooja Slip</span>
+          </button>
+
           {booking.status !== "CANCELLED" && (
             <Link
               href={`/app/bookings/${booking.id}/edit`}
@@ -578,6 +590,14 @@ export default function BookingDetailPage() {
               >
                 Edit Items →
               </Link>
+              <button
+                type="button"
+                onClick={() => setShowPoojaSlipModal(true)}
+                className="text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                title="Pooja Slip & Samagri PDF"
+              >
+                <span>🖨️ PDF Slip</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setShowItemsShareModal(true)}
@@ -1029,6 +1049,15 @@ export default function BookingDetailPage() {
           onClose={() => setShowItemsShareModal(false)}
           booking={booking}
           business={currentBusiness}
+        />
+      )}
+
+      {/* Sacred Pooja Slip & Samagri Checklist PDF Modal */}
+      {showPoojaSlipModal && (
+        <PoojaSlipModal
+          booking={booking}
+          business={currentBusiness}
+          onClose={() => setShowPoojaSlipModal(false)}
         />
       )}
     </div>

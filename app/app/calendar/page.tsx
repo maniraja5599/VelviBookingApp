@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/providers/LanguageContext";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
 import { db } from "@/lib/db/store";
 import { Booking } from "@/lib/types";
+import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -32,6 +33,8 @@ import {
   Phone,
   MessageCircle,
   Search,
+  FileText,
+  Printer,
 } from "lucide-react";
 
 function formatTime12H(t?: string): string {
@@ -61,6 +64,7 @@ export default function CalendarPage() {
   const [pickerYear, setPickerYear] = useState<number>(new Date().getFullYear());
   const [filterIyer, setFilterIyer] = useState<"ALL" | "SELF">("ALL");
   const [activeSacredTab, setActiveSacredTab] = useState<string>("muhurtham");
+  const [selectedSlipBooking, setSelectedSlipBooking] = useState<Booking | null>(null);
 
   // Long press timer refs for calendar date buttons
   const longPressTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -1180,48 +1184,76 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-1.5">
                   {selectedDayBookings.map((b) => (
-                    <Link
+                    <div
                       key={b.id}
-                      href={`/app/bookings/${b.id}`}
-                      className="block bg-white rounded-xl p-2.5 border border-amber-200/70 shadow-2xs hover:border-amber-400 transition group"
+                      className="bg-white rounded-xl p-2.5 border border-amber-200/70 shadow-2xs hover:border-amber-400 transition group"
                     >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-black text-[10px] text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/60">
-                              #{b.bookingNumber?.replace(/^#+/, "")}
-                            </span>
-                            <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate group-hover:text-emerald-950">
-                              👤 {b.customerName}
-                            </h5>
+                      <Link
+                        href={`/app/bookings/${b.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-[10px] text-amber-900 bg-amber-100/90 px-1.5 py-0.2 rounded border border-amber-300/60">
+                                #{b.bookingNumber?.replace(/^#+/, "")}
+                              </span>
+                              <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate group-hover:text-emerald-950">
+                                👤 {b.customerName}
+                              </h5>
+                            </div>
+                            <div className="text-[11px] text-slate-600 mt-0.5 truncate">
+                              <strong className="text-amber-950 font-bold">🪔 {b.poojaEnglishName}</strong>
+                              {b.poojaTamilName && <span className="text-slate-500"> ({b.poojaTamilName})</span>}
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
+                              <span>🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)}</span>
+                              <span>•</span>
+                              <span>📍 {b.location || "Namakkal"}</span>
+                            </div>
                           </div>
-                          <div className="text-[11px] text-slate-600 mt-0.5 truncate">
-                            <strong className="text-amber-950 font-bold">🪔 {b.poojaEnglishName}</strong>
-                            {b.poojaTamilName && <span className="text-slate-500"> ({b.poojaTamilName})</span>}
-                          </div>
-                          <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
-                            <span>🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)}</span>
-                            <span>•</span>
-                            <span>📍 {b.location || "Namakkal"}</span>
-                          </div>
-                        </div>
 
-                        <div className="text-right shrink-0 flex flex-col items-end">
-                          <span className="text-xs font-black text-slate-900">
-                            ₹{b.totalAmount?.toLocaleString("en-IN")}
-                          </span>
-                          <span
-                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
-                              b.paymentStatus === "PAID"
-                                ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                                : "bg-rose-100 text-rose-900 border border-rose-200"
-                            }`}
-                          >
-                            {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
-                          </span>
+                          <div className="text-right shrink-0 flex flex-col items-end">
+                            <span className="text-xs font-black text-slate-900">
+                              ₹{b.totalAmount?.toLocaleString("en-IN")}
+                            </span>
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded mt-0.5 ${
+                                b.paymentStatus === "PAID"
+                                  ? "bg-emerald-100 text-emerald-900 border border-emerald-200"
+                                  : "bg-rose-100 text-rose-900 border border-rose-200"
+                              }`}
+                            >
+                              {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                            </span>
+                          </div>
                         </div>
+                      </Link>
+
+                      {/* Quick Action Footer: Pooja Slip & Samagri Checklist */}
+                      <div className="mt-2 pt-2 border-t border-amber-100/80 flex items-center justify-between gap-2">
+                        <Link
+                          href={`/app/bookings/${b.id}`}
+                          className="text-[10.5px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+                        >
+                          <span>விவரம்</span>
+                          <ArrowRight className="w-3 h-3 text-slate-400" />
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedSlipBooking(b);
+                          }}
+                          className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer"
+                        >
+                          <FileText className="w-3 h-3 text-amber-800" />
+                          <span>Pooja Slip (ரசீது & QR)</span>
+                        </button>
                       </div>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               )}
@@ -2059,49 +2091,77 @@ export default function CalendarPage() {
                 ) : (
                   <div className="space-y-2">
                     {selectedDayBookings.map((b) => (
-                      <Link
+                      <div
                         key={b.id}
-                        href={`/app/bookings/${b.id}`}
-                        className="block p-3 rounded-2xl border border-slate-200/90 bg-white hover:border-amber-400 hover:shadow-xs transition group"
+                        className="p-3 rounded-2xl border border-slate-200/90 bg-white hover:border-amber-400 hover:shadow-xs transition group"
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="font-black text-[10px] text-amber-950 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
-                                {b.bookingNumber}
+                        <Link
+                          href={`/app/bookings/${b.id}`}
+                          className="block"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-black text-[10px] text-amber-950 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200">
+                                  {b.bookingNumber}
+                                </span>
+                                <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-amber-950 truncate">
+                                  {b.poojaTamilName || b.poojaEnglishName}
+                                </h5>
+                              </div>
+
+                              <div className="text-[11px] text-slate-600 mt-1 flex items-center gap-2 flex-wrap font-medium">
+                                <span className="font-bold text-slate-900">👤 {b.customerName}</span>
+                                <span>•</span>
+                                <span>🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)}</span>
+                                {b.location && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-slate-500">📍 {b.location}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <div className="font-black text-xs sm:text-sm text-slate-900">
+                                ₹{b.totalAmount.toLocaleString("en-IN")}
+                              </div>
+                              <span className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded mt-0.5 inline-block ${
+                                b.paymentStatus === "PAID"
+                                  ? "bg-emerald-100 text-emerald-900"
+                                  : "bg-rose-100 text-rose-900"
+                              }`}>
+                                {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
                               </span>
-                              <h5 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover:text-amber-950 truncate">
-                                {b.poojaTamilName || b.poojaEnglishName}
-                              </h5>
-                            </div>
-
-                            <div className="text-[11px] text-slate-600 mt-1 flex items-center gap-2 flex-wrap font-medium">
-                              <span className="font-bold text-slate-900">👤 {b.customerName}</span>
-                              <span>•</span>
-                              <span>🕒 {formatTime12H(b.startTime)}–{formatTime12H(b.endTime)}</span>
-                              {b.location && (
-                                <>
-                                  <span>•</span>
-                                  <span className="text-slate-500">📍 {b.location}</span>
-                                </>
-                              )}
                             </div>
                           </div>
+                        </Link>
 
-                          <div className="text-right shrink-0">
-                            <div className="font-black text-xs sm:text-sm text-slate-900">
-                              ₹{b.totalAmount.toLocaleString("en-IN")}
-                            </div>
-                            <span className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded mt-0.5 inline-block ${
-                              b.paymentStatus === "PAID"
-                                ? "bg-emerald-100 text-emerald-900"
-                                : "bg-rose-100 text-rose-900"
-                            }`}>
-                              {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
-                            </span>
-                          </div>
+                        {/* Quick Action Footer in Day Details Modal */}
+                        <div className="mt-2.5 pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                          <Link
+                            href={`/app/bookings/${b.id}`}
+                            className="text-[11px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+                          >
+                            <span>முழு விவரம்</span>
+                            <ArrowRight className="w-3 h-3 text-slate-400" />
+                          </Link>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedSlipBooking(b);
+                            }}
+                            className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer"
+                          >
+                            <FileText className="w-3 h-3 text-amber-800" />
+                            <span>Pooja Slip (ரசீது & QR)</span>
+                          </button>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -2139,6 +2199,15 @@ export default function CalendarPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 4. Devotee Pooja Slip & Samagri Checklist Modal with Dynamic UPI QR */}
+      {selectedSlipBooking && (
+        <PoojaSlipModal
+          booking={selectedSlipBooking}
+          business={currentBusiness}
+          onClose={() => setSelectedSlipBooking(null)}
+        />
       )}
     </div>
   );

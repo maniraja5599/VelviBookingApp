@@ -33,6 +33,7 @@ import {
 } from "@/lib/seed/data";
 import { calculateNewExpiryDate, validateReferralReward } from "@/lib/referrals/engine";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
+import { pushBookingToCloud } from "@/lib/supabase/sync";
 
 export interface PlatformSettings {
   appName: string;
@@ -587,6 +588,9 @@ export class VelviDatabaseStore {
       createdAt: new Date().toISOString(),
     });
 
+    this.saveToLocalStorage();
+    try { pushBookingToCloud(booking).catch(() => {}); } catch (_) {}
+
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("velvi:db-change"));
     }
@@ -735,6 +739,7 @@ export class VelviDatabaseStore {
 
     this.saveToLocalStorage();
     this.notifyListeners();
+    try { pushBookingToCloud(booking).catch(() => {}); } catch (_) {}
 
     return { success: true, booking };
   }
@@ -1076,6 +1081,7 @@ export class VelviDatabaseStore {
     this.bookings.unshift(newBooking);
     this.saveToLocalStorage();
     this.notifyListeners();
+    try { pushBookingToCloud(newBooking).catch(() => {}); } catch (_) {}
     return newBooking;
   }
 

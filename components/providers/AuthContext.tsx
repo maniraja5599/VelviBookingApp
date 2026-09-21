@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Business, Subscription, UserRole } from "@/lib/types";
 import { db } from "@/lib/db/store";
 import { normalizeIndianMobile, maskEmail } from "@/lib/utils/phone";
+import { initCloudSync } from "@/lib/supabase/sync";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -116,6 +117,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (window as any).velviDb = db;
     }
   }, [syncState]);
+
+  useEffect(() => {
+    if (currentBusiness?.id) {
+      initCloudSync(currentBusiness.id).catch(() => {});
+    }
+  }, [currentBusiness?.id]);
 
   const loginWithCredentials = React.useCallback(
     async (name: string, mobile: string): Promise<User> => {

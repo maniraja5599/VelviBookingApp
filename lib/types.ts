@@ -189,6 +189,7 @@ export interface BookingItem {
   itemTamilName: string;
   quantity: number;
   unit: string;
+  category?: string;
   isOverride?: boolean;
   isChecked?: boolean;
   sortOrder?: number;
