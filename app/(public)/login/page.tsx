@@ -64,22 +64,8 @@ export default function LoginPage() {
             auto_select: false,
             cancel_on_tap_outside: true,
           });
-
-          // Render official button inside container if available
-          if (googleBtnRef.current) {
-            googleBtnRef.current.innerHTML = "";
-            google.accounts.id.renderButton(googleBtnRef.current, {
-              type: "standard",
-              theme: "outline",
-              size: "large",
-              text: "continue_with",
-              shape: "pill",
-              logo_alignment: "left",
-              width: 320,
-            });
-            if (isMounted) {
-              setGisReady(true);
-            }
+          if (isMounted) {
+            setGisReady(true);
           }
         } catch (err) {
           console.warn("Google Identity initialization:", err);
@@ -115,9 +101,9 @@ export default function LoginPage() {
   const processGoogleUser = async (userPayload: GoogleUserPayload) => {
     const user = await loginWithGoogle(userPayload.email, userPayload.name, userPayload.picture);
     setGoogleUser(userPayload);
-    setPriestName(userPayload.name);
+    setPriestName(user.name || userPayload.name);
 
-    // If account already has a registered mobile number, enter the app directly
+    // If account already has a registered mobile number, enter the app directly without asking again
     if (user.mobile && user.mobile.length >= 10 && user.mobileVerified) {
       router.push("/app/calendar");
       return;
@@ -128,12 +114,70 @@ export default function LoginPage() {
     setStep("mobile_setup");
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__simulateGoogleLogin = (email: string, name: string, picture?: string) => {
+        return processGoogleUser({
+          sub: `google-${Date.now()}`,
+          email,
+          name,
+          picture: picture || "https://api.dicebear.com/7.x/initials/svg?seed=" + encodeURIComponent(name),
+          email_verified: true,
+        });
+      };
+    }
+  }, []);
+
   // Direct Google Sign-In button
   const handleGoogleButtonClick = async () => {
     setError("");
     const google = typeof window !== "undefined" ? (window as any).google : null;
 
-    // If real Google Client ID is configured and GIS is initialized, open Google prompt
+    // 1. If real Google Client ID is configured, try Google OAuth2 Token Client popup
+    if (googleClientId && google?.accounts?.oauth2) {
+      try {
+        setIsLoading(true);
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "email profile openid",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              setIsLoading(false);
+              if (tokenResponse.error !== "popup_closed_by_user") {
+                setError("Google sign-in was interrupted. Please try again.");
+              }
+              return;
+            }
+            try {
+              const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+              });
+              const info = await res.json();
+              if (!info || !info.email) {
+                throw new Error("Unable to retrieve Google profile.");
+              }
+              await processGoogleUser({
+                sub: info.sub || `google-${Date.now()}`,
+                email: info.email,
+                name: info.name || info.email.split("@")[0],
+                picture: info.picture,
+                email_verified: info.email_verified,
+              });
+            } catch (fetchErr: any) {
+              setError(fetchErr?.message || "Failed to fetch Google profile.");
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        });
+        tokenClient.requestAccessToken();
+        return;
+      } catch (err) {
+        console.warn("OAuth2 Token Client error, falling back:", err);
+      }
+    }
+
+    // 2. Fallback to GIS Prompt One-Tap
     if (googleClientId && google?.accounts?.id) {
       try {
         google.accounts.id.prompt(async (notification: any) => {
@@ -143,11 +187,11 @@ export default function LoginPage() {
         });
         return;
       } catch (err) {
-        console.warn("GIS Prompt error, falling back to direct login:", err);
+        console.warn("GIS Prompt fallback:", err);
       }
     }
 
-    // Direct Google Login
+    // 3. Fallback to direct mock Google login
     await handleDirectGoogleLogin();
   };
 
@@ -274,48 +318,38 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Single Unified Google Sign-In Button */}
+            {/* Single Unified Prominent Google Sign-In Button */}
             <div className="space-y-3.5">
-              {/* Official Google GIS Button Container */}
-              <div
-                ref={googleBtnRef}
-                className="flex justify-center min-h-[46px]"
-                style={!gisReady ? { position: "absolute", opacity: 0, pointerEvents: "none", zIndex: -1 } : undefined}
-              />
-
-              {/* Styled Fallback Google Button */}
-              {!gisReady && (
-                <button
-                  type="button"
-                  id="google-continue-btn"
-                  onClick={handleGoogleButtonClick}
-                  disabled={isLoading || isDemoLoading}
-                  className="w-full py-3.5 px-5 bg-white hover:bg-amber-50/40 text-slate-950 font-black text-sm sm:text-base rounded-2xl border-2 border-slate-200 hover:border-amber-400 shadow-xs hover:shadow-md transition active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
-                >
-                  {/* Official 4-Color Google G Logo */}
-                  <svg className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span className="font-black text-slate-900 tracking-tight">
-                    {isLoading ? "Signing in..." : "Continue with Google"}
-                  </span>
-                </button>
-              )}
+              <button
+                type="button"
+                id="google-continue-btn"
+                onClick={handleGoogleButtonClick}
+                disabled={isLoading || isDemoLoading}
+                className="w-full py-4 px-6 bg-white hover:bg-amber-50/60 active:bg-amber-100/40 text-slate-900 rounded-2xl border-2 border-slate-300 hover:border-amber-500 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.99] flex items-center justify-center gap-3 cursor-pointer group"
+              >
+                {/* Official 4-Color Google G Logo */}
+                <svg className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform duration-150" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                  />
+                </svg>
+                <span className="font-black text-base sm:text-[17px] text-slate-900 tracking-tight">
+                  {isLoading ? "Signing in with Google..." : "Continue with Google"}
+                </span>
+              </button>
 
               {/* Centered Trust Badge */}
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-bold">

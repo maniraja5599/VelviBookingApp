@@ -206,11 +206,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = React.useCallback(
     async (email?: string, name?: string, avatarUrl?: string): Promise<User> => {
       setIsLoading(true);
-      const targetEmail = email || "ravi.iyer@gmail.com";
+      const targetEmail = (email || "ravi.iyer@gmail.com").trim().toLowerCase();
       const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
 
-      // Find existing or mock new Google user
-      let user = db.users.find((u) => u.email === targetEmail);
+      // Find existing or mock new Google user (case-insensitive email matching)
+      let user = db.users.find((u) => u.email.trim().toLowerCase() === targetEmail);
       if (!user) {
         user = {
           id: `u-${Date.now()}`,
@@ -440,18 +440,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentUser, syncState]);
 
   const updateBusiness = React.useCallback((updates: Partial<Business>) => {
-    if (!currentBusiness) return;
-    const bizIndex = db.businesses.findIndex((b) => b.id === currentBusiness.id);
+    const activeUserId = currentUser?.id || (typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null);
+    const biz = currentBusiness || (activeUserId ? db.businesses.find((b) => b.ownerId === activeUserId) : null);
+    if (!biz) return;
+    const bizIndex = db.businesses.findIndex((b) => b.id === biz.id);
     if (bizIndex >= 0) {
       db.businesses[bizIndex] = { ...db.businesses[bizIndex], ...updates };
       db.saveToLocalStorage();
       setCurrentBusiness({ ...db.businesses[bizIndex] });
     }
-  }, [currentBusiness]);
+  }, [currentBusiness, currentUser]);
 
   const updateUser = React.useCallback((updates: Partial<User>) => {
-    if (!currentUser) return;
-    const userIndex = db.users.findIndex((u) => u.id === currentUser.id);
+    const activeUserId = currentUser?.id || (typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null);
+    if (!activeUserId) return;
+    const userIndex = db.users.findIndex((u) => u.id === activeUserId);
     if (userIndex >= 0) {
       db.users[userIndex] = { ...db.users[userIndex], ...updates };
       db.saveToLocalStorage();

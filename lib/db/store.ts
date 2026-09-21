@@ -1274,6 +1274,9 @@ export class VelviDatabaseStore {
     try {
       const state = {
         isCleared: this.bookings.length === 0 && this.customers.length === 0,
+        users: this.users,
+        businesses: this.businesses,
+        subscriptions: this.subscriptions,
         customers: this.customers,
         bookings: this.bookings,
         poojas: this.poojas,
@@ -1299,6 +1302,15 @@ export class VelviDatabaseStore {
       if (!raw) return false;
       const state = JSON.parse(raw);
       if (state) {
+        if (Array.isArray(state.users) && state.users.length > 0) {
+          this.users = state.users;
+        }
+        if (Array.isArray(state.businesses) && state.businesses.length > 0) {
+          this.businesses = state.businesses;
+        }
+        if (Array.isArray(state.subscriptions) && state.subscriptions.length > 0) {
+          this.subscriptions = state.subscriptions;
+        }
         if (Array.isArray(state.customers)) this.customers = state.customers;
         if (Array.isArray(state.bookings)) this.bookings = state.bookings;
         if (Array.isArray(state.poojas)) this.poojas = state.poojas;

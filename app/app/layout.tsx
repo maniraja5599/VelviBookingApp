@@ -20,7 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isLoading && !currentUser) {
-      router.push("/login");
+      router.replace("/login");
     }
   }, [isLoading, currentUser, router]);
 
@@ -92,20 +92,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     });
   }, [router]);
 
-  if (!isMounted) {
+  if (!isMounted || isLoading || !currentUser) {
     return (
-      <div className="min-h-screen bg-slate-100/80 flex flex-col justify-between overflow-x-clip">
-        <div className="w-full max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto min-h-screen bg-[#fafaf9] shadow-xl relative flex flex-col pb-28 sm:pb-24 border-x border-slate-200/80 overflow-x-clip">
-          <div className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs px-3 sm:px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-serif font-black tracking-wider text-emerald-950 text-base uppercase">VELVI</span>
-              <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 rounded-md border border-amber-300/80 leading-none">App</span>
-            </div>
-          </div>
-          <div className="flex-1 px-3 sm:px-5 py-12 flex items-center justify-center">
-            <div className="w-6 h-6 border-2 border-emerald-800 border-t-transparent rounded-full animate-spin" />
-          </div>
-        </div>
+      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-amber-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
