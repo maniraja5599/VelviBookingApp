@@ -38,7 +38,13 @@ export default function BrandingSettingsPage() {
   );
   const [whatsapp, setWhatsapp] = useState(business.whatsapp || "");
   const [address, setAddress] = useState(business.address || "");
-  const [logoUrl, setLogoUrl] = useState<string>(business.logoUrl || "");
+  const isInitialGoogleLogo = Boolean(
+    business.logoUrl &&
+      (business.logoUrl === currentUser?.avatarUrl ||
+        business.logoUrl.includes("googleusercontent.com") ||
+        business.logoUrl.includes("dicebear.com"))
+  );
+  const [logoUrl, setLogoUrl] = useState<string>(isInitialGoogleLogo ? "" : business.logoUrl || "");
   const [showWatermark, setShowWatermark] = useState(business.showWatermark ?? true);
 
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -66,7 +72,13 @@ export default function BrandingSettingsPage() {
       );
       setWhatsapp(currentBusiness.whatsapp || "");
       setAddress(currentBusiness.address || "");
-      setLogoUrl(currentBusiness.logoUrl || "");
+      const isGoogleLogo = Boolean(
+        currentBusiness.logoUrl &&
+          (currentBusiness.logoUrl === currentUser?.avatarUrl ||
+            currentBusiness.logoUrl.includes("googleusercontent.com") ||
+            currentBusiness.logoUrl.includes("dicebear.com"))
+      );
+      setLogoUrl(isGoogleLogo ? "" : currentBusiness.logoUrl || "");
       setShowWatermark(currentBusiness.showWatermark ?? true);
     }
   }, [currentBusiness, currentUser]);

@@ -252,7 +252,6 @@ export default function LoginPage() {
       updateBusiness({
         iyerName: priestName.trim(),
         name: priestName.trim(),
-        logoUrl: googleUser?.picture || undefined,
         phone: normalizedMobile,
         whatsapp: normalizedMobile,
       });

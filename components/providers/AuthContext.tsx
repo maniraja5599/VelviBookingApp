@@ -92,8 +92,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSubscription(db.subscriptions[0]);
     } else {
       const biz = db.businesses.find((b) => b.ownerId === user.id) || db.businesses[0];
-      setCurrentBusiness(biz);
-      const sub = db.subscriptions.find((s) => s.businessId === biz.id) || db.subscriptions[0];
+      // If business logoUrl was auto-populated with user's personal Google avatar, clear it so default Velvi logo displays
+      if (
+        biz &&
+        biz.logoUrl &&
+        (biz.logoUrl === user.avatarUrl ||
+          biz.logoUrl.includes("googleusercontent.com") ||
+          biz.logoUrl.includes("dicebear.com"))
+      ) {
+        biz.logoUrl = undefined;
+        db.saveToLocalStorage();
+      }
+      setCurrentBusiness(biz ? { ...biz } : null);
+      const sub = db.subscriptions.find((s) => s.businessId === biz?.id) || db.subscriptions[0];
       setSubscription(sub);
     }
   }, []);
@@ -233,7 +244,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: user.name || "Pooja Services",
           serviceName: "Pooja • Homam • Seva",
           iyerName: user.name || "Vadhyar",
-          logoUrl: user.avatarUrl || undefined,
+          logoUrl: undefined, // Default to Velvi sacred logo
           phone: user.mobile || "",
           whatsapp: user.mobile || "",
           address: "தமிழ்நாடு, இந்தியா",
@@ -260,8 +271,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           updatedAt: now.toISOString(),
         });
       } else {
-        if (!biz.logoUrl && user.avatarUrl) {
-          biz.logoUrl = user.avatarUrl;
+        // If logoUrl was previously auto-set to user Google avatar, clear it
+        if (
+          biz.logoUrl &&
+          (biz.logoUrl === user.avatarUrl ||
+            biz.logoUrl.includes("googleusercontent.com") ||
+            biz.logoUrl.includes("dicebear.com"))
+        ) {
+          biz.logoUrl = undefined;
         }
         if (!biz.iyerName && user.name) {
           biz.iyerName = user.name;

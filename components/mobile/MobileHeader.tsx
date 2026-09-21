@@ -74,6 +74,14 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     router.push("/login");
   };
 
+  // Check if business has an intentional custom logo (not Google profile photo)
+  const isCustomBusinessLogo = Boolean(
+    currentBusiness?.logoUrl &&
+      currentBusiness.logoUrl !== currentUser?.avatarUrl &&
+      !currentBusiness.logoUrl.includes("googleusercontent.com") &&
+      !currentBusiness.logoUrl.includes("dicebear.com")
+  );
+
   return (
     <>
       <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs px-3 sm:px-4 py-2 transition-all">
@@ -94,7 +102,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <BrandLogo
                 size="sm"
                 variant="icon"
-                customLogoUrl={currentBusiness?.logoUrl}
+                customLogoUrl={isCustomBusinessLogo ? currentBusiness?.logoUrl : null}
                 businessName={currentBusiness?.name}
                 className="group-hover:scale-105 transition-transform shrink-0"
               />
