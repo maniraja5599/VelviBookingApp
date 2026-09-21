@@ -1,7 +1,8 @@
 import { Booking, Business } from "@/lib/types";
 import { getTamilDate } from "@/lib/calendar/tamil";
 
-export function formatUnitTamil(unit: string): string {
+export function formatUnitTamil(unit?: string): string {
+  if (!unit) return "";
   const map: Record<string, string> = {
     g: "கிராம்",
     kg: "கிலோ",
@@ -26,11 +27,12 @@ export function formatPoojaItemsWhatsAppMessage(
 ): string {
   const tamilInfo = getTamilDate(booking.date);
 
-  const itemsList = booking.items
-    .map((item, idx) => {
-      const name = item.itemTamilName || item.itemEnglishName;
+  const itemsList = (booking.items || [])
+    .map((item: any, idx) => {
+      const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "Item";
       const unit = formatUnitTamil(item.unit);
-      return `${idx + 1}. ${name} - ${item.quantity} ${unit}`;
+      const qty = item.quantity ? ` - ${item.quantity}` : "";
+      return `${idx + 1}. ${name}${qty} ${unit}`.trim();
     })
     .join("\n");
 
