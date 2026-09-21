@@ -76,6 +76,29 @@ function QuickBookingContent() {
   const [date, setDate] = useState<string>(searchParams.get("date") || todayStr);
   const [time, setTime] = useState<string>(searchParams.get("time") || "07:00 AM");
 
+  // Generate Upcoming 14 Days for Quick 1-Tap Date Strip
+  const upcomingDays = useMemo(() => {
+    const days = [];
+    const base = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      const dateStr = getLocalDateString(d);
+      const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+      const dayNum = d.getDate();
+      const monthShort = d.toLocaleDateString("en-US", { month: "short" });
+      days.push({
+        dateStr,
+        dayName,
+        dayNum,
+        monthShort,
+        isToday: i === 0,
+        isTomorrow: i === 1,
+      });
+    }
+    return days;
+  }, []);
+
   // 4. Dakshina & Assignment
   const [amount, setAmount] = useState<number>(5000);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
@@ -313,18 +336,12 @@ function QuickBookingContent() {
           </div>
         </div>
 
-        {/* View Switcher: 2-Step Quick vs 4-Step Wizard */}
-        <div className="flex items-center bg-slate-100 p-0.5 rounded-2xl border border-slate-200 text-xs font-bold">
-          <span className="px-2.5 py-1 bg-white text-emerald-900 rounded-xl shadow-2xs">
-            ⚡ 2-Step Quick
-          </span>
-          <Link
-            href="/app/bookings/new"
-            className="px-2.5 py-1 text-slate-600 hover:text-slate-900 rounded-xl transition"
-          >
-            📋 4-Step Wizard
-          </Link>
-        </div>
+        <Link
+          href="/app/bookings"
+          className="text-xs font-bold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition active:scale-95 shadow-2xs"
+        >
+          Cancel
+        </Link>
       </div>
 
       <form onSubmit={handleConfirmBooking} className="space-y-3.5">
@@ -761,45 +778,92 @@ function QuickBookingContent() {
             </span>
           </div>
 
-          {/* Quick Date Shortcuts (Today / Tomorrow / Pick) */}
-          <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setDate(todayStr)}
-              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
-                date === todayStr
-                  ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs font-black"
-                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-              }`}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={() => setDate(tomorrowStr)}
-              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
-                date === tomorrowStr
-                  ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs font-black"
-                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-              }`}
-            >
-              Tomorrow
-            </button>
-            <div className="relative">
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-center focus:outline-none focus:border-emerald-600"
-              />
+          {/* Interactive 14-Day Horizontal Date Strip */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-bold">
+              <span className="text-slate-400 uppercase tracking-wider text-[10px]">
+                தேதித் தேர்வு (1-Tap Select Date):
+              </span>
+              <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-amber-50 px-2.5 py-1 rounded-xl border border-slate-200 text-amber-900 transition shadow-2xs">
+                <CalendarIcon className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <label className="cursor-pointer text-xs font-bold flex items-center gap-1">
+                  <span>Choose Other Date</span>
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-2 pt-0.5 no-scrollbar">
+              {upcomingDays.map((d) => {
+                const isSelected = date === d.dateStr;
+                return (
+                  <button
+                    key={d.dateStr}
+                    type="button"
+                    onClick={() => setDate(d.dateStr)}
+                    className={`flex-shrink-0 w-16 p-2 rounded-2xl border text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between gap-1 shadow-2xs ${
+                      isSelected
+                        ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-amber-400/40"
+                        : "bg-slate-50/80 hover:bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <span
+                      className={`text-[9.5px] font-bold uppercase ${
+                        isSelected ? "text-amber-300" : "text-slate-400"
+                      }`}
+                    >
+                      {d.isToday ? "Today" : d.isTomorrow ? "Tmrw" : d.dayName}
+                    </span>
+                    <span
+                      className={`text-lg font-black leading-none ${
+                        isSelected ? "text-white" : "text-slate-900"
+                      }`}
+                    >
+                      {d.dayNum}
+                    </span>
+                    <span
+                      className={`text-[9.5px] font-extrabold ${
+                        isSelected ? "text-amber-300" : "text-slate-500"
+                      }`}
+                    >
+                      {d.monthShort}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Compact Tamil Panchangam Strip (Nalla Neram at a glance) */}
-          <div className="bg-amber-50/70 p-2 rounded-xl border border-amber-200/80 flex items-center justify-between text-[11px] font-bold text-amber-950 flex-wrap gap-1.5">
-            <span>🪔 நல்ல நேரம்: {tamilInfo.nallaNeram}</span>
-            <span>✨ கௌரி: {tamilInfo.gowriNallaNeram}</span>
-            <span className="text-rose-700 font-medium">⛔ ராகு: {tamilInfo.rahuKalam}</span>
+          {/* Selected Date Panchangam Details Card */}
+          <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-3 rounded-2xl border border-amber-200/80 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between flex-wrap gap-1">
+              <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                <span>📅 {tamilInfo.formattedFullDay || tamilInfo.formattedDualDate}</span>
+              </div>
+              {tamilInfo.tithiTa && (
+                <span className="text-[10.5px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200">
+                  🌕 {tamilInfo.tithiTa}
+                </span>
+              )}
+            </div>
+
+            {tamilInfo.nakshatraNameTa && (
+              <div className="text-[11px] font-bold text-slate-700 flex items-center gap-2">
+                <span>⭐ நட்சத்திரம்: {tamilInfo.nakshatraNameTa}</span>
+              </div>
+            )}
+
+            {/* Nalla Neram / Gowri / Rahu kalam */}
+            <div className="pt-1.5 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[11px] font-bold">
+              <span className="text-emerald-900">🪔 நல்ல நேரம்: {tamilInfo.nallaNeram}</span>
+              <span className="text-amber-900">✨ கௌரி: {tamilInfo.gowriNallaNeram}</span>
+              <span className="text-rose-700">⛔ ராகு: {tamilInfo.rahuKalam}</span>
+            </div>
           </div>
 
           {/* Interactive 12-Hour Auspicious Time Selector */}
