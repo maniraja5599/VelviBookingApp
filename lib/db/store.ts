@@ -32,8 +32,14 @@ import {
   SEED_BOOKINGS,
 } from "@/lib/seed/data";
 import { calculateNewExpiryDate, validateReferralReward } from "@/lib/referrals/engine";
+import {
+  pushBookingToCloud,
+  pushCustomerToCloud,
+  deleteCustomerFromCloud,
+  pushPoojaToCloud,
+  deletePoojaFromCloud,
+} from "@/lib/supabase/sync";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
-import { pushBookingToCloud } from "@/lib/supabase/sync";
 
 export interface PlatformSettings {
   appName: string;
@@ -965,32 +971,53 @@ export class VelviDatabaseStore {
   }
 
   // -------------------------------------------------------------
-  // CUSTOMER MANAGEMENT (Quick Add & Find)
+  // CUSTOMER MANAGEMENT (Quick Add, Edit, Delete & Cloud Sync)
   // -------------------------------------------------------------
   public createCustomer(params: {
     businessId: string;
     name: string;
     mobile?: string;
+    whatsapp?: string;
     address?: string;
     city?: string;
     notes?: string;
+    gothram?: string;
+    nakshatram?: string;
+    rasi?: string;
   }): Customer {
     const normalizedMobile = params.mobile?.trim() ? normalizeIndianMobile(params.mobile) : "";
-    const newCust: Customer = {
+    const newCustomer: Customer = {
       id: `c-${Date.now()}`,
       businessId: params.businessId,
       name: params.name.trim(),
       mobile: normalizedMobile,
-      whatsapp: normalizedMobile,
+      whatsapp: params.whatsapp?.trim() || normalizedMobile,
       address: params.address?.trim() || "",
       city: params.city?.trim() || "Namakkal",
       notes: params.notes?.trim() || "",
+      gothram: params.gothram?.trim() || "",
+      nakshatram: params.nakshatram?.trim() || "",
+      rasi: params.rasi?.trim() || "",
       createdAt: new Date().toISOString(),
     };
-    this.customers.unshift(newCust);
+    this.customers.unshift(newCustomer);
     this.saveToLocalStorage();
     this.notifyListeners();
-    return newCust;
+    pushCustomerToCloud(newCustomer).catch(() => {});
+    return newCustomer;
+  }
+
+  public updateCustomer(
+    customerId: string,
+    updates: Partial<Customer>
+  ): Customer | null {
+    const customer = this.customers.find((c) => c.id === customerId);
+    if (!customer) return null;
+    Object.assign(customer, updates, { updatedAt: new Date().toISOString() });
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    pushCustomerToCloud(customer).catch(() => {});
+    return customer;
   }
 
   public deleteCustomer(customerId: string): boolean {
@@ -1006,6 +1033,7 @@ export class VelviDatabaseStore {
     this.customers.splice(idx, 1);
     this.saveToLocalStorage();
     this.notifyListeners();
+    deleteCustomerFromCloud(customerId).catch(() => {});
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(
@@ -1117,6 +1145,7 @@ export class VelviDatabaseStore {
     this.poojas.unshift(newPooja);
     this.saveToLocalStorage();
     this.notifyListeners();
+    pushPoojaToCloud(newPooja).catch(() => {});
     return newPooja;
   }
 
@@ -1129,6 +1158,7 @@ export class VelviDatabaseStore {
     Object.assign(pooja, updates);
     this.saveToLocalStorage();
     this.notifyListeners();
+    pushPoojaToCloud(pooja).catch(() => {});
     return pooja;
   }
 
@@ -1145,6 +1175,7 @@ export class VelviDatabaseStore {
     this.poojas.splice(idx, 1);
     this.saveToLocalStorage();
     this.notifyListeners();
+    deletePoojaFromCloud(poojaId).catch(() => {});
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(

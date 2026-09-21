@@ -44,6 +44,30 @@ export async function initCloudSync(businessId: string) {
         {
           event: "*",
           schema: "public",
+          table: "customers",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudCustomerChange(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "poojas",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudPoojaChange(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
           table: "payments",
           filter: `business_id=eq.${businessId}`,
         },
@@ -56,7 +80,7 @@ export async function initCloudSync(businessId: string) {
 }
 
 /**
- * Pulls latest records from Supabase into local store.
+ * Pulls latest records (Bookings, Customers, Poojas) from Supabase into local store.
  */
 export async function pullFromCloud(businessId: string): Promise<boolean> {
   const supabase = getSupabaseClient();
@@ -64,7 +88,69 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 
   isSyncing = true;
   try {
-    // Fetch bookings
+    // 1. Fetch Customers
+    const { data: cloudCustomers, error: cErr } = await supabase
+      .from("customers")
+      .select("*")
+      .eq("business_id", businessId);
+
+    if (!cErr && Array.isArray(cloudCustomers) && cloudCustomers.length > 0) {
+      cloudCustomers.forEach((c) => {
+        const mappedCust: Customer = {
+          id: c.id,
+          businessId: c.business_id,
+          name: c.name,
+          mobile: c.mobile || "",
+          whatsapp: c.whatsapp || "",
+          address: c.address || "",
+          city: c.city || "Namakkal",
+          notes: c.notes || "",
+          gothram: c.gothram || "",
+          nakshatram: c.nakshatram || "",
+          rasi: c.rasi || "",
+          createdAt: c.created_at,
+          updatedAt: c.updated_at,
+        };
+        const idx = db.customers.findIndex((item) => item.id === mappedCust.id);
+        if (idx >= 0) {
+          db.customers[idx] = { ...db.customers[idx], ...mappedCust };
+        } else {
+          db.customers.push(mappedCust);
+        }
+      });
+    }
+
+    // 2. Fetch Poojas
+    const { data: cloudPoojas, error: pErr } = await supabase
+      .from("poojas")
+      .select("*")
+      .eq("business_id", businessId);
+
+    if (!pErr && Array.isArray(cloudPoojas) && cloudPoojas.length > 0) {
+      cloudPoojas.forEach((p) => {
+        const mappedPooja: Pooja = {
+          id: p.id,
+          businessId: p.business_id,
+          englishName: p.english_name,
+          tamilName: p.tamil_name,
+          description: p.description || "",
+          durationMinutes: Number(p.duration_minutes || 120),
+          basePrice: Number(p.base_price || 0),
+          procedure: p.procedure || "",
+          active: true,
+          items: p.items || [],
+          createdAt: p.created_at,
+        };
+        const idx = db.poojas.findIndex((item) => item.id === mappedPooja.id);
+        if (idx >= 0) {
+          db.poojas[idx] = { ...db.poojas[idx], ...mappedPooja };
+        } else {
+          db.poojas.push(mappedPooja);
+        }
+      });
+    }
+
+    // 3. Fetch Bookings
     const { data: cloudBookings, error: bErr } = await supabase
       .from("bookings")
       .select("*")
@@ -110,10 +196,10 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
           db.bookings.push(cb);
         }
       });
-      db.saveToLocalStorage();
-      db.notifyListeners();
     }
 
+    db.saveToLocalStorage();
+    db.notifyListeners();
     return true;
   } catch (err) {
     console.error("[CloudSync] Pull error:", err);
@@ -171,6 +257,114 @@ export async function pushBookingToCloud(booking: Booking): Promise<boolean> {
   }
 }
 
+/**
+ * Pushes a customer record up to Supabase.
+ */
+export async function pushCustomerToCloud(customer: Customer): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const payload = {
+      id: customer.id,
+      business_id: customer.businessId,
+      name: customer.name,
+      mobile: customer.mobile || null,
+      whatsapp: customer.whatsapp || null,
+      address: customer.address || null,
+      city: customer.city || "Namakkal",
+      notes: customer.notes || null,
+      gothram: customer.gothram || null,
+      nakshatram: customer.nakshatram || null,
+      rasi: customer.rasi || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("customers").upsert(payload);
+    if (error) {
+      console.warn("[CloudSync] Upsert customer warning:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] Push customer exception:", err);
+    return false;
+  }
+}
+
+/**
+ * Deletes a customer record from Supabase.
+ */
+export async function deleteCustomerFromCloud(customerId: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.from("customers").delete().eq("id", customerId);
+    if (error) {
+      console.warn("[CloudSync] Delete customer warning:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] Delete customer exception:", err);
+    return false;
+  }
+}
+
+/**
+ * Pushes a pooja record up to Supabase.
+ */
+export async function pushPoojaToCloud(pooja: Pooja): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const payload = {
+      id: pooja.id,
+      business_id: pooja.businessId,
+      english_name: pooja.englishName,
+      tamil_name: pooja.tamilName,
+      description: pooja.description || null,
+      duration_minutes: pooja.durationMinutes || 120,
+      base_price: pooja.basePrice || 0,
+      procedure: pooja.procedure || null,
+      items: pooja.items || [],
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("poojas").upsert(payload);
+    if (error) {
+      console.warn("[CloudSync] Upsert pooja warning:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] Push pooja exception:", err);
+    return false;
+  }
+}
+
+/**
+ * Deletes a pooja record from Supabase.
+ */
+export async function deletePoojaFromCloud(poojaId: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.from("poojas").delete().eq("id", poojaId);
+    if (error) {
+      console.warn("[CloudSync] Delete pooja warning:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] Delete pooja exception:", err);
+    return false;
+  }
+}
+
 function handleCloudBookingChange(payload: any) {
   if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
     const b = payload.new;
@@ -213,5 +407,86 @@ function handleCloudBookingChange(payload: any) {
     }
     db.saveToLocalStorage();
     db.notifyListeners();
+  } else if (payload.eventType === "DELETE") {
+    const oldId = payload.old?.id;
+    if (oldId) {
+      db.bookings = db.bookings.filter((b) => b.id !== oldId);
+      db.saveToLocalStorage();
+      db.notifyListeners();
+    }
+  }
+}
+
+function handleCloudCustomerChange(payload: any) {
+  if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+    const c = payload.new;
+    if (!c) return;
+    const existingIndex = db.customers.findIndex((item) => item.id === c.id);
+    const updated: Customer = {
+      id: c.id,
+      businessId: c.business_id,
+      name: c.name,
+      mobile: c.mobile || "",
+      whatsapp: c.whatsapp || "",
+      address: c.address || "",
+      city: c.city || "Namakkal",
+      notes: c.notes || "",
+      gothram: c.gothram || "",
+      nakshatram: c.nakshatram || "",
+      rasi: c.rasi || "",
+      createdAt: c.created_at,
+      updatedAt: c.updated_at,
+    };
+
+    if (existingIndex >= 0) {
+      db.customers[existingIndex] = updated;
+    } else {
+      db.customers.unshift(updated);
+    }
+    db.saveToLocalStorage();
+    db.notifyListeners();
+  } else if (payload.eventType === "DELETE") {
+    const oldId = payload.old?.id;
+    if (oldId) {
+      db.customers = db.customers.filter((c) => c.id !== oldId);
+      db.saveToLocalStorage();
+      db.notifyListeners();
+    }
+  }
+}
+
+function handleCloudPoojaChange(payload: any) {
+  if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+    const p = payload.new;
+    if (!p) return;
+    const existingIndex = db.poojas.findIndex((item) => item.id === p.id);
+    const updated: Pooja = {
+      id: p.id,
+      businessId: p.business_id,
+      englishName: p.english_name,
+      tamilName: p.tamil_name,
+      description: p.description || "",
+      durationMinutes: Number(p.duration_minutes || 120),
+      basePrice: Number(p.base_price || 0),
+      procedure: p.procedure || "",
+      active: true,
+      items: p.items || [],
+      createdAt: p.created_at,
+    };
+
+    if (existingIndex >= 0) {
+      db.poojas[existingIndex] = updated;
+    } else {
+      db.poojas.unshift(updated);
+    }
+    db.saveToLocalStorage();
+    db.notifyListeners();
+  } else if (payload.eventType === "DELETE") {
+    const oldId = payload.old?.id;
+    if (oldId) {
+      db.poojas = db.poojas.filter((p) => p.id !== oldId);
+      db.saveToLocalStorage();
+      db.notifyListeners();
+    }
   }
 }

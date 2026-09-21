@@ -139,6 +139,10 @@ export interface Customer {
   address?: string;
   city?: string;
   notes?: string;
+  gothram?: string;
+  nakshatram?: string;
+  rasi?: string;
+  updatedAt?: string;
   isSample?: boolean;
   createdAt: string;
 }

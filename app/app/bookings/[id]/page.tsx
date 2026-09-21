@@ -5,7 +5,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { getTamilDate } from "@/lib/calendar/tamil";
-import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
+import {
+  formatBookingConfirmationWhatsAppMessage,
+  formatPoojaReminderWhatsAppMessage,
+} from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
 import Link from "next/link";
@@ -30,6 +33,9 @@ import {
   Trash2,
   Ban,
   AlertTriangle,
+  Copy,
+  X,
+  Send,
 } from "lucide-react";
 
 export default function BookingDetailPage() {
@@ -77,6 +83,9 @@ export default function BookingDetailPage() {
   const [paymentError, setPaymentError] = useState<string>("");
   const [showItemsShareModal, setShowItemsShareModal] = useState(false);
   const [showPoojaSlipModal, setShowPoojaSlipModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [whatsAppType, setWhatsAppType] = useState<"REMINDER" | "CONFIRMATION">("REMINDER");
+  const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
 
   const quickCancelReasons = [
     "Client request",
@@ -85,11 +94,28 @@ export default function BookingDetailPage() {
     "Family emergency",
   ];
 
-  const handleWhatsAppShare = () => {
-    if (!currentBusiness) return;
-    const msg = formatBookingConfirmationWhatsAppMessage(booking, currentBusiness);
+  const currentWhatsAppMsg = React.useMemo(() => {
+    if (!currentBusiness) return "";
+    return whatsAppType === "REMINDER"
+      ? formatPoojaReminderWhatsAppMessage(booking, currentBusiness)
+      : formatBookingConfirmationWhatsAppMessage(booking, currentBusiness);
+  }, [whatsAppType, booking, currentBusiness]);
+
+  const handleSendWhatsApp = () => {
     const phone = booking.customerMobile ? booking.customerMobile.replace(/\D/g, "") : "";
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(currentWhatsAppMsg)}`, "_blank");
+  };
+
+  const handleCopyWhatsApp = async () => {
+    try {
+      await navigator.clipboard.writeText(currentWhatsAppMsg);
+      setCopiedWhatsApp(true);
+      setTimeout(() => setCopiedWhatsApp(false), 2000);
+    } catch (_) {}
+  };
+
+  const handleWhatsAppShare = () => {
+    setShowWhatsAppModal(true);
   };
 
   const handleRecordPayment = () => {
@@ -1059,6 +1085,107 @@ export default function BookingDetailPage() {
           business={currentBusiness}
           onClose={() => setShowPoojaSlipModal(false)}
         />
+      )}
+
+      {/* Devotee WhatsApp Modal (Reminder & Confirmation) */}
+      {showWhatsAppModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-emerald-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900 leading-tight">
+                    வாட்ஸ்அப் செய்தி
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    பக்தருக்கு அனுப்ப வேண்டிய தகவல்
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWhatsAppModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Type Switcher Pills */}
+            <div className="p-4 pb-2">
+              <div className="bg-slate-100 p-1 rounded-2xl flex gap-1">
+                <button
+                  type="button"
+                  onClick={() => setWhatsAppType("REMINDER")}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                    whatsAppType === "REMINDER"
+                      ? "bg-white text-emerald-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  ⏰ பூஜை நினைவூட்டல் (Reminder)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWhatsAppType("CONFIRMATION")}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                    whatsAppType === "CONFIRMATION"
+                      ? "bg-white text-emerald-700 shadow-sm"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  📩 உறுதிப்படுத்தல் (Confirmation)
+                </button>
+              </div>
+            </div>
+
+            {/* Message Preview */}
+            <div className="px-4 py-2 flex-1 overflow-hidden flex flex-col min-h-0">
+              <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
+                <span>செய்தி முன்னோட்டம் (Preview):</span>
+                <span className="text-slate-400 font-normal truncate max-w-[180px]">
+                  {booking.customerName} ({booking.customerMobile})
+                </span>
+              </div>
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 text-xs text-slate-800 whitespace-pre-wrap overflow-y-auto leading-relaxed flex-1 font-sans shadow-inner max-h-[320px]">
+                {currentWhatsAppMsg}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t border-slate-100 flex gap-2.5 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={handleCopyWhatsApp}
+                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center gap-2 transition-all shadow-sm"
+              >
+                {copiedWhatsApp ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-700">நகலெடுக்கப்பட்டது!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-slate-500" />
+                    <span>நகலெடு (Copy)</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleSendWhatsApp}
+                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
+              >
+                <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                <span>அனுப்பு (WhatsApp)</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

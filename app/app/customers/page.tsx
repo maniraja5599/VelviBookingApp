@@ -38,7 +38,10 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   React.useEffect(() => {
-    setCustomers(db.getCustomers(businessId));
+    const update = () => setCustomers(db.getCustomers(businessId));
+    update();
+    window.addEventListener("velvi:db-change", update);
+    return () => window.removeEventListener("velvi:db-change", update);
   }, [businessId]);
 
   // New customer form
@@ -107,8 +110,7 @@ export default function CustomersPage() {
       }
     }
 
-    const newCust: Customer = {
-      id: `c-${Date.now()}`,
+    db.createCustomer({
       businessId,
       name: name.trim(),
       mobile: normalizedMobile,
@@ -116,10 +118,8 @@ export default function CustomersPage() {
       address: address.trim(),
       city: city.trim(),
       notes: notes.trim(),
-      createdAt: new Date().toISOString(),
-    };
+    });
 
-    db.customers.unshift(newCust);
     setCustomers([...db.getCustomers(businessId)]);
     setShowAddModal(false);
     setName("");
