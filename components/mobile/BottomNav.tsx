@@ -19,6 +19,14 @@ export const BottomNav: React.FC = React.memo(() => {
     { href: "/app/settings", label: t("settings") || "Settings", icon: Settings },
   ];
 
+  // Hide bottom navigation on full-screen booking creation pages so action buttons are unobstructed
+  if (
+    pathname?.startsWith("/app/bookings/new") ||
+    pathname?.startsWith("/app/bookings/quick")
+  ) {
+    return null;
+  }
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-2.5 sm:px-5 py-2 sm:py-2.5 max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto transition-all">
       <div className="flex items-center justify-around">

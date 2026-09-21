@@ -957,6 +957,29 @@ _Velvi Booking App_`;
         </div>
       </div>
 
+      {/* Switcher Option: Single Page Quick Booking vs 4 Steps */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50/80 p-2 sm:p-2.5 rounded-2xl border border-amber-200 shadow-2xs">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+            ⚡
+          </div>
+          <div>
+            <div className="text-xs font-black text-amber-950">
+              ஒரே பக்கத்தில் முன்பதிவு செய்ய விருப்பமா?
+            </div>
+            <div className="text-[10px] text-amber-800 font-medium">
+              4 படிகள் இல்லாமல் அனைத்தையும் ஒரே பக்கத்தில் விரைவாக முடிக்கலாம்
+            </div>
+          </div>
+        </div>
+        <Link
+          href="/app/bookings/quick"
+          className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-extrabold shadow-2xs transition active:scale-95 shrink-0"
+        >
+          ஒரே பக்கம் ⚡
+        </Link>
+      </div>
+
       {/* 4-Step Progress Indicator */}
       <div className="bg-white rounded-3xl p-2 sm:p-2.5 border border-slate-200/90 shadow-2xs">
         <div className="grid grid-cols-4 gap-1.5 sm:gap-2">

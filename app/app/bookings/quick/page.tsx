@@ -1,0 +1,798 @@
+"use client";
+
+import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
+import { db } from "@/lib/db/store";
+import { Booking, Customer, Pooja, BookingItem, BusinessMember, PaymentStatus } from "@/lib/types";
+import {
+  ArrowLeft,
+  User,
+  Flame,
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  IndianRupee,
+  CheckCircle2,
+  Sparkles,
+  Search,
+  Plus,
+  X,
+  ChevronDown,
+  ChevronUp,
+  MessageCircle,
+  Share2,
+  Check,
+  CheckSquare,
+  Square,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { getTamilDate, getLocalDateString } from "@/lib/calendar/tamil";
+import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
+
+function QuickBookingContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { currentBusiness, currentUser } = useAuth();
+  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+
+  // Data
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [poojas, setPoojas] = useState<Pooja[]>([]);
+  const [members, setAllMembers] = useState<BusinessMember[]>([]);
+
+  useEffect(() => {
+    setCustomers(db.getCustomers(businessId));
+    setPoojas(db.getPoojas(businessId));
+    setAllMembers(db.getMembers(businessId));
+  }, [businessId]);
+
+  // Form States - All in ONE page
+  // 1. Devotee
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
+    searchParams.get("customerId") || "c-101"
+  );
+  const [devoteeSearch, setDevoteeSearch] = useState<string>("");
+  const [showAddDevotee, setShowAddDevotee] = useState<boolean>(false);
+  const [newCustName, setNewCustName] = useState<string>("");
+  const [newCustMobile, setNewCustMobile] = useState<string>("");
+  const [newCustCity, setNewCustCity] = useState<string>("Namakkal");
+
+  // 2. Pooja & Samagri
+  const [selectedPoojaId, setSelectedPoojaId] = useState<string>(
+    searchParams.get("poojaId") || ""
+  );
+  const [isItemsExpanded, setIsItemsExpanded] = useState<boolean>(false);
+  const [samagriItems, setSamagriItems] = useState<BookingItem[]>([]);
+
+  // 3. Date & Auspicious Time
+  const todayStr = getLocalDateString();
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toISOString().split("T")[0];
+
+  const [date, setDate] = useState<string>(searchParams.get("date") || todayStr);
+  const [time, setTime] = useState<string>(searchParams.get("time") || "07:00 AM");
+
+  // 4. Dakshina & Assignment
+  const [amount, setAmount] = useState<number>(5000);
+  const [advanceAmount, setAdvanceAmount] = useState<number>(0);
+  const [paymentChoice, setPaymentChoice] = useState<"UNPAID" | "ADVANCE" | "FULL">("UNPAID");
+  const [assignedIyerId, setAssignedIyerId] = useState<string>("self");
+  const [location, setLocation] = useState<string>("Namakkal");
+  const [notes, setNotes] = useState<string>("");
+
+  // Celebratory modal
+  const [createdBooking, setCreatedBooking] = useState<Booking | null>(null);
+
+  // Auto select first pooja if none
+  useEffect(() => {
+    if (!selectedPoojaId && poojas.length > 0) {
+      setSelectedPoojaId(poojas[0].id);
+    }
+  }, [poojas, selectedPoojaId]);
+
+  // Sync pooja details & items
+  const currentPooja = useMemo(
+    () => poojas.find((p) => p.id === selectedPoojaId) || poojas[0],
+    [poojas, selectedPoojaId]
+  );
+
+  useEffect(() => {
+    if (currentPooja) {
+      setAmount(currentPooja.basePrice || 5000);
+      if (currentPooja.items && currentPooja.items.length > 0) {
+        setSamagriItems(
+          currentPooja.items.map((it, idx) => ({
+            id: `item-${Date.now()}-${idx}`,
+            bookingId: "",
+            itemEnglishName: it.itemEnglishName,
+            itemTamilName: it.itemTamilName,
+            quantity: it.quantity,
+            unit: it.unit,
+            isChecked: true,
+            isCustom: false,
+          }))
+        );
+      } else {
+        setSamagriItems([]);
+      }
+    }
+  }, [currentPooja]);
+
+  // Tamil Date Info
+  const tamilInfo = useMemo(() => getTamilDate(date), [date]);
+
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === selectedCustomerId),
+    [customers, selectedCustomerId]
+  );
+
+  const filteredCustomers = useMemo(() => {
+    if (!devoteeSearch.trim()) return customers;
+    const q = devoteeSearch.toLowerCase().trim();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.mobile && c.mobile.includes(q)) ||
+        (c.city && c.city.toLowerCase().includes(q))
+    );
+  }, [customers, devoteeSearch]);
+
+  // Quick Add Devotee Inline
+  const handleQuickAddDevotee = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustName.trim()) return;
+    const created = db.createCustomer({
+      businessId,
+      name: newCustName.trim(),
+      mobile: newCustMobile.trim(),
+      city: newCustCity.trim() || "Namakkal",
+    });
+    setCustomers(db.getCustomers(businessId));
+    setSelectedCustomerId(created.id);
+    setShowAddDevotee(false);
+    setNewCustName("");
+    setNewCustMobile("");
+  };
+
+  // Toggle Item
+  const handleToggleItem = (id: string) => {
+    setSamagriItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, isChecked: !it.isChecked } : it))
+    );
+  };
+
+  // Handle Payment Choice
+  const handlePaymentChoiceChange = (choice: "UNPAID" | "ADVANCE" | "FULL") => {
+    setPaymentChoice(choice);
+    if (choice === "UNPAID") setAdvanceAmount(0);
+    else if (choice === "FULL") setAdvanceAmount(amount);
+    else if (choice === "ADVANCE" && advanceAmount === 0) setAdvanceAmount(Math.round(amount / 2));
+  };
+
+  // Create Booking Action
+  const handleConfirmBooking = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomer) {
+      alert("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)");
+      return;
+    }
+    if (!currentPooja) {
+      alert("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)");
+      return;
+    }
+
+    const assignedMember = members.find((m) => m.id === assignedIyerId);
+    const performingName =
+      assignedIyerId === "self" ? currentUser?.name || "Ravi Iyer" : assignedMember?.name || "Assigned Priest";
+
+    const paymentStatus: PaymentStatus =
+      paymentChoice === "FULL"
+        ? "PAID"
+        : paymentChoice === "ADVANCE"
+        ? "PARTIALLY_PAID"
+        : "PENDING";
+
+    const newBooking = db.createBooking({
+      businessId,
+      customerId: selectedCustomer.id,
+      customerName: selectedCustomer.name,
+      customerMobile: selectedCustomer.mobile,
+      customerAddress: selectedCustomer.address || location,
+      poojaId: currentPooja.id,
+      poojaEnglishName: currentPooja.englishName,
+      poojaTamilName: currentPooja.tamilName,
+      date,
+      startTime: time,
+      endTime: time,
+      durationMinutes: currentPooja.durationMinutes || 120,
+      totalAmount: amount,
+      advanceAmount: paymentChoice === "UNPAID" ? 0 : advanceAmount,
+      balanceAmount: Math.max(0, amount - (paymentChoice === "UNPAID" ? 0 : advanceAmount)),
+      paymentStatus,
+      status: "CONFIRMED",
+      assignedIyerId: assignedIyerId === "self" ? "m-owner-01" : assignedIyerId,
+      assignedIyerName: performingName,
+      location: location || selectedCustomer.city || "Namakkal",
+      notes: notes.trim(),
+      items: samagriItems,
+    });
+
+    setCreatedBooking(newBooking);
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!createdBooking || !currentBusiness) return;
+    const msg = formatBookingConfirmationWhatsAppMessage(createdBooking, currentBusiness);
+    const phone = createdBooking.customerMobile ? createdBooking.customerMobile.replace(/\D/g, "") : "";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-4 pb-28 animate-in fade-in duration-200">
+      {/* Top Header & Mode Toggle Switch */}
+      <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
+        <div className="flex items-center gap-2">
+          <Link
+            href="/app/bookings"
+            className="p-1.5 hover:bg-slate-100 rounded-full text-slate-600 transition"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                புதிய முன்பதிவு (New Booking)
+              </h1>
+              <span className="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                ⚡ ஒரே பக்கம் (Sample)
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              அனைத்து விவரங்களையும் ஒரே பக்கத்தில் விரைவாகப் பதிவு செய்யலாம்
+            </p>
+          </div>
+        </div>
+
+        {/* View Switcher: Single Page vs Step Wizard */}
+        <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
+          <span className="px-3 py-1 bg-white text-emerald-900 rounded-xl shadow-xs">
+            ⚡ ஒரே பக்கம் (Single)
+          </span>
+          <Link
+            href="/app/bookings/new"
+            className="px-3 py-1 text-slate-600 hover:text-slate-900 rounded-xl transition"
+          >
+            📋 4 படிகள் (Wizard)
+          </Link>
+        </div>
+      </div>
+
+      <form onSubmit={handleConfirmBooking} className="space-y-3.5">
+        {/* ================================================================= */}
+        {/* SECTION 1: DEVOTEE SELECTION                                      */}
+        {/* ================================================================= */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+                <User className="w-4 h-4 text-amber-700" />
+              </div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                1. பக்தர் விவரம் (Devotee)
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAddDevotee((prev) => !prev)}
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-amber-700" />
+              <span>{showAddDevotee ? "Close Form" : "+ புதிய பக்தர் (New)"}</span>
+            </button>
+          </div>
+
+          {/* Inline Add Devotee Form */}
+          {showAddDevotee && (
+            <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200 space-y-2.5 animate-in fade-in">
+              <span className="text-[11px] font-bold text-amber-950 block">
+                புதிய பக்தரை விரைவாகச் சேர்க்க:
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  placeholder="பக்தர் பெயர் (Name) *"
+                  value={newCustName}
+                  onChange={(e) => setNewCustName(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+                <input
+                  type="tel"
+                  placeholder="மொபைல் எண் (Mobile)"
+                  value={newCustMobile}
+                  onChange={(e) => setNewCustMobile(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    placeholder="ஊர் (City)"
+                    value={newCustCity}
+                    onChange={(e) => setNewCustCity(e.target.value)}
+                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-amber-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickAddDevotee}
+                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-95"
+                  >
+                    சேர்
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Quick Devotee 1-Tap Chips */}
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 block mb-1.5 uppercase tracking-wider">
+              1-Tap Quick Select (அடிக்கடி வரும் பக்தர்கள்):
+            </span>
+            <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {customers.slice(0, 6).map((c) => {
+                const isSelected = selectedCustomerId === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCustomerId(c.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 border shadow-2xs active:scale-95 cursor-pointer ${
+                      isSelected
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <span>{c.name}</span>
+                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected Customer Active Card */}
+          {selectedCustomer && (
+            <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-3 rounded-2xl border border-emerald-300 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                  {selectedCustomer.name.slice(0, 1)}
+                </div>
+                <div>
+                  <div className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                    {selectedCustomer.name}
+                  </div>
+                  <div className="text-[11px] text-slate-500 font-medium flex items-center gap-2">
+                    {selectedCustomer.mobile && <span>📱 {selectedCustomer.mobile}</span>}
+                    {selectedCustomer.city && <span>📍 {selectedCustomer.city}</span>}
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-md border border-emerald-300">
+                தேர்வு செய்யப்பட்டது ✓
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* ================================================================= */}
+        {/* SECTION 2: POOJA & SAMAGRI CHECKLIST                              */}
+        {/* ================================================================= */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+                <Flame className="w-4 h-4 text-emerald-700" />
+              </div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                2. பூஜை &amp; சாக்கிரிகள் (Pooja &amp; Samagri)
+              </h2>
+            </div>
+
+            <Link
+              href="/app/poojas?action=new&returnTo=quick-booking"
+              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>+ Add Pooja (புதிய பூஜை)</span>
+            </Link>
+          </div>
+
+          {/* 1-Tap Pooja Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {poojas.slice(0, 6).map((p) => {
+              const isSelected = selectedPoojaId === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setSelectedPoojaId(p.id)}
+                  className={`p-2.5 rounded-2xl border text-left transition flex flex-col justify-between shadow-2xs active:scale-95 cursor-pointer ${
+                    isSelected
+                      ? "bg-gradient-to-r from-emerald-50 to-emerald-100/90 border-emerald-600 ring-2 ring-emerald-500/25 shadow-xs"
+                      : "bg-slate-50/70 hover:bg-slate-100 border-slate-200"
+                  }`}
+                >
+                  <div>
+                    <div className="text-xs font-black text-slate-900 truncate">
+                      {p.englishName}
+                    </div>
+                    {p.tamilName && (
+                      <div className="text-[10.5px] text-emerald-900 font-bold truncate">
+                        {p.tamilName}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="font-extrabold text-slate-900">
+                      ₹{(p.basePrice || 0).toLocaleString("en-IN")}
+                    </span>
+                    {isSelected && (
+                      <span className="text-[9.5px] font-black text-emerald-800 bg-emerald-200/80 px-1 py-0.2 rounded">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Expandable Samagri Checklist Toggle */}
+          {samagriItems.length > 0 && (
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => setIsItemsExpanded((prev) => !prev)}
+                className="w-full p-2.5 bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 flex items-center justify-between transition cursor-pointer"
+              >
+                <span className="flex items-center gap-1.5">
+                  <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>
+                    பூஜா சாக்கிரிகள் ({samagriItems.filter((i) => i.isChecked !== false).length} /{" "}
+                    {samagriItems.length} பொருட்கள் தேர்வு)
+                  </span>
+                </span>
+                <span className="text-emerald-900 font-extrabold flex items-center gap-0.5">
+                  {isItemsExpanded ? "மறைக்க ▲" : "பார்வை / மாற்று ▼"}
+                </span>
+              </button>
+
+              {/* Compact Checklist Grid when expanded */}
+              {isItemsExpanded && (
+                <div className="mt-2 p-3 bg-white rounded-2xl border border-emerald-200 shadow-inner space-y-1.5 max-h-56 overflow-y-auto animate-in fade-in">
+                  {samagriItems.map((it, idx) => {
+                    const isChecked = it.isChecked !== false;
+                    return (
+                      <div
+                        key={it.id}
+                        onClick={() => handleToggleItem(it.id)}
+                        className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-2 transition cursor-pointer ${
+                          isChecked
+                            ? "bg-emerald-50/40 border-emerald-300 text-slate-900"
+                            : "bg-slate-50 border-slate-200 text-slate-400 opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isChecked ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-300 shrink-0" />
+                          )}
+                          <span className="truncate font-semibold">
+                            {idx + 1}. {it.itemEnglishName} {it.itemTamilName ? `(${it.itemTamilName})` : ""}
+                          </span>
+                        </div>
+                        <span className="text-[10.5px] font-bold text-slate-600 bg-white px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                          {it.quantity} {it.unit}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ================================================================= */}
+        {/* SECTION 3: DATE, PANCHANGAM & TIME                                */}
+        {/* ================================================================= */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+                <CalendarIcon className="w-4 h-4 text-amber-700" />
+              </div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                3. நாள் &amp; சுப நேரம் (Date &amp; Auspicious Time)
+              </h2>
+            </div>
+            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300">
+              {tamilInfo.formattedDualDate}
+            </span>
+          </div>
+
+          {/* Quick Date Shortcuts (Today / Tomorrow / Pick) */}
+          <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setDate(todayStr)}
+              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                date === todayStr
+                  ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs font-black"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              }`}
+            >
+              இன்று (Today)
+            </button>
+            <button
+              type="button"
+              onClick={() => setDate(tomorrowStr)}
+              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                date === tomorrowStr
+                  ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs font-black"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              }`}
+            >
+              நாளை (Tomorrow)
+            </button>
+            <div className="relative">
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full py-1.5 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 text-center focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+          </div>
+
+          {/* Compact Tamil Panchangam Strip (Nalla Neram at a glance) */}
+          <div className="bg-amber-50/70 p-2.5 rounded-2xl border border-amber-200/80 flex items-center justify-between text-[11px] font-bold text-amber-950 flex-wrap gap-2">
+            <span>🪔 நல்ல நேரம்: {tamilInfo.nallaNeram}</span>
+            <span>✨ கௌரி: {tamilInfo.gowriNallaNeram}</span>
+            <span className="text-rose-700 font-medium">⛔ ராகு: {tamilInfo.rahuKalam}</span>
+          </div>
+
+          {/* 1-Tap Auspicious Time Slots */}
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 block mb-1 uppercase tracking-wider">
+              சுப நேரம் (Select Time Slot):
+            </span>
+            <div className="grid grid-cols-4 gap-1.5 text-xs font-bold">
+              {["06:00 AM", "07:00 AM", "08:30 AM", "09:30 AM", "11:00 AM", "04:30 PM", "06:00 PM", "07:15 PM"].map(
+                (tSlot) => {
+                  const isSelected = time === tSlot;
+                  return (
+                    <button
+                      key={tSlot}
+                      type="button"
+                      onClick={() => setTime(tSlot)}
+                      className={`py-1.5 rounded-xl border text-center transition active:scale-95 cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-700 text-white border-emerald-700 shadow-2xs font-black"
+                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      {tSlot}
+                    </button>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ================================================================= */}
+        {/* SECTION 4: DAKSHINA & PRIEST ASSIGNMENT                           */}
+        {/* ================================================================= */}
+        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+                <IndianRupee className="w-4 h-4 text-emerald-700" />
+              </div>
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                4. கட்டணம் &amp; செய்து வைப்பவர் (Dakshina &amp; Priest)
+              </h2>
+            </div>
+            <span className="text-sm font-black text-slate-900">
+              மொத்த கட்டணம்: ₹{amount.toLocaleString("en-IN")}
+            </span>
+          </div>
+
+          {/* Payment Mode Pills */}
+          <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => handlePaymentChoiceChange("UNPAID")}
+              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                paymentChoice === "UNPAID"
+                  ? "bg-slate-900 text-amber-300 border-slate-900 font-black shadow-xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              }`}
+            >
+              கட்டணம் பின்னர் (Pending)
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaymentChoiceChange("ADVANCE")}
+              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                paymentChoice === "ADVANCE"
+                  ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              }`}
+            >
+              முன்பணம் (Advance ₹)
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePaymentChoiceChange("FULL")}
+              className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                paymentChoice === "FULL"
+                  ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+              }`}
+            >
+              முழு தட்சிணை (Paid ✓)
+            </button>
+          </div>
+
+          {/* Advance Amount input if Advance chosen */}
+          {paymentChoice === "ADVANCE" && (
+            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 flex items-center justify-between text-xs animate-in fade-in">
+              <span className="font-bold text-emerald-950">பெறப்பட்ட முன்பணம் (Advance Received ₹):</span>
+              <input
+                type="number"
+                value={advanceAmount}
+                onChange={(e) => setAdvanceAmount(Number(e.target.value))}
+                className="w-28 bg-white border border-emerald-300 rounded-xl px-2.5 py-1 text-sm font-black text-emerald-950 text-right focus:outline-none"
+              />
+            </div>
+          )}
+
+          {/* Priest Assignment (Self or Team Member) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">
+                செய்து வைக்கும் குருக்கள் (Priest):
+              </label>
+              <select
+                value={assignedIyerId}
+                onChange={(e) => setAssignedIyerId(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 cursor-pointer"
+              >
+                <option value="self">🪔 நானே செய்கிறேன் (Self - {currentUser?.name || "Ravi Iyer"})</option>
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    👤 {m.name} ({m.specialization || "உதவி குருக்கள்"})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">
+                பூஜை நடைபெறும் இடம் (Location / Venue):
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="எ.கா: நாமக்கல் / பக்தர் இல்லம்"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ================================================================= */}
+        {/* STICKY BOTTOM CONFIRM BAR                                         */}
+        {/* ================================================================= */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 shadow-2xl">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                {selectedCustomer?.name || "பக்தர் தேர்வு"} • {currentPooja?.englishName || "பூஜை"}
+              </div>
+              <div className="text-[10.5px] sm:text-[11px] text-emerald-800 font-bold flex items-center gap-1 sm:gap-1.5 truncate">
+                <span>📅 {date}</span>
+                <span>•</span>
+                <span>⏰ {time}</span>
+                <span>•</span>
+                <span className="font-black text-slate-900">₹{amount.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+              <span>முன்பதிவு செய் ⚡</span>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {/* Celebratory Modal */}
+      {createdBooking && (
+        <div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-emerald-200 overflow-hidden text-center space-y-4 p-5 animate-in zoom-in-95">
+            <div className="w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
+              <CheckCircle2 className="w-8 h-8 stroke-[2.5]" />
+            </div>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 block">
+                முன்பதிவு உறுதியானது
+              </span>
+              <h3 className="text-lg font-black text-slate-900 mt-1">
+                பூஜை வெற்றிகரமாகப் பதிவானது!
+              </h3>
+              <div className="inline-block mt-1.5 px-2.5 py-0.5 bg-emerald-50 border border-emerald-300 rounded-full font-mono text-xs font-bold text-emerald-900">
+                #{createdBooking.bookingNumber}
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-2xl text-xs space-y-1 text-slate-700 text-left border border-slate-200">
+              <div className="flex justify-between font-bold">
+                <span>பக்தர்:</span>
+                <span>{createdBooking.customerName}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>பூஜை:</span>
+                <span>{createdBooking.poojaEnglishName}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>நாள் &amp; நேரம்:</span>
+                <span>{createdBooking.date} • {createdBooking.startTime}</span>
+              </div>
+              <div className="flex justify-between font-black text-emerald-900 pt-1 border-t border-slate-200">
+                <span>கட்டணம்:</span>
+                <span>₹{createdBooking.totalAmount.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={handleShareWhatsApp}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
+                <span>பக்தருக்கு வாட்ஸ்அப் அனுப்பு</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push(`/app/bookings/${createdBooking.id}`)}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+              >
+                பதிவு விவரம் காண்க (View Booking)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function QuickBookingPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">ஏற்றுகிறது (Loading)...</div>}>
+      <QuickBookingContent />
+    </Suspense>
+  );
+}
