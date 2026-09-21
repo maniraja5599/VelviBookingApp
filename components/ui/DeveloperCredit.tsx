@@ -8,14 +8,7 @@ export const DeveloperCredit: React.FC<{ className?: string; light?: boolean }> 
   light = false,
 }) => {
   return (
-    <div className={`pt-3 pb-2 flex flex-col items-center gap-2 text-center select-none ${className}`}>
-      {/* Devotional / Professional Tagline */}
-      <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-slate-500 tracking-wide">
-        <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400/40 animate-pulse" />
-        <span>Vedic ERP for Purohits & Temples • Designed with Precision</span>
-        <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-400/40 animate-pulse" />
-      </div>
-
+    <div className={`pt-2 pb-2 flex flex-col items-center gap-2 text-center select-none ${className}`}>
       {/* Smart Developer & Creator Badge */}
       <div
         className={`inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 px-4 py-2 rounded-2xl text-[11px] font-medium transition shadow-xs backdrop-blur-md ${
