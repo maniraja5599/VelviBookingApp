@@ -32,6 +32,25 @@ import Link from "next/link";
 import { getTamilDate, getLocalDateString } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage } from "@/lib/whatsapp/formatter";
 
+const convert24To12 = (timeStr: string): string => {
+  const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return timeStr;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  const hStr = h < 10 ? `0${h}` : `${h}`;
+  return `${hStr}:${m} ${ampm}`;
+};
+
+const formatRangeTo12Hr = (rangeStr: string): string => {
+  if (!rangeStr) return "";
+  return rangeStr.replace(/\b(\d{1,2}):(\d{2})\b/g, (match, h, m) => {
+    return convert24To12(`${h}:${m}`);
+  });
+};
+
 function QuickBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -114,16 +133,12 @@ function QuickBookingContent() {
   const [twoStepStage, setTwoStepStage] = useState<1 | 2>(1);
   const [formError, setFormError] = useState<string>("");
 
-  // Auto select first pooja if none
-  useEffect(() => {
-    if (!selectedPoojaId && poojas.length > 0) {
-      setSelectedPoojaId(poojas[0].id);
-    }
-  }, [poojas, selectedPoojaId]);
+  // Preview modal state
+  const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
 
   // Sync pooja details & items
   const currentPooja = useMemo(
-    () => poojas.find((p) => p.id === selectedPoojaId) || poojas[0],
+    () => poojas.find((p) => p.id === selectedPoojaId) || null,
     [poojas, selectedPoojaId]
   );
 
@@ -146,6 +161,8 @@ function QuickBookingContent() {
       } else {
         setSamagriItems([]);
       }
+    } else {
+      setSamagriItems([]);
     }
   }, [currentPooja]);
 
@@ -243,17 +260,26 @@ function QuickBookingContent() {
     else if (choice === "ADVANCE" && advanceAmount === 0) setAdvanceAmount(Math.round(amount / 2));
   };
 
-  // Create Booking Action
-  const handleConfirmBooking = (e: React.FormEvent) => {
+  // Open Preview Modal
+  const handleOpenPreview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomer) {
-      alert("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)");
+      setFormError("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)");
+      setTwoStepStage(1);
       return;
     }
     if (!currentPooja) {
-      alert("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)");
+      setFormError("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)");
+      setTwoStepStage(1);
       return;
     }
+    setFormError("");
+    setShowPreviewModal(true);
+  };
+
+  // Final Create Booking Action
+  const handleFinalConfirmBooking = () => {
+    if (!selectedCustomer || !currentPooja) return;
 
     const assignedMember = members.find((m) => m.id === assignedIyerId);
     const performingName =
@@ -291,6 +317,7 @@ function QuickBookingContent() {
       items: samagriItems,
     });
 
+    setShowPreviewModal(false);
     setCreatedBooking(newBooking);
   };
 
@@ -302,7 +329,7 @@ function QuickBookingContent() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 pb-28 animate-in fade-in duration-200">
+    <div className="max-w-2xl mx-auto space-y-4 pb-44 animate-in fade-in duration-200">
       {/* Top Header & Mode Toggle Switch */}
       <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
         <div className="flex items-center gap-2">
@@ -335,7 +362,7 @@ function QuickBookingContent() {
         </Link>
       </div>
 
-      <form onSubmit={handleConfirmBooking} className="space-y-3.5">
+      <form onSubmit={handleOpenPreview} className="space-y-3.5">
         {/* 2-Step Interactive Segmented Switcher */}
         <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl text-xs font-bold shadow-2xs">
           <button
@@ -402,10 +429,10 @@ function QuickBookingContent() {
             <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
-                    <User className="w-4 h-4 text-amber-700" />
+                  <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                    <User className="w-4 h-4 text-white" />
                   </div>
-                  <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950">
                     1. பக்தர் விவரம் (Devotee)
                   </h2>
                 </div>
@@ -484,7 +511,7 @@ function QuickBookingContent() {
 
               {/* Quick Devotee 1-Tap Chips */}
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block mb-1.5 uppercase tracking-wider">
+                <span className="text-[10.5px] font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">
                   1-Tap Quick Select {devoteeSearch ? `(Results: ${filteredCustomers.length})` : "(அடிக்கடி வரும் பக்தர்கள்):"}
                 </span>
                 {filteredCustomers.length > 0 ? (
@@ -515,9 +542,9 @@ function QuickBookingContent() {
                 )}
               </div>
 
-              {/* Selected Customer Active Card or Empty Prompt */}
-              {selectedCustomer ? (
-                <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-3 rounded-2xl border border-emerald-300 flex items-center justify-between text-xs">
+              {/* Selected Customer Active Card (Shown only when a devotee is picked) */}
+              {selectedCustomer && (
+                <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-3 rounded-2xl border border-emerald-300 flex items-center justify-between text-xs animate-in fade-in">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
                       {selectedCustomer.name.slice(0, 1)}
@@ -535,25 +562,11 @@ function QuickBookingContent() {
                   <button
                     type="button"
                     onClick={() => setSelectedCustomerId("")}
-                    className="text-[10px] font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition"
+                    className="text-[10px] font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition cursor-pointer"
                     title="Change Devotee"
                   >
                     மாற்று ✕
                   </button>
-                </div>
-              ) : (
-                <div className="p-3 bg-amber-50/50 border border-dashed border-amber-300/80 rounded-2xl flex items-center justify-between text-xs text-amber-900">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
-                      👤
-                    </div>
-                    <span className="font-semibold text-slate-700">
-                      பக்தரைத் தேர்ந்தெடுக்க மேலே உள்ள பட்டியலில் கிளிக் செய்யவும் அல்லது <strong className="text-amber-900">+ Add</strong> கொடுக்கவும்.
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
-                    தேர்ந்தெடுக்கவும்
-                  </span>
                 </div>
               )}
             </div>
@@ -850,29 +863,53 @@ function QuickBookingContent() {
           </div>
 
           {/* Selected Date Panchangam Details Card */}
-          <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-3 rounded-2xl border border-amber-200/80 space-y-1.5 text-xs">
-            <div className="flex items-center justify-between flex-wrap gap-1">
-              <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
+          <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-3.5 rounded-2xl border border-amber-200/80 space-y-2 text-xs">
+            <div className="flex items-center justify-between flex-wrap gap-1.5">
+              <div className="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
                 <span>📅 {tamilInfo.formattedFullDay || tamilInfo.formattedDualDate}</span>
               </div>
-              {tamilInfo.tithiTa && (
-                <span className="text-[10.5px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200">
-                  🌕 {tamilInfo.tithiTa}
-                </span>
-              )}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {tamilInfo.tithiTa && (
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-lg border border-amber-200">
+                    🌕 {tamilInfo.tithiTa}
+                  </span>
+                )}
+                {tamilInfo.nakshatraNameTa && (
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">
+                    ⭐ {tamilInfo.nakshatraNameTa}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {tamilInfo.nakshatraNameTa && (
-              <div className="text-[11px] font-bold text-slate-700 flex items-center gap-2">
-                <span>⭐ நட்சத்திரம்: {tamilInfo.nakshatraNameTa}</span>
+            {/* Nalla Neram / Gowri / Rahu kalam formatted in 12-Hour (AM/PM) */}
+            <div className="pt-1.5 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="bg-white/85 p-2 rounded-xl border border-emerald-200/80 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
+                  🪔 நல்ல நேரம்
+                </span>
+                <span className="text-[11px] font-bold text-emerald-950 mt-0.5 leading-snug">
+                  {formatRangeTo12Hr(tamilInfo.nallaNeram)}
+                </span>
               </div>
-            )}
 
-            {/* Nalla Neram / Gowri / Rahu kalam */}
-            <div className="pt-1.5 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[11px] font-bold">
-              <span className="text-emerald-900">🪔 நல்ல நேரம்: {tamilInfo.nallaNeram}</span>
-              <span className="text-amber-900">✨ கௌரி: {tamilInfo.gowriNallaNeram}</span>
-              <span className="text-rose-700">⛔ ராகு: {tamilInfo.rahuKalam}</span>
+              <div className="bg-white/85 p-2 rounded-xl border border-amber-200/80 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">
+                  ✨ கௌரி நல்ல நேரம்
+                </span>
+                <span className="text-[11px] font-bold text-amber-950 mt-0.5 leading-snug">
+                  {formatRangeTo12Hr(tamilInfo.gowriNallaNeram)}
+                </span>
+              </div>
+
+              <div className="bg-white/85 p-2 rounded-xl border border-rose-200/80 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider">
+                  ⛔ ராகு காலம்
+                </span>
+                <span className="text-[11px] font-bold text-rose-950 mt-0.5 leading-snug">
+                  {formatRangeTo12Hr(tamilInfo.rahuKalam)}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1092,16 +1129,22 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 1                                      */}
     {/* ================================================================= */}
     {twoStepStage === 1 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2.5 px-3 sm:px-4 shadow-2xl">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="font-black text-xs sm:text-sm text-slate-900 truncate">
-              {selectedCustomer?.name || "Step 1: Select Devotee"}
+            <div className="font-black text-xs sm:text-sm truncate flex items-center gap-1.5">
+              <span>👤</span>
+              <span className={selectedCustomer ? "text-slate-900 font-extrabold" : "text-amber-700 font-bold"}>
+                {selectedCustomer ? selectedCustomer.name : "பக்தரைத் தேர்ந்தெடுக்கவும்"}
+              </span>
             </div>
-            <div className="text-[10.5px] sm:text-[11px] text-emerald-800 font-bold truncate">
-              {currentPooja
-                ? `${currentPooja.englishName} • ₹${(currentPooja.basePrice || 0).toLocaleString("en-IN")}`
-                : "Choose Pooja ritual"}
+            <div className="text-[10.5px] sm:text-[11px] font-bold truncate flex items-center gap-1.5 mt-0.5">
+              <span>🪔</span>
+              <span className={currentPooja ? "text-emerald-800 font-black" : "text-slate-500 font-medium"}>
+                {currentPooja
+                  ? `${currentPooja.englishName} • ₹${(currentPooja.basePrice || 0).toLocaleString("en-IN")}`
+                  : "பூஜையைத் தேர்ந்தெடுக்கவும்"}
+              </span>
             </div>
           </div>
 
@@ -1109,18 +1152,18 @@ function QuickBookingContent() {
             type="button"
             onClick={() => {
               if (!selectedCustomerId) {
-                setFormError("Please select a devotee to continue.");
+                setFormError("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee).");
                 return;
               }
               if (!selectedPoojaId) {
-                setFormError("Please select a pooja ritual to continue.");
+                setFormError("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja).");
                 return;
               }
               setFormError("");
               setTwoStepStage(2);
               if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <span>Next: Date &amp; Dakshina</span>
             <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
@@ -1133,13 +1176,13 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 2                                      */}
     {/* ================================================================= */}
     {twoStepStage === 2 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 shadow-2xl">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2.5 px-3 sm:px-4 shadow-2xl">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="font-black text-xs sm:text-sm text-slate-900 truncate">
-              {selectedCustomer?.name || "பக்தர் தேர்வு"} • {currentPooja?.englishName || "பூஜை"}
+              👤 {selectedCustomer?.name || "Devotee"} • 🪔 {currentPooja?.englishName || "Pooja"}
             </div>
-            <div className="text-[10.5px] sm:text-[11px] text-emerald-800 font-bold flex items-center gap-1 sm:gap-1.5 truncate">
+            <div className="text-[10.5px] sm:text-[11px] text-emerald-800 font-bold flex items-center gap-1 sm:gap-1.5 truncate mt-0.5">
               <span>📅 {date}</span>
               <span>•</span>
               <span>⏰ {time}</span>
@@ -1150,7 +1193,7 @@ function QuickBookingContent() {
 
           <button
             type="submit"
-            className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
             <span>Confirm Booking ✨</span>
@@ -1159,6 +1202,134 @@ function QuickBookingContent() {
       </div>
     )}
       </form>
+
+      {/* Short & Sweet Booking Preview Modal */}
+      {showPreviewModal && selectedCustomer && currentPooja && (
+        <div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-amber-300 overflow-hidden space-y-3.5 p-4 sm:p-5 animate-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  🪔
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
+                    Booking Preview (முன்பதிவு சரிபார்ப்பு)
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 font-medium">
+                    விவரங்களைச் சரிபார்த்து உறுதிப்படுத்தவும்
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Quick Details Cards */}
+            <div className="space-y-2 text-xs">
+              {/* Devotee Info */}
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
+                    👤
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">பக்தர் (Devotee)</span>
+                    <span className="font-extrabold text-slate-900 truncate block">{selectedCustomer.name}</span>
+                  </div>
+                </div>
+                {selectedCustomer.mobile && (
+                  <span className="text-[11px] font-bold text-slate-600 shrink-0">
+                    📱 {selectedCustomer.mobile}
+                  </span>
+                )}
+              </div>
+
+              {/* Pooja & Samagri Info */}
+              <div className="bg-emerald-50/50 p-2.5 rounded-xl border border-emerald-200/80 flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
+                    🪔
+                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-emerald-800 font-bold uppercase block">பூஜை சேவை (Pooja)</span>
+                    <span className="font-extrabold text-slate-900 truncate block">
+                      {currentPooja.englishName} {currentPooja.tamilName ? `(${currentPooja.tamilName})` : ""}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10.5px] font-bold text-emerald-900 bg-white px-2 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                  {samagriItems.filter((i) => i.isChecked !== false).length} பொருட்கள்
+                </span>
+              </div>
+
+              {/* Date, Auspicious Time & Dual Date */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">தேதி (Date)</span>
+                  <span className="font-extrabold text-slate-900 block mt-0.5">📅 {date}</span>
+                  <span className="text-[10px] font-bold text-amber-800 block mt-0.5 truncate">{tamilInfo.formattedDualDate}</span>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase block">சுப நேரம் (Time)</span>
+                  <span className="font-extrabold text-emerald-900 block mt-0.5">⏰ {time}</span>
+                  <span className="text-[10px] text-slate-500 font-bold block mt-0.5">12-Hour AM/PM</span>
+                </div>
+              </div>
+
+              {/* Dakshina & Payment Status */}
+              <div className="bg-gradient-to-r from-amber-50 to-white p-2.5 rounded-xl border border-amber-200 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-500 font-bold uppercase block">தட்சணை (Dakshina)</span>
+                  <span className="text-base font-black text-slate-900">₹{amount.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase block">கட்டண நிலை</span>
+                  <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+                    {paymentChoice === "FULL"
+                      ? "முழுத் தொகை (Paid)"
+                      : paymentChoice === "ADVANCE"
+                      ? `முன்பணம் ₹${advanceAmount}`
+                      : "பிறகு செலுத்தப்படும் (Unpaid)"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Location & Iyer */}
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-200/80 text-[11px] font-semibold text-slate-600 flex items-center justify-between gap-2 flex-wrap">
+                <span>📍 இடம்: <strong className="text-slate-900">{location || selectedCustomer.city || "Namakkal"}</strong></span>
+                <span>🪔 குருக்கள்: <strong className="text-slate-900">{assignedIyerId === "self" ? currentUser?.name || "Ravi Iyer" : members.find(m => m.id === assignedIyerId)?.name || "Assigned"}</strong></span>
+              </div>
+            </div>
+
+            {/* Actions: Edit vs Confirm */}
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer active:scale-95"
+              >
+                ← Edit (திருத்து)
+              </button>
+              <button
+                type="button"
+                onClick={handleFinalConfirmBooking}
+                className="py-2.5 px-3 bg-gradient-to-r from-emerald-800 to-[#0b2b17] hover:from-emerald-700 hover:to-emerald-900 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                <span>Confirm &amp; Book ✨</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Celebratory Modal */}
       {createdBooking && (
