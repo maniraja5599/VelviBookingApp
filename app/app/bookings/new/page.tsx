@@ -957,26 +957,17 @@ _Velvi Booking App_`;
         </div>
       </div>
 
-      {/* Switcher Option: Single Page Quick Booking vs 4 Steps */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50/80 p-2 sm:p-2.5 rounded-2xl border border-amber-200 shadow-2xs">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
-            ⚡
-          </div>
-          <div>
-            <div className="text-xs font-black text-amber-950">
-              ஒரே பக்கத்தில் முன்பதிவு செய்ய விருப்பமா?
-            </div>
-            <div className="text-[10px] text-amber-800 font-medium">
-              4 படிகள் இல்லாமல் அனைத்தையும் ஒரே பக்கத்தில் விரைவாக முடிக்கலாம்
-            </div>
-          </div>
+      {/* Quick Mode Switcher */}
+      <div className="flex items-center justify-between bg-amber-50/75 border border-amber-200/80 px-3 py-1.5 rounded-2xl text-xs">
+        <div className="flex items-center gap-1.5 text-amber-950 font-bold text-[11px]">
+          <span>⚡</span>
+          <span>Need faster 1-page booking?</span>
         </div>
         <Link
           href="/app/bookings/quick"
-          className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl text-xs font-extrabold shadow-2xs transition active:scale-95 shrink-0"
+          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shadow-2xs transition active:scale-95"
         >
-          ஒரே பக்கம் ⚡
+          Single Page ⚡
         </Link>
       </div>
 
@@ -1068,11 +1059,9 @@ _Velvi Booking App_`;
           </div>
 
           {/* Smart Tip for Step 1 - Cute & Compact */}
-          <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <span className="text-base shrink-0">💡</span>
-            <p className="text-[11px] text-emerald-900 leading-tight">
-              <span className="font-bold">பக்தர் குறிப்பு:</span> பக்தரின் மொபைல் எண் சேர்த்தால் வாட்ஸ்அப்பில் பூஜை விவரங்கள் மற்றும் சாமான்கள் பட்டியலை 1-கிளிக்கில் அனுப்பலாம்.
-            </p>
+          <div className="bg-emerald-50/80 border border-emerald-200/70 rounded-xl px-2.5 py-1 text-[11px] text-emerald-900 inline-flex items-center gap-1.5 font-medium">
+            <span>💡</span>
+            <span>Add devotee mobile number for 1-click WhatsApp pooja slips.</span>
           </div>
 
           {/* If Devotee is Selected: Detailed Showcase Card */}
@@ -1292,34 +1281,17 @@ _Velvi Booking App_`;
 
             <Link
               href="/app/poojas?action=new&returnTo=new-booking"
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition active:scale-95 cursor-pointer"
-              title="பூஜைகள் பக்கத்திற்குச் சென்று புதிய பூஜையை முழு பொருட்களுடன் சேர்க்கவும்"
+              className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
-              <span>+ Add Pooja (புதிய பூஜை)</span>
+              <Plus className="w-3.5 h-3.5 text-white" />
+              <span>+ Add Pooja</span>
             </Link>
           </div>
 
-          {/* Smart & Friendly Explanation for New Users */}
-          <div className="bg-gradient-to-r from-amber-50/80 via-white to-emerald-50/60 border border-amber-200/90 rounded-2xl p-3.5 shadow-2xs space-y-1">
-            <div className="flex items-center justify-between flex-wrap gap-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🪔</span>
-                <span className="font-extrabold text-xs text-amber-950">
-                  பூஜை &amp; சாக்கிரிகள் வழிகாட்டி (Pooja Selection Guide)
-                </span>
-              </div>
-              <Link
-                href="/app/poojas"
-                className="text-[11px] font-bold text-amber-900 hover:text-amber-950 underline flex items-center gap-0.5"
-              >
-                <span>பூஜைகள் பட்டியல் மேலாண்மை</span>
-                <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
-            <p className="text-[11px] text-slate-600 leading-relaxed">
-              கீழேயுள்ள பட்டியலில் இருந்து இந்த முன்பதிவிற்குரிய பூஜையைத் தேர்ந்தெடுக்கவும். தேர்வு செய்தவுடன் அதற்கான பொருட்கள் பட்டியல் தோன்றும். புதிய பூஜைகளை நிரந்தரமாக உருவாக்க மேலே உள்ள <strong>&apos;+ Add Pooja&apos;</strong> பட்டனைப் பயன்படுத்தலாம்.
-            </p>
+          {/* Smart Tip for Step 2 - Cute & Compact */}
+          <div className="bg-amber-50/80 border border-amber-200/70 rounded-xl px-2.5 py-1 text-[11px] text-amber-900 inline-flex items-center gap-1.5 font-medium">
+            <span>💡</span>
+            <span>Select a pooja to view and customize its samagri checklist.</span>
           </div>
 
           {/* Popular / Frequent Poojas: Instant 1-Tap Numbered Cards */}

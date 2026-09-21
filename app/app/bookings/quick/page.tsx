@@ -247,7 +247,7 @@ function QuickBookingContent() {
                 புதிய முன்பதிவு (New Booking)
               </h1>
               <span className="text-[10px] font-extrabold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
-                ⚡ ஒரே பக்கம் (Sample)
+                ⚡ Single Page
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium">
@@ -257,15 +257,15 @@ function QuickBookingContent() {
         </div>
 
         {/* View Switcher: Single Page vs Step Wizard */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
-          <span className="px-3 py-1 bg-white text-emerald-900 rounded-xl shadow-xs">
-            ⚡ ஒரே பக்கம் (Single)
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-2xl border border-slate-200 text-xs font-bold">
+          <span className="px-2.5 py-1 bg-white text-emerald-900 rounded-xl shadow-2xs">
+            ⚡ Single Page
           </span>
           <Link
             href="/app/bookings/new"
-            className="px-3 py-1 text-slate-600 hover:text-slate-900 rounded-xl transition"
+            className="px-2.5 py-1 text-slate-600 hover:text-slate-900 rounded-xl transition"
           >
-            📋 4 படிகள் (Wizard)
+            📋 4-Step Wizard
           </Link>
         </div>
       </div>
@@ -288,10 +288,10 @@ function QuickBookingContent() {
             <button
               type="button"
               onClick={() => setShowAddDevotee((prev) => !prev)}
-              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
+              className="text-xs font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-amber-700" />
-              <span>{showAddDevotee ? "Close Form" : "+ புதிய பக்தர் (New)"}</span>
+              <span>{showAddDevotee ? "Close" : "+ Add Devotee"}</span>
             </button>
           </div>
 
@@ -329,7 +329,7 @@ function QuickBookingContent() {
                     onClick={handleQuickAddDevotee}
                     className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer active:scale-95"
                   >
-                    சேர்
+                    Add
                   </button>
                 </div>
               </div>
@@ -403,10 +403,10 @@ function QuickBookingContent() {
 
             <Link
               href="/app/poojas?action=new&returnTo=quick-booking"
-              className="text-[11px] font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
+              className="text-xs font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-xl border border-amber-300 flex items-center gap-1 transition cursor-pointer"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
-              <span>+ Add Pooja (புதிய பூஜை)</span>
+              <Plus className="w-3.5 h-3.5 text-amber-700" />
+              <span>+ Add Pooja</span>
             </Link>
           </div>
 
@@ -536,7 +536,7 @@ function QuickBookingContent() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               }`}
             >
-              இன்று (Today)
+              Today
             </button>
             <button
               type="button"
@@ -547,7 +547,7 @@ function QuickBookingContent() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               }`}
             >
-              நாளை (Tomorrow)
+              Tomorrow
             </button>
             <div className="relative">
               <input
@@ -560,7 +560,7 @@ function QuickBookingContent() {
           </div>
 
           {/* Compact Tamil Panchangam Strip (Nalla Neram at a glance) */}
-          <div className="bg-amber-50/70 p-2.5 rounded-2xl border border-amber-200/80 flex items-center justify-between text-[11px] font-bold text-amber-950 flex-wrap gap-2">
+          <div className="bg-amber-50/70 p-2 rounded-xl border border-amber-200/80 flex items-center justify-between text-[11px] font-bold text-amber-950 flex-wrap gap-1.5">
             <span>🪔 நல்ல நேரம்: {tamilInfo.nallaNeram}</span>
             <span>✨ கௌரி: {tamilInfo.gowriNallaNeram}</span>
             <span className="text-rose-700 font-medium">⛔ ராகு: {tamilInfo.rahuKalam}</span>
@@ -624,7 +624,7 @@ function QuickBookingContent() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               }`}
             >
-              கட்டணம் பின்னர் (Pending)
+              Pending
             </button>
             <button
               type="button"
@@ -635,7 +635,7 @@ function QuickBookingContent() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               }`}
             >
-              முன்பணம் (Advance ₹)
+              Advance
             </button>
             <button
               type="button"
@@ -646,25 +646,32 @@ function QuickBookingContent() {
                   : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
               }`}
             >
-              முழு தட்சிணை (Paid ✓)
+              Paid
             </button>
           </div>
 
-          {/* Advance Amount input if Advance chosen */}
           {paymentChoice === "ADVANCE" && (
-            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 flex items-center justify-between text-xs animate-in fade-in">
-              <span className="font-bold text-emerald-950">பெறப்பட்ட முன்பணம் (Advance Received ₹):</span>
-              <input
-                type="number"
-                value={advanceAmount}
-                onChange={(e) => setAdvanceAmount(Number(e.target.value))}
-                className="w-28 bg-white border border-emerald-300 rounded-xl px-2.5 py-1 text-sm font-black text-emerald-950 text-right focus:outline-none"
-              />
+            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1.5 animate-in fade-in">
+              <label className="text-[11px] font-bold text-emerald-950 block">
+                முன்பணத் தொகை (Advance Amount):
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-black text-emerald-950">₹</span>
+                <input
+                  type="number"
+                  value={advanceAmount}
+                  onChange={(e) => setAdvanceAmount(Number(e.target.value) || 0)}
+                  className="bg-white border border-emerald-300 rounded-xl px-3 py-1.5 text-xs font-black text-slate-900 focus:outline-none w-32"
+                />
+                <span className="text-xs text-slate-500 font-bold">
+                  மீதி: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
+                </span>
+              </div>
             </div>
           )}
 
           {/* Priest Assignment (Self or Team Member) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
               <label className="text-[10px] font-bold text-slate-500 block mb-1 uppercase tracking-wider">
                 செய்து வைக்கும் குருக்கள் (Priest):
@@ -721,7 +728,7 @@ function QuickBookingContent() {
               className="px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-              <span>முன்பதிவு செய் ⚡</span>
+              <span>Confirm Booking ✨</span>
             </button>
           </div>
         </div>
@@ -772,14 +779,14 @@ function QuickBookingContent() {
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
-                <span>பக்தருக்கு வாட்ஸ்அப் அனுப்பு</span>
+                <span>Send WhatsApp Slip</span>
               </button>
               <button
                 type="button"
                 onClick={() => router.push(`/app/bookings/${createdBooking.id}`)}
                 className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
               >
-                பதிவு விவரம் காண்க (View Booking)
+                View Booking
               </button>
             </div>
           </div>
