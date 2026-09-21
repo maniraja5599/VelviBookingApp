@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
@@ -289,9 +290,10 @@ const getUnitBadgeLabel = (unit: string) => {
   return unit;
 };
 
-export default function PoojasCataloguePage() {
+function PoojasCatalogueContent() {
   const { currentBusiness } = useAuth();
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
   const [poojas, setPoojas] = useState<Pooja[]>([]);
@@ -449,6 +451,12 @@ export default function PoojasCataloguePage() {
     setShowFormModal(true);
   };
 
+  useEffect(() => {
+    if (searchParams.get("action") === "new" || searchParams.get("openAdd") === "true") {
+      openCreateModal();
+    }
+  }, [searchParams]);
+
   const openEditModal = (p: Pooja) => {
     setIsEditing(true);
     setEditingPoojaId(p.id);
@@ -584,6 +592,24 @@ export default function PoojasCataloguePage() {
 
   return (
     <div className="space-y-4 pb-8 animate-in fade-in duration-200">
+      {searchParams.get("returnTo") === "new-booking" && (
+        <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-2 border-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs text-emerald-950 shadow-2xs animate-in slide-in-from-top-2 gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🪔</span>
+            <span>
+              <strong>முன்பதிவு வழிகாட்டி:</strong> புதிய பூஜை உருவாக்கிய பின் முன்பதிவுப் பக்கத்திற்குத் திரும்பலாம்.
+            </span>
+          </div>
+          <Link
+            href="/app/bookings/new"
+            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-1 shadow-2xs transition active:scale-95"
+          >
+            <span>← முன்பதிவிற்குத் திரும்பு</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
       {selectedPooja ? (
         /* FULL POOJA & SAMAGRI DETAILS VIEW (NOT A POPUP - NO SCROLL CONSTRAINT) */
         <div className="space-y-4 animate-in fade-in duration-150">
@@ -2039,3 +2065,12 @@ export default function PoojasCataloguePage() {
     </div>
   );
 }
+
+export default function PoojasCataloguePage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-500">ஏற்றுகிறது (Loading)...</div>}>
+      <PoojasCatalogueContent />
+    </Suspense>
+  );
+}
+

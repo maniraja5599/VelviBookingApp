@@ -1267,21 +1267,35 @@ _Velvi Booking App_`;
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowPoojaModal(true)}
-              className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 rounded-2xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shadow-2xs active:scale-95"
+            <Link
+              href="/app/poojas?action=new&returnTo=new-booking"
+              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white rounded-2xl text-xs font-black flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition active:scale-95 cursor-pointer"
+              title="பூஜைகள் பக்கத்திற்குச் சென்று புதிய பூஜையை முழு பொருட்களுடன் சேர்க்கவும்"
             >
-              <Plus className="w-3.5 h-3.5 text-emerald-700" />
-              <span>+ Add Pooja</span>
-            </button>
+              <Sparkles className="w-3.5 h-3.5 text-amber-200 fill-amber-200" />
+              <span>+ Add Pooja (புதிய பூஜை)</span>
+            </Link>
           </div>
 
-          {/* Smart Tip for Step 2 - Cute & Compact */}
-          <div className="bg-emerald-50/90 border border-emerald-200/90 rounded-2xl px-3.5 py-2 flex items-center gap-2.5 text-xs text-emerald-950 shadow-2xs">
-            <span className="text-base shrink-0">💡</span>
-            <p className="text-[11px] text-emerald-900 leading-tight">
-              <span className="font-bold">பூஜை குறிப்பு:</span> புதிய பூஜைகளை உருவாக்க மற்றும் முழுமையான பட்டியல் நிர்வாகத்தை <Link href="/app/poojas" className="underline font-bold text-emerald-800 hover:text-emerald-950">&quot;பூஜைகள்&quot; (Poojas)</Link> பக்கத்தில் செய்யலாம்.
+          {/* Smart & Friendly Explanation for New Users */}
+          <div className="bg-gradient-to-r from-amber-50/80 via-white to-emerald-50/60 border border-amber-200/90 rounded-2xl p-3.5 shadow-2xs space-y-1">
+            <div className="flex items-center justify-between flex-wrap gap-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🪔</span>
+                <span className="font-extrabold text-xs text-amber-950">
+                  பூஜை &amp; சாக்கிரிகள் வழிகாட்டி (Pooja Selection Guide)
+                </span>
+              </div>
+              <Link
+                href="/app/poojas"
+                className="text-[11px] font-bold text-amber-900 hover:text-amber-950 underline flex items-center gap-0.5"
+              >
+                <span>பூஜைகள் பட்டியல் மேலாண்மை</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              கீழேயுள்ள பட்டியலில் இருந்து இந்த முன்பதிவிற்குரிய பூஜையைத் தேர்ந்தெடுக்கவும். தேர்வு செய்தவுடன் அதற்கான பொருட்கள் பட்டியல் தோன்றும். புதிய பூஜைகளை நிரந்தரமாக உருவாக்க மேலே உள்ள <strong>&apos;+ Add Pooja&apos;</strong> பட்டனைப் பயன்படுத்தலாம்.
             </p>
           </div>
 
@@ -1438,52 +1452,37 @@ _Velvi Booking App_`;
             </div>
           </div>
 
-          {/* Selected Pooja Full Details Card */}
-          {selectedPooja && (
-            <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-4 rounded-2xl border-2 border-emerald-400 shadow-sm space-y-2.5 animate-in fade-in">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-base text-slate-900">
-                      {selectedPooja.englishName}
-                    </h3>
-                    {selectedPooja.tamilName && (
-                      <span className="text-xs font-bold text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
-                        {selectedPooja.tamilName}
-                      </span>
-                    )}
-                  </div>
-                  {selectedPooja.description && (
-                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                      {selectedPooja.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="text-right shrink-0">
-                  <div className="text-base font-black text-emerald-950">
-                    ₹{(selectedPooja.basePrice || 0).toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* THE PROMINENT SAMAGRI CHECKLIST SECTION */}
           {selectedPooja && (
-            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3.5">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs space-y-3.5 animate-in fade-in duration-150">
+              <div className="flex items-start justify-between border-b border-slate-100 pb-3 gap-2">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs shrink-0 mt-0.5">
                     <CheckSquare className="w-4 h-4" />
                   </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-900">
-                      Pooja Samagri Checklist ({samagriItems.length} Total Materials)
-                    </h3>
-                    <p className="text-[10px] text-slate-500">
-                      Tick to include/exclude. Change quantity using - / + or direct number.
-                    </p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                        {selectedPooja.englishName}
+                      </h3>
+                      {selectedPooja.tamilName && selectedPooja.tamilName !== selectedPooja.englishName && (
+                        <span className="text-xs font-bold text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-md border border-emerald-300">
+                          {selectedPooja.tamilName}
+                        </span>
+                      )}
+                      <span className="text-xs font-black text-emerald-950 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        ₹{(selectedPooja.basePrice || 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    {selectedPooja.description ? (
+                      <p className="text-[11px] text-slate-600 mt-1 leading-snug">
+                        {selectedPooja.description}
+                      </p>
+                    ) : (
+                      <p className="text-[10.5px] text-slate-500 mt-0.5">
+                        சாக்கிரிகள் பட்டியல் ({samagriItems.length} பொருட்கள்) • தேவையானதை தேர்வு செய்யவும்
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -1677,112 +1676,6 @@ _Velvi Booking App_`;
                   </div>
                 </div>
               </form>
-
-              {/* DEDICATED LIVE SELECTED SAMAGRI PREVIEW BOX (FULL DISPLAY & WHATSAPP SHARE) */}
-              <div className="bg-gradient-to-br from-white via-emerald-50/30 to-emerald-50/60 rounded-2xl p-4 border-2 border-emerald-300/80 shadow-sm space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <Clipboard className="w-4 h-4 text-emerald-800 shrink-0" />
-                    <div>
-                      <h4 className="text-xs font-black text-slate-900">
-                        Selected Items Preview (தேர்வு செய்யப்பட்ட பொருட்கள்)
-                      </h4>
-                      <p className="text-[10px] text-slate-500 font-medium">
-                        Complete list of materials to prepare before pooja ceremony.
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-2.5 py-1 rounded-full border border-emerald-300 shadow-2xs">
-                    ✨ {samagriItems.filter((i) => i.isChecked !== false).length} Materials Selected
-                  </span>
-                </div>
-
-                {/* Devotee & Pooja Confirmation Header Bar */}
-                <div className="bg-white/95 p-2.5 rounded-2xl border border-emerald-200 text-xs flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-extrabold text-slate-900 flex items-center gap-1">
-                      <User className="w-3.5 h-3.5 text-emerald-700" />
-                      {selectedCustomer?.name || "Devotee"}
-                    </span>
-                    {selectedCustomer?.mobile && (
-                      <span className="text-[11px] text-slate-500 font-bold">
-                        📱 {selectedCustomer.mobile}
-                      </span>
-                    )}
-                    <span className="text-slate-300">•</span>
-                    <span className="text-emerald-900 font-black">
-                      📅 {date} ({selectedTime})
-                    </span>
-                  </div>
-
-                  {/* WhatsApp Direct Share & Copy Text Buttons */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={handleCopyShareText}
-                      className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl text-[11px] font-bold flex items-center gap-1 transition shadow-2xs cursor-pointer active:scale-95"
-                      title="Copy complete pooja & samagri text"
-                    >
-                      {copiedShare ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700">Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Copy List</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleShareWhatsApp}
-                      className="px-3 py-1.5 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white rounded-xl text-[11px] font-black flex items-center gap-1.5 shadow-xs transition active:scale-95 cursor-pointer"
-                      title="Send full details and samagri list directly to customer WhatsApp"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 text-white" />
-                      <span>Send to Devotee</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* FULL ITEMS DISPLAY (No scroll - all items clearly visible) */}
-                {samagriItems.filter((i) => i.isChecked !== false).length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-                    {samagriItems
-                      .filter((i) => i.isChecked !== false)
-                      .map((i, pIdx) => (
-                        <div
-                          key={i.id}
-                          className="bg-white p-2.5 rounded-xl border border-emerald-200/90 text-xs shadow-2xs flex items-center justify-between gap-2 hover:border-emerald-400 transition"
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 w-5 h-5 rounded-md flex items-center justify-center shrink-0">
-                              {pIdx + 1}
-                            </span>
-                            <span className="font-extrabold text-slate-900 truncate">
-                              {i.itemEnglishName}
-                            </span>
-                            {i.itemTamilName && i.itemTamilName !== i.itemEnglishName && (
-                              <span className="text-[10px] text-emerald-900 truncate font-semibold">
-                                ({i.itemTamilName})
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[11px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md shrink-0 border border-slate-200">
-                            {i.quantity} {i.unit}
-                          </span>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-emerald-900 italic bg-white/70 p-3 rounded-2xl border border-emerald-200">
-                    No items selected yet. Click any tick mark in the checklist above to include materials.
-                  </p>
-                )}
-              </div>
             </div>
           )}
 
