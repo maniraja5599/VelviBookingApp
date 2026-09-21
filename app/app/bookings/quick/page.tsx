@@ -52,7 +52,7 @@ function QuickBookingContent() {
   // Form States - All in ONE page
   // 1. Devotee
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>(
-    searchParams.get("customerId") || "c-101"
+    searchParams.get("customerId") || ""
   );
   const [devoteeSearch, setDevoteeSearch] = useState<string>("");
   const [showAddDevotee, setShowAddDevotee] = useState<boolean>(false);
@@ -113,15 +113,6 @@ function QuickBookingContent() {
   // 2-Step interactive stage (Stage 1: Devotee & Pooja, Stage 2: Date & Dakshina)
   const [twoStepStage, setTwoStepStage] = useState<1 | 2>(1);
   const [formError, setFormError] = useState<string>("");
-
-  // Auto select first devotee if none or invalid
-  useEffect(() => {
-    if (customers.length > 0) {
-      if (!selectedCustomerId || !customers.some((c) => c.id === selectedCustomerId)) {
-        setSelectedCustomerId(customers[0].id);
-      }
-    }
-  }, [customers, selectedCustomerId]);
 
   // Auto select first pooja if none
   useEffect(() => {
@@ -524,8 +515,8 @@ function QuickBookingContent() {
                 )}
               </div>
 
-              {/* Selected Customer Active Card */}
-              {selectedCustomer && (
+              {/* Selected Customer Active Card or Empty Prompt */}
+              {selectedCustomer ? (
                 <div className="bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 p-3 rounded-2xl border border-emerald-300 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
@@ -541,8 +532,27 @@ function QuickBookingContent() {
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-md border border-emerald-300">
-                    தேர்வு செய்யப்பட்டது ✓
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCustomerId("")}
+                    className="text-[10px] font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition"
+                    title="Change Devotee"
+                  >
+                    மாற்று ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="p-3 bg-amber-50/50 border border-dashed border-amber-300/80 rounded-2xl flex items-center justify-between text-xs text-amber-900">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
+                      👤
+                    </div>
+                    <span className="font-semibold text-slate-700">
+                      பக்தரைத் தேர்ந்தெடுக்க மேலே உள்ள பட்டியலில் கிளிக் செய்யவும் அல்லது <strong className="text-amber-900">+ Add</strong> கொடுக்கவும்.
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
+                    தேர்ந்தெடுக்கவும்
                   </span>
                 </div>
               )}
@@ -563,7 +573,7 @@ function QuickBookingContent() {
                 </div>
 
                 <Link
-                  href="/app/poojas?action=new&returnTo=quick-booking"
+                  href="/app/poojas?action=new&returnTo=booking"
                   className="text-xs font-bold text-amber-900 hover:text-amber-950 bg-amber-50 hover:bg-amber-100 px-3 py-1 rounded-xl border border-amber-300 flex items-center gap-1.5 transition cursor-pointer active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5 text-amber-700" />

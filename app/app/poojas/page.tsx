@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
-import { Pooja, PoojaItemTemplate } from "@/lib/types";
+import { Pooja, PoojaItemTemplate, Booking } from "@/lib/types";
 import {
   Flame,
   Plus,
@@ -30,6 +30,9 @@ import {
   Tag,
   Copy,
   Share2,
+  Crown,
+  TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 import { SamagriCategory } from "@/lib/types";
@@ -297,12 +300,17 @@ function PoojasCatalogueContent() {
   const businessId = currentBusiness?.id || "biz-venkateswara-01";
 
   const [poojas, setPoojas] = useState<Pooja[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPooja, setSelectedPooja] = useState<Pooja | null>(null);
 
   useEffect(() => {
     setPoojas(db.getPoojas(businessId));
-    const handleDbChange = () => setPoojas([...db.getPoojas(businessId)]);
+    setBookings(db.getBookings(businessId));
+    const handleDbChange = () => {
+      setPoojas([...db.getPoojas(businessId)]);
+      setBookings([...db.getBookings(businessId)]);
+    };
     window.addEventListener("velvi:db-change", handleDbChange);
     return () => window.removeEventListener("velvi:db-change", handleDbChange);
   }, [businessId]);
@@ -405,6 +413,70 @@ function PoojasCatalogueContent() {
       (p.tamilName && p.tamilName.includes(searchQuery)) ||
       (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Booking statistics per pooja and top performed pooja
+  const poojaBookingStats = useMemo(() => {
+    const stats: Record<
+      string,
+      {
+        count: number;
+        completedCount: number;
+        totalDakshina: number;
+      }
+    > = {};
+
+    poojas.forEach((p) => {
+      stats[p.id] = { count: 0, completedCount: 0, totalDakshina: 0 };
+    });
+
+    bookings.forEach((b) => {
+      const matchedPooja =
+        poojas.find((p) => p.id === b.poojaId) ||
+        poojas.find(
+          (p) =>
+            b.poojaEnglishName &&
+            p.englishName.toLowerCase() === b.poojaEnglishName.toLowerCase()
+        );
+
+      const pId = matchedPooja ? matchedPooja.id : b.poojaId;
+      if (pId) {
+        if (!stats[pId]) {
+          stats[pId] = { count: 0, completedCount: 0, totalDakshina: 0 };
+        }
+        stats[pId].count += 1;
+        if (b.status === "COMPLETED") {
+          stats[pId].completedCount += 1;
+        }
+        stats[pId].totalDakshina += b.totalAmount || 0;
+      }
+    });
+
+    return stats;
+  }, [poojas, bookings]);
+
+  // Find top performed pooja (#1 most booked)
+  const topPerformedPooja = useMemo<{
+    pooja: Pooja;
+    count: number;
+    stats?: { count: number; completedCount: number; totalDakshina: number };
+  } | null>(() => {
+    if (poojas.length === 0) return null;
+    let maxCount = -1;
+    let top: Pooja | null = null;
+    for (const p of poojas) {
+      const c = poojaBookingStats[p.id]?.count || 0;
+      if (c > maxCount) {
+        maxCount = c;
+        top = p;
+      }
+    }
+    if (!top) return null;
+    return {
+      pooja: top,
+      count: maxCount,
+      stats: poojaBookingStats[top.id],
+    };
+  }, [poojas, poojaBookingStats]);
 
   const applyPoojaPreset = (preset: (typeof PRESET_POOJA_TEMPLATES)[0]) => {
     setSelectedPresetName(preset.englishName);
@@ -592,21 +664,41 @@ function PoojasCatalogueContent() {
 
   return (
     <div className="space-y-4 pb-8 animate-in fade-in duration-200">
-      {searchParams.get("returnTo") === "new-booking" && (
-        <div className="bg-gradient-to-r from-emerald-50 via-white to-emerald-50 border-2 border-emerald-300 p-3.5 rounded-2xl flex items-center justify-between text-xs text-emerald-950 shadow-2xs animate-in slide-in-from-top-2 gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-base">🪔</span>
-            <span>
-              <strong>முன்பதிவு வழிகாட்டி:</strong> புதிய பூஜை உருவாக்கிய பின் முன்பதிவுப் பக்கத்திற்குத் திரும்பலாம்.
-            </span>
+      {/* Prominent Glowing Return-to-Booking Banner (Appears ONLY when accessed from New Booking) */}
+      {(searchParams.get("returnTo") === "booking" ||
+        searchParams.get("returnTo") === "quick-booking" ||
+        searchParams.get("returnTo") === "new-booking") && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-emerald-700 to-[#0b2b17] text-white p-4 rounded-3xl shadow-xl border-2 border-amber-300 animate-in slide-in-from-top-2 duration-300">
+          <div className="absolute -right-8 -top-8 w-36 h-36 bg-white/15 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center justify-between gap-3 flex-wrap relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner border border-white/30 shrink-0">
+                🪔
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-black text-amber-100 tracking-wide uppercase">
+                    New Booking in Progress
+                  </span>
+                  <span className="text-[10px] font-black bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full shadow-2xs border border-amber-300">
+                    முன்பதிவு வழிகாட்டி
+                  </span>
+                </div>
+                <p className="text-xs font-semibold text-white/95 mt-0.5">
+                  பூஜை விவரங்களைச் சரிபார்த்த பின் அல்லது புதிய பூஜை சேர்த்த பின் முன்பதிவுப் பக்கத்திற்குத் திரும்பவும்.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/app/bookings/new"
+              className="px-4 py-2.5 bg-white hover:bg-amber-50 text-slate-900 text-xs sm:text-sm font-black rounded-2xl shadow-md transition active:scale-95 flex items-center gap-2 cursor-pointer shrink-0 border border-white/40 ring-4 ring-white/25"
+            >
+              <ArrowLeft className="w-4 h-4 text-emerald-800 stroke-[3]" />
+              <span>← Return to Booking</span>
+              <span className="text-[11px] font-bold text-emerald-800 hidden sm:inline">(முன்பதிவுக்குத் திரும்பு)</span>
+            </Link>
           </div>
-          <Link
-            href="/app/bookings/new"
-            className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold flex items-center gap-1 shadow-2xs transition active:scale-95"
-          >
-            <span>← முன்பதிவிற்குத் திரும்பு</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
         </div>
       )}
 
@@ -690,7 +782,7 @@ function PoojasCatalogueContent() {
             </div>
 
             {/* Quick Metrics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
               <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   தட்சணை (Dakshina)
@@ -702,21 +794,31 @@ function PoojasCatalogueContent() {
 
               <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
+                  முன்பதிவுகள் (Bookings)
+                </span>
+                <span className="text-base sm:text-lg font-black text-emerald-800 flex items-center gap-1">
+                  <span>{poojaBookingStats[selectedPooja.id]?.count || 0}</span>
+                  <span className="text-xs font-bold text-slate-500">பூஜைகள்</span>
+                </span>
+              </div>
+
+              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
+                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   தேவையான பொருட்கள்
                 </span>
-                <span className="text-base sm:text-lg font-black text-emerald-800">
+                <span className="text-base sm:text-lg font-black text-slate-900">
                   {selectedPooja.items?.length || 0} பொருட்கள்
                 </span>
               </div>
 
-              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs col-span-2 sm:col-span-1">
+              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   கால அளவு (Duration)
                 </span>
                 <span className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1 mt-0.5">
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                   <span>
-                    {selectedPooja.durationMinutes ? `${selectedPooja.durationMinutes} நிமிடங்கள்` : "சுமார் 2 - 3 மணி நேரம்"}
+                    {selectedPooja.durationMinutes ? `${selectedPooja.durationMinutes} நிமி` : "2-3 மணி"}
                   </span>
                 </span>
               </div>
@@ -913,7 +1015,7 @@ function PoojasCatalogueContent() {
                 <span>{t("pooja") || "Pooja & Homam Services"}</span>
               </h2>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {filteredPoojas.length} வேத சடங்குகள் & பொருட்கள் பட்டியல்
+                {filteredPoojas.length} வேத சடங்குகள் &amp; பொருட்கள் பட்டியல்
               </p>
             </div>
 
@@ -925,6 +1027,79 @@ function PoojasCatalogueContent() {
                 <Plus className="w-4 h-4 text-amber-300 stroke-[3]" />
                 <span>Add Pooja</span>
               </button>
+            </div>
+          </div>
+
+          {/* Top Analytics Summary Strip & #1 Most Booked Pooja Card */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+            {/* Top Performed Pooja Card */}
+            {topPerformedPooja && (
+              <div className="sm:col-span-2 bg-gradient-to-br from-amber-500/10 via-amber-100/40 to-emerald-50/50 rounded-3xl p-3.5 sm:p-4 border-2 border-amber-300/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-xl shadow-md border border-amber-300 shrink-0">
+                      👑
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full border border-amber-300">
+                          ⭐ Top Performed (அதிக முன்பதிவு)
+                        </span>
+                        {topPerformedPooja.count > 0 && (
+                          <span className="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                            🔥 {topPerformedPooja.count} Bookings
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 truncate">
+                        {topPerformedPooja.pooja.tamilName || topPerformedPooja.pooja.englishName}
+                      </h3>
+                      <p className="text-xs text-slate-600 font-medium truncate">
+                        {topPerformedPooja.pooja.englishName} • Dakshina: ₹{topPerformedPooja.pooja.basePrice.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPooja(topPerformedPooja.pooja)}
+                    className="text-xs font-bold text-amber-900 hover:text-amber-950 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-300 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
+                  >
+                    விவரம் →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Metrics Column */}
+            <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
+              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                    மொத்த பூஜைகள்
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-slate-900">
+                    {poojas.length} சேவைகள்
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-sm shrink-0">
+                  🪔
+                </div>
+              </div>
+
+              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
+                    மொத்த முன்பதிவுகள்
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-emerald-800">
+                    {bookings.length} பூஜைகள்
+                  </span>
+                </div>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0">
+                  📊
+                </div>
+              </div>
             </div>
           </div>
 
@@ -982,8 +1157,24 @@ function PoojasCatalogueContent() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2.5 text-[11px] text-slate-500 font-medium mt-1">
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium mt-1 flex-wrap">
                         <span className="text-slate-600 font-semibold">{p.items?.length || 0} items checklist</span>
+                        <span>•</span>
+                        {/* Booking Count Badge */}
+                        {poojaBookingStats[p.id]?.count > 0 ? (
+                          <span className="text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                            🔥 <span>{poojaBookingStats[p.id].count} Bookings</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
+                            0 Bookings
+                          </span>
+                        )}
+                        {topPerformedPooja?.pooja.id === p.id && topPerformedPooja.count > 0 && (
+                          <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1 shadow-2xs">
+                            👑 Top Performed
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
