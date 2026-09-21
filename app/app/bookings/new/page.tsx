@@ -961,13 +961,13 @@ _Velvi Booking App_`;
       <div className="flex items-center justify-between bg-amber-50/75 border border-amber-200/80 px-3 py-1.5 rounded-2xl text-xs">
         <div className="flex items-center gap-1.5 text-amber-950 font-bold text-[11px]">
           <span>⚡</span>
-          <span>Need faster 1-page booking?</span>
+          <span>Want fast 2-step booking?</span>
         </div>
         <Link
           href="/app/bookings/quick"
           className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[11px] font-bold shadow-2xs transition active:scale-95"
         >
-          Single Page ⚡
+          2-Step Quick ⚡
         </Link>
       </div>
 
