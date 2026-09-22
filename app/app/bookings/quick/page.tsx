@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
-import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
+import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil, formatUnitShort } from "@/lib/whatsapp/formatter";
 import { SAMAGRI_CATALOG, SamagriCatalogItem } from "@/lib/samagri/catalog";
 
 const convert24To12 = (timeStr: string): string => {
@@ -1234,7 +1234,7 @@ function QuickBookingContent() {
 
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                                  {catItem.qty} {formatUnitTamil(catItem.unit)}
+                                  {catItem.qty} {formatUnitShort(catItem.unit)}
                                 </span>
                                 {isAlreadyAdded ? (
                                   <span className="text-[10px] font-bold text-emerald-800">
@@ -1346,10 +1346,10 @@ function QuickBookingContent() {
                             )}
                           </div>
 
-                          {/* Right: Stepper [-] [qty] [+] BEFORE Unit, then Unit Badge, then Delete Button */}
+                          {/* Right: Fixed-width Uniform Controls (Stepper w-[84px] + Unit w-11 + Trash w-6) */}
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {/* Stepper with [-] and [+] BEFORE Unit */}
-                            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                            {/* Stepper with [-] and [+] strictly fixed width w-[88px] */}
+                            <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 shadow-2xs w-[88px] justify-between">
                               <button
                                 type="button"
                                 onClick={() => handleItemQuantityChange(it.id, -1)}
@@ -1365,7 +1365,7 @@ function QuickBookingContent() {
                                 disabled={!isChecked}
                                 value={it.quantity}
                                 onChange={(e) => handleItemDirectQuantity(it.id, e.target.value)}
-                                className="w-10 text-center text-xs font-black bg-transparent text-slate-900 focus:outline-none"
+                                className="w-9 text-center text-xs font-black bg-transparent text-slate-900 focus:outline-none"
                                 title="அளவு"
                               />
                               <button
@@ -1379,9 +1379,9 @@ function QuickBookingContent() {
                               </button>
                             </div>
 
-                            {/* Unit Badge (Units ku munadi increment/decrement) */}
-                            <span className="text-[11px] font-extrabold text-emerald-950 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
-                              {formatUnitTamil(it.unit) || it.unit || "எண்ணிக்கை"}
+                            {/* Fixed-Width Unit Badge: English short abbreviations g, nos, ml, kg, pkt, bunch */}
+                            <span className="w-12 py-1 rounded-md text-[11px] font-black text-emerald-950 bg-emerald-50 border border-emerald-200 text-center shrink-0">
+                              {formatUnitShort(it.unit)}
                             </span>
 
                             {/* Delete Button */}
@@ -1502,7 +1502,7 @@ function QuickBookingContent() {
                       )}
                     </div>
                     <span className="font-bold text-emerald-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px] shrink-0 ml-2 shadow-2xs">
-                      {it.quantity} {formatUnitTamil(it.unit)}
+                      {it.quantity} {formatUnitShort(it.unit)}
                     </span>
                   </div>
                 ))}
@@ -2583,7 +2583,7 @@ function QuickBookingContent() {
                       </div>
                       <div className="shrink-0 ml-2">
                         <span className="text-[11px] font-black text-emerald-950 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                          {item.quantity} {formatUnitTamil(item.unit)}
+                          {item.quantity} {formatUnitShort(item.unit)}
                         </span>
                       </div>
                     </div>

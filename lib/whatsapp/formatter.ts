@@ -18,6 +18,43 @@ export function formatUnitTamil(unit?: string): string {
   return map[unit.toLowerCase()] || unit;
 }
 
+export function formatUnitShort(unit?: string): string {
+  if (!unit) return "nos";
+  const u = unit.toLowerCase().trim();
+  const map: Record<string, string> = {
+    "g": "g",
+    "gram": "g",
+    "grams": "g",
+    "கிராம்": "g",
+    "kg": "kg",
+    "kilogram": "kg",
+    "கிலோ": "kg",
+    "nos": "nos",
+    "pcs": "nos",
+    "no": "nos",
+    "numbers": "nos",
+    "எண்ணிக்கை": "nos",
+    "packet": "pkt",
+    "pkt": "pkt",
+    "பாக்கெட்": "pkt",
+    "bundle": "bunch",
+    "bunch": "bunch",
+    "கட்டு": "bunch",
+    "set": "set",
+    "sets": "set",
+    "செட்": "set",
+    "ml": "ml",
+    "மில்லிலிட்டர்": "ml",
+    "மி.லி": "ml",
+    "l": "L",
+    "litre": "L",
+    "லிட்டர்": "L",
+    "dozen": "doz",
+    "டஜன்": "doz",
+  };
+  return map[u] || u;
+}
+
 /**
  * Format a WhatsApp message for Pooja Required Items list
  */
