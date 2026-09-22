@@ -28,7 +28,7 @@ import { loadGoogleIdentityScript, parseGoogleJwt, GoogleUserPayload } from "@/l
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithGoogle, loginDemo, updateUser, updateBusiness } = useAuth();
+  const { loginWithGoogle, loginDemo, updateUser, updateBusiness, logout } = useAuth();
 
   const [step, setStep] = useState<"login" | "mobile_setup">("login");
   const [googleUser, setGoogleUser] = useState<GoogleUserPayload | null>(null);
@@ -137,10 +137,19 @@ export default function LoginPage() {
     if (googleClientId && google?.accounts?.oauth2) {
       try {
         setIsLoading(true);
+
+        let cleanupTimers: (() => void) | null = null;
+
         const tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: googleClientId,
           scope: "email profile openid",
+          error_callback: (error: any) => {
+            console.warn("Google OAuth error or popup closed:", error);
+            if (cleanupTimers) cleanupTimers();
+            setIsLoading(false);
+          },
           callback: async (tokenResponse: any) => {
+            if (cleanupTimers) cleanupTimers();
             if (tokenResponse.error) {
               setIsLoading(false);
               if (tokenResponse.error !== "popup_closed_by_user") {
@@ -170,23 +179,48 @@ export default function LoginPage() {
             }
           },
         });
+
+        // Window focus safeguard: when user closes popup or cancels and returns to our page
+        const onWindowFocus = () => {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 1200);
+        };
+        window.addEventListener("focus", onWindowFocus, { once: true });
+
+        // Safety timeout fallback (e.g. 20s)
+        const safetyTimer = setTimeout(() => {
+          setIsLoading(false);
+          window.removeEventListener("focus", onWindowFocus);
+        }, 20000);
+
+        cleanupTimers = () => {
+          clearTimeout(safetyTimer);
+          window.removeEventListener("focus", onWindowFocus);
+        };
+
         tokenClient.requestAccessToken();
         return;
       } catch (err) {
         console.warn("OAuth2 Token Client error, falling back:", err);
+        setIsLoading(false);
       }
     }
 
     // 2. Fallback to GIS Prompt One-Tap
     if (googleClientId && google?.accounts?.id) {
       try {
+        setIsLoading(true);
         google.accounts.id.prompt(async (notification: any) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
             await handleDirectGoogleLogin();
+          } else if (notification.isDismissedMoment()) {
+            setIsLoading(false);
           }
         });
         return;
       } catch (err) {
+        setIsLoading(false);
         console.warn("GIS Prompt fallback:", err);
       }
     }
@@ -216,8 +250,9 @@ export default function LoginPage() {
     }
   };
 
-  // 1-Tap Quick Demo Access
+  // 1-Tap Quick Demo Access - Always unblocked & instantly accessible
   const handleInstantDemo = async () => {
+    setIsLoading(false); // Instantly cancel any lingering Google loading state
     setIsDemoLoading(true);
     setError("");
     try {
@@ -372,8 +407,8 @@ export default function LoginPage() {
               type="button"
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
-              disabled={isDemoLoading || isLoading}
-              className="w-full p-3.5 bg-gradient-to-r from-amber-50/90 via-amber-100/50 to-amber-50/90 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300/80 transition-all flex items-center justify-between group cursor-pointer shadow-xs hover:shadow-md active:scale-[0.99]"
+              disabled={isDemoLoading}
+              className="w-full p-3.5 bg-gradient-to-r from-amber-50/90 via-amber-100/50 to-amber-50/90 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300/80 transition-all flex items-center justify-between group cursor-pointer shadow-xs hover:shadow-md active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
@@ -547,7 +582,14 @@ export default function LoginPage() {
               {/* Back to Switch Account */}
               <button
                 type="button"
-                onClick={() => setStep("login")}
+                onClick={() => {
+                  setIsLoading(false);
+                  setIsDemoLoading(false);
+                  setError("");
+                  setGoogleUser(null);
+                  logout();
+                  setStep("login");
+                }}
                 className="w-full py-1.5 text-center text-xs font-bold text-slate-500 hover:text-slate-800 transition cursor-pointer flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
