@@ -497,11 +497,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(negativeRes.success).toBe(false);
   });
 
-  // TEST CASE 21: WhatsApp Formatter uses English labels while preserving Tamil calendar date
-  it("Test 21: WhatsApp formatter outputs clean English labels with Tamil calendar date", async () => {
-    const { formatPoojaItemsWhatsAppMessage, formatBookingConfirmationWhatsAppMessage } = await import(
-      "../lib/whatsapp/formatter"
-    );
+  // TEST CASE 21: WhatsApp Formatter uses English labels, preserves Tamil calendar date, and never exposes priest to user
+  it("Test 21: WhatsApp formatter outputs clean English labels and never exposes priest to user", async () => {
+    const {
+      formatPoojaItemsWhatsAppMessage,
+      formatBookingConfirmationWhatsAppMessage,
+      formatPoojaReminderWhatsAppMessage,
+    } = await import("../lib/whatsapp/formatter");
 
     const booking = store.bookings[0];
     const business = store.businesses[0];
@@ -513,6 +515,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(itemsMsg).toContain("Please keep all items ready");
     // Preserves Tamil calendar date (e.g. ஆவணி 27)
     expect(itemsMsg).toMatch(/[\u0B80-\u0BFF]+\s+[0-9]{1,2}/);
+    // Never exposes priest to customer
+    expect(itemsMsg).not.toContain("Priest:");
 
     const confMsg = formatBookingConfirmationWhatsAppMessage(booking, business);
     expect(confMsg).toContain("Booking Confirmed");
@@ -520,6 +524,12 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(confMsg).toContain("Date:");
     expect(confMsg).toContain("Time:");
     expect(confMsg).toContain("Total Fee:");
+    // Never exposes priest to customer
+    expect(confMsg).not.toContain("Assigned Priest");
+    expect(confMsg).not.toContain("குருக்கள்");
+
+    const reminderMsg = formatPoojaReminderWhatsAppMessage(booking, business);
+    expect(reminderMsg).not.toContain("குருக்கள்:");
   });
 
   // TEST CASE 22: Version Control Registry & PWA Manifest Integrity

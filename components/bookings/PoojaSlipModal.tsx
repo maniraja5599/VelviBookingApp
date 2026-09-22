@@ -35,16 +35,15 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   const tamilDate = getTamilDate(booking.date);
-  const priestName = business?.iyerName || booking.assignedIyerName || "Vedic Priest";
-  const priestPhone = business?.phone || business?.whatsapp || "+91-9840012345";
-  const priestUpi = business?.whatsapp
+  const contactPhone = business?.phone || business?.whatsapp || "+91-9840012345";
+  const paymentUpi = business?.whatsapp
     ? `${business.whatsapp.replace(/\D/g, "").slice(-10)}@upi`
     : "priest@okaxis";
 
   // Dynamic UPI Payment Link for Balance Dakshina
   const balanceToPay = booking.balanceAmount || 0;
-  const upiLink = `upi://pay?pa=${encodeURIComponent(priestUpi)}&pn=${encodeURIComponent(
-    priestName
+  const upiLink = `upi://pay?pa=${encodeURIComponent(paymentUpi)}&pn=${encodeURIComponent(
+    business?.name || "Velvi Pooja Services"
   )}&am=${balanceToPay}&cu=INR&tn=${encodeURIComponent(
     `Velvi-${booking.bookingNumber}-${booking.poojaEnglishName}`
   )}`;
@@ -97,8 +96,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     msg += `பதிவு எண்: *${booking.bookingNumber}*\n`;
     msg += `பூஜை: *${booking.poojaEnglishName}* (${booking.poojaTamilName})\n`;
     msg += `தேதி: *${booking.date}* (${tamilDate.tamilMonth} ${tamilDate.tamilDay} - ${booking.startTime})\n`;
-    msg += `இடம்: *${booking.location || "Namakkal"}*\n`;
-    msg += `குருக்கள்: *${priestName}* (${priestPhone})\n\n`;
+    msg += `இடம்: *${booking.location || "Namakkal"}*\n\n`;
     msg += `📦 *பக்தர்கள் வாங்கி வைக்க வேண்டிய சாமக்கிரி பொருட்கள்:*\n`;
     samagriList.forEach((it, i) => {
       msg += `${i + 1}. ${it.name} — *${it.qty}*\n`;
@@ -179,7 +177,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             <p className="text-[11px] text-slate-600 font-semibold flex items-center justify-center gap-3 flex-wrap">
               <span className="flex items-center gap-1">
                 <Phone className="w-3 h-3 text-emerald-700" />
-                {priestPhone}
+                {contactPhone}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
@@ -339,7 +337,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
                       ? `Scan to pay ₹${balanceToPay.toLocaleString("en-IN")} directly via GPay / PhonePe / Paytm`
                       : "Scan to pay or offer dakshina directly via GPay / PhonePe / Paytm"}
                   </p>
-                  <p className="text-[10px] font-mono text-slate-500 font-semibold">{priestUpi}</p>
+                  <p className="text-[10px] font-mono text-slate-500 font-semibold">{paymentUpi}</p>
                 </div>
                 <div className="p-2 bg-white rounded-xl border-2 border-emerald-800/80 shadow-xs shrink-0">
                   <img src={qrDataUrl} alt="UPI QR Code" className="w-24 h-24 sm:w-28 sm:h-28 object-contain" />

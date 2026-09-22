@@ -50,7 +50,7 @@ ${itemsList}
 
 —
 *${business.name}*
-${business.iyerName ? `Priest: ${business.iyerName}\n` : ""}Contact: ${business.phone}
+Contact: ${business.phone}
 ${business.showWatermark ? "\n_Powered by Velvi App_" : ""}`;
 }
 
@@ -77,7 +77,6 @@ ${booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !
       ? `(Advance: ₹${booking.advanceAmount.toLocaleString("en-IN")}, Balance: ₹${booking.balanceAmount.toLocaleString("en-IN")})`
       : ""
   }
-${booking.assignedIyerName ? `🪔 Assigned Priest: *${booking.assignedIyerName}*` : ""}
 
 Thank you!
 
@@ -95,8 +94,7 @@ export function formatPoojaReminderWhatsAppMessage(
   business: Business
 ): string {
   const tamilInfo = getTamilDate(booking.date);
-  const priestName = business.iyerName || booking.assignedIyerName || "வேத குருக்கள்";
-  const priestPhone = business.phone || business.whatsapp || "";
+  const contactPhone = business.phone || business.whatsapp || "";
 
   // Top 6 essential samagri items preview
   const topItems = (booking.items || []).slice(0, 6);
@@ -131,9 +129,7 @@ export function formatPoojaReminderWhatsAppMessage(
 📍 *இடம்:* ${booking.location || "உங்கள் இல்லம்"}
 ${itemsText}${balanceText}
 தயவுசெய்து பூஜை தொடங்குவதற்கு முன் ஏற்பாடுகளை தயார் நிலையில் வைத்திருக்கவும்.
-
-🙏 *குருக்கள்:* ${priestName}
-📞 *தொடர்புக்கு:* ${priestPhone}
+${contactPhone ? `\n📞 *தொடர்புக்கு:* ${contactPhone}` : ""}
 
 —
 *${business.name || "வேள்வி வேத பவனம்"}*

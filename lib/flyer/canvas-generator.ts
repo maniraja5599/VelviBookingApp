@@ -156,20 +156,14 @@ export async function generatePoojaFlyer(
   // 4. Business Branding
   ctx.font = "bold 36px 'Segoe UI', Arial, sans-serif";
   ctx.fillStyle = colors.primary;
-  ctx.fillText(business.name, width / 2, 145);
-
-  if (business.iyerName) {
-    ctx.font = "500 24px 'Segoe UI', Arial, sans-serif";
-    ctx.fillStyle = colors.textMuted;
-    ctx.fillText(`Priest: ${business.iyerName}`, width / 2, 185);
-  }
+  ctx.fillText(business.name, width / 2, 155);
 
   // Divider Line
   ctx.strokeStyle = colors.gold;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(250, 215);
-  ctx.lineTo(width - 250, 215);
+  ctx.moveTo(250, 205);
+  ctx.lineTo(width - 250, 205);
   ctx.stroke();
 
   // 5. Pooja Name Section
