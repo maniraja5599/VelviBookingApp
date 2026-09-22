@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.5.1";
+export const APP_VERSION = "2.5.2";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "23 Sep 2026, 02:35 AM IST";
+export const BUILD_DATE = "23 Sep 2026, 02:50 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.2",
+    releaseDate: "23 Sep 2026",
+    releaseTime: "02:50 AM IST",
+    title: "Clear Demo Data Action, 8 Authentic Samagri Categories, Maha Kumbabishekam & Grihapravesam Master Catalog",
+    summary:
+      "Added 1-tap demo data purge action across Bookings, Settings, and Data Backup pages; introduced the full 130+ item authentic catalog for Kumbabishekam and Grihapravesam across 8 standardized categories with confirmed traditional spellings; added Maha Kumbabishekam (மகா கும்பாபிஷேகம்) master pooja template with complete checklists.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "Feature",
+        description: "Clear Demo Data (மாதிரி பதிவுகளை நீக்கு) 1-tap purge in Bookings, Settings & Data Backup, safely wiping sample records while protecting user data.",
+      },
+      {
+        category: "Feature",
+        description: "130+ item authentic Samagri Catalog for Maha Kumbabishekam and Grihapravesam with verified Tamil spellings (குங்குமம், கெட்டி கல்கண்டு, ஹோம திரவியம், நவ சமித்து, ஜவ்வாது, அரகஜா, மாடா குச்சி, பூர்ணாகுதி சாமான்கள், etc.).",
+      },
+      {
+        category: "Feature",
+        description: "8 standardized sacred categories (பூஜைப் பொருட்கள், ஹோமப் பொருட்கள், நவக்கிரகப் பொருட்கள், பூ மற்றும் மாலை வகைகள், பழங்கள் மற்றும் உணவுப் பொருட்கள், பூஜை உபகரணங்கள், வஸ்திரம் / துணி வகைகள், கிரகப்பிரவேசப் பொருட்கள்) with seamless backwards-compatible alias normalization.",
+      },
+      {
+        category: "Enhancement",
+        description: "Added Maha Kumbabishekam (மகா கும்பாபிஷேகம்) master ritual template and enriched Gruhapravesam & Vastu Homam with full item checklists across all 8 sacred categories.",
+      },
+    ],
+  },
   {
     version: "2.5.1",
     releaseDate: "23 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Pure White Top Header, Compact Sync Badge, Zero-Wobble Swipe & Dashboard Performance Boost",
     summary:
       "Comprehensive polish across top navbar, swipe gesture mechanics, and dashboard responsiveness: pure white top header with hairline border, compact cloud sync profile badge eliminating mobile overflow, strict horizontal axis-locking on booking card swipe-to-complete eliminating vertical wobble, and dashboard performance optimizations including requestAnimationFrame debouncing, O(1) indexed lookup maps, and memoized SVG chart rendering.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Enhancement",
     changes: [
       {

@@ -57,14 +57,14 @@ export interface PlatformSettings {
 }
 
 export const DEFAULT_SAMAGRI_CATEGORIES: SamagriCategory[] = [
-  { id: "essentials", labelTa: "அடிப்படை & பழங்கள்", labelEn: "Basics & Fruits", icon: "🥥", isDefault: true },
-  { id: "ghee_oils", labelTa: "நெய் & எண்ணெய்கள்", labelEn: "Ghee & Oils", icon: "🪔", isDefault: true },
-  { id: "homam", labelTa: "சமித்து & ஹோம திரவியம்", labelEn: "Homam Samagri", icon: "🪵", isDefault: true },
-  { id: "powders", labelTa: "பொடிகள் & நறுமணம்", labelEn: "Powders & Fragrance", icon: "🌿", isDefault: true },
-  { id: "flowers", labelTa: "பூக்கள் & இலைகள்", labelEn: "Flowers & Leaves", icon: "🌺", isDefault: true },
-  { id: "vastram", labelTa: "வஸ்திரம் & செட்", labelEn: "Vastram & Sets", icon: "🪙", isDefault: true },
-  { id: "fruits_prasad", labelTa: "பழங்கள் & பிரசாதம்", labelEn: "Fruits & Prasad", icon: "🍎", isDefault: true },
-  { id: "vessels_items", labelTa: "பாத்திரங்கள் & இதர", labelEn: "Vessels & Others", icon: "🏺", isDefault: true },
+  { id: "pooja_items", labelTa: "பூஜைப் பொருட்கள்", labelEn: "Pooja Items", icon: "🥥", isDefault: true },
+  { id: "homam_items", labelTa: "ஹோமப் பொருட்கள்", labelEn: "Homam Items", icon: "🔥", isDefault: true },
+  { id: "navagraha_items", labelTa: "நவக்கிரகப் பொருட்கள்", labelEn: "Navagraha Items", icon: "🌾", isDefault: true },
+  { id: "flowers_garlands", labelTa: "பூ மற்றும் மாலை வகைகள்", labelEn: "Flowers & Garlands", icon: "🌺", isDefault: true },
+  { id: "fruits_food", labelTa: "பழங்கள் மற்றும் உணவுப் பொருட்கள்", labelEn: "Fruits & Food", icon: "🍎", isDefault: true },
+  { id: "vessels_utensils", labelTa: "பூஜை உபகரணங்கள்", labelEn: "Vessels & Utensils", icon: "🏺", isDefault: true },
+  { id: "vastram_clothes", labelTa: "வஸ்திரம் / துணி வகைகள்", labelEn: "Vastram & Clothes", icon: "🧵", isDefault: true },
+  { id: "grihapravesam_items", labelTa: "கிரகப்பிரவேசப் பொருட்கள்", labelEn: "Grihapravesam Items", icon: "🥛", isDefault: true },
 ];
 
 export class VelviDatabaseStore {
@@ -1365,7 +1365,15 @@ export class VelviDatabaseStore {
         }
         if (Array.isArray(state.customers)) this.customers = state.customers;
         if (Array.isArray(state.bookings)) this.bookings = state.bookings;
-        if (Array.isArray(state.poojas)) this.poojas = state.poojas;
+        if (Array.isArray(state.poojas)) {
+          this.poojas = state.poojas;
+          // Ensure new master poojas like Maha Kumbabishekam exist in store
+          SEED_POOJAS.forEach((sp) => {
+            if (!this.poojas.some((p) => p.id === sp.id)) {
+              this.poojas.push(structuredClone(sp));
+            }
+          });
+        }
         if (Array.isArray(state.members)) this.members = state.members;
         if (Array.isArray(state.settlements)) this.settlements = state.settlements;
         if (Array.isArray(state.payments)) this.payments = state.payments;
@@ -1375,6 +1383,17 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.recentlyDeleted)) this.recentlyDeleted = state.recentlyDeleted;
         if (Array.isArray(state.samagriCategories) && state.samagriCategories.length > 0) {
           this.samagriCategories = state.samagriCategories;
+          DEFAULT_SAMAGRI_CATEGORIES.forEach((defCat) => {
+            if (!this.samagriCategories.some((c) => c.id === defCat.id)) {
+              this.samagriCategories.push(structuredClone(defCat));
+            }
+          });
+        }
+        if (localStorage.getItem("velvi_demo_data_cleared") === "true") {
+          const seedBookingIds = new Set(SEED_BOOKINGS.map((b) => b.id));
+          const seedCustomerIds = new Set(SEED_CUSTOMERS.map((c) => c.id));
+          this.bookings = this.bookings.filter((b) => !b.isSample && !seedBookingIds.has(b.id) && !b.id.startsWith("b-82"));
+          this.customers = this.customers.filter((c) => !c.isSample && !seedCustomerIds.has(c.id));
         }
         return true;
       }
@@ -1390,6 +1409,12 @@ export class VelviDatabaseStore {
   public getSamagriCategories(): SamagriCategory[] {
     if (!this.samagriCategories || this.samagriCategories.length === 0) {
       this.samagriCategories = structuredClone(DEFAULT_SAMAGRI_CATEGORIES);
+    } else {
+      DEFAULT_SAMAGRI_CATEGORIES.forEach((defCat) => {
+        if (!this.samagriCategories.some((c) => c.id === defCat.id)) {
+          this.samagriCategories.push(structuredClone(defCat));
+        }
+      });
     }
     return this.samagriCategories;
   }
@@ -1427,7 +1452,7 @@ export class VelviDatabaseStore {
   }
 
   // -------------------------------------------------------------
-  // DATA MANAGEMENT: CLEAR ALL & LOAD ALL (Point requested)
+  // DATA MANAGEMENT: CLEAR ALL & LOAD ALL
   // -------------------------------------------------------------
   public clearAllData(options?: { keepCatalog?: boolean }): void {
     this.bookings = [];
@@ -1451,20 +1476,89 @@ export class VelviDatabaseStore {
     this.notifyListeners();
   }
 
-  public removeSampleData(businessId?: string): {
+  public clearDemoData(options?: {
+    clearBookings?: boolean;
+    clearCustomers?: boolean;
+    clearPoojas?: boolean;
+  }): {
     removedBookings: number;
     removedCustomers: number;
     removedPoojas: number;
   } {
+    const clearBookings = options?.clearBookings !== false;
+    const clearCustomers = options?.clearCustomers !== false;
+    const clearPoojas = options?.clearPoojas === true;
+
+    const seedBookingIds = new Set(SEED_BOOKINGS.map((b) => b.id));
+    const seedCustomerIds = new Set(SEED_CUSTOMERS.map((c) => c.id));
+    const seedPoojaIds = new Set(SEED_POOJAS.map((p) => p.id));
+
     const isSampleBooking = (b: Booking) =>
       b.isSample === true ||
       b.id.startsWith("b-sample-") ||
+      b.id.startsWith("b-82") ||
+      seedBookingIds.has(b.id) ||
       ["b-101", "b-102", "b-103", "b-104", "b-105", "b-106"].includes(b.id);
 
     const isSampleCustomer = (c: Customer) =>
       c.isSample === true ||
       c.id.startsWith("c-sample-") ||
-      ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-anand-05", "c-priya-06"].includes(c.id);
+      seedCustomerIds.has(c.id) ||
+      ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-vignesh-05", "c-anandhi-06", "c-balaji-07", "c-karthik-08", "c-gowri-09", "c-jayanthi-10", "c-soundar-11", "c-revathi-12"].includes(c.id);
+
+    const isSamplePooja = (p: Pooja) =>
+      p.isSample === true ||
+      p.id.startsWith("p-sample-") ||
+      seedPoojaIds.has(p.id);
+
+    const prevBCount = this.bookings.length;
+    const prevCCount = this.customers.length;
+    const prevPCount = this.poojas.length;
+
+    if (clearBookings) {
+      this.bookings = this.bookings.filter((b) => !isSampleBooking(b));
+    }
+    if (clearCustomers) {
+      this.customers = this.customers.filter((c) => !isSampleCustomer(c));
+    }
+    if (clearPoojas) {
+      this.poojas = this.poojas.filter((p) => !isSamplePooja(p));
+    }
+
+    const removedBookings = prevBCount - this.bookings.length;
+    const removedCustomers = prevCCount - this.customers.length;
+    const removedPoojas = prevPCount - this.poojas.length;
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("velvi_demo_data_cleared", "true");
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+
+    return { removedBookings, removedCustomers, removedPoojas };
+  }
+
+  public removeSampleData(businessId?: string): {
+    removedBookings: number;
+    removedCustomers: number;
+    removedPoojas: number;
+  } {
+    const seedBookingIds = new Set(SEED_BOOKINGS.map((b) => b.id));
+    const seedCustomerIds = new Set(SEED_CUSTOMERS.map((c) => c.id));
+    const seedPoojaIds = new Set(SEED_POOJAS.map((p) => p.id));
+
+    const isSampleBooking = (b: Booking) =>
+      b.isSample === true ||
+      b.id.startsWith("b-sample-") ||
+      b.id.startsWith("b-82") ||
+      seedBookingIds.has(b.id) ||
+      ["b-101", "b-102", "b-103", "b-104", "b-105", "b-106"].includes(b.id);
+
+    const isSampleCustomer = (c: Customer) =>
+      c.isSample === true ||
+      c.id.startsWith("c-sample-") ||
+      seedCustomerIds.has(c.id) ||
+      ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-vignesh-05", "c-anandhi-06", "c-balaji-07", "c-karthik-08", "c-gowri-09", "c-jayanthi-10", "c-soundar-11", "c-revathi-12"].includes(c.id);
 
     const isSamplePooja = (p: Pooja) =>
       p.isSample === true ||
@@ -1484,6 +1578,7 @@ export class VelviDatabaseStore {
     const removedPoojas = prevPCount - this.poojas.length;
 
     if (typeof window !== "undefined") {
+      localStorage.setItem("velvi_demo_data_cleared", "true");
       this.saveToLocalStorage();
     }
     this.notifyListeners();

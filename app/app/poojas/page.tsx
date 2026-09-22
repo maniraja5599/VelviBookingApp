@@ -55,10 +55,39 @@ const SAMAGRI_UNITS: Array<{
   { unit: "dozen", labelTa: "டஜன்", labelEn: "dozen", code: "dozen" },
 ];
 
-import { SAMAGRI_CATALOG, SamagriCatalogItem } from "@/lib/samagri/catalog";
+import { SAMAGRI_CATALOG, SamagriCatalogItem, normalizeCategoryId } from "@/lib/samagri/catalog";
 export type { SamagriCatalogItem };
 
 const PRESET_POOJA_TEMPLATES = [
+  {
+    icon: "🛕",
+    englishName: "Maha Kumbabishekam",
+    tamilName: "மகா கும்பாபிஷேகம்",
+    description: "Grand temple consecration & sanctification ritual with 8 sacred offerings & homam.",
+    durationMinutes: 360,
+    basePrice: 25000,
+    items: [
+      { itemEnglishName: "Turmeric Sticks", itemTamilName: "மஞ்சள் கொம்பு", quantity: 500, unit: "g" as const, category: "pooja_items" },
+      { itemEnglishName: "Kumkum", itemTamilName: "குங்குமம்", quantity: 250, unit: "g" as const, category: "pooja_items" },
+      { itemEnglishName: "White Camphor", itemTamilName: "வெள்ளைக் கற்பூரம்", quantity: 5, unit: "packet" as const, category: "pooja_items" },
+      { itemEnglishName: "Block Camphor", itemTamilName: "கட்டி கற்பூரம்", quantity: 2, unit: "packet" as const, category: "pooja_items" },
+      { itemEnglishName: "Vibhuti", itemTamilName: "விபூதி", quantity: 500, unit: "g" as const, category: "pooja_items" },
+      { itemEnglishName: "Sandalwood Powder", itemTamilName: "சந்தனப் பொடி", quantity: 200, unit: "g" as const, category: "pooja_items" },
+      { itemEnglishName: "Attar", itemTamilName: "அத்தர்", quantity: 2, unit: "nos" as const, category: "pooja_items" },
+      { itemEnglishName: "Javvadhu", itemTamilName: "ஜவ்வாது", quantity: 5, unit: "packet" as const, category: "pooja_items" },
+      { itemEnglishName: "Pure Cow Ghee", itemTamilName: "நெய்", quantity: 5, unit: "litre" as const, category: "homam_items" },
+      { itemEnglishName: "Nava Samithu 9 Woods", itemTamilName: "நவ சமித்து", quantity: 3, unit: "set" as const, category: "homam_items" },
+      { itemEnglishName: "Homam Draviyam Pack", itemTamilName: "ஹோம திரவியம்", quantity: 1, unit: "kg" as const, category: "homam_items" },
+      { itemEnglishName: "Poornahuthi Sacred Saman", itemTamilName: "பூர்ணாகுதி சாமான்கள்", quantity: 1, unit: "set" as const, category: "homam_items" },
+      { itemEnglishName: "Navadhanyam 9 Grains", itemTamilName: "நவதானியம்", quantity: 1, unit: "set" as const, category: "navagraha_items" },
+      { itemEnglishName: "9 Color Navagraha Vastram", itemTamilName: "நவக்கிரக வஸ்திரம்", quantity: 1, unit: "set" as const, category: "navagraha_items" },
+      { itemEnglishName: "Garlands for Deities", itemTamilName: "மாலை", quantity: 6, unit: "nos" as const, category: "flowers_garlands" },
+      { itemEnglishName: "Fresh Coconuts", itemTamilName: "தேங்காய்", quantity: 21, unit: "nos" as const, category: "fruits_food" },
+      { itemEnglishName: "New Brass Kudam", itemTamilName: "புதிய பித்தளை குடம்", quantity: 2, unit: "nos" as const, category: "vessels_utensils" },
+      { itemEnglishName: "Dhoti Sets", itemTamilName: "வேஷ்டி", quantity: 4, unit: "nos" as const, category: "vastram_clothes" },
+      { itemEnglishName: "Shikara Kalasa Vastram", itemTamilName: "கலச வஸ்திரம்", quantity: 5, unit: "nos" as const, category: "grihapravesam_items" },
+    ],
+  },
   {
     icon: "🐘",
     englishName: "Ganapathi Homam",
@@ -302,7 +331,7 @@ function PoojasCatalogueContent() {
       "",
       "பொருட்கள் (Materials Checklist):",
       ...selectedPooja.items.map((it, idx) => {
-        const cat = categories.find((c) => c.id === it.category);
+        const cat = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
         const icon = cat?.icon || "•";
         const unit = getUnitBadgeLabel(it.unit);
         return `${idx + 1}. ${icon} ${it.itemTamilName || it.itemEnglishName} (${it.itemEnglishName}) - ${it.quantity} ${unit}`;
@@ -320,12 +349,13 @@ function PoojasCatalogueContent() {
   };
 
   const displayedDetailItems = (selectedPooja?.items || []).filter((it) => {
+    const normCat = normalizeCategoryId(it.category);
     const matchesCategory =
-      selectedDetailCategory === "all" || it.category === selectedDetailCategory;
+      selectedDetailCategory === "all" || it.category === selectedDetailCategory || normCat === selectedDetailCategory;
     if (!matchesCategory) return false;
     if (!detailItemSearch.trim()) return true;
     const q = detailItemSearch.toLowerCase();
-    const cat = categories.find((c) => c.id === it.category);
+    const cat = categories.find((c) => c.id === it.category || c.id === normCat);
     return (
       it.itemEnglishName.toLowerCase().includes(q) ||
       it.itemTamilName.toLowerCase().includes(q) ||
@@ -834,7 +864,7 @@ function PoojasCatalogueContent() {
                   அனைத்தும் ({selectedPooja.items?.length || 0})
                 </button>
                 {categories.map((cat) => {
-                  const count = (selectedPooja.items || []).filter((it) => it.category === cat.id).length;
+                  const count = (selectedPooja.items || []).filter((it) => it.category === cat.id || normalizeCategoryId(it.category) === cat.id).length;
                   if (count === 0) return null;
                   return (
                     <button
@@ -864,7 +894,7 @@ function PoojasCatalogueContent() {
             ) : (
               <div className="space-y-1.5 pt-1">
                 {displayedDetailItems.map((it, idx) => {
-                  const catInfo = categories.find((c) => c.id === it.category);
+                  const catInfo = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
                   return (
                     <div
                       key={it.id}
@@ -1455,7 +1485,7 @@ function PoojasCatalogueContent() {
                     ) : (
                       <div className="space-y-1.5 max-h-80 overflow-y-auto pr-0.5">
                         {formItems.map((it, idx) => {
-                          const catInfo = categories.find((c) => c.id === it.category);
+                          const catInfo = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
                           return (
                             <div
                               key={it.id}
@@ -1747,7 +1777,7 @@ function PoojasCatalogueContent() {
                             }
                           };
 
-                          const catInfo = categories.find((c) => c.id === sug.category);
+                          const catInfo = categories.find((c) => c.id === sug.category || c.id === normalizeCategoryId(sug.category));
 
                           return (
                             <div

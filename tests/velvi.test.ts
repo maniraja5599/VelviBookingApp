@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { VelviDatabaseStore } from "../lib/db/store";
+import { VelviDatabaseStore, DEFAULT_SAMAGRI_CATEGORIES } from "../lib/db/store";
 import { getTamilDate, formatTime12H } from "../lib/calendar/tamil";
 import {
   normalizeIndianMobile,
@@ -8,6 +8,8 @@ import {
   inspectIndianMobile,
 } from "../lib/utils/phone";
 import { cashfree } from "../lib/payments/cashfree";
+import { SAMAGRI_CATALOG, normalizeCategoryId } from "../lib/samagri/catalog";
+import { APP_VERSION } from "../lib/version/history";
 
 describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () => {
   let store: VelviDatabaseStore;
@@ -540,13 +542,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("2.5.1");
+    expect(APP_VERSION).toBe("2.5.2");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("2.5.1");
+    expect(latest.version).toBe("2.5.2");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
     expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
@@ -1144,6 +1146,98 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(formatTime12H("8:00 AM")).toBe("08:00 AM");
     expect(formatTime12H("18:00 - 20:00")).toBe("06:00 PM - 08:00 PM");
     expect(formatTime12H("")).toBe("");
+  });
+
+  it("Test 42: clearDemoData purges sample bookings and customers while preserving real user records and master pooja templates", () => {
+    const store = new VelviDatabaseStore();
+    expect(store.bookings.length).toBeGreaterThan(0);
+    expect(store.customers.length).toBeGreaterThan(0);
+    const initialPoojas = store.poojas.length;
+
+    // Create a real user customer and booking
+    const realCustomer = store.createCustomer({
+      businessId: "biz-venkateswara-01",
+      name: "Real Devotee",
+      mobile: "+919842109876",
+    });
+    const realBooking = store.createBooking({
+      businessId: "biz-venkateswara-01",
+      customerId: realCustomer.id,
+      customerName: realCustomer.name,
+      poojaId: "p-kumbabishekam-11",
+      poojaEnglishName: "Maha Kumbabishekam",
+      date: "2026-11-15",
+      startTime: "06:00 AM",
+      location: "Thanjavur",
+      totalAmount: 25000,
+      advanceAmount: 5000,
+      balanceAmount: 20000,
+      paymentStatus: "PARTIALLY_PAID",
+      status: "CONFIRMED",
+    });
+
+    const res = store.clearDemoData();
+    expect(res.removedBookings).toBeGreaterThan(0);
+    expect(res.removedCustomers).toBeGreaterThan(0);
+
+    // Real records must remain intact!
+    expect(store.customers.some((c) => c.id === realCustomer.id)).toBe(true);
+    expect(store.bookings.some((b) => b.id === realBooking.id)).toBe(true);
+
+    // Master poojas should be kept so user can still book ceremonies
+    expect(store.poojas.length).toBe(initialPoojas);
+    expect(store.poojas.some((p) => p.id === "p-kumbabishekam-11")).toBe(true);
+  });
+
+  it("Test 43: DEFAULT_SAMAGRI_CATEGORIES contains the 8 authentic Kumbabishekam & Grihapravesam categories", () => {
+    expect(DEFAULT_SAMAGRI_CATEGORIES.length).toBe(8);
+    const catIds = DEFAULT_SAMAGRI_CATEGORIES.map((c) => c.id);
+    expect(catIds).toContain("pooja_items");
+    expect(catIds).toContain("homam_items");
+    expect(catIds).toContain("navagraha_items");
+    expect(catIds).toContain("flowers_garlands");
+    expect(catIds).toContain("fruits_food");
+    expect(catIds).toContain("vessels_utensils");
+    expect(catIds).toContain("vastram_clothes");
+    expect(catIds).toContain("grihapravesam_items");
+
+    // Verify alias normalization
+    expect(normalizeCategoryId("essentials")).toBe("pooja_items");
+    expect(normalizeCategoryId("powders")).toBe("pooja_items");
+    expect(normalizeCategoryId("ghee_oils")).toBe("homam_items");
+    expect(normalizeCategoryId("homam")).toBe("homam_items");
+    expect(normalizeCategoryId("flowers")).toBe("flowers_garlands");
+    expect(normalizeCategoryId("fruits_prasad")).toBe("fruits_food");
+    expect(normalizeCategoryId("vessels_items")).toBe("vessels_utensils");
+    expect(normalizeCategoryId("vastram")).toBe("vastram_clothes");
+  });
+
+  it("Test 44: SAMAGRI_CATALOG contains 130+ items with confirmed Tamil spellings and v2.5.2 release parity", () => {
+    expect(SAMAGRI_CATALOG.length).toBeGreaterThanOrEqual(130);
+    const itemNamesTa = SAMAGRI_CATALOG.map((i) => i.ta);
+
+    // Verify specific confirmed spellings requested by user
+    expect(itemNamesTa).toContain("குங்குமம்");
+    expect(itemNamesTa).toContain("டை கல்கண்டு");
+    expect(itemNamesTa).toContain("கெட்டி கல்கண்டு");
+    expect(itemNamesTa).toContain("ஹோம திரவியம்");
+    expect(itemNamesTa).toContain("ஜவ்வாது");
+    expect(itemNamesTa).toContain("அரகஜா");
+    expect(itemNamesTa).toContain("கோரோசனை");
+    expect(itemNamesTa).toContain("கஸ்தூரி");
+    expect(itemNamesTa).toContain("சீகக்காய் தூள்");
+    expect(itemNamesTa).toContain("மட்டிப்பால்");
+    expect(itemNamesTa).toContain("கலர் கோலப்பொடி – 5 கலர்");
+    expect(itemNamesTa).toContain("நெய்");
+    expect(itemNamesTa).toContain("நவ சமித்து");
+    expect(itemNamesTa).toContain("சீந்தில் புடி");
+    expect(itemNamesTa).toContain("நாயுருவி");
+    expect(itemNamesTa).toContain("மாடா குச்சி");
+    expect(itemNamesTa).toContain("தவிடு");
+    expect(itemNamesTa).toContain("பூர்ணாகுதி சாமான்கள்");
+
+    // Verify version is 2.5.2
+    expect(APP_VERSION).toBe("2.5.2");
   });
 });
 

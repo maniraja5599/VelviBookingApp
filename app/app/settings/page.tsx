@@ -217,6 +217,18 @@ export default function SettingsHubPage() {
           icon: Cloud,
           keywords: "backup export excel csv import restore cloud data",
         },
+        {
+          onClick: () => {
+            if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
+              const res = db.clearDemoData();
+              alert(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) வெற்றிகரமாக நீக்கப்பட்டன!\n(Demo data cleared successfully)`);
+            }
+          },
+          label: "Clear Demo Data",
+          desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
+          icon: Sparkles,
+          keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு",
+        },
       ],
     },
     {

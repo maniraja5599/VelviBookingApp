@@ -948,6 +948,11 @@ export default function BookingsListPage() {
     [allBookings, todayStr]
   );
 
+  const hasSampleBookings = useMemo(
+    () => allBookings.some((b) => b.isSample || b.id.startsWith("b-sample-") || b.id.startsWith("b-82")),
+    [allBookings]
+  );
+
   const filteredBookings = useMemo(() => {
     return allBookings.filter((b) => {
       const matchesFilter =
@@ -1096,6 +1101,29 @@ export default function BookingsListPage() {
           </button>
         )}
       </div>
+
+      {/* Demo Bookings Alert Banner */}
+      {hasSampleBookings && (
+        <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="text-base">✨</span>
+            <div>
+              <span className="font-bold text-amber-950">மாதிரி முன்பதிவுகள் உள்ளன (Demo Bookings Active)</span>
+              <p className="text-[11px] text-amber-800/80">மாதிரி பதிவுகளை நீக்கிவிட்டு உங்கள் புதிய பதிவுகளை தொடங்கலாம்.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
+                db.clearDemoData();
+              }
+            }}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white rounded-xl font-bold text-xs shrink-0 cursor-pointer shadow-2xs transition"
+          >
+            மாதிரி நீக்கு (Clear Demo)
+          </button>
+        </div>
+      )}
 
       {/* Status Filter Tabs */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
