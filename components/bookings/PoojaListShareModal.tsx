@@ -5,6 +5,7 @@ import { Booking, Business } from "@/lib/types";
 import { formatPoojaItemsWhatsAppMessage } from "@/lib/whatsapp/formatter";
 import { generatePoojaFlyer } from "@/lib/flyer/canvas-generator";
 import { useTheme } from "@/components/providers/ThemeContext";
+import { copyToClipboard } from "@/lib/utils/clipboard";
 import {
   X,
   Share2,
@@ -103,12 +104,10 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
   };
 
   const handleCopyText = async () => {
-    try {
-      await navigator.clipboard.writeText(customWhatsAppMsg || whatsappMessage);
+    const success = await copyToClipboard(customWhatsAppMsg || whatsappMessage);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
     }
   };
 

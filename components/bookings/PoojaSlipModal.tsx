@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import { Booking, Business } from "@/lib/types";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import {
-  Share2,
   X,
   Phone,
   MapPin,
@@ -22,6 +21,7 @@ import {
 } from "lucide-react";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
+import { copyToClipboard } from "@/lib/utils/clipboard";
 
 interface PoojaSlipModalProps {
   booking: Booking;
@@ -31,7 +31,6 @@ interface PoojaSlipModalProps {
 
 export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalProps) {
   const [copied, setCopied] = useState(false);
-  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isCapturing, setIsCapturing] = useState(false);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
   const [showWhatsAppEditor, setShowWhatsAppEditor] = useState(false);
@@ -43,25 +42,48 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
   const contactPhone = business?.phone || business?.whatsapp || "+91-9840012345";
 
   // Extract samagri checklist items
-  const samagriList = (booking.items && booking.items.length > 0)
-    ? booking.items.map((it) => ({
-        id: it.id,
-        name: it.itemTamilName || it.itemEnglishName,
-        qty: `${it.quantity} ${formatUnitTamil(it.unit || "nos") || it.unit}`,
-      }))
-    : [
-        { id: "1", name: "மஞ்சள் தூள் (Turmeric Powder)", qty: "100 கிராம்" },
-        { id: "2", name: "குங்குமம் (Kumkum)", qty: "50 கிராம்" },
-        { id: "3", name: "சந்தனம் (Sandal Powder)", qty: "1 பாக்கெட்" },
-        { id: "4", name: "கற்பூரம் (Camphor)", qty: "1 பாக்கெட்" },
-        { id: "5", name: "ஊதுபத்தி (Agarbathi)", qty: "1 பாக்கெட்" },
-        { id: "6", name: "வெற்றிலை பாக்கு (Betel Leaves & Nuts)", qty: "10 செட்" },
-        { id: "7", name: "தேங்காய் (Coconuts)", qty: "3 எண்ணிக்கை" },
-        { id: "8", name: "பூக்கள் மாலை மற்றும் உதிரி (Flowers)", qty: "1 முழம் & உதிரி" },
-      ];
+  const samagriList = useMemo(() => {
+    return (booking.items && booking.items.length > 0)
+      ? booking.items.map((it) => ({
+          id: it.id,
+          name: it.itemTamilName || it.itemEnglishName,
+          qty: `${it.quantity} ${formatUnitTamil(it.unit || "nos") || it.unit}`,
+        }))
+      : [
+          { id: "1", name: "மஞ்சள் தூள் (Turmeric Powder)", qty: "100 கிராம்" },
+          { id: "2", name: "குங்குமம் (Kumkum)", qty: "50 கிராம்" },
+          { id: "3", name: "சந்தனம் (Sandal Powder)", qty: "1 பாக்கெட்" },
+          { id: "4", name: "கற்பூரம் (Camphor)", qty: "1 பாக்கெட்" },
+          { id: "5", name: "ஊதுபத்தி (Agarbathi)", qty: "1 பாக்கெட்" },
+          { id: "6", name: "வெற்றிலை பாக்கு (Betel Leaves & Nuts)", qty: "10 செட்" },
+          { id: "7", name: "தேங்காய் (Coconuts)", qty: "3 எண்ணிக்கை" },
+          { id: "8", name: "பூக்கள் மாலை மற்றும் உதிரி (Flowers)", qty: "1 முழம் & உதிரி" },
+        ];
+  }, [booking.items]);
+
+  // All items ticked (checked) by default as requested
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    samagriList.forEach((it) => {
+      initial[it.id] = true;
+    });
+    return initial;
+  });
+
+  useEffect(() => {
+    setCheckedItems((prev) => {
+      const updated = { ...prev };
+      samagriList.forEach((it) => {
+        if (updated[it.id] === undefined) {
+          updated[it.id] = true;
+        }
+      });
+      return updated;
+    });
+  }, [samagriList]);
 
   const toggleCheck = (id: string) => {
-    setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+    setCheckedItems((prev) => ({ ...prev, [id]: prev[id] === false ? true : false }));
   };
 
   // 1. Save Image (Explicit Download PNG)
@@ -89,70 +111,8 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     }
   };
 
-  // 2. Share Image (Uses Web Share API with image file OR Clipboard copy — NO auto-download!)
-  const handleShareImage = async () => {
-    if (!slipRef.current || isCapturing) return;
-    try {
-      setIsCapturing(true);
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(slipRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#faf8f5",
-      });
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setIsCapturing(false);
-          return;
-        }
-        const cleanNum = (booking.bookingNumber || booking.id).replace(/#/g, "");
-        const file = new File([blob], `Velvi_Slip_${cleanNum}.png`, { type: "image/png" });
-
-        // Web Share API
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `பூஜை ரசீது - ${booking.customerName}`,
-              text: `வேள்வி பூஜை ரசீது #${booking.bookingNumber}`,
-            });
-            setIsCapturing(false);
-            return;
-          } catch (shareErr) {
-            if ((shareErr as any)?.name === "AbortError") {
-              setIsCapturing(false);
-              return;
-            }
-          }
-        }
-
-        // Fallback: Copy to clipboard (NO automatic download!)
-        if (navigator.clipboard && (window as any).ClipboardItem) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ "image/png": blob }),
-            ]);
-            setShareNotice("Slip image copied! You can paste (Ctrl+V) directly into WhatsApp.");
-            setTimeout(() => setShareNotice(null), 4000);
-            setIsCapturing(false);
-            return;
-          } catch (clipErr) {
-            console.warn("Clipboard copy failed:", clipErr);
-          }
-        }
-
-        setShareNotice("Could not share directly. You can use 'Save Image' to download.");
-        setTimeout(() => setShareNotice(null), 4000);
-        setIsCapturing(false);
-      });
-    } catch (err) {
-      console.error("Share image error:", err);
-      setIsCapturing(false);
-    }
-  };
-
   // Default WhatsApp confirmation message
-  const defaultWhatsAppMsg = React.useMemo(() => {
+  const defaultWhatsAppMsg = useMemo(() => {
     const biz = business || {
       id: "biz-venkateswara-01",
       name: "வேள்வி வேத பவனம்",
@@ -175,26 +135,31 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
   };
 
   const handleCopyCustomWhatsApp = async () => {
-    try {
-      await navigator.clipboard.writeText(editableWhatsAppText || defaultWhatsAppMsg);
+    const success = await copyToClipboard(editableWhatsAppText || defaultWhatsAppMsg);
+    if (success) {
       setCopiedWhatsAppText(true);
       setTimeout(() => setCopiedWhatsAppText(false), 2000);
-    } catch (err) {
-      console.error("Clipboard copy failed:", err);
     }
   };
 
   const handleShareWhatsApp = handleOpenWhatsAppPreview;
 
-  const handleCopyText = () => {
-    let msg = `வேள்வி — பூஜை சாமக்கிரி பட்டியல் (${booking.customerName} - ${booking.poojaTamilName}):\n\n`;
+  const handleCopyText = async () => {
+    let msg = `வேள்வி — பூஜை சாமக்கிரி பொருட்கள் (${booking.customerName} - ${booking.poojaTamilName || booking.poojaEnglishName}):\n\n`;
     samagriList.forEach((it, i) => {
-      msg += `${i + 1}. ${it.name} - ${it.qty}\n`;
+      const isChecked = checkedItems[it.id] !== false;
+      msg += `${i + 1}. ${isChecked ? "✅" : "⬜"} ${it.name} - ${it.qty}\n`;
     });
-    msg += `\nதேதி: ${booking.date} (${booking.startTime}) | இடம்: ${booking.location || "Namakkal"}`;
-    navigator.clipboard.writeText(msg);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    msg += `\n📅 நாள்: ${booking.date} (${booking.startTime}) | 📍 இடம்: ${booking.customerAddress || booking.location || "Namakkal"}`;
+    if (business?.name) {
+      msg += `\n🙏 ${business.name} • ${contactPhone}`;
+    }
+
+    const success = await copyToClipboard(msg);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
   };
 
   return (
@@ -211,7 +176,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Save Image Button */}
+            {/* Save Image Button (Direct PNG) */}
             <button
               type="button"
               onClick={handleSaveImage}
@@ -221,18 +186,6 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{isCapturing ? "Saving..." : "Save Image"}</span>
-            </button>
-
-            {/* Share Image Button */}
-            <button
-              type="button"
-              onClick={handleShareImage}
-              disabled={isCapturing}
-              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-1 transition active:scale-95 shadow-xs cursor-pointer"
-              title="Share Image"
-            >
-              <Share2 className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Share Image</span>
             </button>
 
             {/* Dedicated WhatsApp Text Button */}
@@ -438,47 +391,73 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
 
           {/* Pooja Samagri Items Checklist */}
           <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-amber-200/80 shadow-2xs space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-amber-600" />
-                <h4 className="font-black text-xs sm:text-sm text-slate-900">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Layers className="w-4 h-4 text-amber-600 shrink-0" />
+                <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
                   சாமக்கிரி பொருட்கள் பட்டியல் (Items to Arrange)
                 </h4>
               </div>
               <button
                 type="button"
                 onClick={handleCopyText}
-                className="text-[10.5px] font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 transition cursor-pointer"
+                className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 rounded-xl text-[11px] font-black flex items-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer shrink-0"
+                title="சாமக்கிரி பட்டியலை காபி செய் (Copy List)"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? "Copied!" : "Copy List"}</span>
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                    <span className="text-emerald-800 font-black">Copied! ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Copy List</span>
+                  </>
+                )}
               </button>
             </div>
 
             <div className="space-y-1 divide-y divide-slate-100 text-xs max-h-60 overflow-y-auto pr-1">
-              {samagriList.map((item, idx) => (
-                <div
-                  key={item.id}
-                  onClick={() => toggleCheck(item.id)}
-                  className={`pt-1.5 pb-0.5 flex items-center justify-between gap-2 cursor-pointer transition select-none ${
-                    checkedItems[item.id] ? "opacity-50 line-through" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="w-4 h-4 rounded-md border border-slate-300 flex items-center justify-center shrink-0">
-                      {checkedItems[item.id] && <Check className="w-3 h-3 text-emerald-700 stroke-[3]" />}
+              {samagriList.map((item, idx) => {
+                const isChecked = checkedItems[item.id] !== false; // Default true (ticked)
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => toggleCheck(item.id)}
+                    className={`pt-1.5 pb-1 flex items-center justify-between gap-2 cursor-pointer transition select-none hover:bg-amber-50/50 rounded-lg px-1.5 ${
+                      !isChecked ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 transition-colors ${
+                          isChecked
+                            ? "bg-emerald-600 border border-emerald-700 text-white shadow-2xs"
+                            : "border-2 border-slate-300 bg-white"
+                        }`}
+                      >
+                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                      </span>
+                      <span className={`font-bold truncate ${isChecked ? "text-slate-900" : "text-slate-400"}`}>
+                        {idx + 1}. {item.name}
+                      </span>
+                    </div>
+                    <span className="font-extrabold text-emerald-950 font-mono text-[10.5px] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 shrink-0">
+                      {item.qty}
                     </span>
-                    <span className="font-bold text-slate-800 truncate">{idx + 1}. {item.name}</span>
                   </div>
-                  <span className="font-extrabold text-emerald-950 font-mono text-[10.5px] bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60 shrink-0">
-                    {item.qty}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            <p className="text-[9.5px] text-slate-400 italic text-center pt-0.5">
-              Tip: Click on items to mark them as arranged.
-            </p>
+
+            <div className="flex items-center justify-between text-[9.5px] text-slate-500 pt-1 border-t border-slate-100">
+              <span className="flex items-center gap-1 text-emerald-800 font-bold">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span>டீஃபால்டாக அனைத்து பொருட்களும் உறுதி செய்யப்பட்டன (All items confirmed)</span>
+              </span>
+              <span className="text-slate-400">கிளிக் செய்து மாற்றலாம்</span>
+            </div>
           </div>
 
           {/* Clean Dakshina Details Section (No UPI QR Code) */}
