@@ -19,13 +19,57 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.4.2";
+export const APP_VERSION = "2.5.0";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "22 Sep 2026, 11:15 PM IST";
+export const BUILD_DATE = "23 Sep 2026, 02:25 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.0",
+    releaseDate: "23 Sep 2026",
+    releaseTime: "02:25 AM IST",
+    title: "Animated Cloud Sync Ticker, Calendar 2x Auto-Fill & Pooja Slip Upgrades",
+    summary:
+      "Major UI/UX and operational polish: real-time animated vertical scroll-up cloud sync status in top navbar, double-click date auto-fill from calendar with 14-day strip inclusion, default-checked Pooja Slip checklist with green tickmarks, universal multi-layer clipboard copy engine for all devices, and refined sacred hairline navbar styling.",
+    isCurrent: true,
+    tag: "Major",
+    changes: [
+      {
+        category: "UI/UX",
+        description: "Real-time animated vertical scroll-up ticker in navbar profile button smoothly cycling between Priest Name, 'Syncing...', and 'Cloud Synced ✓'.",
+      },
+      {
+        category: "UI/UX",
+        description: "Refined top navbar border to clean hairline amber-900/10 with subtle sacred elevation, removing harsh dark borders.",
+      },
+      {
+        category: "Feature",
+        description: "Calendar cell double-tap / double-click automatically opens New Booking with exact date pre-filled and dynamically selected in the date strip.",
+      },
+      {
+        category: "UI/UX",
+        description: "Pooja Slip checklist items now default checked with crisp emerald checkmark boxes (no strike-throughs or empty squares).",
+      },
+      {
+        category: "Fix",
+        description: "Universal clipboard copy engine with execCommand fallback ensuring 'Copy List' works reliably across all mobile browsers, webviews, and desktop.",
+      },
+      {
+        category: "Enhancement",
+        description: "Removed redundant top 'Share Image' button from Pooja Slip modal, streamlining direct Save Image (PNG) and WhatsApp preview actions.",
+      },
+      {
+        category: "UI/UX",
+        description: "Smooth cubic-bezier swipe-to-complete animation on bookings list with haptic vibration feedback.",
+      },
+      {
+        category: "Security",
+        description: "Robust Google Sign-In cancellation handling with non-blocking 1-tap instant Demo Login recovery.",
+      },
+    ],
+  },
   {
     version: "2.4.2",
     releaseDate: "22 Sep 2026",
@@ -33,7 +77,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "One-Line Samagri Checklist, Stepper Before Units & 100-Step Decrement",
     summary:
       "All-new one-line checklist presentation for Pooja Samagri across New Booking, Step 2 Preview, View Booking, and Edit Items. Includes smart 100-step decrement/increment for weight/volume (grams/ml), stepper before Tamil unit badge, full checklist preview without scroll cutoff, and updated receipts.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {
