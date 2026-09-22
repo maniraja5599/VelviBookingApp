@@ -31,6 +31,7 @@ import {
   UserCheck,
   RotateCcw,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
@@ -270,6 +271,77 @@ function QuickBookingContent() {
   // 2-Step interactive stage (Stage 1: Devotee & Pooja, Stage 2: Date & Dakshina)
   const [twoStepStage, setTwoStepStage] = useState<1 | 2>(1);
   const [formError, setFormError] = useState<string>("");
+
+  // Missing field validation popup and scroll highlight state
+  const [errorPopup, setErrorPopup] = useState<{
+    title: string;
+    message: string;
+    actionLabel: string;
+    targetSection: "devotee" | "pooja" | "priest" | "date";
+  } | null>(null);
+
+  const [highlightedSection, setHighlightedSection] = useState<
+    "devotee" | "pooja" | "priest" | "date" | null
+  >(null);
+
+  const showMissingError = (
+    section: "devotee" | "pooja" | "priest" | "date",
+    title: string,
+    message: string,
+    actionLabel: string
+  ) => {
+    setFormError(message);
+    setHighlightedSection(section);
+    setErrorPopup({
+      title,
+      message,
+      actionLabel,
+      targetSection: section,
+    });
+
+    // Instant smooth scroll to the exact missing element
+    setTimeout(() => {
+      const el = document.getElementById(`${section}-section`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (section === "devotee") {
+          const input = document.getElementById("devotee-search-input");
+          if (input) (input as HTMLElement).focus();
+        }
+      }
+    }, 80);
+
+    // Auto-clear highlight ring after 4 seconds
+    setTimeout(() => {
+      setHighlightedSection(null);
+    }, 4000);
+  };
+
+  const validateAndProceedToStep2 = () => {
+    if (!selectedCustomerId) {
+      showMissingError(
+        "devotee",
+        "பக்தர் விவரம் விடுபட்டுள்ளது (Devotee Missing)",
+        "முன்பதிவைத் தொடர தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் அல்லது புதிய பக்தரைச் சேர்க்கவும்.",
+        "பக்தர் தேர்வு செய்க (Select Devotee)"
+      );
+      return;
+    }
+    if (!selectedPoojaId) {
+      showMissingError(
+        "pooja",
+        "பூஜை தேர்வு விடுபட்டுள்ளது (Pooja Missing)",
+        "அடுத்த நிலைக்குச் செல்ல தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும்.",
+        "பூஜை தேர்வு செய்க (Select Pooja)"
+      );
+      return;
+    }
+    setFormError("");
+    setErrorPopup(null);
+    setHighlightedSection(null);
+    setTwoStepStage(2);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // Preview modal state
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
@@ -523,13 +595,23 @@ function QuickBookingContent() {
   const handleOpenPreview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCustomer) {
-      setFormError("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)");
       setTwoStepStage(1);
+      showMissingError(
+        "devotee",
+        "பக்தர் விவரம் விடுபட்டுள்ளது (Devotee Missing)",
+        "முன்பதிவை உறுதி செய்ய தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும்.",
+        "பக்தர் தேர்வு செய்க (Select Devotee)"
+      );
       return;
     }
     if (!currentPooja) {
-      setFormError("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)");
       setTwoStepStage(1);
+      showMissingError(
+        "pooja",
+        "பூஜை தேர்வு விடுபட்டுள்ளது (Pooja Missing)",
+        "முன்பதிவை உறுதி செய்ய தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும்.",
+        "பூஜை தேர்வு செய்க (Select Pooja)"
+      );
       return;
     }
     if (priestType === "other" && (!assignedIyerId || assignedIyerId === "self")) {
@@ -655,18 +737,7 @@ function QuickBookingContent() {
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (!selectedCustomerId) {
-                setFormError("Please select a devotee first.");
-                return;
-              }
-              if (!selectedPoojaId) {
-                setFormError("Please select a pooja ritual first.");
-                return;
-              }
-              setFormError("");
-              setTwoStepStage(2);
-            }}
+            onClick={validateAndProceedToStep2}
             className={`py-2 px-3 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
               twoStepStage === 2
                 ? "bg-white text-emerald-950 shadow-xs font-black ring-1 ring-emerald-600/20"
@@ -697,15 +768,33 @@ function QuickBookingContent() {
         {twoStepStage === 1 && (
           <div className="space-y-3.5 animate-in fade-in duration-150">
             {/* SECTION 1: DEVOTEE SELECTION */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+            <div
+              id="devotee-section"
+              className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
+                highlightedSection === "devotee"
+                  ? "ring-4 ring-rose-500/50 border-rose-500 shadow-lg shadow-rose-500/20 animate-pulse"
+                  : "border-slate-200"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                  <div
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs ${
+                      highlightedSection === "devotee"
+                        ? "bg-rose-600 text-white"
+                        : "bg-amber-500 text-white"
+                    }`}
+                  >
                     <User className="w-4 h-4 text-white" />
                   </div>
                   <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-950">
                     1. பக்தர் விவரம் (Devotee)
                   </h2>
+                  {highlightedSection === "devotee" && (
+                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-300">
+                      தேர்வு தேவை ⚠️
+                    </span>
+                  )}
                 </div>
 
                 <button
@@ -722,11 +811,16 @@ function QuickBookingContent() {
               <div className="relative">
                 <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
+                  id="devotee-search-input"
                   type="text"
                   placeholder="Search devotee by name or mobile..."
                   value={devoteeSearch}
                   onChange={(e) => setDevoteeSearch(e.target.value)}
-                  className="w-full pl-8 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 transition"
+                  className={`w-full pl-8 pr-8 py-1.5 bg-slate-50 border rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none transition ${
+                    highlightedSection === "devotee"
+                      ? "border-rose-400 focus:border-rose-600 ring-1 ring-rose-400"
+                      : "border-slate-200 focus:border-amber-500"
+                  }`}
                 />
                 {devoteeSearch && (
                   <button
@@ -845,15 +939,33 @@ function QuickBookingContent() {
             {/* ================================================================= */}
             {/* SECTION 2: POOJA & SAMAGRI CHECKLIST                              */}
             {/* ================================================================= */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+            <div
+              id="pooja-section"
+              className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
+                highlightedSection === "pooja"
+                  ? "ring-4 ring-rose-500/50 border-rose-500 shadow-lg shadow-rose-500/20 animate-pulse"
+                  : "border-slate-200"
+              }`}
+            >
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shadow-2xs">
-                    <Flame className="w-4 h-4 text-emerald-700" />
+                  <div
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs ${
+                      highlightedSection === "pooja"
+                        ? "bg-rose-600 text-white"
+                        : "bg-emerald-100 text-emerald-900"
+                    }`}
+                  >
+                    <Flame className={`w-4 h-4 ${highlightedSection === "pooja" ? "text-white" : "text-emerald-700"}`} />
                   </div>
                   <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
                     2. பூஜை &amp; சாக்கிரிகள் (Pooja &amp; Samagri)
                   </h2>
+                  {highlightedSection === "pooja" && (
+                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-300">
+                      தேர்வு தேவை ⚠️
+                    </span>
+                  )}
                 </div>
 
                 <Link
@@ -2595,19 +2707,7 @@ function QuickBookingContent() {
 
           <button
             type="button"
-            onClick={() => {
-              if (!selectedCustomerId) {
-                setFormError("தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee).");
-                return;
-              }
-              if (!selectedPoojaId) {
-                setFormError("தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja).");
-                return;
-              }
-              setFormError("");
-              setTwoStepStage(2);
-              if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
+            onClick={validateAndProceedToStep2}
             className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <span>Next: Date &amp; Dakshina</span>
@@ -2648,7 +2748,60 @@ function QuickBookingContent() {
     )}
       </form>
 
+      {/* Interactive Missing Field / Error Alert Popup Modal */}
+      {errorPopup && (
+        <div className="fixed inset-0 z-[75] bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-2 border-rose-400 space-y-4 animate-in zoom-in-95 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-xs border border-rose-200 animate-bounce">
+              <AlertTriangle className="w-7 h-7 stroke-[2.5]" />
+            </div>
 
+            <div>
+              <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest block">
+                விடுபட்ட தகவல் (Missing Field)
+              </span>
+              <h3 className="text-base font-black text-slate-900 leading-snug mt-1">
+                {errorPopup.title}
+              </h3>
+              <p className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed">
+                {errorPopup.message}
+              </p>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const sec = errorPopup.targetSection;
+                  setErrorPopup(null);
+                  setTimeout(() => {
+                    const el = document.getElementById(`${sec}-section`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "center" });
+                      if (sec === "devotee") {
+                        const input = document.getElementById("devotee-search-input");
+                        if (input) (input as HTMLElement).focus();
+                      }
+                    }
+                  }, 60);
+                }}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-xs font-black shadow-md shadow-rose-600/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>{errorPopup.actionLabel}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setErrorPopup(null)}
+                className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition cursor-pointer"
+              >
+                சரி / Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Full Booking Preview Modal (முன்பதிவு முழு சரிபார்ப்பு & செக்-லிஸ்ட்) */}
       {showPreviewModal && selectedCustomer && currentPooja && (
