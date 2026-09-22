@@ -145,6 +145,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
 }) => {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
   const currentOffsetRef = React.useRef(0);
@@ -155,24 +156,30 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   const diffDays = isOverdue ? getDiffDays(b.date, todayStr) : 0;
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isFinishing) return;
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     isDraggingRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
 
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      if (diffX < -6) {
-        // Swiping Left
+      if (diffX < -4) {
+        // Swiping Left with soft elastic rubber-banding past -140px
         isDraggingRef.current = true;
         setIsSwiping(true);
-        const nextX = Math.max(-140, Math.min(0, diffX));
+        let nextX = diffX;
+        if (nextX < -140) {
+          const overdrag = nextX - (-140);
+          nextX = -140 + overdrag * 0.22;
+        }
+        nextX = Math.min(0, nextX);
         currentOffsetRef.current = nextX;
         setOffsetX(nextX);
-      } else if (currentOffsetRef.current < 0 && diffX > 6) {
+      } else if (currentOffsetRef.current < 0 && diffX > 4) {
         // Swiping Right to Close
         isDraggingRef.current = true;
         setIsSwiping(true);
@@ -184,6 +191,14 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   };
 
   const handleTouchEnd = () => {
+    if (isFinishing) return;
+    setIsSwiping(false);
+    // If full swipe past -220px, auto-complete smoothly
+    if (currentOffsetRef.current <= -220) {
+      handleTriggerComplete();
+      return;
+    }
+    // Snap smoothly to dock or close
     if (currentOffsetRef.current <= -45) {
       currentOffsetRef.current = -140;
       setOffsetX(-140);
@@ -191,31 +206,35 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
       currentOffsetRef.current = 0;
       setOffsetX(0);
     }
-    setIsSwiping(false);
     setTimeout(() => {
       isDraggingRef.current = false;
-    }, 150);
+    }, 200);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || isFinishing) return;
     touchStartRef.current = { x: e.clientX, y: e.clientY };
     isDraggingRef.current = false;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     const diffX = e.clientX - touchStartRef.current.x;
     const diffY = e.clientY - touchStartRef.current.y;
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      if (diffX < -6) {
-        // Swiping Left
+      if (diffX < -4) {
+        // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
         setIsSwiping(true);
-        const nextX = Math.max(-140, Math.min(0, diffX));
+        let nextX = diffX;
+        if (nextX < -140) {
+          const overdrag = nextX - (-140);
+          nextX = -140 + overdrag * 0.22;
+        }
+        nextX = Math.min(0, nextX);
         currentOffsetRef.current = nextX;
         setOffsetX(nextX);
-      } else if (currentOffsetRef.current < 0 && diffX > 6) {
+      } else if (currentOffsetRef.current < 0 && diffX > 4) {
         // Swiping Right to Close
         isDraggingRef.current = true;
         setIsSwiping(true);
@@ -227,7 +246,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   };
 
   const handleMouseUp = () => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     touchStartRef.current = null;
     handleTouchEnd();
   };
@@ -246,6 +265,18 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
     }
   };
 
+  const handleTriggerComplete = () => {
+    if (isFinishing) return;
+    setIsFinishing(true);
+    setOffsetX(0);
+    currentOffsetRef.current = 0;
+    // Allow smooth glide animation to complete before changing data
+    setTimeout(() => {
+      onToggleComplete(b);
+      setIsFinishing(false);
+    }, 280);
+  };
+
   return (
     <div
       className="relative overflow-hidden rounded-2xl flex-1 min-w-0 select-none shadow-2xs"
@@ -258,29 +289,33 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Background action revealed on left swipe - Only visible when swiping left */}
+      {/* Background action revealed on left swipe - Smooth fade & scale */}
       <button
         type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onToggleComplete(b);
-          currentOffsetRef.current = 0;
-          setOffsetX(0);
+          handleTriggerComplete();
         }}
-        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-2xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner transition-opacity ${
-          offsetX < -2 ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-2xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner ${
+          offsetX < -2 ? "visible pointer-events-auto" : "invisible pointer-events-none"
         } ${
           isCompleted
             ? "bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white"
             : "bg-gradient-to-l from-emerald-600 via-emerald-500 to-emerald-600 text-white"
         }`}
         style={{
-          transition: "opacity 0.15s ease",
+          opacity: Math.max(0, Math.min(1, Math.abs(offsetX) / 50)),
+          transition: isSwiping ? "none" : "opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
         title={isCompleted ? "Reopen Booking" : "Mark as Complete"}
       >
-        <div className="flex items-center gap-2.5">
+        <div
+          className="flex items-center gap-2.5 transition-transform"
+          style={{
+            transform: `scale(${Math.min(1, 0.88 + (Math.abs(offsetX) / 140) * 0.12)})`,
+          }}
+        >
           {isCompleted ? (
             <>
               <div className="leading-tight text-right">
@@ -301,11 +336,12 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
         </div>
       </button>
 
-      {/* Foreground card */}
+      {/* Foreground card - Silky smooth cubic-bezier momentum curve */}
       <div
         style={{
           transform: `translateX(${offsetX}px)`,
-          transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
+          transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: isSwiping ? "transform" : "auto",
         }}
         className="relative z-10 bg-white rounded-2xl"
       >
@@ -477,6 +513,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
 }) => {
   const [offsetX, setOffsetX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
   const currentOffsetRef = React.useRef(0);
@@ -486,24 +523,30 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   const diffDays = isOverdue ? getDiffDays(b.date, todayStr) : 0;
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isFinishing) return;
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     isDraggingRef.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
 
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      if (diffX < -6) {
-        // Swiping Left
+      if (diffX < -4) {
+        // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
         setIsSwiping(true);
-        const nextX = Math.max(-140, Math.min(0, diffX));
+        let nextX = diffX;
+        if (nextX < -140) {
+          const overdrag = nextX - (-140);
+          nextX = -140 + overdrag * 0.22;
+        }
+        nextX = Math.min(0, nextX);
         currentOffsetRef.current = nextX;
         setOffsetX(nextX);
-      } else if (currentOffsetRef.current < 0 && diffX > 6) {
+      } else if (currentOffsetRef.current < 0 && diffX > 4) {
         // Swiping Right to Close
         isDraggingRef.current = true;
         setIsSwiping(true);
@@ -515,6 +558,14 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   };
 
   const handleTouchEnd = () => {
+    if (isFinishing) return;
+    setIsSwiping(false);
+    // If full swipe past -220px, auto-complete smoothly
+    if (currentOffsetRef.current <= -220) {
+      handleTriggerComplete();
+      return;
+    }
+    // Snap smoothly to dock or close
     if (currentOffsetRef.current <= -45) {
       currentOffsetRef.current = -140;
       setOffsetX(-140);
@@ -522,31 +573,35 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
       currentOffsetRef.current = 0;
       setOffsetX(0);
     }
-    setIsSwiping(false);
     setTimeout(() => {
       isDraggingRef.current = false;
-    }, 150);
+    }, 200);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || isFinishing) return;
     touchStartRef.current = { x: e.clientX, y: e.clientY };
     isDraggingRef.current = false;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     const diffX = e.clientX - touchStartRef.current.x;
     const diffY = e.clientY - touchStartRef.current.y;
     if (Math.abs(diffX) > Math.abs(diffY)) {
-      if (diffX < -6) {
-        // Swiping Left
+      if (diffX < -4) {
+        // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
         setIsSwiping(true);
-        const nextX = Math.max(-140, Math.min(0, diffX));
+        let nextX = diffX;
+        if (nextX < -140) {
+          const overdrag = nextX - (-140);
+          nextX = -140 + overdrag * 0.22;
+        }
+        nextX = Math.min(0, nextX);
         currentOffsetRef.current = nextX;
         setOffsetX(nextX);
-      } else if (currentOffsetRef.current < 0 && diffX > 6) {
+      } else if (currentOffsetRef.current < 0 && diffX > 4) {
         // Swiping Right to Close
         isDraggingRef.current = true;
         setIsSwiping(true);
@@ -558,7 +613,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   };
 
   const handleMouseUp = () => {
-    if (!touchStartRef.current) return;
+    if (!touchStartRef.current || isFinishing) return;
     touchStartRef.current = null;
     handleTouchEnd();
   };
@@ -577,6 +632,18 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
     }
   };
 
+  const handleTriggerComplete = () => {
+    if (isFinishing) return;
+    setIsFinishing(true);
+    setOffsetX(0);
+    currentOffsetRef.current = 0;
+    // Allow smooth glide animation to complete before changing data
+    setTimeout(() => {
+      onToggleComplete(b);
+      setIsFinishing(false);
+    }, 280);
+  };
+
   return (
     <div
       className="relative overflow-hidden rounded-xl select-none"
@@ -589,29 +656,33 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Background action revealed on left swipe - Only visible when swiping left */}
+      {/* Background action revealed on left swipe - Smooth fade & scale */}
       <button
         type="button"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onToggleComplete(b);
-          currentOffsetRef.current = 0;
-          setOffsetX(0);
+          handleTriggerComplete();
         }}
-        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner transition-opacity ${
-          offsetX < -2 ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner ${
+          offsetX < -2 ? "visible pointer-events-auto" : "invisible pointer-events-none"
         } ${
           isCompleted
             ? "bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white"
             : "bg-gradient-to-l from-emerald-600 via-emerald-500 to-emerald-600 text-white"
         }`}
         style={{
-          transition: "opacity 0.15s ease",
+          opacity: Math.max(0, Math.min(1, Math.abs(offsetX) / 50)),
+          transition: isSwiping ? "none" : "opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
         title={isCompleted ? "Reopen Booking" : "Mark as Complete"}
       >
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2 transition-transform"
+          style={{
+            transform: `scale(${Math.min(1, 0.88 + (Math.abs(offsetX) / 140) * 0.12)})`,
+          }}
+        >
           {isCompleted ? (
             <>
               <div className="leading-tight text-right">
@@ -632,11 +703,12 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
         </div>
       </button>
 
-      {/* Foreground compact row */}
+      {/* Foreground compact row - Silky smooth cubic-bezier momentum curve */}
       <div
         style={{
           transform: `translateX(${offsetX}px)`,
-          transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
+          transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+          willChange: isSwiping ? "transform" : "auto",
         }}
         className="relative z-10 bg-white rounded-xl"
       >
