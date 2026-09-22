@@ -1404,330 +1404,6 @@ function QuickBookingContent() {
                 </div>
               )}
             </div>
-
-            {/* ================================================================= */}
-            {/* SECTION 3: PERFORMING PRIEST & VENUE (Step 1 Smart & Simple)     */}
-            {/* ================================================================= */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3.5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs shadow-2xs">
-                    <UserCheck className="w-4 h-4 text-amber-700" />
-                  </div>
-                  <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                    3. குருக்கள் &amp; இடம் (Priest &amp; Venue)
-                  </h2>
-                </div>
-              </div>
-
-              {/* Priest Selection: Simple Self vs Other Toggle */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPriestType("self");
-                      setAssignedIyerId("self");
-                      setShowAddPriest(false);
-                    }}
-                    className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
-                      priestType === "self"
-                        ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 font-bold"
-                    }`}
-                  >
-                    <span>Self (நான்)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPriestType("other");
-                      if (assignedIyerId === "self" || !assignedIyerId) {
-                        const defaultPick = recentPriests[0]?.id || otherPriests[0]?.id || members[0]?.id || "";
-                        if (defaultPick) {
-                          setAssignedIyerId(defaultPick);
-                          saveRecentPriest(defaultPick);
-                        }
-                      }
-                    }}
-                    className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
-                      priestType === "other"
-                        ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 font-bold"
-                    }`}
-                  >
-                    <span>Other (வேறு குருக்கள்)</span>
-                  </button>
-                </div>
-
-                {/* If Self: sleek confirmation note */}
-                {priestType === "self" && (
-                  <div className="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200/80 flex items-center justify-between text-xs text-emerald-950 font-semibold animate-in fade-in">
-                    <span className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                      <span>Priest: <strong>{currentUser?.name || "Ravi Iyer"} (Self)</strong></span>
-                    </span>
-                    <span className="text-[10px] bg-emerald-200/80 px-2 py-0.5 rounded-full font-bold text-emerald-900">
-                      தலைமை குருக்கள்
-                    </span>
-                  </div>
-                )}
-
-                {/* When Other Priest: Quick chips & Search */}
-                {priestType === "other" && (
-                  <div className="p-3 bg-slate-50/90 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in">
-                    <div className="flex items-center justify-between gap-2">
-                      <label className="text-[10.5px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <Users className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Choose Priest (குருக்கள் தேர்வு):</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddPriest(!showAddPriest);
-                          setPriestError("");
-                        }}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100/70 hover:bg-emerald-200/70 px-2.5 py-1 rounded-xl border border-emerald-300/80 transition flex items-center gap-1 cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>{showAddPriest ? "Close" : "Add Priest"}</span>
-                      </button>
-                    </div>
-
-                    {/* Recent / Suggested Priest Chips */}
-                    {recentPriests.length > 0 && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {recentPriests.map((p) => {
-                          const isSelected = assignedIyerId === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                setAssignedIyerId(p.id);
-                                saveRecentPriest(p.id);
-                              }}
-                              className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition active:scale-95 flex items-center gap-1.5 border cursor-pointer ${
-                                isSelected
-                                  ? "bg-emerald-800 text-white border-emerald-800 shadow-xs ring-2 ring-emerald-400/40"
-                                  : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200 shadow-2xs"
-                              }`}
-                            >
-                              <span
-                                className={`w-4 h-4 rounded-full text-[9px] font-black flex items-center justify-center shrink-0 ${
-                                  isSelected
-                                    ? "bg-amber-400 text-slate-950"
-                                    : "bg-emerald-100 text-emerald-900"
-                                }`}
-                              >
-                                {p.name.charAt(0)}
-                              </span>
-                              <span className="truncate max-w-[120px] sm:max-w-[150px]">{p.name}</span>
-                              {isSelected && <Check className="w-3 h-3 text-amber-300 shrink-0 stroke-[3]" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Quick Priest Dropdown / Search fallback */}
-                    <div className="relative">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={priestSearch}
-                        onChange={(e) => setPriestSearch(e.target.value)}
-                        placeholder="Search other priests..."
-                        className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs transition"
-                      />
-                      {priestSearch && (
-                        <button
-                          type="button"
-                          onClick={() => setPriestSearch("")}
-                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                        >
-                          ✕
-                        </button>
-                      )}
-                    </div>
-
-                    {priestSearch && filteredPriests.length > 0 && (
-                      <div className="space-y-1 max-h-36 overflow-y-auto pr-0.5 bg-white p-1.5 rounded-xl border border-slate-200">
-                        {filteredPriests.map((p) => {
-                          const isSelected = assignedIyerId === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                setAssignedIyerId(p.id);
-                                saveRecentPriest(p.id);
-                                setPriestSearch("");
-                              }}
-                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-between transition cursor-pointer ${
-                                isSelected ? "bg-emerald-100 text-emerald-900" : "hover:bg-slate-100 text-slate-800"
-                              }`}
-                            >
-                              <span>{p.name} {p.specialization ? `(${p.specialization})` : ""}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-emerald-700" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Inline Add Priest Form if toggled */}
-                    {showAddPriest && (
-                      <div className="p-3 bg-white rounded-xl border border-emerald-300 space-y-2.5 shadow-xs animate-in zoom-in-95">
-                        <div className="flex items-center justify-between pb-1 border-b border-slate-100">
-                          <span className="text-xs font-extrabold text-emerald-950">
-                            + புதிய குருக்களை சேர்க்க (Add New Priest)
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setShowAddPriest(false)}
-                            className="text-slate-400 hover:text-slate-600 text-xs font-bold"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          <div>
-                            <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Priest Name *</label>
-                            <input
-                              type="text"
-                              value={newPriestName}
-                              onChange={(e) => setNewPriestName(e.target.value)}
-                              placeholder="எ.கா: வெங்கடேஷ் ஐயர்"
-                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Mobile (Optional)</label>
-                              <input
-                                type="tel"
-                                value={newPriestMobile}
-                                onChange={(e) => setNewPriestMobile(e.target.value)}
-                                placeholder="9876543210"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-600 block mb-0.5">Specialization</label>
-                              <input
-                                type="text"
-                                value={newPriestSpec}
-                                onChange={(e) => setNewPriestSpec(e.target.value)}
-                                placeholder="Assistant Priest"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                              />
-                            </div>
-                          </div>
-                          {priestError && (
-                            <p className="text-[11px] font-bold text-red-600 bg-red-50 p-1.5 rounded-lg">{priestError}</p>
-                          )}
-                          <div className="flex items-center justify-end gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setShowAddPriest(false);
-                                setPriestError("");
-                              }}
-                              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleQuickAddPriest}
-                              className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-black shadow-xs transition active:scale-95 cursor-pointer flex items-center gap-1"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                              <span>Save Priest</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Location / Venue with Quick Preset Pills + Manual Edit */}
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
-                  பூஜை நடைபெறும் இடம் (Location / Venue):
-                </label>
-
-                {/* Quick Presets */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const homeLoc = selectedCustomer?.address || (selectedCustomer?.city ? `${selectedCustomer.name} இல்லம், ${selectedCustomer.city}` : "பக்தர் இல்லம்");
-                      setLocation(homeLoc);
-                    }}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                      location.includes("இல்லம்") || (selectedCustomer?.address && location === selectedCustomer.address)
-                        ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    <span>🏠 பக்தர் இல்லம்</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setLocation("கோவில் (Temple)")}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                      location.includes("கோவில்")
-                        ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    <span>🛕 கோவில்</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setLocation("மண்டபம் (Hall)")}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                      location.includes("மண்டபம்")
-                        ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    <span>🏛️ மண்டபம்</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setLocation("நாமக்கல் (Namakkal)")}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                      location.includes("நாமக்கல்") || location === "Namakkal"
-                        ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                        : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    <span>📍 நாமக்கல்</span>
-                  </button>
-                </div>
-
-                {/* Manual Edit Input */}
-                <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="எ.கா: நாமக்கல் / பக்தர் இல்லம்"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -1787,31 +1463,31 @@ function QuickBookingContent() {
             </div>
           </div>
 
-          {/* Samagri Checklist Full Preview in Step 2 (ஒரே வரியில் - One Line & Full Preview) */}
+          {/* Samagri Checklist Full Preview in Step 2 */}
           {samagriItems.length > 0 && (
             <div className="pt-2 border-t border-slate-100 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-[10.5px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                   <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>சாமக்கிரி பொருட்கள் பட்டியல் ({samagriItems.filter((i) => i.isChecked !== false).length} பொருட்கள் தேர்வு):</span>
+                  <span>சாமக்கிரி பொருட்கள் ({samagriItems.filter((i) => i.isChecked !== false).length})</span>
                 </span>
-                <span className="text-[10px] font-extrabold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                  சரிபார்க்கப்பட்டது ✓
+                <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  {samagriItems.filter((i) => i.isChecked !== false).length} பொருட்கள் உறுதி
                 </span>
               </div>
 
               {/* Full preview in one line each, clean and clear */}
-              <div className="bg-slate-50/90 rounded-2xl p-2.5 border border-slate-200 divide-y divide-slate-100/90 space-y-0.5">
+              <div className="bg-slate-50/70 rounded-2xl p-2 sm:p-2.5 border border-slate-200/90 divide-y divide-slate-100 space-y-0.5">
                 {samagriItems.filter((i) => i.isChecked !== false).map((it, idx) => (
                   <div
                     key={it.id || idx}
-                    className="flex items-center justify-between text-xs py-1.5 px-1 hover:bg-white rounded-lg transition"
+                    className="flex items-center justify-between text-xs py-1.5 px-1.5 hover:bg-white rounded-lg transition"
                   >
                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[9px] font-black shrink-0">
+                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black shrink-0 border border-emerald-300">
                         ✓
                       </span>
-                      <span className="font-extrabold text-slate-900 truncate">
+                      <span className="font-extrabold text-slate-800 truncate">
                         {idx + 1}. {it.itemTamilName || it.itemEnglishName}
                       </span>
                       {it.itemEnglishName && it.itemTamilName && it.itemEnglishName !== it.itemTamilName && (
@@ -1825,7 +1501,7 @@ function QuickBookingContent() {
                         </span>
                       )}
                     </div>
-                    <span className="font-black text-emerald-950 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px] shrink-0 ml-2 shadow-2xs">
+                    <span className="font-bold text-emerald-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px] shrink-0 ml-2 shadow-2xs">
                       {it.quantity} {formatUnitTamil(it.unit)}
                     </span>
                   </div>
@@ -1881,29 +1557,33 @@ function QuickBookingContent() {
                     key={d.dateStr}
                     type="button"
                     onClick={() => setDate(d.dateStr)}
-                    className={`flex-shrink-0 w-16 p-2 rounded-2xl border text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between gap-1 shadow-2xs ${
+                    className={`flex-shrink-0 min-w-[58px] py-2 px-1.5 rounded-2xl border text-center transition-all cursor-pointer active:scale-95 flex flex-col items-center justify-between gap-1 shadow-2xs ${
                       isSelected
-                        ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-amber-400/40"
-                        : "bg-slate-50/80 hover:bg-slate-100 text-slate-700 border-slate-200"
+                        ? "bg-gradient-to-b from-emerald-800 to-emerald-950 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400/40"
+                        : "bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200"
                     }`}
                   >
                     <span
-                      className={`text-[9.5px] font-bold uppercase ${
-                        isSelected ? "text-amber-300" : "text-slate-400"
+                      className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full ${
+                        isSelected
+                          ? "bg-emerald-700/80 text-amber-200"
+                          : d.isToday
+                          ? "bg-amber-100 text-amber-900"
+                          : "text-slate-400"
                       }`}
                     >
                       {d.isToday ? "Today" : d.isTomorrow ? "Tmrw" : d.dayName}
                     </span>
                     <span
-                      className={`text-lg font-black leading-none ${
+                      className={`text-base font-black leading-tight ${
                         isSelected ? "text-white" : "text-slate-900"
                       }`}
                     >
                       {d.dayNum}
                     </span>
                     <span
-                      className={`text-[9.5px] font-extrabold ${
-                        isSelected ? "text-amber-300" : "text-slate-500"
+                      className={`text-[9.5px] font-bold ${
+                        isSelected ? "text-emerald-200" : "text-slate-400"
                       }`}
                     >
                       {d.monthShort}
@@ -1971,7 +1651,7 @@ function QuickBookingContent() {
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Select Time (12-Hour AM/PM):
               </span>
-              <div className="flex items-center gap-1.5 bg-slate-900 text-amber-300 px-2.5 py-1 rounded-xl text-xs font-black shadow-xs">
+              <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-900 to-emerald-800 text-amber-200 px-3 py-1 rounded-xl text-xs font-black shadow-xs border border-emerald-700/60">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
                 <span>{time}</span>
               </div>
@@ -1992,7 +1672,7 @@ function QuickBookingContent() {
                       onClick={() => updateTimeSlot(h, undefined, undefined)}
                       className={`py-1.5 rounded-xl border text-center transition active:scale-95 cursor-pointer ${
                         isSelected
-                          ? "bg-slate-900 text-amber-300 border-slate-900 font-black shadow-xs"
+                          ? "bg-emerald-800 text-amber-200 border-emerald-800 font-black shadow-xs ring-1 ring-emerald-600"
                           : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                       }`}
                     >
@@ -2123,7 +1803,7 @@ function QuickBookingContent() {
                 onClick={() => handlePaymentChoiceChange("UNPAID")}
                 className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
                   paymentChoice === "UNPAID"
-                    ? "bg-slate-900 text-amber-300 border-slate-900 font-black shadow-xs"
+                    ? "bg-amber-600 text-white border-amber-600 font-black shadow-xs ring-1 ring-amber-400"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
@@ -2134,7 +1814,7 @@ function QuickBookingContent() {
                 onClick={() => handlePaymentChoiceChange("ADVANCE")}
                 className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
                   paymentChoice === "ADVANCE"
-                    ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs"
+                    ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs ring-1 ring-emerald-500"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
@@ -2145,7 +1825,7 @@ function QuickBookingContent() {
                 onClick={() => handlePaymentChoiceChange("FULL")}
                 className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
                   paymentChoice === "FULL"
-                    ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs"
+                    ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-xs ring-1 ring-emerald-600"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
@@ -2308,11 +1988,11 @@ function QuickBookingContent() {
                 }}
                 className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   priestType === "self"
-                    ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 font-bold"
+                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 border-emerald-800 shadow-xs ring-2 ring-emerald-500/20"
+                    : "bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200 font-bold shadow-2xs"
                 }`}
               >
-                <span>Self</span>
+                <span>🪔 Self (நான்)</span>
               </button>
 
               <button
@@ -2329,11 +2009,11 @@ function QuickBookingContent() {
                 }}
                 className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   priestType === "other"
-                    ? "bg-slate-900 text-amber-300 border-slate-900 shadow-xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200 font-bold"
+                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 border-emerald-800 shadow-xs ring-2 ring-emerald-500/20"
+                    : "bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200 font-bold shadow-2xs"
                 }`}
               >
-                <span>Other</span>
+                <span>👥 Other (வேறு குருக்கள்)</span>
               </button>
             </div>
 
@@ -2582,73 +2262,101 @@ function QuickBookingContent() {
           </div>
 
           {/* Pooja Location / Venue */}
-          <div className="space-y-2">
-            <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
-              பூஜை நடைபெறும் இடம் (Location / Venue):
-            </label>
-
-            {/* Quick Presets */}
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                type="button"
-                onClick={() => {
-                  const homeLoc = selectedCustomer?.address || (selectedCustomer?.city ? `${selectedCustomer.name} இல்லம், ${selectedCustomer.city}` : "பக்தர் இல்லம்");
-                  setLocation(homeLoc);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                  location.includes("இல்லம்") || (selectedCustomer?.address && location === selectedCustomer.address)
-                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-              >
-                <span>🏠 பக்தர் இல்லம்</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLocation("கோவில் (Temple)")}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                  location.includes("கோவில்")
-                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-              >
-                <span>🛕 கோவில்</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLocation("மண்டபம் (Hall)")}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                  location.includes("மண்டபம்")
-                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-              >
-                <span>🏛️ மண்டபம்</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLocation("நாமக்கல் (Namakkal)")}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition active:scale-95 border cursor-pointer flex items-center gap-1 ${
-                  location.includes("நாமக்கல்") || location === "Namakkal"
-                    ? "bg-amber-600 text-white border-amber-600 shadow-2xs"
-                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                }`}
-              >
-                <span>📍 நாமக்கல்</span>
-              </button>
+          <div className="space-y-2.5 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                <span>பூஜை நடைபெறும் இடம் (Location / Venue):</span>
+              </label>
+              {location && (
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 truncate max-w-[150px]">
+                  {location}
+                </span>
+              )}
             </div>
 
+            {/* Modern Venue Selection Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                {
+                  label: "பக்தர் இல்லம்",
+                  sub: "Home",
+                  icon: "🏠",
+                  match: () =>
+                    location.includes("இல்லம்") ||
+                    location.includes("Home") ||
+                    Boolean(selectedCustomer?.address && location === selectedCustomer.address),
+                  onClick: () => {
+                    const homeLoc =
+                      selectedCustomer?.address ||
+                      (selectedCustomer?.city ? `${selectedCustomer.name} இல்லம், ${selectedCustomer.city}` : "பக்தர் இல்லம்");
+                    setLocation(homeLoc);
+                  },
+                },
+                {
+                  label: "கோவில்",
+                  sub: "Temple",
+                  icon: "🛕",
+                  match: () => location.includes("கோவில்") || location.includes("Temple"),
+                  onClick: () => setLocation("கோவில் (Temple)"),
+                },
+                {
+                  label: "மண்டபம்",
+                  sub: "Hall",
+                  icon: "🏛️",
+                  match: () => location.includes("மண்டபம்") || location.includes("Hall"),
+                  onClick: () => setLocation("மண்டபம் (Hall)"),
+                },
+                {
+                  label: "நாமக்கல்",
+                  sub: "Namakkal",
+                  icon: "📍",
+                  match: () => location.includes("நாமக்கல்") || location === "Namakkal",
+                  onClick: () => setLocation("நாமக்கல் (Namakkal)"),
+                },
+              ].map((v) => {
+                const isSelected = v.match();
+                return (
+                  <button
+                    key={v.label}
+                    type="button"
+                    onClick={v.onClick}
+                    className={`py-2 px-2.5 rounded-xl text-left transition active:scale-95 border cursor-pointer flex items-center gap-2 ${
+                      isSelected
+                        ? "bg-emerald-50 border-2 border-emerald-600 text-emerald-950 shadow-xs ring-2 ring-emerald-500/20 font-black"
+                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 font-bold shadow-2xs"
+                    }`}
+                  >
+                    <span className="text-base shrink-0">{v.icon}</span>
+                    <div className="min-w-0 flex-1 leading-tight">
+                      <div className="text-xs truncate">{v.label}</div>
+                      <div
+                        className={`text-[9.5px] truncate ${
+                          isSelected ? "text-emerald-700 font-extrabold" : "text-slate-400 font-normal"
+                        }`}
+                      >
+                        {v.sub}
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Clear, highly visible Text Input */}
             <div className="relative">
-              <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+              <MapPin className="w-4 h-4 text-emerald-600 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="எ.கா: நாமக்கல் / பக்தர் இல்லம்"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+                placeholder="எ.கா: பக்தர் இல்ல முகவரி / கோவில் பெயர் / நாமக்கல்"
+                className="w-full bg-white border-2 border-slate-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 rounded-xl pl-9 pr-3 py-2 text-xs font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal shadow-2xs transition"
               />
             </div>
           </div>
