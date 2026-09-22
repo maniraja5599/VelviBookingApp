@@ -60,17 +60,59 @@ export default function HomeDashboardPage() {
   const [activeSubTab, setActiveSubTab] = useState<"analytics" | "payments" | "devotees">("analytics");
 
   useEffect(() => {
+    let animFrame: number;
     const refreshData = () => {
-      setBookings(db.getBookings(businessId));
-      setCustomers(db.getCustomers(businessId));
+      cancelAnimationFrame(animFrame);
+      animFrame = requestAnimationFrame(() => {
+        setBookings(db.getBookings(businessId));
+        setCustomers(db.getCustomers(businessId));
+      });
     };
     refreshData();
     window.addEventListener("velvi:db-change", refreshData);
-    return () => window.removeEventListener("velvi:db-change", refreshData);
+    return () => {
+      cancelAnimationFrame(animFrame);
+      window.removeEventListener("velvi:db-change", refreshData);
+    };
   }, [businessId]);
 
   const members = useMemo(() => db.getMembers(businessId), [businessId]);
   const ownerMember = useMemo(() => members.find((m) => m.role === "OWNER") || members[0], [members]);
+
+  // Pre-indexed booking counts for devotees to ensure 60fps scrolling & instant responsiveness
+  const customerBookingCountMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const b of bookings) {
+      if (b.customerId) map.set(b.customerId, (map.get(b.customerId) || 0) + 1);
+      if (b.customerMobile) {
+        const norm = b.customerMobile.replace(/\D/g, "");
+        if (norm) map.set(norm, (map.get(norm) || 0) + 1);
+      }
+    }
+    return map;
+  }, [bookings]);
+
+  // Pre-indexed member bookings map to eliminate O(N) array filtering per member in render
+  const memberBookingsMap = useMemo(() => {
+    const map = new Map<string, Booking[]>();
+    for (const m of members) {
+      const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
+      const list = bookings.filter((b) => {
+        if (isOwner) {
+          return (
+            b.assignedIyerId === m.id ||
+            b.assignedIyerName === m.name ||
+            b.assignedIyerName === "Ravi Iyer" ||
+            !b.assignedIyerName ||
+            b.assignedIyerName.toLowerCase() === "self"
+          );
+        }
+        return b.assignedIyerId === m.id || b.assignedIyerName === m.name;
+      });
+      map.set(m.id, list);
+    }
+    return map;
+  }, [bookings, members, ownerMember]);
 
   // Overall metrics
   const todayBookings = useMemo(() => bookings.filter((b) => b.date === todayInfo.dateStr), [bookings, todayInfo.dateStr]);
@@ -562,6 +604,51 @@ export default function HomeDashboardPage() {
     return data2026;
   }, [selectedAnalyticsYear, data2026, data2025, data2024]);
 
+  // Memoized SVG Bezier Chart Data for 60fps buttery smooth rendering
+  const cumulativeChartConfig = useMemo(() => {
+    const chartData = activeYearMonthlyData;
+    const maxCumul = chartData[chartData.length - 1]?.cumulative || 500000;
+    const roundedMax = Math.ceil(maxCumul / 100000) * 100000 || 500000;
+    const svgWidth = 480;
+    const svgHeight = 150;
+    const padLeft = 48;
+    const padRight = 20;
+    const padTop = 15;
+    const padBottom = 25;
+    const plotW = svgWidth - padLeft - padRight;
+    const plotH = svgHeight - padTop - padBottom;
+
+    const points = chartData.map((m, idx) => {
+      const x = padLeft + (idx / Math.max(1, chartData.length - 1)) * plotW;
+      const y = padTop + plotH - (m.cumulative / roundedMax) * plotH;
+      return { ...m, x, y };
+    });
+
+    const pathD = points.reduce((acc, pt, idx, arr) => {
+      if (idx === 0) return `M ${pt.x},${pt.y}`;
+      const prev = arr[idx - 1];
+      const cp1x = prev.x + (pt.x - prev.x) / 2;
+      const cp1y = prev.y;
+      const cp2x = prev.x + (pt.x - prev.x) / 2;
+      const cp2y = pt.y;
+      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
+    }, "");
+
+    const areaD =
+      points.length > 0
+        ? `${pathD} L ${points[points.length - 1].x},${padTop + plotH} L ${points[0].x},${padTop + plotH} Z`
+        : "";
+
+    const gridLevels = [
+      { pct: 1.0, val: roundedMax },
+      { pct: 0.66, val: Math.round(roundedMax * 0.66) },
+      { pct: 0.33, val: Math.round(roundedMax * 0.33) },
+      { pct: 0.0, val: 0 },
+    ];
+
+    return { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels };
+  }, [activeYearMonthlyData]);
+
   // Overall 2026 Stats for Top Pinned Hero
   const monthlyAnalyticsData = data2026;
   const multiMonthTotalCollected = useMemo(
@@ -782,9 +869,11 @@ export default function HomeDashboardPage() {
                 ) : (
                   <div className="space-y-2">
                     {filteredDevoteesList.map((c) => {
-                      const custBookings = bookings.filter(
-                        (b) => b.customerId === c.id || b.customerMobile === c.mobile
-                      );
+                      const cMobile = c.mobile?.replace(/\D/g, "");
+                      const poojaCount =
+                        (c.id && customerBookingCountMap.get(c.id)) ||
+                        (cMobile && customerBookingCountMap.get(cMobile)) ||
+                        0;
                       const initials = c.name
                         .split(" ")
                         .map((n) => n[0])
@@ -810,7 +899,7 @@ export default function HomeDashboardPage() {
                                 <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
                                 <span>{c.city || "Namakkal"}</span>
                                 <span>•</span>
-                                <span>{custBookings.length} {custBookings.length === 1 ? "Pooja" : "Poojas"}</span>
+                                <span>{poojaCount} {poojaCount === 1 ? "Pooja" : "Poojas"}</span>
                               </p>
                             </div>
                           </div>
@@ -850,18 +939,7 @@ export default function HomeDashboardPage() {
               <div className="space-y-3">
                 {members.map((m) => {
                   const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
-                  const memberBookings = bookings.filter((b) => {
-                    if (isOwner) {
-                      return (
-                        b.assignedIyerId === m.id ||
-                        b.assignedIyerName === m.name ||
-                        b.assignedIyerName === "Ravi Iyer" ||
-                        !b.assignedIyerName ||
-                        b.assignedIyerName.toLowerCase() === "self"
-                      );
-                    }
-                    return b.assignedIyerId === m.id || b.assignedIyerName === m.name;
-                  });
+                  const memberBookings = memberBookingsMap.get(m.id) || [];
 
                   return (
                     <div
@@ -1602,47 +1680,9 @@ export default function HomeDashboardPage() {
                     </div>
                   )}
 
-                  {/* SVG Bezier Cumulative Line Chart */}
+                  {/* SVG Bezier Cumulative Line Chart (Memoized for zero lag) */}
                   {(() => {
-                    const chartData = activeYearMonthlyData;
-                    const maxCumul = chartData[chartData.length - 1]?.cumulative || 500000;
-                    const roundedMax = Math.ceil(maxCumul / 100000) * 100000 || 500000;
-                    const svgWidth = 480;
-                    const svgHeight = 150;
-                    const padLeft = 48;
-                    const padRight = 20;
-                    const padTop = 15;
-                    const padBottom = 25;
-                    const plotW = svgWidth - padLeft - padRight;
-                    const plotH = svgHeight - padTop - padBottom;
-
-                    const points = chartData.map((m, idx) => {
-                      const x = padLeft + (idx / Math.max(1, chartData.length - 1)) * plotW;
-                      const y = padTop + plotH - (m.cumulative / roundedMax) * plotH;
-                      return { ...m, x, y };
-                    });
-
-                    const pathD = points.reduce((acc, pt, idx, arr) => {
-                      if (idx === 0) return `M ${pt.x},${pt.y}`;
-                      const prev = arr[idx - 1];
-                      const cp1x = prev.x + (pt.x - prev.x) / 2;
-                      const cp1y = prev.y;
-                      const cp2x = prev.x + (pt.x - prev.x) / 2;
-                      const cp2y = pt.y;
-                      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
-                    }, "");
-
-                    const areaD =
-                      points.length > 0
-                        ? `${pathD} L ${points[points.length - 1].x},${padTop + plotH} L ${points[0].x},${padTop + plotH} Z`
-                        : "";
-
-                    const gridLevels = [
-                      { pct: 1.0, val: roundedMax },
-                      { pct: 0.66, val: Math.round(roundedMax * 0.66) },
-                      { pct: 0.33, val: Math.round(roundedMax * 0.33) },
-                      { pct: 0.0, val: 0 },
-                    ];
+                    const { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels } = cumulativeChartConfig;
 
                     return (
                       <div className="relative w-full overflow-hidden">
@@ -2203,36 +2243,33 @@ export default function HomeDashboardPage() {
               <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">
                 Pooja Booking History
               </h4>
-              {bookings.filter(
-                (b) =>
-                  b.customerId === selectedDevoteeDrawer.id ||
-                  b.customerMobile === selectedDevoteeDrawer.mobile
-              ).length === 0 ? (
-                <p className="text-xs text-slate-400">No bookings recorded yet.</p>
-              ) : (
-                bookings
-                  .filter(
-                    (b) =>
-                      b.customerId === selectedDevoteeDrawer.id ||
-                      b.customerMobile === selectedDevoteeDrawer.mobile
-                  )
-                  .map((b) => (
-                    <div
-                      key={b.id}
-                      className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-slate-900">{b.poojaEnglishName}</div>
-                        <div className="text-[10.5px] text-slate-500">
-                          {b.date} • {formatTime12H(b.startTime)}
-                        </div>
-                      </div>
-                      <div className="text-right font-black text-slate-900">
-                        ₹{b.totalAmount.toLocaleString("en-IN")}
+              {(() => {
+                const drawerMobile = selectedDevoteeDrawer.mobile?.replace(/\D/g, "");
+                const devoteeDrawerBookings = bookings.filter(
+                  (b) =>
+                    (selectedDevoteeDrawer.id && b.customerId === selectedDevoteeDrawer.id) ||
+                    (drawerMobile && b.customerMobile?.replace(/\D/g, "") === drawerMobile)
+                );
+                if (devoteeDrawerBookings.length === 0) {
+                  return <p className="text-xs text-slate-400">No bookings recorded yet.</p>;
+                }
+                return devoteeDrawerBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-slate-900">{b.poojaEnglishName}</div>
+                      <div className="text-[10.5px] text-slate-500">
+                        {b.date} • {formatTime12H(b.startTime)}
                       </div>
                     </div>
-                  ))
-              )}
+                    <div className="text-right font-black text-slate-900">
+                      ₹{b.totalAmount.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
 
             <button

@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.5.0";
+export const APP_VERSION = "2.5.1";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "23 Sep 2026, 02:25 AM IST";
+export const BUILD_DATE = "23 Sep 2026, 02:35 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.1",
+    releaseDate: "23 Sep 2026",
+    releaseTime: "02:35 AM IST",
+    title: "Pure White Top Header, Compact Sync Badge, Zero-Wobble Swipe & Dashboard Performance Boost",
+    summary:
+      "Comprehensive polish across top navbar, swipe gesture mechanics, and dashboard responsiveness: pure white top header with hairline border, compact cloud sync profile badge eliminating mobile overflow, strict horizontal axis-locking on booking card swipe-to-complete eliminating vertical wobble, and dashboard performance optimizations including requestAnimationFrame debouncing, O(1) indexed lookup maps, and memoized SVG chart rendering.",
+    isCurrent: true,
+    tag: "Enhancement",
+    changes: [
+      {
+        category: "UI/UX",
+        description: "Pure white top navbar with subtle slate-100 hairline divider, removing heavy background tints and border shadows.",
+      },
+      {
+        category: "UI/UX",
+        description: "Compact cloud sync badge and profile chip ('Syncing' / 'Synced') sized to prevent any horizontal overflow on small mobile screens.",
+      },
+      {
+        category: "Fix",
+        description: "Strict horizontal axis-lock (pan-y and translate3d) on swipe-to-complete booking cards, completely eliminating vertical wobbling and screen jitter.",
+      },
+      {
+        category: "Enhancement",
+        description: "Dashboard rendering performance boost: requestAnimationFrame debounced DB event listeners, O(1) precomputed devotee/priest booking maps, and memoized SVG Bezier cashflow chart.",
+      },
+    ],
+  },
   {
     version: "2.5.0",
     releaseDate: "23 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Animated Cloud Sync Ticker, Calendar 2x Auto-Fill & Pooja Slip Upgrades",
     summary:
       "Major UI/UX and operational polish: real-time animated vertical scroll-up cloud sync status in top navbar, double-click date auto-fill from calendar with 14-day strip inclusion, default-checked Pooja Slip checklist with green tickmarks, universal multi-layer clipboard copy engine for all devices, and refined sacred hairline navbar styling.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Major",
     changes: [
       {

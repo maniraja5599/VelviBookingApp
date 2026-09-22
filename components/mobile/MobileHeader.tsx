@@ -126,21 +126,21 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-amber-900/10 shadow-[0_1px_3px_rgba(0,0,0,0.03)] px-3 sm:px-4 py-2 transition-all">
-        <div className="flex items-center justify-between gap-2">
+      <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-100 px-2.5 sm:px-4 py-2 transition-all">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Brand Logo & Title */}
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
             {backUrl ? (
               <Link
                 href={backUrl}
-                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition shrink-0"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition shrink-0"
                 aria-label="Go back"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Link>
             ) : null}
 
-            <Link href="/app" className="flex items-center gap-2 min-w-0 group">
+            <Link href="/app" className="flex items-center gap-1.5 sm:gap-2 min-w-0 group">
               <BrandLogo
                 size="sm"
                 variant="icon"
@@ -151,30 +151,30 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <div className="min-w-0">
                 {title ? (
                   <div>
-                    <div className="flex items-center gap-1.5 leading-none mb-0.5">
-                      <span className="text-[10px] font-bold text-emerald-900 uppercase tracking-wider">
+                    <div className="flex items-center gap-1 leading-none mb-0.5">
+                      <span className="text-[9.5px] font-bold text-emerald-900 uppercase tracking-wider">
                         VELVI
                       </span>
-                      <span className="text-amber-500 text-[9px]">•</span>
-                      <span className="text-[10px] font-medium text-slate-500 truncate max-w-[130px]">
+                      <span className="text-amber-500 text-[8px]">•</span>
+                      <span className="text-[9.5px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[130px]">
                         {currentBusiness?.name || "Pooja Services"}
                       </span>
                     </div>
-                    <h1 className="font-extrabold text-slate-900 leading-tight text-sm truncate max-w-[180px]">
+                    <h1 className="font-extrabold text-slate-900 leading-tight text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[180px]">
                       {title}
                     </h1>
                   </div>
                 ) : (
                   <div>
                     <div className="flex items-center gap-1 leading-none">
-                      <span className="font-serif font-black tracking-wider text-emerald-950 text-base uppercase">
+                      <span className="font-serif font-black tracking-wider text-emerald-950 text-sm sm:text-base uppercase">
                         VELVI
                       </span>
-                      <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 rounded-md border border-amber-300/80 leading-none shadow-2xs">
+                      <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 rounded-md border border-amber-300/80 leading-none">
                         App
                       </span>
                     </div>
-                    <p className="text-[10.5px] font-semibold text-emerald-900 truncate max-w-[170px] leading-tight mt-0.5">
+                    <p className="text-[10px] font-semibold text-emerald-900 truncate max-w-[130px] sm:max-w-[170px] leading-tight mt-0.5">
                       {subtitle || currentBusiness?.name || "Pooja • Homam • Seva"}
                     </p>
                   </div>
@@ -183,31 +183,31 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
             </Link>
           </div>
 
-          {/* Right side: Global Search + User Profile Dropdown Button */}
-          <div className="flex items-center gap-1.5 shrink-0 relative" ref={menuRef}>
+          {/* Right side: Global Search + Compact User Profile Dropdown Button */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 relative" ref={menuRef}>
             {/* Global Search Icon Button */}
             <button
               type="button"
               onClick={() => setIsSearchOpen(true)}
-              className="w-8 h-8 rounded-xl bg-amber-50/90 hover:bg-amber-100/90 border border-amber-300/70 text-amber-900 flex items-center justify-center transition active:scale-95 shadow-2xs group"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 group shrink-0"
               title="தேடுக / Search (Ctrl+K)"
               aria-label="Search across app"
             >
-              <Search className="w-4 h-4 text-amber-800 group-hover:scale-110 transition-transform" />
+              <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform" />
             </button>
 
             {/* Profile Button with User Name & Real-time Animated Cloud Sync Ticker */}
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition active:scale-95 border min-w-[110px] sm:min-w-[140px] max-w-[165px] sm:max-w-[195px] ${
+              className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border max-w-[115px] sm:max-w-[145px] shrink-0 ${
                 isProfileMenuOpen
                   ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                   : syncState === "syncing"
-                  ? "bg-amber-50/90 border-amber-400 text-amber-950 shadow-2xs ring-1 ring-amber-300/60"
+                  ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
                   : syncState === "synced"
-                  ? "bg-emerald-50/90 border-emerald-400 text-emerald-950 shadow-2xs ring-1 ring-emerald-300/60"
-                  : "bg-white hover:bg-amber-50/80 border-slate-200 text-slate-800 shadow-2xs"
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
+                  : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
               }`}
               title="User Profile & Sync Status"
               aria-expanded={isProfileMenuOpen}
@@ -217,42 +217,42 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 <img
                   src={currentUser.avatarUrl}
                   alt={displayName}
-                  className="w-6 h-6 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
+                  className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
                 />
               ) : (
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
-                  <User className="w-3.5 h-3.5 text-amber-300 stroke-[2.5]" />
+                <div className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                  <User className="w-3 h-3 text-amber-300 stroke-[2.5]" />
                 </div>
               )}
 
-              {/* Smooth Vertical Scroll-up Animated Ticker */}
-              <div className="flex-1 min-w-0 h-5 overflow-hidden relative">
+              {/* Smooth Vertical Scroll-up Animated Ticker (Compact & No Screen Overflow) */}
+              <div className="flex-1 min-w-0 h-[18px] overflow-hidden relative">
                 <div
                   className="transition-transform duration-300 ease-out"
                   style={{
                     transform:
                       syncState === "syncing"
-                        ? "translateY(-20px)"
+                        ? "translateY(-18px)"
                         : syncState === "synced"
-                        ? "translateY(-40px)"
+                        ? "translateY(-36px)"
                         : "translateY(0px)",
                   }}
                 >
                   {/* Slot 0: Priest Display Name with Live Online Pulse */}
-                  <div className="h-5 flex items-center gap-1 min-w-0">
-                    <span className="text-xs font-black truncate text-slate-900 text-left">
+                  <div className="h-[18px] flex items-center gap-1 min-w-0">
+                    <span className="text-[10.5px] sm:text-[11px] font-bold truncate text-slate-900 text-left">
                       {displayName}
                     </span>
                     <span
-                      className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 shadow-2xs animate-pulse"
+                      className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"
                       title="Cloud connected"
                     />
                   </div>
 
                   {/* Slot 1: Syncing State (Spinning indicator) */}
-                  <div className="h-5 flex items-center gap-1 min-w-0 text-amber-800">
+                  <div className="h-[18px] flex items-center gap-1 min-w-0 text-amber-800">
                     <svg
-                      className="animate-spin w-3 h-3 text-amber-700 shrink-0"
+                      className="animate-spin w-2.5 h-2.5 text-amber-700 shrink-0"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -271,23 +271,23 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         d="M4 12a8 8 0 018-8v8H4z"
                       />
                     </svg>
-                    <span className="text-[11px] font-black truncate leading-none">
-                      Syncing...
+                    <span className="text-[9.5px] font-extrabold truncate leading-none">
+                      Syncing
                     </span>
                   </div>
 
                   {/* Slot 2: Cloud Synced State (Emerald Checkmark) */}
-                  <div className="h-5 flex items-center gap-1 min-w-0 text-emerald-800">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0 stroke-[2.5]" />
-                    <span className="text-[11px] font-black truncate leading-none">
-                      Cloud Synced
+                  <div className="h-[18px] flex items-center gap-1 min-w-0 text-emerald-800">
+                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0 stroke-[2.5]" />
+                    <span className="text-[9.5px] font-extrabold truncate leading-none">
+                      Synced
                     </span>
                   </div>
                 </div>
               </div>
 
               <ChevronRight
-                className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
+                className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
                   isProfileMenuOpen ? "rotate-90 text-amber-800" : ""
                 }`}
               />

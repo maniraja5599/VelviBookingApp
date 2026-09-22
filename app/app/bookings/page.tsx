@@ -149,6 +149,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
   const currentOffsetRef = React.useRef(0);
+  const directionLockRef = React.useRef<"none" | "horizontal" | "vertical">("none");
 
   const dateInfo = getTamilDate(b.date);
   const isCompleted = b.status === "COMPLETED";
@@ -159,14 +160,26 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
     if (isFinishing) return;
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     isDraggingRef.current = false;
+    directionLockRef.current = "none";
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStartRef.current || isFinishing) return;
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
 
-    if (Math.abs(diffX) > Math.abs(diffY)) {
+    // Strict direction locking once finger moves 6px
+    if (directionLockRef.current === "none") {
+      if (absX > 6 || absY > 6) {
+        directionLockRef.current = absX > absY ? "horizontal" : "vertical";
+      }
+    }
+
+    if (directionLockRef.current === "vertical") return;
+
+    if (directionLockRef.current === "horizontal") {
       if (diffX < -4) {
         // Swiping Left with soft elastic rubber-banding past -140px
         isDraggingRef.current = true;
@@ -193,6 +206,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   const handleTouchEnd = () => {
     if (isFinishing) return;
     setIsSwiping(false);
+    directionLockRef.current = "none";
     // If full swipe past -220px, auto-complete smoothly
     if (currentOffsetRef.current <= -220) {
       handleTriggerComplete();
@@ -215,13 +229,25 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
     if (e.button !== 0 || isFinishing) return;
     touchStartRef.current = { x: e.clientX, y: e.clientY };
     isDraggingRef.current = false;
+    directionLockRef.current = "none";
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!touchStartRef.current || isFinishing) return;
     const diffX = e.clientX - touchStartRef.current.x;
     const diffY = e.clientY - touchStartRef.current.y;
-    if (Math.abs(diffX) > Math.abs(diffY)) {
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
+
+    if (directionLockRef.current === "none") {
+      if (absX > 6 || absY > 6) {
+        directionLockRef.current = absX > absY ? "horizontal" : "vertical";
+      }
+    }
+
+    if (directionLockRef.current === "vertical") return;
+
+    if (directionLockRef.current === "horizontal") {
       if (diffX < -4) {
         // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
@@ -248,6 +274,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   const handleMouseUp = () => {
     if (!touchStartRef.current || isFinishing) return;
     touchStartRef.current = null;
+    directionLockRef.current = "none";
     handleTouchEnd();
   };
 
@@ -280,6 +307,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
   return (
     <div
       className="relative overflow-hidden rounded-2xl flex-1 min-w-0 select-none shadow-2xs"
+      style={{ touchAction: "pan-y" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -336,10 +364,10 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
         </div>
       </button>
 
-      {/* Foreground card - Silky smooth cubic-bezier momentum curve */}
+      {/* Foreground card - Strictly locked to X axis translate3d with zero vertical displacement */}
       <div
         style={{
-          transform: `translateX(${offsetX}px)`,
+          transform: `translate3d(${offsetX}px, 0px, 0px)`,
           transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           willChange: isSwiping ? "transform" : "auto",
         }}
@@ -517,6 +545,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
   const isDraggingRef = React.useRef(false);
   const currentOffsetRef = React.useRef(0);
+  const directionLockRef = React.useRef<"none" | "horizontal" | "vertical">("none");
 
   const isCompleted = b.status === "COMPLETED";
   const isOverdue = !isCompleted && b.status !== "CANCELLED" && b.date < todayStr;
@@ -526,14 +555,25 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
     if (isFinishing) return;
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     isDraggingRef.current = false;
+    directionLockRef.current = "none";
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStartRef.current || isFinishing) return;
     const diffX = e.touches[0].clientX - touchStartRef.current.x;
     const diffY = e.touches[0].clientY - touchStartRef.current.y;
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
 
-    if (Math.abs(diffX) > Math.abs(diffY)) {
+    if (directionLockRef.current === "none") {
+      if (absX > 6 || absY > 6) {
+        directionLockRef.current = absX > absY ? "horizontal" : "vertical";
+      }
+    }
+
+    if (directionLockRef.current === "vertical") return;
+
+    if (directionLockRef.current === "horizontal") {
       if (diffX < -4) {
         // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
@@ -560,6 +600,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   const handleTouchEnd = () => {
     if (isFinishing) return;
     setIsSwiping(false);
+    directionLockRef.current = "none";
     // If full swipe past -220px, auto-complete smoothly
     if (currentOffsetRef.current <= -220) {
       handleTriggerComplete();
@@ -582,13 +623,25 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
     if (e.button !== 0 || isFinishing) return;
     touchStartRef.current = { x: e.clientX, y: e.clientY };
     isDraggingRef.current = false;
+    directionLockRef.current = "none";
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!touchStartRef.current || isFinishing) return;
     const diffX = e.clientX - touchStartRef.current.x;
     const diffY = e.clientY - touchStartRef.current.y;
-    if (Math.abs(diffX) > Math.abs(diffY)) {
+    const absX = Math.abs(diffX);
+    const absY = Math.abs(diffY);
+
+    if (directionLockRef.current === "none") {
+      if (absX > 6 || absY > 6) {
+        directionLockRef.current = absX > absY ? "horizontal" : "vertical";
+      }
+    }
+
+    if (directionLockRef.current === "vertical") return;
+
+    if (directionLockRef.current === "horizontal") {
       if (diffX < -4) {
         // Swiping Left with soft elastic rubber-banding
         isDraggingRef.current = true;
@@ -615,6 +668,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   const handleMouseUp = () => {
     if (!touchStartRef.current || isFinishing) return;
     touchStartRef.current = null;
+    directionLockRef.current = "none";
     handleTouchEnd();
   };
 
@@ -647,6 +701,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
   return (
     <div
       className="relative overflow-hidden rounded-xl select-none"
+      style={{ touchAction: "pan-y" }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -703,10 +758,10 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
         </div>
       </button>
 
-      {/* Foreground compact row - Silky smooth cubic-bezier momentum curve */}
+      {/* Foreground compact row - Strictly locked to X axis translate3d with zero vertical displacement */}
       <div
         style={{
-          transform: `translateX(${offsetX}px)`,
+          transform: `translate3d(${offsetX}px, 0px, 0px)`,
           transition: isSwiping ? "none" : "transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
           willChange: isSwiping ? "transform" : "auto",
         }}
