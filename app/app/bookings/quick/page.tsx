@@ -106,7 +106,28 @@ function QuickBookingContent() {
   const [date, setDate] = useState<string>(searchParams.get("date") || todayStr);
   const [time, setTime] = useState<string>(searchParams.get("time") || "07:00 AM");
 
-  // Generate Upcoming 14 Days for Quick 1-Tap Date Strip
+  // Keep route searchParams (e.g. from calendar double-tap or deep links) in sync with component state
+  useEffect(() => {
+    const paramDate = searchParams.get("date");
+    if (paramDate) {
+      setDate(paramDate);
+      setPaymentDate(paramDate);
+    }
+    const paramTime = searchParams.get("time");
+    if (paramTime) {
+      setTime(paramTime);
+    }
+    const paramCustomerId = searchParams.get("customerId");
+    if (paramCustomerId) {
+      setSelectedCustomerId(paramCustomerId);
+    }
+    const paramPoojaId = searchParams.get("poojaId");
+    if (paramPoojaId) {
+      setSelectedPoojaId(paramPoojaId);
+    }
+  }, [searchParams]);
+
+  // Generate Upcoming 14 Days for Quick 1-Tap Date Strip (and include selected date if outside window)
   const upcomingDays = useMemo(() => {
     const days = [];
     const base = new Date();
@@ -126,8 +147,33 @@ function QuickBookingContent() {
         isTomorrow: i === 1,
       });
     }
+
+    // If selected date is outside the 14-day window (e.g. chosen from calendar or date picker)
+    if (date && !days.some((d) => d.dateStr === date)) {
+      const [y, m, day] = date.split("-").map(Number);
+      if (y && m && day) {
+        const d = new Date(y, m - 1, day);
+        const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+        const dayNum = d.getDate();
+        const monthShort = d.toLocaleDateString("en-US", { month: "short" });
+        const customDay = {
+          dateStr: date,
+          dayName,
+          dayNum,
+          monthShort,
+          isToday: false,
+          isTomorrow: false,
+        };
+        if (date < days[0].dateStr) {
+          days.unshift(customDay);
+        } else {
+          days.push(customDay);
+        }
+      }
+    }
+
     return days;
-  }, []);
+  }, [date]);
 
   // 4. Dakshina & Payment
   const [amount, setAmount] = useState<number>(5000);

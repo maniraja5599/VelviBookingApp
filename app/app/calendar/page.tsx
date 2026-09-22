@@ -80,7 +80,7 @@ export default function CalendarPage() {
     if (
       lastClickRef.current &&
       lastClickRef.current.dateStr === dateStr &&
-      now - lastClickRef.current.time < 380
+      now - lastClickRef.current.time < 450
     ) {
       // Double click / double tap detected! Directly open booking page for this date
       lastClickRef.current = null;
@@ -991,6 +991,7 @@ export default function CalendarPage() {
                     }}
                     onClick={() => handleDateCellClick(dateStr)}
                     onDoubleClick={() => router.push(`/app/bookings/new?date=${dateStr}`)}
+                    style={{ touchAction: "manipulation" }}
                     title="இருமுறை கிளிக்: புதிய பதிவு | அழுத்திப் பிடிக்க: நாள் விவரங்கள்"
                     className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
                       isSelected

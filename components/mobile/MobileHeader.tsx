@@ -32,7 +32,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced">("idle");
   const menuRef = useRef<HTMLDivElement>(null);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Global shortcut (Ctrl+K / Cmd+K)
   useEffect(() => {
@@ -44,6 +46,46 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Listen for real-time cloud sync / database change events to trigger animated status ticker
+  useEffect(() => {
+    const handleSyncTrigger = (e?: Event) => {
+      const customEvent = e as CustomEvent<{ state?: "syncing" | "synced" | "idle" }>;
+      const explicitState = customEvent?.detail?.state;
+
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+
+      if (explicitState === "synced") {
+        setSyncState("synced");
+        syncTimeoutRef.current = setTimeout(() => {
+          setSyncState("idle");
+        }, 2200);
+        return;
+      }
+
+      // Default animated cycle: Syncing... -> Cloud Synced -> Return to Name
+      setSyncState("syncing");
+      syncTimeoutRef.current = setTimeout(() => {
+        setSyncState("synced");
+        syncTimeoutRef.current = setTimeout(() => {
+          setSyncState("idle");
+        }, 2200);
+      }, 750);
+    };
+
+    window.addEventListener("velvi:db-change", handleSyncTrigger);
+    window.addEventListener("velvi:sync-state", handleSyncTrigger);
+
+    return () => {
+      window.removeEventListener("velvi:db-change", handleSyncTrigger);
+      window.removeEventListener("velvi:sync-state", handleSyncTrigger);
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Close menu when clicking outside
@@ -84,7 +126,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs px-3 sm:px-4 py-2 transition-all">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-amber-900/10 shadow-[0_1px_3px_rgba(0,0,0,0.03)] px-3 sm:px-4 py-2 transition-all">
         <div className="flex items-center justify-between gap-2">
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -154,16 +196,20 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <Search className="w-4 h-4 text-amber-800 group-hover:scale-110 transition-transform" />
             </button>
 
-            {/* Profile Button with User Name & Clearly Visible Sacred Icon */}
+            {/* Profile Button with User Name & Real-time Animated Cloud Sync Ticker */}
             <button
               type="button"
               onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-xl transition active:scale-95 border ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition active:scale-95 border min-w-[110px] sm:min-w-[140px] max-w-[165px] sm:max-w-[195px] ${
                 isProfileMenuOpen
                   ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
+                  : syncState === "syncing"
+                  ? "bg-amber-50/90 border-amber-400 text-amber-950 shadow-2xs ring-1 ring-amber-300/60"
+                  : syncState === "synced"
+                  ? "bg-emerald-50/90 border-emerald-400 text-emerald-950 shadow-2xs ring-1 ring-emerald-300/60"
                   : "bg-white hover:bg-amber-50/80 border-slate-200 text-slate-800 shadow-2xs"
               }`}
-              title="User Profile & Settings"
+              title="User Profile & Sync Status"
               aria-expanded={isProfileMenuOpen}
             >
               {/* Priest Avatar with Google Profile Picture or Sacred Icon Badge */}
@@ -179,9 +225,66 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 </div>
               )}
 
-              <span className="text-xs font-black truncate max-w-[85px] sm:max-w-[120px] text-slate-900 text-left">
-                {displayName}
-              </span>
+              {/* Smooth Vertical Scroll-up Animated Ticker */}
+              <div className="flex-1 min-w-0 h-5 overflow-hidden relative">
+                <div
+                  className="transition-transform duration-300 ease-out"
+                  style={{
+                    transform:
+                      syncState === "syncing"
+                        ? "translateY(-20px)"
+                        : syncState === "synced"
+                        ? "translateY(-40px)"
+                        : "translateY(0px)",
+                  }}
+                >
+                  {/* Slot 0: Priest Display Name with Live Online Pulse */}
+                  <div className="h-5 flex items-center gap-1 min-w-0">
+                    <span className="text-xs font-black truncate text-slate-900 text-left">
+                      {displayName}
+                    </span>
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 shadow-2xs animate-pulse"
+                      title="Cloud connected"
+                    />
+                  </div>
+
+                  {/* Slot 1: Syncing State (Spinning indicator) */}
+                  <div className="h-5 flex items-center gap-1 min-w-0 text-amber-800">
+                    <svg
+                      className="animate-spin w-3 h-3 text-amber-700 shrink-0"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      />
+                    </svg>
+                    <span className="text-[11px] font-black truncate leading-none">
+                      Syncing...
+                    </span>
+                  </div>
+
+                  {/* Slot 2: Cloud Synced State (Emerald Checkmark) */}
+                  <div className="h-5 flex items-center gap-1 min-w-0 text-emerald-800">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0 stroke-[2.5]" />
+                    <span className="text-[11px] font-black truncate leading-none">
+                      Cloud Synced
+                    </span>
+                  </div>
+                </div>
+              </div>
 
               <ChevronRight
                 className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${
