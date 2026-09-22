@@ -223,6 +223,9 @@ export interface Booking {
   advanceAmount: number;
   balanceAmount: number;
   paymentStatus: PaymentStatus;
+  paymentDate?: string; // YYYY-MM-DD (date payment was received or updated)
+  paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER";
+  paymentNotes?: string;
   expenseAmount?: number;
   expenseNotes?: string;
   notes?: string;

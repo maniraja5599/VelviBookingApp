@@ -702,7 +702,8 @@ export class VelviDatabaseStore {
   public recordBookingPayment(params: {
     bookingId: string;
     amount: number;
-    paymentMethod?: string;
+    paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER" | string;
+    paymentDate?: string;
     recordedBy?: string;
     notes?: string;
   }): { success: boolean; booking?: Booking; error?: string } {
@@ -722,6 +723,10 @@ export class VelviDatabaseStore {
     booking.advanceAmount = (booking.advanceAmount || 0) + params.amount;
     booking.balanceAmount = Math.max(0, booking.totalAmount - booking.advanceAmount);
     booking.paymentStatus = booking.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
+    booking.paymentDate = params.paymentDate || new Date().toISOString().split("T")[0];
+    if (params.paymentMethod) {
+      booking.paymentMethod = params.paymentMethod as any;
+    }
     booking.updatedAt = new Date().toISOString();
 
     this.auditLogs.push({
@@ -1072,6 +1077,9 @@ export class VelviDatabaseStore {
     advanceAmount: number;
     balanceAmount: number;
     paymentStatus: PaymentStatus;
+    paymentDate?: string;
+    paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER";
+    paymentNotes?: string;
     status: BookingStatus;
     expenseAmount?: number;
     expenseNotes?: string;
@@ -1101,6 +1109,9 @@ export class VelviDatabaseStore {
       advanceAmount: params.advanceAmount,
       balanceAmount: params.balanceAmount,
       paymentStatus: params.paymentStatus,
+      paymentDate: params.paymentDate,
+      paymentMethod: params.paymentMethod,
+      paymentNotes: params.paymentNotes,
       status: params.status || "CONFIRMED",
       expenseAmount: params.expenseAmount || 0,
       expenseNotes: params.expenseNotes || "",

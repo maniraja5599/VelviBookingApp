@@ -31,11 +31,14 @@ import {
   UserCheck,
   RotateCcw,
   Trash2,
+  Info,
+  Save,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil, formatUnitShort } from "@/lib/whatsapp/formatter";
 import { SAMAGRI_CATALOG, SamagriCatalogItem } from "@/lib/samagri/catalog";
+import { getSamagriItemDetail } from "@/lib/samagri/details";
 
 const convert24To12 = (timeStr: string): string => {
   const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -96,6 +99,9 @@ function QuickBookingContent() {
   const tomorrowDate = new Date();
   tomorrowDate.setDate(tomorrowDate.getDate() + 1);
   const tomorrowStr = tomorrowDate.toISOString().split("T")[0];
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterdayDate);
 
   const [date, setDate] = useState<string>(searchParams.get("date") || todayStr);
   const [time, setTime] = useState<string>(searchParams.get("time") || "07:00 AM");
@@ -123,10 +129,15 @@ function QuickBookingContent() {
     return days;
   }, []);
 
-  // 4. Dakshina & Assignment
+  // 4. Dakshina & Payment
   const [amount, setAmount] = useState<number>(5000);
   const [advanceAmount, setAdvanceAmount] = useState<number>(0);
   const [paymentChoice, setPaymentChoice] = useState<"UNPAID" | "ADVANCE" | "FULL">("UNPAID");
+  const [paymentDate, setPaymentDate] = useState<string>(todayStr);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE">("UPI");
+  const [paymentNotes, setPaymentNotes] = useState<string>("");
+  const [isPaymentSaved, setIsPaymentSaved] = useState<boolean>(false);
+  const [paymentSavedFeedback, setPaymentSavedFeedback] = useState<string>("");
   const [priestType, setPriestType] = useState<"self" | "other">("self");
   const [assignedIyerId, setAssignedIyerId] = useState<string>("self");
   const [showAddPriest, setShowAddPriest] = useState<boolean>(false);
@@ -324,6 +335,35 @@ function QuickBookingContent() {
   // Preview modal state
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
   const [showStep2ChecklistPreview, setShowStep2ChecklistPreview] = useState<boolean>(true);
+
+  // Tap & Hold (Long-press) extra details state
+  const [activeDetailItemId, setActiveDetailItemId] = useState<string | null>(null);
+  const itemLongPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isItemLongPressTriggeredRef = useRef<boolean>(false);
+
+  const activeDetailItem = useMemo(() => {
+    if (!activeDetailItemId) return null;
+    return samagriItems.find((it) => it.id === activeDetailItemId) || null;
+  }, [samagriItems, activeDetailItemId]);
+
+  const handleItemPressStart = (itemId: string) => {
+    isItemLongPressTriggeredRef.current = false;
+    if (itemLongPressTimerRef.current) clearTimeout(itemLongPressTimerRef.current);
+    itemLongPressTimerRef.current = setTimeout(() => {
+      isItemLongPressTriggeredRef.current = true;
+      if (typeof window !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+      setActiveDetailItemId(itemId);
+    }, 450);
+  };
+
+  const handleItemPressEnd = () => {
+    if (itemLongPressTimerRef.current) {
+      clearTimeout(itemLongPressTimerRef.current);
+      itemLongPressTimerRef.current = null;
+    }
+  };
 
   // Sync pooja details & items
   const currentPooja = useMemo(
@@ -539,9 +579,36 @@ function QuickBookingContent() {
   // Handle Payment Choice
   const handlePaymentChoiceChange = (choice: "UNPAID" | "ADVANCE" | "FULL") => {
     setPaymentChoice(choice);
-    if (choice === "UNPAID") setAdvanceAmount(0);
-    else if (choice === "FULL") setAdvanceAmount(amount);
-    else if (choice === "ADVANCE" && advanceAmount === 0) setAdvanceAmount(Math.round(amount / 2));
+    setIsPaymentSaved(false);
+    setPaymentSavedFeedback("");
+    if (choice === "UNPAID") {
+      setAdvanceAmount(0);
+    } else if (choice === "FULL") {
+      setAdvanceAmount(amount);
+    } else if (choice === "ADVANCE" && advanceAmount === 0) {
+      setAdvanceAmount(Math.round(amount / 2));
+    }
+  };
+
+  // Save / Record Payment Details in New Booking
+  const handleSavePaymentDetails = () => {
+    setIsPaymentSaved(true);
+    if (paymentChoice === "UNPAID") {
+      setPaymentSavedFeedback("கட்டண நிலை: நிலுவை (Pending) என உறுதி செய்யப்பட்டது.");
+    } else {
+      const amt = paymentChoice === "FULL" ? amount : advanceAmount;
+      const methodLabel =
+        paymentMethod === "UPI"
+          ? "GPay / UPI"
+          : paymentMethod === "CASH"
+          ? "ரொக்கம்"
+          : paymentMethod === "BANK_TRANSFER"
+          ? "வங்கி பரிவர்த்தனை"
+          : "காசோலை";
+      setPaymentSavedFeedback(
+        `✓ ₹${amt.toLocaleString("en-IN")} (${methodLabel}) — ${paymentDate} அன்று பதிவு செய்யப்பட்டது!`
+      );
+    }
   };
 
   // Quick Add Priest Inline
@@ -634,6 +701,9 @@ function QuickBookingContent() {
       advanceAmount: paymentChoice === "UNPAID" ? 0 : advanceAmount,
       balanceAmount: Math.max(0, amount - (paymentChoice === "UNPAID" ? 0 : advanceAmount)),
       paymentStatus,
+      paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
+      paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
+      paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
       status: "CONFIRMED",
       assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
       assignedIyerName: performingName,
@@ -1317,10 +1387,23 @@ function QuickBookingContent() {
                               : "bg-slate-50 border-slate-200 text-slate-400 opacity-60"
                           }`}
                         >
-                          {/* Left: Checkbox + Number + Tamil Name + English Subtitle */}
+                          {/* Left: Checkbox + Number + Tamil Name + English Subtitle + Tap & Hold Trigger */}
                           <div
-                            onClick={() => handleToggleItem(it.id)}
+                            onTouchStart={() => handleItemPressStart(it.id)}
+                            onTouchEnd={handleItemPressEnd}
+                            onTouchMove={handleItemPressEnd}
+                            onMouseDown={() => handleItemPressStart(it.id)}
+                            onMouseUp={handleItemPressEnd}
+                            onMouseLeave={handleItemPressEnd}
+                            onClick={() => {
+                              if (isItemLongPressTriggeredRef.current) {
+                                isItemLongPressTriggeredRef.current = false;
+                                return;
+                              }
+                              handleToggleItem(it.id);
+                            }}
                             className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer select-none"
+                            title="தொட்டு தேர்வு செய்க / அழுத்திப் பிடித்தால் (Tap & Hold) கூடுதல் விவரம்"
                           >
                             {isChecked ? (
                               <div className="w-5 h-5 rounded-md bg-emerald-700 text-white flex items-center justify-center shrink-0 shadow-2xs">
@@ -1344,6 +1427,17 @@ function QuickBookingContent() {
                                 புதியது
                               </span>
                             )}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveDetailItemId(it.id);
+                              }}
+                              className="w-5 h-5 rounded-full text-slate-300 hover:text-emerald-700 hover:bg-emerald-50 transition flex items-center justify-center shrink-0 cursor-pointer"
+                              title="கூடுதல் விவரங்கள் (Extra Details)"
+                            >
+                              <Info className="w-3.5 h-3.5" />
+                            </button>
                           </div>
 
                           {/* Right: Fixed-width Uniform Controls (Stepper w-[84px] + Unit w-11 + Trash w-6) */}
@@ -1754,9 +1848,125 @@ function QuickBookingContent() {
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
                 <IndianRupee className="w-4 h-4 text-emerald-700" />
               </div>
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                4. கட்டணம் &amp; தட்சணை (Dakshina &amp; Payment)
-              </h2>
+              <div>
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                  4. கட்டணம் &amp; தட்சணை (Dakshina &amp; Payment)
+                </h2>
+                <p className="text-[10px] text-slate-500 font-medium">
+                  தட்சணை, முன்பணம், பணம் பெற்ற தேதி &amp; முறை பதிவு
+                </p>
+              </div>
+            </div>
+            {isPaymentSaved && (
+              <span className="text-[10.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-in fade-in">
+                <Check className="w-3.5 h-3.5 text-emerald-700 stroke-[3]" />
+                <span>Saved ✓</span>
+              </span>
+            )}
+          </div>
+
+          {/* Total Dakshina Amount Customizer */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                மொத்த தட்சணைத் தொகை (Total Dakshina):
+              </label>
+              <div className="flex items-center gap-1">
+                {[1000, 2500, 5000, 10000].map((quickAmt) => (
+                  <button
+                    key={quickAmt}
+                    type="button"
+                    onClick={() => {
+                      setAmount(quickAmt);
+                      if (paymentChoice === "FULL") setAdvanceAmount(quickAmt);
+                      else if (paymentChoice === "ADVANCE") setAdvanceAmount(Math.round(quickAmt / 2));
+                      setIsPaymentSaved(false);
+                    }}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition active:scale-95 cursor-pointer ${
+                      amount === quickAmt
+                        ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
+                        : "bg-slate-50 hover:bg-emerald-50 text-slate-600 border-slate-200"
+                    }`}
+                  >
+                    ₹{quickAmt.toLocaleString("en-IN")}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-2 text-sm font-black text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={amount || ""}
+                  onChange={(e) => {
+                    const newAmt = Math.max(0, Number(e.target.value) || 0);
+                    setAmount(newAmt);
+                    if (paymentChoice === "FULL") setAdvanceAmount(newAmt);
+                    else if (paymentChoice === "ADVANCE" && advanceAmount > newAmt) setAdvanceAmount(newAmt);
+                    setIsPaymentSaved(false);
+                  }}
+                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-600 focus:bg-white rounded-xl pl-7 pr-3 py-1.5 text-sm font-black text-slate-900 focus:outline-none shadow-2xs transition"
+                />
+              </div>
+
+              {/* Quick Stepper Buttons (-500, -100, +100, +500) */}
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAmt = Math.max(0, amount - 500);
+                    setAmount(newAmt);
+                    if (paymentChoice === "FULL") setAdvanceAmount(newAmt);
+                    setIsPaymentSaved(false);
+                  }}
+                  className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black border border-slate-200 transition active:scale-95 cursor-pointer"
+                  title="₹500 கழிக்க"
+                >
+                  -500
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAmt = Math.max(0, amount - 100);
+                    setAmount(newAmt);
+                    if (paymentChoice === "FULL") setAdvanceAmount(newAmt);
+                    setIsPaymentSaved(false);
+                  }}
+                  className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black border border-slate-200 transition active:scale-95 cursor-pointer"
+                  title="₹100 கழிக்க"
+                >
+                  -100
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAmt = amount + 100;
+                    setAmount(newAmt);
+                    if (paymentChoice === "FULL") setAdvanceAmount(newAmt);
+                    setIsPaymentSaved(false);
+                  }}
+                  className="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-black border border-emerald-200 transition active:scale-95 cursor-pointer"
+                  title="₹100 கூட்ட"
+                >
+                  +100
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newAmt = amount + 500;
+                    setAmount(newAmt);
+                    if (paymentChoice === "FULL") setAdvanceAmount(newAmt);
+                    setIsPaymentSaved(false);
+                  }}
+                  className="px-2 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded-xl text-xs font-black border border-emerald-300 transition active:scale-95 cursor-pointer"
+                  title="₹500 கூட்ட"
+                >
+                  +500
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1792,64 +2002,269 @@ function QuickBookingContent() {
             </div>
           </div>
 
-          {/* Payment Mode Pills */}
+          {/* Payment Status Tabs (Pending, Advance, Full Paid) */}
           <div className="space-y-1.5">
-            <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
-              கட்டண நிலை (Payment Status):
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
+                கட்டண நிலை (Payment Status):
+              </label>
+              <span className="text-[10px] text-slate-400 font-semibold">
+                {paymentChoice === "UNPAID" ? "நிலுவை (Pending)" : paymentChoice === "ADVANCE" ? "முன்பணம் (Advance)" : "முழுத் தொகை (Paid)"}
+              </span>
+            </div>
             <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => handlePaymentChoiceChange("UNPAID")}
-                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   paymentChoice === "UNPAID"
                     ? "bg-amber-600 text-white border-amber-600 font-black shadow-xs ring-1 ring-amber-400"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
-                Pending
+                <span>⏳ Pending</span>
               </button>
               <button
                 type="button"
                 onClick={() => handlePaymentChoiceChange("ADVANCE")}
-                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   paymentChoice === "ADVANCE"
                     ? "bg-emerald-700 text-white border-emerald-700 font-black shadow-xs ring-1 ring-emerald-500"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
-                Advance
+                <span>🪙 Advance</span>
               </button>
               <button
                 type="button"
                 onClick={() => handlePaymentChoiceChange("FULL")}
-                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer ${
+                className={`py-2 rounded-xl transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   paymentChoice === "FULL"
                     ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-xs ring-1 ring-emerald-600"
                     : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
                 }`}
               >
-                Paid
+                <span>✅ Full Paid</span>
               </button>
             </div>
           </div>
 
-          {paymentChoice === "ADVANCE" && (
-            <div className="p-3 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-1.5 animate-in fade-in">
-              <label className="text-[11px] font-bold text-emerald-950 block">
-                முன்பணத் தொகை (Advance Amount):
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-emerald-950">₹</span>
+          {/* ADVANCE & FULL PAID EXPANDED PAYMENT FORM */}
+          {paymentChoice !== "UNPAID" && (
+            <div className="p-3.5 bg-gradient-to-b from-emerald-50/70 to-slate-50 rounded-2xl border border-emerald-200/90 space-y-3 animate-in fade-in">
+              {/* Advance Amount Calculation & Percentage Chips */}
+              {paymentChoice === "ADVANCE" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-black text-emerald-950 block">
+                      முன்பணத் தொகை (Advance Amount):
+                    </label>
+                    <span className="text-[11px] font-extrabold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                      மீதி (Balance): ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  {/* Quick Percentage Presets */}
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { label: "25%", val: Math.round(amount * 0.25) },
+                      { label: "50%", val: Math.round(amount * 0.5) },
+                      { label: "75%", val: Math.round(amount * 0.75) },
+                    ].map((p) => {
+                      const isSel = advanceAmount === p.val;
+                      return (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => {
+                            setAdvanceAmount(p.val);
+                            setIsPaymentSaved(false);
+                          }}
+                          className={`text-xs font-bold px-2.5 py-1 rounded-lg border transition active:scale-95 cursor-pointer ${
+                            isSel
+                              ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs font-black"
+                              : "bg-white hover:bg-emerald-50 text-slate-700 border-slate-300"
+                          }`}
+                        >
+                          {p.label} (₹{p.val.toLocaleString("en-IN")})
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="relative">
+                    <span className="absolute left-3 top-2 text-sm font-black text-emerald-900">₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={amount}
+                      value={advanceAmount || ""}
+                      onChange={(e) => {
+                        setAdvanceAmount(Number(e.target.value) || 0);
+                        setIsPaymentSaved(false);
+                      }}
+                      placeholder="0"
+                      className="w-full bg-white border border-emerald-300 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500 rounded-xl pl-7 pr-3 py-1.5 text-xs font-black text-slate-900 focus:outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {paymentChoice === "FULL" && (
+                <div className="p-2.5 bg-emerald-100/70 rounded-xl border border-emerald-300 text-xs font-bold text-emerald-950 flex items-center justify-between">
+                  <span>முழுத் தட்சணைத் தொகை:</span>
+                  <span className="font-black text-sm text-emerald-900">₹{amount.toLocaleString("en-IN")} (மீதம்: ₹0)</span>
+                </div>
+              )}
+
+              {/* PAYMENT DATE TRACKER: "entha date la payement update aguthu nu vechuko" */}
+              <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                    <CalendarIcon className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>பணம் பெற்ற / புதுப்பிக்கப்பட்ட தேதி (Payment Date):</span>
+                  </label>
+                  {paymentDate === todayStr && (
+                    <span className="text-[9.5px] font-black text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
+                      இன்று (Today)
+                    </span>
+                  )}
+                </div>
+
+                {/* Quick Date Chips: Today, Yesterday, Custom */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentDate(todayStr);
+                      setIsPaymentSaved(false);
+                    }}
+                    className={`text-xs font-bold px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer shrink-0 ${
+                      paymentDate === todayStr
+                        ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
+                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300"
+                    }`}
+                  >
+                    📅 இன்று (Today)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentDate(yesterdayStr);
+                      setIsPaymentSaved(false);
+                    }}
+                    className={`text-xs font-bold px-2.5 py-1.5 rounded-xl border transition active:scale-95 cursor-pointer shrink-0 ${
+                      paymentDate === yesterdayStr
+                        ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
+                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-300"
+                    }`}
+                  >
+                    நேற்று (Yesterday)
+                  </button>
+                  <div className="relative flex-1 min-w-0">
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => {
+                        setPaymentDate(e.target.value);
+                        setIsPaymentSaved(false);
+                      }}
+                      className="w-full bg-white border border-slate-300 focus:border-emerald-600 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none shadow-2xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* PAYMENT METHOD SELECTOR */}
+              <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
+                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                  கட்டண முறை (Payment Mode):
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs font-bold">
+                  {[
+                    { key: "CASH", label: "ரொக்கம்", sub: "Cash", icon: "💵" },
+                    { key: "UPI", label: "GPay / UPI", sub: "Online", icon: "📱" },
+                    { key: "BANK_TRANSFER", label: "வங்கி", sub: "Bank", icon: "🏦" },
+                    { key: "CHEQUE", label: "காசோலை", sub: "Cheque", icon: "📝" },
+                  ].map((m) => {
+                    const isSel = paymentMethod === m.key;
+                    return (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod(m.key as any);
+                          setIsPaymentSaved(false);
+                        }}
+                        className={`py-2 px-2 rounded-xl border transition active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+                          isSel
+                            ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs ring-2 ring-emerald-500/20"
+                            : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <span className="text-sm shrink-0">{m.icon}</span>
+                        <div className="min-w-0 text-left leading-tight">
+                          <div className="text-[11px] truncate">{m.label}</div>
+                          <div className={`text-[9px] ${isSel ? "text-emerald-200" : "text-slate-400"}`}>{m.sub}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* PAYMENT NOTES / TRANSACTION REF */}
+              <div className="space-y-1 pt-1 border-t border-emerald-100/90">
+                <label className="text-[10px] font-bold text-slate-600 block">
+                  பரிவர்த்தனை குறிப்பு (Transaction Reference / Notes - Optional):
+                </label>
                 <input
-                  type="number"
-                  value={advanceAmount}
-                  onChange={(e) => setAdvanceAmount(Number(e.target.value) || 0)}
-                  className="bg-white border border-emerald-300 rounded-xl px-3 py-1.5 text-xs font-black text-slate-900 focus:outline-none w-32"
+                  type="text"
+                  value={paymentNotes}
+                  onChange={(e) => {
+                    setPaymentNotes(e.target.value);
+                    setIsPaymentSaved(false);
+                  }}
+                  placeholder="எ.கா: GPay Ref #981245 / ரொக்கமாக கைமாறியது"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
                 />
-                <span className="text-xs text-slate-500 font-bold">
-                  மீதி: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}
-                </span>
+              </div>
+
+              {/* SAVE PAYMENT BUTTON ("save btn vechuko") */}
+              <div className="pt-2 border-t border-emerald-200/90">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSavePaymentDetails}
+                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-black shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+                      isPaymentSaved
+                        ? "bg-emerald-700 text-white border border-emerald-700"
+                        : "bg-gradient-to-r from-emerald-800 to-[#0b2b17] hover:from-emerald-700 hover:to-emerald-900 text-amber-200 border border-emerald-900"
+                    }`}
+                  >
+                    <Save className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{isPaymentSaved ? "✓ கட்டணம் சேமிக்கப்பட்டது (Saved)" : "💾 கட்டணத்தை சேமி (Save Payment Record)"}</span>
+                  </button>
+
+                  {isPaymentSaved && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPaymentSaved(false)}
+                      className="px-2.5 py-2 text-[11px] font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-xl transition cursor-pointer"
+                      title="Edit payment"
+                    >
+                      மாற்று
+                    </button>
+                  )}
+                </div>
+
+                {/* Instant Feedback Banner */}
+                {isPaymentSaved && paymentSavedFeedback && (
+                  <div className="mt-2 p-2 bg-emerald-100/90 text-emerald-950 rounded-xl border border-emerald-300 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span className="flex-1">{paymentSavedFeedback}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -2622,10 +3037,33 @@ function QuickBookingContent() {
                   </div>
                 </div>
 
-                {paymentChoice === "ADVANCE" && (
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 pt-1 border-t border-amber-100">
-                    <span>முன்பணம்: ₹{advanceAmount.toLocaleString("en-IN")}</span>
-                    <span className="text-rose-700">மீதம்: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}</span>
+                {paymentChoice !== "UNPAID" && (
+                  <div className="p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between font-bold text-emerald-950">
+                      <span>செலுத்தப்பட்ட தொகை: ₹{(paymentChoice === "FULL" ? amount : advanceAmount).toLocaleString("en-IN")}</span>
+                      <span className="text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-md font-black text-[10.5px] border border-emerald-200">
+                        {paymentMethod === "UPI"
+                          ? "📱 GPay / UPI"
+                          : paymentMethod === "CASH"
+                          ? "💵 ரொக்கம் (Cash)"
+                          : paymentMethod === "BANK_TRANSFER"
+                          ? "🏦 வங்கி (Bank)"
+                          : "📝 காசோலை (Cheque)"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1 border-t border-emerald-100">
+                      <span>📅 பணம் பெற்ற தேதி: <strong className="text-slate-900">{paymentDate}</strong></span>
+                      {paymentChoice === "ADVANCE" && (
+                        <span className="text-rose-700 font-bold">மீதம்: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}</span>
+                      )}
+                    </div>
+
+                    {paymentNotes && (
+                      <div className="text-[10.5px] text-slate-600 font-medium truncate pt-1 border-t border-emerald-100">
+                        குறிப்பு / Ref: <span className="font-bold text-slate-800">{paymentNotes}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2746,6 +3184,180 @@ function QuickBookingContent() {
           </div>
         </div>
       )}
+
+      {/* ================================================================= */}
+      {/* SAMAGRI ITEM DETAILS MODAL (Tap & Hold விவரம்)                   */}
+      {/* ================================================================= */}
+      {activeDetailItem && (() => {
+        const detail = getSamagriItemDetail(activeDetailItem);
+        const isChecked = activeDetailItem.isChecked !== false;
+        const step = getItemStep(activeDetailItem.unit);
+        return (
+          <div className="fixed inset-0 z-[70] bg-black/65 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
+            <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full shadow-2xl border border-emerald-300 overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom-5">
+              {/* Mobile drag handle */}
+              <div className="w-12 h-1.5 rounded-full bg-slate-300 mx-auto mt-2.5 mb-1 block sm:hidden" />
+
+              {/* Header */}
+              <div className="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-amber-50/90 via-white to-emerald-50/50 flex items-start justify-between gap-3 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-black text-lg shadow-2xs shrink-0">
+                    🪔
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-full border border-amber-300/80">
+                        {detail.categoryTa}
+                      </span>
+                      <span className="text-[10px] font-extrabold text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300/80">
+                        {activeDetailItem.quantity} {formatUnitShort(activeDetailItem.unit)}
+                      </span>
+                    </div>
+                    <h3 className="font-black text-base sm:text-lg text-slate-900 leading-tight mt-1 truncate">
+                      {detail.titleTa}
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium truncate">
+                      {detail.titleEn}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveDetailItemId(null)}
+                  className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 text-xs">
+                {/* 1. Spiritual Significance */}
+                <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-50/40 p-3.5 rounded-2xl border border-amber-200/90 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-amber-900 font-black text-xs uppercase tracking-wider">
+                    <span>✨</span>
+                    <span>பூஜை பயன்பாடு &amp; ஆன்மீக முக்கியத்துவம்:</span>
+                  </div>
+                  <p className="text-slate-800 font-semibold leading-relaxed text-[12.5px]">
+                    {detail.significance}
+                  </p>
+                </div>
+
+                {/* 2. Devotee Preparation Tips */}
+                <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/90 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center gap-1.5 text-emerald-900 font-black text-xs uppercase tracking-wider">
+                    <span>📋</span>
+                    <span>பக்தர் தயாரிப்பு &amp; தரக் குறிப்புகள்:</span>
+                  </div>
+                  <p className="text-emerald-950 font-semibold leading-relaxed text-[12px]">
+                    {detail.preparationTip}
+                  </p>
+                  <div className="pt-2 border-t border-emerald-200/60 text-[11px] text-slate-600 font-medium flex items-center gap-1.5">
+                    <span className="font-bold text-emerald-900">பராமரிப்பு / தரம்:</span>
+                    <span>{detail.storageOrQuality}</span>
+                  </div>
+                </div>
+
+                {/* 3. In-Modal Quantity Stepper & Quick Adjustment */}
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                      தேவையான அளவு (Adjust Quantity):
+                    </span>
+                    <span className="text-xs font-black text-slate-900">
+                      {activeDetailItem.quantity} {formatUnitShort(activeDetailItem.unit)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center bg-white border border-slate-300 rounded-xl p-1 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => handleItemQuantityChange(activeDetailItem.id, -1)}
+                        className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-sm flex items-center justify-center transition active:scale-95 cursor-pointer"
+                        title={`குறைக்க (-${step})`}
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="1"
+                        value={activeDetailItem.quantity}
+                        onChange={(e) => handleItemDirectQuantity(activeDetailItem.id, e.target.value)}
+                        className="w-16 text-center font-black text-sm text-slate-900 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleItemQuantityChange(activeDetailItem.id, 1)}
+                        className="w-8 h-8 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm flex items-center justify-center transition active:scale-95 cursor-pointer"
+                        title={`அதிகரிக்க (+${step})`}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {[10, 50, 100].map((inc) => (
+                        <button
+                          key={inc}
+                          type="button"
+                          onClick={() => {
+                            const newQty = (activeDetailItem.quantity || 0) + inc;
+                            handleItemDirectQuantity(activeDetailItem.id, String(newQty));
+                          }}
+                          className="px-2.5 py-1.5 bg-white hover:bg-emerald-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer shadow-2xs"
+                        >
+                          +{inc}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Item Inclusion & Delete Toggle */}
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleItem(activeDetailItem.id)}
+                    className={`py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                      isChecked
+                        ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                        : "bg-slate-100 text-slate-600 border border-slate-200"
+                    }`}
+                  >
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>{isChecked ? "பட்டியலில் உள்ளது (Included)" : "விலக்கப்பட்டது (Excluded)"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleRemoveItem(activeDetailItem.id);
+                      setActiveDetailItemId(null);
+                    }}
+                    className="py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 hover:bg-rose-50 border border-rose-200 transition flex items-center gap-1 cursor-pointer active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>நீக்குக</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-3.5 sm:p-4 bg-slate-50 border-t border-slate-100 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveDetailItemId(null)}
+                  className="w-full py-2.5 bg-gradient-to-r from-emerald-800 to-emerald-900 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl text-xs font-black shadow-md transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <span>சரி (Done)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

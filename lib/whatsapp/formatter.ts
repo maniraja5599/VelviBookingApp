@@ -117,9 +117,29 @@ export function formatBookingConfirmationWhatsAppMessage(
         .join("\n") + "\n"
     : "";
 
-  const paymentDetails = booking.advanceAmount > 0
-    ? `💰 தட்சணை: ₹${booking.totalAmount.toLocaleString("en-IN")} (முன்பணம்: ₹${booking.advanceAmount.toLocaleString("en-IN")}, மீதம்: ₹${booking.balanceAmount.toLocaleString("en-IN")})`
-    : `💰 தட்சணை: ₹${booking.totalAmount.toLocaleString("en-IN")}`;
+  const methodLabel = booking.paymentMethod
+    ? booking.paymentMethod === "UPI"
+      ? "UPI"
+      : booking.paymentMethod === "CASH"
+      ? "ரொக்கம்"
+      : booking.paymentMethod === "BANK_TRANSFER"
+      ? "வங்கி"
+      : booking.paymentMethod === "CHEQUE"
+      ? "காசோலை"
+      : booking.paymentMethod
+    : "";
+  const dateInfo = booking.paymentDate
+    ? ` [${booking.paymentDate}${methodLabel ? ` • ${methodLabel}` : ""}]`
+    : methodLabel
+    ? ` [${methodLabel}]`
+    : "";
+
+  let paymentDetails = `💰 தட்சணை: ₹${booking.totalAmount.toLocaleString("en-IN")}`;
+  if (booking.advanceAmount > 0) {
+    paymentDetails += ` (செலுத்திய முன்பணம்: ₹${booking.advanceAmount.toLocaleString("en-IN")}${dateInfo}, மீதம்: ₹${booking.balanceAmount.toLocaleString("en-IN")})`;
+  } else if (booking.paymentStatus === "PAID") {
+    paymentDetails += ` (முழுத் தொகை செலுத்தப்பட்டது${dateInfo})`;
+  }
 
   return `🙏 *சுப முகூர்த்த பூஜை முன்பதிவு உறுதியானது* 🙏
 
