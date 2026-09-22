@@ -118,9 +118,25 @@ export async function generatePoojaFlyer(
   const companyName = (options.customCompanyName?.trim() || business.name || "வேள்வி வேத பவனம்").trim();
   const contactPhone = (options.customPhone?.trim() || business.phone || business.whatsapp || "").trim();
 
-  const canvas = document.createElement("canvas");
+  // Extract checked items
+  const items = (booking.items && booking.items.length > 0)
+    ? booking.items.filter((it: any) => it.isChecked !== false)
+    : [];
+
+  const isSingleCol = items.length <= 8;
+  const half = Math.ceil(items.length / 2);
+  const rowsCount = isSingleCol ? Math.max(1, items.length) : Math.max(1, half);
+  const rowHeight = isSingleCol ? 52 : 46;
+  const startY = 525;
+  const itemsHeight = rowsCount * rowHeight;
+  const footerSpace = 240;
+
+  // Dynamic canvas height to avoid giant empty white voids
+  const calculatedHeight = startY + itemsHeight + footerSpace;
   const width = 1080;
-  const height = 1520;
+  const height = Math.max(980, Math.min(1600, calculatedHeight));
+
+  const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
@@ -237,78 +253,104 @@ export async function generatePoojaFlyer(
   ctx.fillText(`⏰ நேரம்: ${booking.startTime}   •   📍 இடம்: ${booking.location || "இல்லம்"}`, cardX + 28, cardY + 122);
 
   // 7. Checklist Header Strip
-  const listHeadingY = 490;
+  const listHeadingY = 485;
   ctx.textAlign = "center";
   ctx.font = "black 27px 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.primary;
-  ctx.fillText("📋 தேவையான பூஜை சாமக்கிரி பொருட்கள்", width / 2, listHeadingY);
+  ctx.fillText("📋 தேவையான பூஜை சாமக்கிரி பொருட்கள் (Items Checklist)", width / 2, listHeadingY);
 
-  // 8. Clean Aligned 2-Column Items Grid
-  const items = (booking.items && booking.items.length > 0)
-    ? booking.items.filter((it: any) => it.isChecked !== false)
-    : [];
+  // 8. Balanced Items Grid (Single column for <=8 items, balanced dual column for >8)
+  const col1X = isSingleCol ? 100 : 75;
+  const col1W = isSingleCol ? width - 200 : 445;
+  const col2X = width / 2 + 20;
+  const col2W = 445;
 
-  const maxRows = 14;
-  const col1X = 85;
-  const col1W = 430;
-  const col2X = width / 2 + 25;
-  const col2W = 430;
-  const startY = 535;
-  const rowHeight = 44;
-
-  const totalSlots = Math.min(items.length, maxRows * 2);
-
-  for (let i = 0; i < totalSlots; i++) {
+  for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const isCol2 = i >= maxRows;
+    const isCol2 = !isSingleCol && i >= half;
+    const colIndex = isSingleCol ? i : isCol2 ? i - half : i;
+
     const x = isCol2 ? col2X : col1X;
     const w = isCol2 ? col2W : col1W;
-    const y = startY + (i % maxRows) * rowHeight;
+    const y = startY + colIndex * rowHeight;
 
     // Subtle row background pill
-    ctx.fillStyle = i % 2 === 0 ? "rgba(200, 146, 52, 0.05)" : "rgba(255, 255, 255, 0.7)";
+    ctx.fillStyle = i % 2 === 0 ? "rgba(200, 146, 52, 0.06)" : "rgba(255, 255, 255, 0.75)";
     ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(x, y - 28, w, 36, 8) : ctx.rect(x, y - 28, w, 36);
+    ctx.roundRect ? ctx.roundRect(x, y - 30, w, rowHeight - 8, 10) : ctx.rect(x, y - 30, w, rowHeight - 8);
     ctx.fill();
 
     // Checkmark / Number
     ctx.textAlign = "left";
-    ctx.font = "bold 18px 'Segoe UI', sans-serif";
+    ctx.font = "bold 19px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
-    ctx.fillText(`${i + 1}.`, x + 10, y - 4);
+    ctx.fillText(`${i + 1}.`, x + 12, y - 4);
 
-    // Item Tamil / English Name
-    const name = item.itemTamilName || item.itemEnglishName || "பொருள்";
-    ctx.font = "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
+    // Things Name (Bilingual Tamil + English)
+    let itemName = "";
+    const taName = (item.itemTamilName || "").trim();
+    const enName = (item.itemEnglishName || "").trim();
+    if (taName && enName && taName !== enName) {
+      itemName = `${taName} (${enName})`;
+    } else {
+      itemName = taName || enName || "பொருள்";
+    }
+
+    ctx.font = isSingleCol
+      ? "bold 22px 'Mukta Malar', 'Segoe UI', sans-serif"
+      : "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textDark;
-    const maxNameWidth = w - 140;
-    let truncatedName = name;
+
+    const maxNameWidth = w - (isSingleCol ? 160 : 130);
+    let truncatedName = itemName;
     if (ctx.measureText(truncatedName).width > maxNameWidth) {
       while (truncatedName.length > 4 && ctx.measureText(truncatedName + "...").width > maxNameWidth) {
         truncatedName = truncatedName.slice(0, -1);
       }
       truncatedName += "...";
     }
-    ctx.fillText(truncatedName, x + 38, y - 4);
+    ctx.fillText(truncatedName, x + 40, y - 4);
 
-    // Quantity Badge (Right aligned)
+    // Quantity Badge with Explicit Unit (No missing unit!)
     ctx.textAlign = "right";
-    ctx.font = "bold 19px 'Segoe UI', sans-serif";
+    ctx.font = "bold 20px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
-    const unitText = item.unit ? (item.unit === "nos" || item.unit === "pcs" ? "" : item.unit) : "";
-    const qtyText = `${item.quantity || 1} ${unitText}`.trim();
-    ctx.fillText(qtyText, x + w - 12, y - 4);
+
+    const unitRaw = (item.unit || "").trim().toLowerCase();
+    let unitDisplay = "nos";
+    if (unitRaw === "g" || unitRaw === "grams" || unitRaw === "கிராம்") {
+      unitDisplay = "g";
+    } else if (unitRaw === "kg" || unitRaw === "கிலோ") {
+      unitDisplay = "kg";
+    } else if (unitRaw === "ml" || unitRaw === "மில்லி") {
+      unitDisplay = "ml";
+    } else if (unitRaw === "litre" || unitRaw === "liter" || unitRaw === "l" || unitRaw === "லிட்டர்") {
+      unitDisplay = "L";
+    } else if (unitRaw === "packet" || unitRaw === "pkt" || unitRaw === "பாக்கெட்") {
+      unitDisplay = "pkt";
+    } else if (unitRaw === "bundle" || unitRaw === "bdl" || unitRaw === "கட்டு") {
+      unitDisplay = "bdl";
+    } else if (unitRaw === "set" || unitRaw === "செட்") {
+      unitDisplay = "set";
+    } else if (unitRaw === "nos" || unitRaw === "count" || unitRaw === "pcs" || unitRaw === "pieces" || unitRaw === "எண்ணிக்கை" || unitRaw === "எண்ணம்") {
+      unitDisplay = "nos";
+    } else if (item.unit) {
+      unitDisplay = item.unit.trim();
+    }
+
+    const qtyText = `${item.quantity || 1} ${unitDisplay}`;
+    ctx.fillText(qtyText, x + w - 14, y - 4);
   }
 
   if (items.length === 0) {
     ctx.textAlign = "center";
     ctx.font = "22px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textMuted;
-    ctx.fillText("பொருட்கள் எதுவும் சேர்க்கப்படவில்லை", width / 2, startY + 60);
+    ctx.fillText("பொருட்கள் எதுவும் சேர்க்கப்படவில்லை (No items added)", width / 2, startY + 60);
   }
 
-  // 9. Sacred Instruction Note
-  const noteY = height - 170;
+  // 9. Sacred Instruction Note (Dynamically placed above bottom)
+  const noteY = height - 150;
   ctx.textAlign = "center";
   ctx.font = "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.gold;
@@ -316,16 +358,16 @@ export async function generatePoojaFlyer(
 
   // 10. Contact Info
   if (contactPhone) {
-    ctx.font = "bold 23px 'Segoe UI', sans-serif";
+    ctx.font = "bold 22px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
-    ctx.fillText(`📞 தொடர்புக்கு: ${contactPhone}`, width / 2, noteY + 45);
+    ctx.fillText(`📞 தொடர்புக்கு (Contact): ${contactPhone}`, width / 2, noteY + 45);
   }
 
   // 11. Subtle Watermark
   if (business.showWatermark) {
     ctx.font = "16px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textMuted;
-    ctx.fillText("✨ Powered by Velvi App • வேத முறை முன்பதிவு மேலாண்மை ✨", width / 2, height - 52);
+    ctx.fillText("✨ Powered by Velvi App • வேத முறை முன்பதிவு மேலாண்மை ✨", width / 2, height - 45);
   }
 
   return canvas.toDataURL("image/png");

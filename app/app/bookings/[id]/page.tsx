@@ -321,7 +321,7 @@ export default function BookingDetailPage() {
             title="Pooja Slip & Samagri"
           >
             <span>📜</span>
-            <span>பூஜை ரசீது</span>
+            <span>Pooja Slip</span>
           </button>
 
           {booking.status !== "CANCELLED" && (
@@ -331,7 +331,7 @@ export default function BookingDetailPage() {
               title="Edit Booking"
             >
               <Edit className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Edit (திருத்து)</span>
+              <span>Edit</span>
             </Link>
           )}
 
@@ -509,7 +509,7 @@ export default function BookingDetailPage() {
                   title="Reset or Delete Collected Payment"
                 >
                   <Trash2 className="w-3 h-3 text-rose-600" />
-                  <span>கட்டணம் நீக்கு</span>
+                  <span>Reset Payment</span>
                 </button>
               )}
             </div>
@@ -629,7 +629,7 @@ export default function BookingDetailPage() {
                 className="text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
                 title="Pooja Slip & Samagri"
               >
-                <span>📜 பூஜை ரசீது</span>
+                <span>📜 Pooja Slip</span>
               </button>
               <button
                 type="button"
@@ -683,7 +683,7 @@ export default function BookingDetailPage() {
               className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Mark Completed (பூஜை நிறைவடைந்தது)</span>
+              <span>Mark Completed</span>
             </button>
           )}
 
@@ -1052,10 +1052,10 @@ export default function BookingDetailPage() {
                 <Trash2 className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-rose-950">
-                கட்டணத்தை நீக்கவா? (Delete/Reset Payment)
+                Delete / Reset Payment?
               </h3>
               <p className="text-xs text-rose-800 leading-relaxed">
-                பதிவு #{booking.bookingNumber}-ல் பெறப்பட்ட கட்டணம் <strong>₹{booking.advanceAmount.toLocaleString("en-IN")}</strong> நீக்கப்பட்டு, மீதமுள்ள நிலுவைத் தொகை <strong>₹{booking.totalAmount.toLocaleString("en-IN")}</strong> ஆக மாற்றப்படும்.
+                The recorded payment of <strong>₹{booking.advanceAmount.toLocaleString("en-IN")}</strong> for booking #{booking.bookingNumber} will be deleted, and the balance due will reset to <strong>₹{booking.totalAmount.toLocaleString("en-IN")}</strong>.
               </p>
               <div className="text-[11px] bg-amber-50 p-2 rounded-xl text-amber-900 font-semibold border border-amber-200">
                 Payment status will change back to PENDING.
@@ -1068,14 +1068,14 @@ export default function BookingDetailPage() {
                 onClick={() => setShowResetPaymentModal(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmResetPayment}
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm"
               >
-                ஆம், நீக்கு (Reset Payment)
+                Reset Payment
               </button>
             </div>
           </div>
@@ -1113,10 +1113,10 @@ export default function BookingDetailPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-slate-900 leading-tight">
-                    வாட்ஸ்அப் செய்தி
+                    WhatsApp Message
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    பக்தருக்கு அனுப்ப வேண்டிய தகவல்
+                    Send update or reminder to devotee
                   </p>
                 </div>
               </div>
@@ -1124,6 +1124,7 @@ export default function BookingDetailPage() {
                 type="button"
                 onClick={() => setShowWhatsAppModal(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors"
+                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1141,7 +1142,7 @@ export default function BookingDetailPage() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  ⏰ பூஜை நினைவூட்டல் (Reminder)
+                  ⏰ Reminder
                 </button>
                 <button
                   type="button"
@@ -1152,7 +1153,7 @@ export default function BookingDetailPage() {
                       : "text-slate-600 hover:text-slate-900"
                   }`}
                 >
-                  📩 உறுதிப்படுத்தல் (Confirmation)
+                  📩 Confirmation
                 </button>
               </div>
             </div>
@@ -1161,7 +1162,7 @@ export default function BookingDetailPage() {
             <div className="px-4 py-2 flex-1 overflow-hidden flex flex-col min-h-0 space-y-1.5">
               <div className="text-[11px] font-semibold text-slate-600 flex items-center justify-between">
                 <span className="font-bold flex items-center gap-1">
-                  <span>செய்தி முன்னோட்டம் & திருத்துதல் (Preview & Edit):</span>
+                  <span>Message Preview & Edit:</span>
                 </span>
                 <button
                   type="button"
@@ -1169,7 +1170,7 @@ export default function BookingDetailPage() {
                   className="text-[10px] text-slate-500 hover:text-slate-800 underline font-medium cursor-pointer"
                   title="Reset back to default template message"
                 >
-                  மீட்டமை (Reset)
+                  Reset
                 </button>
               </div>
               <textarea
@@ -1177,10 +1178,10 @@ export default function BookingDetailPage() {
                 onChange={(e) => setEditableWhatsAppMsg(e.target.value)}
                 rows={11}
                 className="w-full bg-[#faf9f6] border border-slate-300 rounded-2xl p-3 text-xs text-slate-800 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/30 outline-none resize-none overflow-y-auto leading-relaxed font-sans shadow-inner max-h-[300px]"
-                placeholder="வாட்ஸ்அப் செய்தி..."
+                placeholder="Type WhatsApp message..."
               />
               <p className="text-[9.5px] text-slate-400 italic">
-                💡 அனுப்புவதற்கு முன் இந்தச் செய்தியை உங்கள் விருப்பப்படி திருத்திக் கொள்ளலாம்.
+                💡 You can edit and customize this message before sending.
               </p>
             </div>
 
@@ -1194,12 +1195,12 @@ export default function BookingDetailPage() {
                 {copiedWhatsApp ? (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">நகலெடுக்கப்பட்டது!</span>
+                    <span className="text-emerald-700">Copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4 text-slate-500" />
-                    <span>நகலெடு (Copy)</span>
+                    <span>Copy Text</span>
                   </>
                 )}
               </button>
@@ -1209,7 +1210,7 @@ export default function BookingDetailPage() {
                 className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all"
               >
                 <MessageCircle className="w-4 h-4 fill-white text-emerald-600" />
-                <span>அனுப்பு (WhatsApp)</span>
+                <span>Send to WhatsApp</span>
               </button>
             </div>
           </div>

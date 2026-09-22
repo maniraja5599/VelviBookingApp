@@ -137,18 +137,18 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
           new ClipboardItem({ "image/png": blob }),
         ]);
         setImageCopied(true);
-        setShareNotice("படம் நகலெடுக்கப்பட்டது! வாட்ஸ்அப்பில் Ctrl+V செய்து நேரடியாக பகிரலாம்.");
+        setShareNotice("Image copied to clipboard! You can paste (Ctrl+V) directly in WhatsApp.");
         setTimeout(() => {
           setImageCopied(false);
           setShareNotice(null);
         }, 4000);
       } else {
-        setShareNotice("உங்கள் உலாவியில் படம் நகலெடுக்கும் வசதி இல்லை.");
+        setShareNotice("Browser does not support direct image copying. Please use Download.");
         setTimeout(() => setShareNotice(null), 3000);
       }
     } catch (err) {
       console.error("Copy image failed:", err);
-      setShareNotice("படம் நகலெடுப்பதில் சிக்கல் ஏற்பட்டது.");
+      setShareNotice("Failed to copy image. Please try downloading.");
       setTimeout(() => setShareNotice(null), 3000);
     }
   };
@@ -200,9 +200,9 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
             </div>
             <div className="min-w-0">
               <h3 className="font-black text-sm sm:text-base text-slate-900 leading-tight truncate">
-                பூஜைப் பொருட்கள் பகிர்வு (Share List)
+                Share Pooja Items List
               </h3>
-              <p className="text-[10.5px] text-slate-500 font-semibold truncate">
+              <p className="text-[11px] text-slate-500 font-semibold truncate">
                 {booking.poojaEnglishName || booking.poojaTamilName} • {booking.customerName}
               </p>
             </div>
@@ -219,31 +219,31 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
         </div>
 
         {/* Tab Switcher: Image Flyer vs WhatsApp Text */}
-        <div className="flex bg-slate-100 p-1 rounded-2xl text-xs font-black my-3 shrink-0">
+        <div className="flex bg-slate-100 p-1 rounded-2xl text-xs font-bold my-3 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("image")}
-            className={`flex-1 py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "image"
                 ? "bg-white text-emerald-950 shadow-2xs border border-slate-200"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <ImageIcon className="w-3.5 h-3.5 text-emerald-700" />
-            <span>பதாகைப் படம் (Flyer Image)</span>
+            <ImageIcon className="w-4 h-4 text-emerald-700 shrink-0" />
+            <span>Flyer Image</span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("text")}
-            className={`flex-1 py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+            className={`flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
               activeTab === "text"
                 ? "bg-white text-emerald-950 shadow-2xs border border-slate-200"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <MessageCircle className="w-3.5 h-3.5 text-green-600" />
-            <span>வாட்ஸ்அப் உரை (WhatsApp Text)</span>
+            <MessageCircle className="w-4 h-4 text-green-600 shrink-0" />
+            <span>WhatsApp Text</span>
           </button>
         </div>
 
@@ -266,8 +266,8 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
               <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-2.5 space-y-1 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-black text-amber-950 flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-amber-700" />
-                    <span>நிறுவனம் / கோவில் பெயர் (Company / Temple Name):</span>
+                    <Building2 className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>Temple / Business Name:</span>
                   </label>
                   {companyName !== (business?.name || "வேள்வி வேத பவனம்") && (
                     <button
@@ -275,7 +275,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                       onClick={() => setCompanyName(business?.name || "வேள்வி வேத பவனம்")}
                       className="text-[10px] text-amber-800 hover:text-amber-950 underline font-semibold cursor-pointer"
                     >
-                      மீட்டமை (Reset)
+                      Reset
                     </button>
                   )}
                 </div>
@@ -283,21 +283,21 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                   type="text"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="வேள்வி வேத பவனம் / ஸ்ரீ விநாயகர் கோவில்"
+                  placeholder="e.g. Sri Karpaga Vinayagar Temple"
                   className="w-full bg-white border border-amber-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                 />
                 <p className="text-[9.5px] text-amber-800/80 font-medium">
-                  💡 இங்கு மாற்றும் பெயர் பதாகைப் படத்தில் (Flyer Image) உடனே மாறும்.
+                  💡 Name entered here updates the flyer image in real-time.
                 </p>
               </div>
 
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3.5 h-3.5 text-amber-600" />
-                  <span>முழுப் பட முன்னோட்டம் (Preview)</span>
+                <span className="flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Flyer Image Preview</span>
                 </span>
                 <span className="text-[10px] text-emerald-850 font-black bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {booking.items?.length || 0} பொருட்கள்
+                  {booking.items?.length || 0} Items
                 </span>
               </div>
 
@@ -306,7 +306,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                 {isGenerating ? (
                   <div className="flex flex-col items-center justify-center gap-2 text-slate-500 py-12">
                     <div className="w-8 h-8 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
-                    <span className="text-xs font-bold">அழகிய படம் தயாராகிறது...</span>
+                    <span className="text-xs font-bold">Rendering High-Res Flyer...</span>
                   </div>
                 ) : flyerDataUrl ? (
                   <div className="w-full flex flex-col items-center">
@@ -318,7 +318,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-10 text-slate-400 text-xs">
-                    படம் உருவாக்க முடியவில்லை
+                    Could not render flyer image
                   </div>
                 )}
               </div>
@@ -330,18 +330,18 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                     type="button"
                     onClick={handleCopyImage}
                     disabled={!flyerDataUrl || isGenerating}
-                    className="py-2.5 px-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer disabled:opacity-50 min-w-0"
-                    title="Copy PNG image to clipboard for WhatsApp Web pasting (Ctrl+V)"
+                    className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer disabled:opacity-50"
+                    title="Copy image to clipboard for WhatsApp Web pasting (Ctrl+V)"
                   >
                     {imageCopied ? (
                       <>
                         <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                        <span className="text-emerald-700 truncate">Copied ✅</span>
+                        <span className="text-emerald-700">Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="w-4 h-4 text-emerald-700 shrink-0" />
-                        <span className="truncate">படம் நகலெடு (Copy)</span>
+                        <Copy className="w-4 h-4 text-slate-600 shrink-0" />
+                        <span>Copy Image</span>
                       </>
                     )}
                   </button>
@@ -350,11 +350,11 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                     type="button"
                     onClick={handleNativeShare}
                     disabled={!flyerDataUrl || isGenerating}
-                    className="py-2.5 px-2.5 bg-gradient-to-r from-emerald-850 to-emerald-900 hover:from-emerald-800 hover:to-emerald-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer disabled:opacity-50 min-w-0"
+                    className="py-2.5 px-3 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer disabled:opacity-50"
                     title="Direct Share via App or Clipboard (No Download)"
                   >
                     <Share2 className="w-4 h-4 text-amber-300 shrink-0" />
-                    <span className="truncate">பகிர் (Share Img)</span>
+                    <span>Share Image</span>
                   </button>
                 </div>
 
@@ -366,7 +366,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                   title="Download and save PNG file to your computer"
                 >
                   <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                  <span>படத்தைப் பதிவிறக்கு (Save File to Disk)</span>
+                  <span>Download Image (PNG)</span>
                 </button>
               </div>
             </div>
@@ -376,9 +376,9 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
             /* ======================================================== */
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
-                <span className="flex items-center gap-1">
-                  <MessageCircle className="w-3.5 h-3.5 text-green-600" />
-                  <span>செய்தி முன்னோட்டம் & திருத்துதல் (Editable)</span>
+                <span className="flex items-center gap-1.5 text-emerald-950 font-black">
+                  <MessageCircle className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                  <span>WhatsApp Message (Preview & Edit)</span>
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -388,7 +388,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                     title="Reset back to default template message"
                   >
                     <RotateCcw className="w-3 h-3" />
-                    <span>மீட்டமை</span>
+                    <span>Reset</span>
                   </button>
                   <button
                     type="button"
@@ -398,12 +398,12 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                     {copied ? (
                       <>
                         <Check className="w-3 h-3 text-emerald-600" />
-                        <span className="text-emerald-600">நகலெடுக்கப்பட்டது!</span>
+                        <span className="text-emerald-600">Copied!</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3 h-3" />
-                        <span>உரையை நகலெடு</span>
+                        <span>Copy Text</span>
                       </>
                     )}
                   </button>
@@ -417,10 +417,10 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                   onChange={(e) => setCustomWhatsAppMsg(e.target.value)}
                   rows={10}
                   className="w-full bg-[#faf9f6] rounded-2xl border border-slate-300 p-3 text-xs text-slate-900 leading-relaxed font-sans shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white resize-none"
-                  placeholder="வாட்ஸ்அப் செய்தி..."
+                  placeholder="Type or edit your WhatsApp message..."
                 />
                 <p className="text-[10px] text-slate-400 italic">
-                  💡 வாட்ஸ்அப் அனுப்பும் முன் உரையை உங்கள் விருப்பப்படி இங்கே திருத்திக் கொள்ளலாம்.
+                  💡 You can edit and customize this message before sending to devotee.
                 </p>
               </div>
 
@@ -429,17 +429,17 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                 <button
                   type="button"
                   onClick={handleCopyText}
-                  className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
+                  className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
                 >
                   {copied ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-600" />
-                      <span className="text-emerald-700">Copied ✅</span>
+                      <span className="text-emerald-700">Copied!</span>
                     </>
                   ) : (
                     <>
                       <Copy className="w-4 h-4 text-slate-600" />
-                      <span>உரையை நகலெடு</span>
+                      <span>Copy Text</span>
                     </>
                   )}
                 </button>
@@ -447,10 +447,10 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenWhatsApp}
-                  className="py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
+                  className="py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4 fill-white" />
-                  <span>வாட்ஸ்அப் திறக்க</span>
+                  <span>Send to WhatsApp</span>
                 </button>
               </div>
             </div>
@@ -459,15 +459,15 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
 
         {/* Modal Footer */}
         <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
-          <span className="text-[10.5px] text-slate-500 font-semibold">
-            பக்தர் எண்: {booking.customerMobile || "N/A"}
+          <span className="text-[11px] text-slate-500 font-semibold">
+            Devotee Mobile: {booking.customerMobile || "N/A"}
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black rounded-xl transition cursor-pointer active:scale-95"
+            className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer active:scale-95"
           >
-            மூடு (Close)
+            Close
           </button>
         </div>
       </div>

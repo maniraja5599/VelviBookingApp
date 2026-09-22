@@ -132,7 +132,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             await navigator.clipboard.write([
               new ClipboardItem({ "image/png": blob }),
             ]);
-            setShareNotice("பூஜை ரசீது படம் நகலெடுக்கப்பட்டது! வாட்ஸ்அப்பில் Ctrl+V செய்து அனுப்பலாம்.");
+            setShareNotice("Slip image copied! You can paste (Ctrl+V) directly into WhatsApp.");
             setTimeout(() => setShareNotice(null), 4000);
             setIsCapturing(false);
             return;
@@ -141,7 +141,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
           }
         }
 
-        setShareNotice("படம் பகிர முடியவில்லை. 'Save Image' மூலம் பதிவிறக்கிக் கொள்ளலாம்.");
+        setShareNotice("Could not share directly. You can use 'Save Image' to download.");
         setTimeout(() => setShareNotice(null), 4000);
         setIsCapturing(false);
       });
@@ -232,7 +232,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               title="Share Image"
             >
               <Share2 className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Share Img</span>
+              <span className="hidden sm:inline">Share Image</span>
             </button>
 
             {/* Dedicated WhatsApp Text Button */}
@@ -251,6 +251,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               type="button"
               onClick={onClose}
               className="p-1 text-emerald-200 hover:text-white hover:bg-white/10 rounded-lg transition cursor-pointer"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
@@ -286,7 +287,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
                 className="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>ரசீது பார்க்க (Back to Slip)</span>
+                <span>Back to Slip</span>
               </button>
 
               <button
@@ -296,7 +297,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
                 title="Reset to default template"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>மீட்டமை (Reset)</span>
+                <span>Reset</span>
               </button>
             </div>
 
@@ -304,7 +305,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                 <span className="flex items-center gap-1.5 text-emerald-950 font-black">
                   <MessageCircle className="w-4 h-4 text-green-600" />
-                  <span>வாட்ஸ்அப் செய்தி முன்னோட்டம் & திருத்துதல்:</span>
+                  <span>WhatsApp Message (Preview & Edit)</span>
                 </span>
                 <span className="text-[10px] text-slate-400 font-normal">
                   {booking.customerName} ({booking.customerMobile})
@@ -315,10 +316,10 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
                 onChange={(e) => setEditableWhatsAppText(e.target.value)}
                 rows={13}
                 className="w-full bg-[#faf9f6] rounded-2xl border border-slate-300 p-3.5 text-xs text-slate-900 leading-relaxed font-sans shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white resize-none"
-                placeholder="வாட்ஸ்அப் செய்தி தட்டச்சு செய்க..."
+                placeholder="Type or edit your WhatsApp message..."
               />
               <p className="text-[10px] text-slate-500 italic">
-                💡 பக்தருக்கு அனுப்பும் முன் தேவைப்படும் மாற்றங்களை இங்கு நேரடியாக செய்து கொள்ளலாம்.
+                💡 You can edit and customize this message before sending to devotee.
               </p>
             </div>
 
@@ -326,17 +327,17 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               <button
                 type="button"
                 onClick={handleCopyCustomWhatsApp}
-                className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
+                className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
               >
                 {copiedWhatsAppText ? (
                   <>
                     <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">Copied ✅</span>
+                    <span className="text-emerald-700">Copied!</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4 text-slate-600" />
-                    <span>உரையை நகலெடு</span>
+                    <span>Copy Text</span>
                   </>
                 )}
               </button>
@@ -344,10 +345,10 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               <button
                 type="button"
                 onClick={handleSendCustomWhatsApp}
-                className="py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
+                className="py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4 fill-white" />
-                <span>வாட்ஸ்அப் திறக்க</span>
+                <span>Send to WhatsApp</span>
               </button>
             </div>
           </div>
