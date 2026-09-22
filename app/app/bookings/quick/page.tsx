@@ -31,7 +31,6 @@ import {
   UserCheck,
   RotateCcw,
   Trash2,
-  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
@@ -272,32 +271,16 @@ function QuickBookingContent() {
   const [twoStepStage, setTwoStepStage] = useState<1 | 2>(1);
   const [formError, setFormError] = useState<string>("");
 
-  // Missing field validation popup and scroll highlight state
-  const [errorPopup, setErrorPopup] = useState<{
-    title: string;
-    message: string;
-    actionLabel: string;
-    targetSection: "devotee" | "pooja" | "priest" | "date";
-  } | null>(null);
-
   const [highlightedSection, setHighlightedSection] = useState<
     "devotee" | "pooja" | "priest" | "date" | null
   >(null);
 
   const showMissingError = (
     section: "devotee" | "pooja" | "priest" | "date",
-    title: string,
-    message: string,
-    actionLabel: string
+    message: string
   ) => {
     setFormError(message);
     setHighlightedSection(section);
-    setErrorPopup({
-      title,
-      message,
-      actionLabel,
-      targetSection: section,
-    });
 
     // Instant smooth scroll to the exact missing element
     setTimeout(() => {
@@ -309,35 +292,30 @@ function QuickBookingContent() {
           if (input) (input as HTMLElement).focus();
         }
       }
-    }, 80);
+    }, 50);
 
-    // Auto-clear highlight ring after 4 seconds
+    // Auto-clear highlight ring after 3.5 seconds
     setTimeout(() => {
       setHighlightedSection(null);
-    }, 4000);
+    }, 3500);
   };
 
   const validateAndProceedToStep2 = () => {
     if (!selectedCustomerId) {
       showMissingError(
         "devotee",
-        "பக்தர் விவரம் விடுபட்டுள்ளது (Devotee Missing)",
-        "முன்பதிவைத் தொடர தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் அல்லது புதிய பக்தரைச் சேர்க்கவும்.",
-        "பக்தர் தேர்வு செய்க (Select Devotee)"
+        "தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)."
       );
       return;
     }
     if (!selectedPoojaId) {
       showMissingError(
         "pooja",
-        "பூஜை தேர்வு விடுபட்டுள்ளது (Pooja Missing)",
-        "அடுத்த நிலைக்குச் செல்ல தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும்.",
-        "பூஜை தேர்வு செய்க (Select Pooja)"
+        "தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)."
       );
       return;
     }
     setFormError("");
-    setErrorPopup(null);
     setHighlightedSection(null);
     setTwoStepStage(2);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -598,9 +576,7 @@ function QuickBookingContent() {
       setTwoStepStage(1);
       showMissingError(
         "devotee",
-        "பக்தர் விவரம் விடுபட்டுள்ளது (Devotee Missing)",
-        "முன்பதிவை உறுதி செய்ய தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும்.",
-        "பக்தர் தேர்வு செய்க (Select Devotee)"
+        "தயவுசெய்து ஒரு பக்தரைத் தேர்ந்தெடுக்கவும் (Please select devotee)."
       );
       return;
     }
@@ -608,9 +584,7 @@ function QuickBookingContent() {
       setTwoStepStage(1);
       showMissingError(
         "pooja",
-        "பூஜை தேர்வு விடுபட்டுள்ளது (Pooja Missing)",
-        "முன்பதிவை உறுதி செய்ய தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும்.",
-        "பூஜை தேர்வு செய்க (Select Pooja)"
+        "தயவுசெய்து ஒரு பூஜையைத் தேர்ந்தெடுக்கவும் (Please select pooja)."
       );
       return;
     }
@@ -2747,61 +2721,6 @@ function QuickBookingContent() {
       </div>
     )}
       </form>
-
-      {/* Interactive Missing Field / Error Alert Popup Modal */}
-      {errorPopup && (
-        <div className="fixed inset-0 z-[75] bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border-2 border-rose-400 space-y-4 animate-in zoom-in-95 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-xs border border-rose-200 animate-bounce">
-              <AlertTriangle className="w-7 h-7 stroke-[2.5]" />
-            </div>
-
-            <div>
-              <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest block">
-                விடுபட்ட தகவல் (Missing Field)
-              </span>
-              <h3 className="text-base font-black text-slate-900 leading-snug mt-1">
-                {errorPopup.title}
-              </h3>
-              <p className="text-xs text-slate-600 font-medium mt-1.5 leading-relaxed">
-                {errorPopup.message}
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  const sec = errorPopup.targetSection;
-                  setErrorPopup(null);
-                  setTimeout(() => {
-                    const el = document.getElementById(`${sec}-section`);
-                    if (el) {
-                      el.scrollIntoView({ behavior: "smooth", block: "center" });
-                      if (sec === "devotee") {
-                        const input = document.getElementById("devotee-search-input");
-                        if (input) (input as HTMLElement).focus();
-                      }
-                    }
-                  }, 60);
-                }}
-                className="w-full py-2.5 px-4 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-xl text-xs font-black shadow-md shadow-rose-600/25 transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>{errorPopup.actionLabel}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setErrorPopup(null)}
-                className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition cursor-pointer"
-              >
-                சரி / Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Full Booking Preview Modal (முன்பதிவு முழு சரிபார்ப்பு & செக்-லிஸ்ட்) */}
       {showPreviewModal && selectedCustomer && currentPooja && (
