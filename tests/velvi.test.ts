@@ -542,13 +542,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("2.5.2");
+    expect(APP_VERSION).toBe("2.5.3");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("2.5.2");
+    expect(latest.version).toBe("2.5.3");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
     expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
@@ -1236,8 +1236,83 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(itemNamesTa).toContain("தவிடு");
     expect(itemNamesTa).toContain("பூர்ணாகுதி சாமான்கள்");
 
-    // Verify version is 2.5.2
-    expect(APP_VERSION).toBe("2.5.2");
+    // Verify version is 2.5.3
+    expect(APP_VERSION).toBe("2.5.3");
+  });
+
+  // TEST CASE 45: Authentic 8 Poojas Catalog from Iyyer Documents with Items & Categories
+  it("Test 45: 8 Authentic Poojas from Iyyer Documents with accurate items, units, and categories", () => {
+    const poojas = store.getPoojas("biz-venkateswara-01");
+    expect(poojas.length).toBe(8);
+
+    const poojaIds = poojas.map((p) => p.id);
+    expect(poojaIds).toContain("p-ganapathi-01");
+    expect(poojaIds).toContain("p-vastu-02");
+    expect(poojaIds).toContain("p-ayush-03");
+    expect(poojaIds).toContain("p-swayamvara-parvathi-04");
+    expect(poojaIds).toContain("p-kumbabishekam-11");
+    expect(poojaIds).toContain("p-sangu-pooja-06");
+    expect(poojaIds).toContain("p-punyaham-07");
+    expect(poojaIds).toContain("p-lakshmi-08");
+
+    // Check Maha Ganapathi Homam items
+    const ganapathi = poojas.find((p) => p.id === "p-ganapathi-01")!;
+    expect(ganapathi.tamilName).toBe("மகா கணபதி ஹோமம்");
+    expect(ganapathi.items.length).toBeGreaterThanOrEqual(50);
+    expect(ganapathi.items.some((i) => i.itemTamilName === "மஞ்சள்தூள்" && i.quantity === 250 && i.unit === "g")).toBe(true);
+    expect(ganapathi.items.some((i) => i.itemTamilName === "செங்கல்" && i.quantity === 40 && i.unit === "nos")).toBe(true);
+
+    // Check Vastu Shanthi Homam items
+    const vastu = poojas.find((p) => p.id === "p-vastu-02")!;
+    expect(vastu.tamilName).toBe("வாஸ்து சாந்தி ஹோமம்");
+    expect(vastu.items.length).toBeGreaterThanOrEqual(50);
+    expect(vastu.items.some((i) => i.itemTamilName === "வாஸ்துபதம் பெரிது")).toBe(true);
+    expect(vastu.items.some((i) => i.itemTamilName === "செங்கல்" && i.quantity === 75)).toBe(true);
+
+    // Check Ayushya Homam
+    const ayush = poojas.find((p) => p.id === "p-ayush-03")!;
+    expect(ayush.tamilName).toBe("ஆயுஷ்ய ஹோமம் (ஆயுர் ஹோமம்)");
+    expect(ayush.items.length).toBeGreaterThanOrEqual(45);
+
+    // Check Swayamvara Parvathi Homam
+    const swayamvara = poojas.find((p) => p.id === "p-swayamvara-parvathi-04")!;
+    expect(swayamvara.tamilName).toBe("சுயம்வர பார்வதி ஹோமம்");
+    expect(swayamvara.items.length).toBeGreaterThanOrEqual(45);
+
+    // Check 108 Sangu Pooja
+    const sangu = poojas.find((p) => p.id === "p-sangu-pooja-06")!;
+    expect(sangu.tamilName).toBe("108 சங்கு பூஜை");
+    expect(sangu.items.length).toBeGreaterThanOrEqual(40);
+    expect(sangu.items.some((i) => i.itemTamilName === "ரோஜா" && i.quantity === 110)).toBe(true);
+
+    // Check Sudhi Punyahavachanam
+    const punyaham = poojas.find((p) => p.id === "p-punyaham-07")!;
+    expect(punyaham.tamilName).toBe("சுத்தி புண்யாகவாசனம்");
+    expect(punyaham.items.length).toBeGreaterThanOrEqual(45);
+
+    // Check Sri Maha Lakshmi Pooja
+    const lakshmi = poojas.find((p) => p.id === "p-lakshmi-08")!;
+    expect(lakshmi.tamilName).toBe("ஸ்ரீ மகா லட்சுமி பூஜை");
+    expect(lakshmi.items.length).toBeGreaterThanOrEqual(30);
+
+    // Verify all items have valid categories
+    const validCategories = new Set([
+      "pooja_items",
+      "homam_items",
+      "navagraha_items",
+      "flowers_garlands",
+      "fruits_food",
+      "vessels_utensils",
+      "vastram_clothes",
+      "grihapravesam_items",
+    ]);
+
+    for (const pooja of poojas) {
+      for (const item of pooja.items) {
+        expect(validCategories.has(item.category || "")).toBe(true);
+      }
+    }
   });
 });
+
 

@@ -1367,12 +1367,42 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.bookings)) this.bookings = state.bookings;
         if (Array.isArray(state.poojas)) {
           this.poojas = state.poojas;
-          // Ensure new master poojas like Maha Kumbabishekam exist in store
-          SEED_POOJAS.forEach((sp) => {
-            if (!this.poojas.some((p) => p.id === sp.id)) {
-              this.poojas.push(structuredClone(sp));
-            }
-          });
+          
+          // Check if authentic 8 poojas migration has run
+          const migrationKey = "velvi_authentic_8_poojas_v2";
+          const hasMigrated = localStorage.getItem(migrationKey) === "true";
+
+          const obsoleteOldSeedIds = new Set([
+            "p-ayushya-02", "p-navagraha-03", "p-gruhapravesam-04",
+            "p-sathyanarayana-05", "p-sudarshana-06", "p-rudra-07",
+            "p-lakshmi-kubera-08", "p-mrityunjaya-09", "p-sashtiapthapoorthi-10",
+            "p-durga-11", "p-karthigai-12", "p-subamuhurtha-13",
+            "p-navagraha-02", "p-sudarshana-03", "p-lakshmi-04",
+            "p-vastu-05", "p-rudra-06", "p-satya-07", "p-ayush-08"
+          ]);
+
+          if (!hasMigrated) {
+            // Remove old obsolete sample poojas that were replaced
+            this.poojas = this.poojas.filter((p) => !obsoleteOldSeedIds.has(p.id));
+            
+            // Upsert / refresh the 8 authentic poojas with exact items & details from Iyyer documents
+            SEED_POOJAS.forEach((sp) => {
+              const existingIdx = this.poojas.findIndex((p) => p.id === sp.id);
+              if (existingIdx !== -1) {
+                this.poojas[existingIdx] = structuredClone(sp);
+              } else {
+                this.poojas.push(structuredClone(sp));
+              }
+            });
+            localStorage.setItem(migrationKey, "true");
+          } else {
+            // Ensure any missing authentic pooja exists
+            SEED_POOJAS.forEach((sp) => {
+              if (!this.poojas.some((p) => p.id === sp.id)) {
+                this.poojas.push(structuredClone(sp));
+              }
+            });
+          }
         }
         if (Array.isArray(state.members)) this.members = state.members;
         if (Array.isArray(state.settlements)) this.settlements = state.settlements;
@@ -1563,7 +1593,8 @@ export class VelviDatabaseStore {
     const isSamplePooja = (p: Pooja) =>
       p.isSample === true ||
       p.id.startsWith("p-sample-") ||
-      ["p-ganapathi-01", "p-navagraha-02", "p-sudarshana-03", "p-lakshmi-04", "p-vastu-05", "p-rudra-06", "p-satya-07", "p-ayush-08"].includes(p.id);
+      seedPoojaIds.has(p.id) ||
+      ["p-ganapathi-01", "p-vastu-02", "p-ayush-03", "p-swayamvara-parvathi-04", "p-kumbabishekam-11", "p-sangu-pooja-06", "p-punyaham-07", "p-lakshmi-08"].includes(p.id);
 
     const prevBCount = this.bookings.length;
     const prevCCount = this.customers.length;

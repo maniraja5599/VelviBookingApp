@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.5.2";
+export const APP_VERSION = "2.5.3";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "23 Sep 2026, 02:50 AM IST";
+export const BUILD_DATE = "23 Sep 2026, 03:10 AM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.3",
+    releaseDate: "23 Sep 2026",
+    releaseTime: "03:10 AM IST",
+    title: "8 Authentic Vedic Pooja Ritual Catalogs from Iyyer Documents with Complete Item Checklists",
+    summary:
+      "Replaced all generic/dummy pooja templates with the 8 authentic rituals from traditional priest documents (Iyyer Documents): Maha Ganapathi Homam, Vastu Shanthi Homam, Ayushya / Ayur Homam, Swayamvara Parvathi Homam, Maha Kumbabishekam & Grihapravesam, 108 Sangu Pooja, Sudhi Punyahavachanam, and Sri Maha Lakshmi Pooja. Every pooja comes with its exact handwritten & printed items, authentic quantities, and standardized category assignments.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "Feature",
+        description: "Replaced old dummy poojas with the complete authentic 8 Vedic Pooja & Homam rituals extracted directly from priests' handwritten & printed documents (Iyyer Documents).",
+      },
+      {
+        category: "Feature",
+        description: "Comprehensive material checklists for all 8 poojas (Maha Ganapathi: 60 items, Vastu Shanthi: 65 items, Ayushya Homam: 53 items, Swayamvara Parvathi: 57 items, Maha Kumbabishekam: 57 items, 108 Sangu Pooja: 48 items, Sudhi Punyahavachanam: 54 items, Sri Maha Lakshmi: 37 items).",
+      },
+      {
+        category: "Enhancement",
+        description: "Accurate category assignment for every item across the 8 sacred categories (பூஜைப் பொருட்கள், ஹோமப் பொருட்கள், நவக்கிரகப் பொருட்கள், பூ மற்றும் மாலை வகைகள், பழங்கள் மற்றும் உணவுப் பொருட்கள், பூஜை உபகரணங்கள், வஸ்திரம் / துணி வகைகள், கிரகப்பிரவேசப் பொருட்கள்).",
+      },
+      {
+        category: "Enhancement",
+        description: "Updated preset 1-click templates in Pooja Catalog creation modal with all 8 authentic poojas and full item lists.",
+      },
+    ],
+  },
   {
     version: "2.5.2",
     releaseDate: "23 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Clear Demo Data Action, 8 Authentic Samagri Categories, Maha Kumbabishekam & Grihapravesam Master Catalog",
     summary:
       "Added 1-tap demo data purge action across Bookings, Settings, and Data Backup pages; introduced the full 130+ item authentic catalog for Kumbabishekam and Grihapravesam across 8 standardized categories with confirmed traditional spellings; added Maha Kumbabishekam (மகா கும்பாபிஷேகம்) master pooja template with complete checklists.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {
