@@ -89,6 +89,7 @@ export default function BookingDetailPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [whatsAppType, setWhatsAppType] = useState<"REMINDER" | "CONFIRMATION">("REMINDER");
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
+  const [editableWhatsAppMsg, setEditableWhatsAppMsg] = useState("");
 
   const quickCancelReasons = [
     "Client request",
@@ -104,14 +105,22 @@ export default function BookingDetailPage() {
       : formatBookingConfirmationWhatsAppMessage(booking, currentBusiness);
   }, [whatsAppType, booking, currentBusiness]);
 
+  useEffect(() => {
+    if (currentWhatsAppMsg) {
+      setEditableWhatsAppMsg(currentWhatsAppMsg);
+    }
+  }, [currentWhatsAppMsg]);
+
   const handleSendWhatsApp = () => {
     const phone = booking.customerMobile ? booking.customerMobile.replace(/\D/g, "") : "";
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(currentWhatsAppMsg)}`, "_blank");
+    const msgToSend = editableWhatsAppMsg || currentWhatsAppMsg;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msgToSend)}`, "_blank");
   };
 
   const handleCopyWhatsApp = async () => {
     try {
-      await navigator.clipboard.writeText(currentWhatsAppMsg);
+      const msgToSend = editableWhatsAppMsg || currentWhatsAppMsg;
+      await navigator.clipboard.writeText(msgToSend);
       setCopiedWhatsApp(true);
       setTimeout(() => setCopiedWhatsApp(false), 2000);
     } catch (_) {}
@@ -1148,17 +1157,31 @@ export default function BookingDetailPage() {
               </div>
             </div>
 
-            {/* Message Preview */}
-            <div className="px-4 py-2 flex-1 overflow-hidden flex flex-col min-h-0">
-              <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-between">
-                <span>செய்தி முன்னோட்டம் (Preview):</span>
-                <span className="text-slate-400 font-normal truncate max-w-[180px]">
-                  {booking.customerName} ({booking.customerMobile})
+            {/* Message Preview & Edit */}
+            <div className="px-4 py-2 flex-1 overflow-hidden flex flex-col min-h-0 space-y-1.5">
+              <div className="text-[11px] font-semibold text-slate-600 flex items-center justify-between">
+                <span className="font-bold flex items-center gap-1">
+                  <span>செய்தி முன்னோட்டம் & திருத்துதல் (Preview & Edit):</span>
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setEditableWhatsAppMsg(currentWhatsAppMsg)}
+                  className="text-[10px] text-slate-500 hover:text-slate-800 underline font-medium cursor-pointer"
+                  title="Reset back to default template message"
+                >
+                  மீட்டமை (Reset)
+                </button>
               </div>
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 text-xs text-slate-800 whitespace-pre-wrap overflow-y-auto leading-relaxed flex-1 font-sans shadow-inner max-h-[320px]">
-                {currentWhatsAppMsg}
-              </div>
+              <textarea
+                value={editableWhatsAppMsg}
+                onChange={(e) => setEditableWhatsAppMsg(e.target.value)}
+                rows={11}
+                className="w-full bg-[#faf9f6] border border-slate-300 rounded-2xl p-3 text-xs text-slate-800 focus:bg-white focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/30 outline-none resize-none overflow-y-auto leading-relaxed font-sans shadow-inner max-h-[300px]"
+                placeholder="வாட்ஸ்அப் செய்தி..."
+              />
+              <p className="text-[9.5px] text-slate-400 italic">
+                💡 அனுப்புவதற்கு முன் இந்தச் செய்தியை உங்கள் விருப்பப்படி திருத்திக் கொள்ளலாம்.
+              </p>
             </div>
 
             {/* Actions */}

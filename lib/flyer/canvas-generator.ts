@@ -98,14 +98,29 @@ function drawTempleBorder(
 /**
  * Generate a beautiful high-resolution image flyer for WhatsApp sharing
  */
+export interface GenerateFlyerOptions {
+  themePreset?: ThemePreset;
+  customCompanyName?: string;
+  customPhone?: string;
+}
+
 export async function generatePoojaFlyer(
   booking: Booking,
   business: Business,
-  themePreset: ThemePreset = "traditional"
+  optionsOrPreset: ThemePreset | GenerateFlyerOptions = "traditional"
 ): Promise<string> {
+  const options: GenerateFlyerOptions =
+    typeof optionsOrPreset === "string"
+      ? { themePreset: optionsOrPreset }
+      : optionsOrPreset || {};
+
+  const themePreset = options.themePreset || "traditional";
+  const companyName = (options.customCompanyName?.trim() || business.name || "வேள்வி வேத பவனம்").trim();
+  const contactPhone = (options.customPhone?.trim() || business.phone || business.whatsapp || "").trim();
+
   const canvas = document.createElement("canvas");
   const width = 1080;
-  const height = 1500;
+  const height = 1520;
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d");
@@ -118,10 +133,12 @@ export async function generatePoojaFlyer(
   ctx.fillStyle = colors.background;
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Temple Borders
+  // 2. Temple Borders with refined inner hairline
   drawTempleBorder(ctx, width, height, colors.borderColor, colors.gold);
 
-  // 3. Header Logo (Customer Custom Logo or Master Velvi Logo)
+  // 3. Compact "Cute" Logo Badge (logo kutty a - 44px diameter)
+  const logoCenterY = 78;
+  const logoRadius = 22; // Small & cute!
   const flyerLogoSrc = business.logoUrl || "/icons/velvi-logo.png";
   try {
     const logoImg = new Image();
@@ -131,134 +148,184 @@ export async function generatePoojaFlyer(
       logoImg.onerror = () => reject();
       logoImg.src = flyerLogoSrc;
     });
-    // Draw circular logo
+    // Draw circular cute logo
     ctx.save();
     ctx.beginPath();
-    ctx.arc(width / 2, 88, 38, 0, Math.PI * 2);
+    ctx.arc(width / 2, logoCenterY, logoRadius, 0, Math.PI * 2);
     ctx.clip();
-    ctx.drawImage(logoImg, width / 2 - 38, 88 - 38, 76, 76);
+    ctx.drawImage(logoImg, width / 2 - logoRadius, logoCenterY - logoRadius, logoRadius * 2, logoRadius * 2);
     ctx.restore();
-    // Draw gold border around logo
+    // Draw gold outer ring
     ctx.save();
     ctx.strokeStyle = colors.gold;
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(width / 2, 88, 38, 0, Math.PI * 2);
+    ctx.arc(width / 2, logoCenterY, logoRadius, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   } catch {
-    ctx.font = "bold 38px serif";
+    ctx.font = "bold 26px serif";
     ctx.fillStyle = colors.gold;
     ctx.textAlign = "center";
-    ctx.fillText("🪔 ॐ ஸ்ரீம் 🪔", width / 2, 90);
+    ctx.fillText("🪔 ॐ 🪔", width / 2, logoCenterY + 8);
   }
 
-  // 4. Business Branding
-  ctx.font = "bold 36px 'Segoe UI', Arial, sans-serif";
+  // 4. Company Name (Live custom input from user)
+  ctx.textAlign = "center";
+  ctx.font = "bold 34px 'Segoe UI', Arial, sans-serif";
   ctx.fillStyle = colors.primary;
-  ctx.fillText(business.name, width / 2, 155);
+  ctx.fillText(companyName, width / 2, 132);
 
-  // Divider Line
+  // Subtitle Tagline
+  ctx.font = "500 19px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = colors.textMuted;
+  ctx.fillText("பூஜை சாமக்கிரி பொருட்கள் பட்டியல் (Pooja Required Items List)", width / 2, 162);
+
+  // Subtle Ornamental Divider Line
   ctx.strokeStyle = colors.gold;
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(250, 205);
-  ctx.lineTo(width - 250, 205);
+  ctx.moveTo(300, 185);
+  ctx.lineTo(width - 300, 185);
   ctx.stroke();
 
-  // 5. Pooja Name Section
-  ctx.font = "bold 46px 'Segoe UI', Arial, sans-serif";
-  ctx.fillStyle = colors.textDark;
-  ctx.fillText(booking.poojaEnglishName || "Pooja Ceremony", width / 2, 280);
+  // Small center diamond
+  ctx.fillStyle = colors.gold;
+  ctx.beginPath();
+  ctx.arc(width / 2, 185, 4, 0, Math.PI * 2);
+  ctx.fill();
 
-  // 6. Ceremony Schedule Card
-  const cardX = 80;
-  const cardY = 330;
-  const cardW = width - 160;
-  const cardH = 150;
+  // 5. Pooja Name Section
+  ctx.font = "black 42px 'Segoe UI', Arial, sans-serif";
+  ctx.fillStyle = colors.textDark;
+  const poojaTitle = booking.poojaEnglishName || booking.poojaTamilName || "Pooja Ceremony";
+  ctx.fillText(poojaTitle, width / 2, 240);
+
+  if (booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName) {
+    ctx.font = "bold 26px 'Mukta Malar', 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.primary;
+    ctx.fillText(`(${booking.poojaTamilName})`, width / 2, 276);
+  }
+
+  // 6. Ceremony Details Card (Devotee, Date, Time, Venue)
+  const cardX = 75;
+  const cardY = 305;
+  const cardW = width - 150;
+  const cardH = 145;
 
   ctx.fillStyle = colors.cardBg;
   ctx.strokeStyle = colors.gold;
-  ctx.lineWidth = 1;
-  ctx.fillRect(cardX, cardY, cardW, cardH);
-  ctx.strokeRect(cardX, cardY, cardW, cardH);
+  ctx.lineWidth = 1.2;
+  // Rounded rectangle card
+  ctx.beginPath();
+  ctx.roundRect ? ctx.roundRect(cardX, cardY, cardW, cardH, 18) : ctx.rect(cardX, cardY, cardW, cardH);
+  ctx.fill();
+  ctx.stroke();
 
-  // Info items in Card
+  // Card Content
   ctx.textAlign = "left";
-  ctx.font = "bold 24px 'Segoe UI', sans-serif";
+  ctx.font = "bold 23px 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.primary;
-  ctx.fillText(`👤 Customer: ${booking.customerName || "Customer"}`, cardX + 30, cardY + 45);
+  ctx.fillText(`👤 பக்தர் (Devotee): ${booking.customerName || "Devotee"}`, cardX + 28, cardY + 42);
 
-  ctx.font = "bold 24px 'Segoe UI', sans-serif";
+  ctx.font = "bold 22px 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.textDark;
-  ctx.fillText(`📅 ${tamilInfo.formattedDualDate} (${tamilInfo.dayOfWeekTa})`, cardX + 30, cardY + 90);
+  ctx.fillText(`📅 தேதி (Date): ${tamilInfo.formattedDualDate} (${tamilInfo.dayOfWeekTa})`, cardX + 28, cardY + 84);
 
-  ctx.font = "22px 'Segoe UI', sans-serif";
+  ctx.font = "20px 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.textMuted;
-  ctx.fillText(`🕐 Time: ${booking.startTime}   📍 Location: ${booking.location}`, cardX + 30, cardY + 130);
+  ctx.fillText(`⏰ நேரம்: ${booking.startTime}   •   📍 இடம்: ${booking.location || "இல்லம்"}`, cardX + 28, cardY + 122);
 
-  // 7. Required Items Heading
+  // 7. Checklist Header Strip
+  const listHeadingY = 490;
   ctx.textAlign = "center";
-  ctx.font = "bold 30px 'Mukta Malar', 'Segoe UI', sans-serif";
+  ctx.font = "black 27px 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.primary;
-  ctx.fillText("Required Items Checklist", width / 2, 530);
+  ctx.fillText("📋 தேவையான பூஜை சாமக்கிரி பொருட்கள்", width / 2, listHeadingY);
 
-  // 8. Items Table Grid (2 columns for compact, clean layout)
-  const items = booking.items || [];
-  const col1X = 90;
-  const col2X = width / 2 + 30;
-  const startY = 580;
-  const rowHeight = 44;
+  // 8. Clean Aligned 2-Column Items Grid
+  const items = (booking.items && booking.items.length > 0)
+    ? booking.items.filter((it: any) => it.isChecked !== false)
+    : [];
+
   const maxRows = 14;
+  const col1X = 85;
+  const col1W = 430;
+  const col2X = width / 2 + 25;
+  const col2W = 430;
+  const startY = 535;
+  const rowHeight = 44;
 
-  ctx.textAlign = "left";
-  for (let i = 0; i < Math.min(items.length, maxRows * 2); i++) {
+  const totalSlots = Math.min(items.length, maxRows * 2);
+
+  for (let i = 0; i < totalSlots; i++) {
     const item = items[i];
     const isCol2 = i >= maxRows;
     const x = isCol2 ? col2X : col1X;
+    const w = isCol2 ? col2W : col1W;
     const y = startY + (i % maxRows) * rowHeight;
 
-    // Bullet & Item Name
-    ctx.font = "600 22px 'Mukta Malar', 'Segoe UI', sans-serif";
-    ctx.fillStyle = colors.textDark;
-    const displayName = `${i + 1}. ${item.itemEnglishName || item.itemTamilName}`;
-    ctx.fillText(displayName, x, y);
-
-    // Quantity Badge
-    ctx.textAlign = "right";
-    ctx.font = "bold 20px 'Segoe UI', sans-serif";
-    ctx.fillStyle = colors.primary;
-    const qtyText = `${item.quantity} ${item.unit}`;
-    const qtyX = isCol2 ? width - 90 : width / 2 - 30;
-    ctx.fillText(qtyText, qtyX, y);
-    ctx.textAlign = "left";
-
-    // Row divider dotted line
-    ctx.strokeStyle = "#ECE6DE";
-    ctx.lineWidth = 1;
+    // Subtle row background pill
+    ctx.fillStyle = i % 2 === 0 ? "rgba(200, 146, 52, 0.05)" : "rgba(255, 255, 255, 0.7)";
     ctx.beginPath();
-    ctx.moveTo(x, y + 8);
-    ctx.lineTo(qtyX, y + 8);
-    ctx.stroke();
+    ctx.roundRect ? ctx.roundRect(x, y - 28, w, 36, 8) : ctx.rect(x, y - 28, w, 36);
+    ctx.fill();
+
+    // Checkmark / Number
+    ctx.textAlign = "left";
+    ctx.font = "bold 18px 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.primary;
+    ctx.fillText(`${i + 1}.`, x + 10, y - 4);
+
+    // Item Tamil / English Name
+    const name = item.itemTamilName || item.itemEnglishName || "பொருள்";
+    ctx.font = "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.textDark;
+    const maxNameWidth = w - 140;
+    let truncatedName = name;
+    if (ctx.measureText(truncatedName).width > maxNameWidth) {
+      while (truncatedName.length > 4 && ctx.measureText(truncatedName + "...").width > maxNameWidth) {
+        truncatedName = truncatedName.slice(0, -1);
+      }
+      truncatedName += "...";
+    }
+    ctx.fillText(truncatedName, x + 38, y - 4);
+
+    // Quantity Badge (Right aligned)
+    ctx.textAlign = "right";
+    ctx.font = "bold 19px 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.primary;
+    const unitText = item.unit ? (item.unit === "nos" || item.unit === "pcs" ? "" : item.unit) : "";
+    const qtyText = `${item.quantity || 1} ${unitText}`.trim();
+    ctx.fillText(qtyText, x + w - 12, y - 4);
+  }
+
+  if (items.length === 0) {
+    ctx.textAlign = "center";
+    ctx.font = "22px 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.textMuted;
+    ctx.fillText("பொருட்கள் எதுவும் சேர்க்கப்படவில்லை", width / 2, startY + 60);
   }
 
   // 9. Sacred Instruction Note
-  const noteY = height - 190;
+  const noteY = height - 170;
   ctx.textAlign = "center";
-  ctx.font = "italic 22px 'Mukta Malar', 'Segoe UI', sans-serif";
+  ctx.font = "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.gold;
-  ctx.fillText("🙏 Please keep all items ready before the ceremony starts.", width / 2, noteY);
+  ctx.fillText("🙏 தயவுசெய்து பூஜை தொடங்குவதற்கு முன் அனைத்து பொருட்களையும் தயார் நிலையில் வைக்கவும்.", width / 2, noteY);
 
-  // 10. Contact Footer
-  ctx.font = "bold 24px 'Segoe UI', sans-serif";
-  ctx.fillStyle = colors.primary;
-  ctx.fillText(`Contact: ${business.phone}`, width / 2, noteY + 50);
+  // 10. Contact Info
+  if (contactPhone) {
+    ctx.font = "bold 23px 'Segoe UI', sans-serif";
+    ctx.fillStyle = colors.primary;
+    ctx.fillText(`📞 தொடர்புக்கு: ${contactPhone}`, width / 2, noteY + 45);
+  }
 
-  // 11. Watermark
+  // 11. Subtle Watermark
   if (business.showWatermark) {
     ctx.font = "16px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textMuted;
-    ctx.fillText("Powered by Velvi App • Pooja & Seva Management", width / 2, height - 50);
+    ctx.fillText("✨ Powered by Velvi App • வேத முறை முன்பதிவு மேலாண்மை ✨", width / 2, height - 52);
   }
 
   return canvas.toDataURL("image/png");

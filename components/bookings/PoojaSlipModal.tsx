@@ -16,6 +16,9 @@ import {
   Layers,
   Download,
   MessageCircle,
+  RotateCcw,
+  CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
@@ -30,6 +33,10 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
   const [copied, setCopied] = useState(false);
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
   const [isCapturing, setIsCapturing] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [showWhatsAppEditor, setShowWhatsAppEditor] = useState(false);
+  const [editableWhatsAppText, setEditableWhatsAppText] = useState("");
+  const [copiedWhatsAppText, setCopiedWhatsAppText] = useState(false);
   const slipRef = useRef<HTMLDivElement>(null);
 
   const tamilDate = getTamilDate(booking.date);
@@ -40,26 +47,24 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     ? booking.items.map((it) => ({
         id: it.id,
         name: it.itemTamilName || it.itemEnglishName,
-        english: it.itemEnglishName,
-        qty: `${it.quantity} ${formatUnitTamil(it.unit) || it.unit}`,
-        category: it.category || "சாமக்கிரி",
+        qty: `${it.quantity} ${formatUnitTamil(it.unit || "nos") || it.unit}`,
       }))
     : [
-        { id: "s-1", name: "தேங்காய் (மட்டை உரித்தது)", english: "Coconuts (Peeled)", qty: "5 எண்ணம்", category: "அடிப்படை" },
-        { id: "s-2", name: "தூய பசு நெய்", english: "Pure Cow Ghee", qty: "500 கிராம்", category: "நெய் & எண்ணெய்" },
-        { id: "s-3", name: "ஹோம சமித்து கட்டு & தர்பை", english: "Samithu Bundle & Darbha", qty: "1 செட்", category: "ஹோமம்" },
-        { id: "s-4", name: "நவதானியம் செட்", english: "Navadhanyam 9 Grains", qty: "1 பாக்கெட்", category: "தானியங்கள்" },
-        { id: "s-5", name: "மஞ்சள் தூள், குங்குமம், சந்தனம்", english: "Turmeric, Kumkum, Sandal", qty: "தலா 50g", category: "பொடிகள்" },
-        { id: "s-6", name: "மல்லி பூ, உதிரி பூ மாலை", english: "Fresh Flowers & Garlands", qty: "2 முழம் + 2 மாலை", category: "பூக்கள்" },
-        { id: "s-7", name: "வெற்றிலை பாக்கு, வாழைப்பழம்", english: "Betel Leaves & Bananas", qty: "20 இலை + 1 சீப்பு", category: "பழங்கள்" },
-        { id: "s-8", name: "வஸ்திரம் (வேஷ்டி துண்டு செட்)", english: "Vastram Cotton Dhoti Set", qty: "1 செட்", category: "வஸ்திரம்" },
+        { id: "1", name: "மஞ்சள் தூள் (Turmeric Powder)", qty: "100 கிராம்" },
+        { id: "2", name: "குங்குமம் (Kumkum)", qty: "50 கிராம்" },
+        { id: "3", name: "சந்தனம் (Sandal Powder)", qty: "1 பாக்கெட்" },
+        { id: "4", name: "கற்பூரம் (Camphor)", qty: "1 பாக்கெட்" },
+        { id: "5", name: "ஊதுபத்தி (Agarbathi)", qty: "1 பாக்கெட்" },
+        { id: "6", name: "வெற்றிலை பாக்கு (Betel Leaves & Nuts)", qty: "10 செட்" },
+        { id: "7", name: "தேங்காய் (Coconuts)", qty: "3 எண்ணிக்கை" },
+        { id: "8", name: "பூக்கள் மாலை மற்றும் உதிரி (Flowers)", qty: "1 முழம் & உதிரி" },
       ];
 
   const toggleCheck = (id: string) => {
     setCheckedItems((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // 1. Save Image (Downloads slip as PNG)
+  // 1. Save Image (Explicit Download PNG)
   const handleSaveImage = async () => {
     if (!slipRef.current || isCapturing) return;
     try {
@@ -70,11 +75,10 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
         useCORS: true,
         backgroundColor: "#faf8f5",
       });
-      const dataUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = dataUrl;
       const cleanNum = (booking.bookingNumber || booking.id).replace(/#/g, "");
-      a.download = `Velvi_Slip_${cleanNum}.png`;
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `Velvi_Pooja_Slip_${cleanNum}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -85,7 +89,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     }
   };
 
-  // 2. Share Image (Uses Web Share API with image file)
+  // 2. Share Image (Uses Web Share API with image file OR Clipboard copy — NO auto-download!)
   const handleShareImage = async () => {
     if (!slipRef.current || isCapturing) return;
     try {
@@ -104,6 +108,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
         const cleanNum = (booking.bookingNumber || booking.id).replace(/#/g, "");
         const file = new File([blob], `Velvi_Slip_${cleanNum}.png`, { type: "image/png" });
 
+        // Web Share API
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try {
             await navigator.share({
@@ -114,19 +119,30 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             setIsCapturing(false);
             return;
           } catch (shareErr) {
-            if ((shareErr as any)?.name !== "AbortError") {
-              console.warn("Share failed, falling back to download:", shareErr);
+            if ((shareErr as any)?.name === "AbortError") {
+              setIsCapturing(false);
+              return;
             }
           }
         }
 
-        // Fallback: download the image
-        const a = document.createElement("a");
-        a.href = canvas.toDataURL("image/png");
-        a.download = `Velvi_Slip_${cleanNum}.png`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // Fallback: Copy to clipboard (NO automatic download!)
+        if (navigator.clipboard && (window as any).ClipboardItem) {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ "image/png": blob }),
+            ]);
+            setShareNotice("பூஜை ரசீது படம் நகலெடுக்கப்பட்டது! வாட்ஸ்அப்பில் Ctrl+V செய்து அனுப்பலாம்.");
+            setTimeout(() => setShareNotice(null), 4000);
+            setIsCapturing(false);
+            return;
+          } catch (clipErr) {
+            console.warn("Clipboard copy failed:", clipErr);
+          }
+        }
+
+        setShareNotice("படம் பகிர முடியவில்லை. 'Save Image' மூலம் பதிவிறக்கிக் கொள்ளலாம்.");
+        setTimeout(() => setShareNotice(null), 4000);
         setIsCapturing(false);
       });
     } catch (err) {
@@ -135,18 +151,40 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     }
   };
 
-  // 3. WhatsApp Text Message (Sends clean formatted text with checklist & stylish Velvi App footer)
-  const handleShareWhatsApp = () => {
+  // Default WhatsApp confirmation message
+  const defaultWhatsAppMsg = React.useMemo(() => {
     const biz = business || {
       id: "biz-venkateswara-01",
       name: "வேள்வி வேத பவனம்",
       phone: contactPhone,
       showWatermark: true,
     };
-    const msg = formatBookingConfirmationWhatsAppMessage(booking, biz as Business);
+    return formatBookingConfirmationWhatsAppMessage(booking, biz as Business);
+  }, [booking, business, contactPhone]);
+
+  // Open Preview & Edit panel before WhatsApp send
+  const handleOpenWhatsAppPreview = () => {
+    setEditableWhatsAppText(defaultWhatsAppMsg);
+    setShowWhatsAppEditor(true);
+  };
+
+  const handleSendCustomWhatsApp = () => {
     const phone = booking.customerMobile ? booking.customerMobile.replace(/\D/g, "") : "";
+    const msg = editableWhatsAppText || defaultWhatsAppMsg;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
+
+  const handleCopyCustomWhatsApp = async () => {
+    try {
+      await navigator.clipboard.writeText(editableWhatsAppText || defaultWhatsAppMsg);
+      setCopiedWhatsAppText(true);
+      setTimeout(() => setCopiedWhatsAppText(false), 2000);
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+    }
+  };
+
+  const handleShareWhatsApp = handleOpenWhatsAppPreview;
 
   const handleCopyText = () => {
     let msg = `வேள்வி — பூஜை சாமக்கிரி பட்டியல் (${booking.customerName} - ${booking.poojaTamilName}):\n\n`;
@@ -219,14 +257,109 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
           </div>
         </div>
 
-        {/* ======================================================================= */}
-        {/* CAPTUREABLE SACRED SLIP CONTAINER                                       */}
-        {/* ======================================================================= */}
-        <div
-          ref={slipRef}
-          id="pooja-slip-card"
-          className="p-4 sm:p-6 space-y-4 bg-[#faf8f5] text-slate-900"
-        >
+        {/* Share Notice Banner */}
+        {shareNotice && (
+          <div className="bg-emerald-50 border-b border-emerald-300 text-emerald-950 px-4 py-2 text-xs font-bold flex items-center justify-between animate-in fade-in shrink-0">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{shareNotice}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShareNotice(null)}
+              className="text-emerald-700 hover:text-emerald-950 text-xs font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {showWhatsAppEditor ? (
+          /* ======================================================================= */
+          /* WHATSAPP MESSAGE PREVIEW & EDIT PANEL                                   */
+          /* ======================================================================= */
+          <div className="p-4 sm:p-5 space-y-3.5 bg-white text-slate-900 animate-in fade-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <button
+                type="button"
+                onClick={() => setShowWhatsAppEditor(false)}
+                className="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>ரசீது பார்க்க (Back to Slip)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEditableWhatsAppText(defaultWhatsAppMsg)}
+                className="text-[11px] text-slate-500 hover:text-slate-800 flex items-center gap-1 font-semibold cursor-pointer"
+                title="Reset to default template"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>மீட்டமை (Reset)</span>
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span className="flex items-center gap-1.5 text-emerald-950 font-black">
+                  <MessageCircle className="w-4 h-4 text-green-600" />
+                  <span>வாட்ஸ்அப் செய்தி முன்னோட்டம் & திருத்துதல்:</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal">
+                  {booking.customerName} ({booking.customerMobile})
+                </span>
+              </div>
+              <textarea
+                value={editableWhatsAppText}
+                onChange={(e) => setEditableWhatsAppText(e.target.value)}
+                rows={13}
+                className="w-full bg-[#faf9f6] rounded-2xl border border-slate-300 p-3.5 text-xs text-slate-900 leading-relaxed font-sans shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white resize-none"
+                placeholder="வாட்ஸ்அப் செய்தி தட்டச்சு செய்க..."
+              />
+              <p className="text-[10px] text-slate-500 italic">
+                💡 பக்தருக்கு அனுப்பும் முன் தேவைப்படும் மாற்றங்களை இங்கு நேரடியாக செய்து கொள்ளலாம்.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={handleCopyCustomWhatsApp}
+                className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
+              >
+                {copiedWhatsAppText ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span className="text-emerald-700">Copied ✅</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-slate-600" />
+                    <span>உரையை நகலெடு</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSendCustomWhatsApp}
+                className="py-2.5 px-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 fill-white" />
+                <span>வாட்ஸ்அப் திறக்க</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* ======================================================================= */
+          /* CAPTUREABLE SACRED SLIP CONTAINER                                       */
+          /* ======================================================================= */
+          <div
+            ref={slipRef}
+            id="pooja-slip-card"
+            className="p-4 sm:p-6 space-y-4 bg-[#faf8f5] text-slate-900"
+          >
           {/* Sacred Brand Header (Kutty Smart Logo) */}
           <div className="text-center pb-3 border-b-2 border-dashed border-amber-200/90 space-y-1">
             <div className="flex items-center justify-center gap-1.5">
@@ -400,7 +533,8 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             </p>
           </div>
         </div>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 }

@@ -16,6 +16,9 @@ import {
   Image as ImageIcon,
   ExternalLink,
   Eye,
+  Building2,
+  RotateCcw,
+  CheckCircle2,
 } from "lucide-react";
 
 interface PoojaListShareModalProps {
@@ -36,6 +39,11 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
   const [flyerDataUrl, setFlyerDataUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [imageCopied, setImageCopied] = useState(false);
+  const [shareNotice, setShareNotice] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>(
+    business?.name || "வேள்வி வேத பவனம்"
+  );
 
   // Generate WhatsApp text message
   const whatsappMessage = React.useMemo(() => {
@@ -43,49 +51,69 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
     return formatPoojaItemsWhatsAppMessage(booking, business);
   }, [booking, business]);
 
-  // Generate Image Flyer on open or when booking changes
+  // Editable WhatsApp message
+  const [customWhatsAppMsg, setCustomWhatsAppMsg] = useState("");
+
+  useEffect(() => {
+    if (whatsappMessage) {
+      setCustomWhatsAppMsg(whatsappMessage);
+    }
+  }, [whatsappMessage]);
+
+  // Generate Image Flyer on open or when booking / companyName changes
   useEffect(() => {
     if (!isOpen || !booking || !business) return;
 
     let isMounted = true;
     setIsGenerating(true);
 
-    generatePoojaFlyer(booking, business, theme.preset)
-      .then((dataUrl) => {
-        if (isMounted) {
-          setFlyerDataUrl(dataUrl);
-          setIsGenerating(false);
-        }
+    const timer = setTimeout(() => {
+      generatePoojaFlyer(booking, business, {
+        themePreset: theme.preset,
+        customCompanyName: companyName,
       })
-      .catch((err) => {
-        console.error("Flyer generation error:", err);
-        if (isMounted) {
-          setIsGenerating(false);
-        }
-      });
+        .then((dataUrl) => {
+          if (isMounted) {
+            setFlyerDataUrl(dataUrl);
+            setIsGenerating(false);
+          }
+        })
+        .catch((err) => {
+          console.error("Flyer generation error:", err);
+          if (isMounted) {
+            setIsGenerating(false);
+          }
+        });
+    }, 200);
 
     return () => {
       isMounted = false;
+      clearTimeout(timer);
     };
-  }, [isOpen, booking, business, theme.preset]);
+  }, [isOpen, booking, business, theme.preset, companyName]);
 
   if (!isOpen) return null;
 
   const phone = booking.customerMobile ? booking.customerMobile.replace(/\D/g, "") : "";
 
   const handleOpenWhatsApp = () => {
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage)}`;
+    const textToSend = customWhatsAppMsg || whatsappMessage;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(textToSend)}`;
     window.open(url, "_blank");
   };
 
   const handleCopyText = async () => {
     try {
-      await navigator.clipboard.writeText(whatsappMessage);
+      await navigator.clipboard.writeText(customWhatsAppMsg || whatsappMessage);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Clipboard copy failed:", err);
     }
+  };
+
+  const handleResetText = () => {
+    setCustomWhatsAppMsg(whatsappMessage);
   };
 
   const handleDownloadImage = () => {
@@ -97,6 +125,32 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+  };
+
+  const handleCopyImage = async () => {
+    if (!flyerDataUrl) return;
+    try {
+      const res = await fetch(flyerDataUrl);
+      const blob = await res.blob();
+      if (navigator.clipboard && (window as any).ClipboardItem) {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        setImageCopied(true);
+        setShareNotice("படம் நகலெடுக்கப்பட்டது! வாட்ஸ்அப்பில் Ctrl+V செய்து நேரடியாக பகிரலாம்.");
+        setTimeout(() => {
+          setImageCopied(false);
+          setShareNotice(null);
+        }, 4000);
+      } else {
+        setShareNotice("உங்கள் உலாவியில் படம் நகலெடுக்கும் வசதி இல்லை.");
+        setTimeout(() => setShareNotice(null), 3000);
+      }
+    } catch (err) {
+      console.error("Copy image failed:", err);
+      setShareNotice("படம் நகலெடுப்பதில் சிக்கல் ஏற்பட்டது.");
+      setTimeout(() => setShareNotice(null), 3000);
+    }
   };
 
   const handleNativeShare = async () => {
@@ -117,18 +171,22 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({
             title: `${booking.poojaEnglishName || "Pooja"} Items List`,
-            text: whatsappMessage,
+            text: customWhatsAppMsg || whatsappMessage,
             files: [file],
           });
           return;
         }
       }
     } catch (err) {
-      console.log("Native share fallback to WhatsApp:", err);
+      if ((err as any)?.name !== "AbortError") {
+        console.log("Native share error:", err);
+      } else {
+        return;
+      }
     }
 
-    // Fallback directly to WhatsApp web/app
-    handleOpenWhatsApp();
+    // Fallback: Copy image to clipboard without downloading!
+    await handleCopyImage();
   };
 
   return (
@@ -189,6 +247,14 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
           </button>
         </div>
 
+        {/* Share / Copy Toast Notice */}
+        {shareNotice && (
+          <div className="bg-emerald-50 border border-emerald-300 text-emerald-950 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in shrink-0 shadow-xs mb-1">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{shareNotice}</span>
+          </div>
+        )}
+
         {/* Modal Body - Scrollable Content */}
         <div className="flex-1 overflow-y-auto space-y-3 min-h-0 pr-0.5">
           {activeTab === "image" ? (
@@ -196,6 +262,35 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
             /* 1. FLYER IMAGE PREVIEW VIEW                             */
             /* ======================================================== */
             <div className="space-y-3">
+              {/* Live Company Name Input (company name input la kudukurathu) */}
+              <div className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-2.5 space-y-1 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-black text-amber-950 flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-amber-700" />
+                    <span>நிறுவனம் / கோவில் பெயர் (Company / Temple Name):</span>
+                  </label>
+                  {companyName !== (business?.name || "வேள்வி வேத பவனம்") && (
+                    <button
+                      type="button"
+                      onClick={() => setCompanyName(business?.name || "வேள்வி வேத பவனம்")}
+                      className="text-[10px] text-amber-800 hover:text-amber-950 underline font-semibold cursor-pointer"
+                    >
+                      மீட்டமை (Reset)
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="வேள்வி வேத பவனம் / ஸ்ரீ விநாயகர் கோவில்"
+                  className="w-full bg-white border border-amber-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+                <p className="text-[9.5px] text-amber-800/80 font-medium">
+                  💡 இங்கு மாற்றும் பெயர் பதாகைப் படத்தில் (Flyer Image) உடனே மாறும்.
+                </p>
+              </div>
+
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
                 <span className="flex items-center gap-1">
                   <Eye className="w-3.5 h-3.5 text-amber-600" />
@@ -228,69 +323,105 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                 )}
               </div>
 
-              {/* Action Buttons for Image */}
-              <div className="grid grid-cols-2 gap-2 pt-1">
+              {/* Action Buttons for Image: Copy Image, Direct Share (No download), and Save PNG */}
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyImage}
+                    disabled={!flyerDataUrl || isGenerating}
+                    className="py-2.5 px-2.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer disabled:opacity-50 min-w-0"
+                    title="Copy PNG image to clipboard for WhatsApp Web pasting (Ctrl+V)"
+                  >
+                    {imageCopied ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span className="text-emerald-700 truncate">Copied ✅</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 text-emerald-700 shrink-0" />
+                        <span className="truncate">படம் நகலெடு (Copy)</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNativeShare}
+                    disabled={!flyerDataUrl || isGenerating}
+                    className="py-2.5 px-2.5 bg-gradient-to-r from-emerald-850 to-emerald-900 hover:from-emerald-800 hover:to-emerald-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer disabled:opacity-50 min-w-0"
+                    title="Direct Share via App or Clipboard (No Download)"
+                  >
+                    <Share2 className="w-4 h-4 text-amber-300 shrink-0" />
+                    <span className="truncate">பகிர் (Share Img)</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleDownloadImage}
                   disabled={!flyerDataUrl || isGenerating}
-                  className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer disabled:opacity-50"
+                  className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer disabled:opacity-50"
+                  title="Download and save PNG file to your computer"
                 >
-                  <Download className="w-4 h-4 text-emerald-700" />
-                  <span>படத்தைப் பதிவிறக்கு</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleNativeShare}
-                  disabled={!flyerDataUrl || isGenerating}
-                  className="py-2.5 px-3 bg-gradient-to-r from-emerald-850 to-emerald-900 hover:from-emerald-800 hover:to-emerald-800 text-white rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition cursor-pointer disabled:opacity-50"
-                >
-                  <Share2 className="w-4 h-4 text-amber-300" />
-                  <span>வாட்ஸ்அப் பகிர்</span>
+                  <Download className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>படத்தைப் பதிவிறக்கு (Save File to Disk)</span>
                 </button>
               </div>
             </div>
           ) : (
             /* ======================================================== */
-            /* 2. WHATSAPP CHAT MESSAGE PREVIEW VIEW                   */
+            /* 2. WHATSAPP CHAT MESSAGE PREVIEW & EDIT VIEW            */
             /* ======================================================== */
             <div className="space-y-3">
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
                 <span className="flex items-center gap-1">
                   <MessageCircle className="w-3.5 h-3.5 text-green-600" />
-                  <span>வாட்ஸ்அப் உரை செய்தி (Chat Preview)</span>
+                  <span>செய்தி முன்னோட்டம் & திருத்துதல் (Editable)</span>
                 </span>
-                <button
-                  type="button"
-                  onClick={handleCopyText}
-                  className="text-[10.5px] font-extrabold text-emerald-850 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span className="text-emerald-600">நகலெடுக்கப்பட்டது!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>உரையை நகலெடு</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetText}
+                    className="text-[10px] text-slate-500 hover:text-slate-800 flex items-center gap-1 font-semibold cursor-pointer"
+                    title="Reset back to default template message"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>மீட்டமை</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyText}
+                    className="text-[10.5px] font-extrabold text-emerald-850 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span className="text-emerald-600">நகலெடுக்கப்பட்டது!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>உரையை நகலெடு</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
-              {/* Realistic WhatsApp Chat Bubble Container */}
-              <div className="bg-[#efeae2] p-3 rounded-2xl border border-slate-200/80 shadow-inner max-h-[320px] overflow-y-auto">
-                <div className="bg-white rounded-2xl rounded-tl-none p-3 shadow-xs border border-slate-100 space-y-1.5 max-w-[95%] text-slate-900 leading-relaxed font-sans text-xs select-text">
-                  <div className="whitespace-pre-wrap font-medium text-[11.5px]">
-                    {whatsappMessage}
-                  </div>
-                  <div className="text-[9px] text-slate-400 text-right font-mono flex items-center justify-end gap-1 pt-1">
-                    <span>Just now</span>
-                    <span className="text-blue-500 font-bold">✓✓</span>
-                  </div>
-                </div>
+              {/* Editable Textarea Panel */}
+              <div className="space-y-1">
+                <textarea
+                  value={customWhatsAppMsg}
+                  onChange={(e) => setCustomWhatsAppMsg(e.target.value)}
+                  rows={10}
+                  className="w-full bg-[#faf9f6] rounded-2xl border border-slate-300 p-3 text-xs text-slate-900 leading-relaxed font-sans shadow-inner focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:bg-white resize-none"
+                  placeholder="வாட்ஸ்அப் செய்தி..."
+                />
+                <p className="text-[10px] text-slate-400 italic">
+                  💡 வாட்ஸ்அப் அனுப்பும் முன் உரையை உங்கள் விருப்பப்படி இங்கே திருத்திக் கொள்ளலாம்.
+                </p>
               </div>
 
               {/* WhatsApp Action Buttons */}
