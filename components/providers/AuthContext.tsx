@@ -62,11 +62,35 @@ const AuthContext = createContext<AuthContextType>({
   completeOnboarding: async () => {},
 });
 
+function getInitialAuthState(): {
+  user: User | null;
+  biz: Business | null;
+  sub: Subscription | null;
+} {
+  if (typeof window === "undefined") {
+    return { user: null, biz: null, sub: null };
+  }
+  try {
+    const savedUserId = localStorage.getItem("velvi_active_user_id");
+    if (!savedUserId || savedUserId === "LOGGED_OUT") {
+      return { user: null, biz: null, sub: null };
+    }
+    const user = db.users.find((u) => u.id === savedUserId) || null;
+    if (!user) return { user: null, biz: null, sub: null };
+    const biz = db.businesses.find((b) => b.ownerId === user.id) || db.businesses[0] || null;
+    const sub = db.subscriptions.find((s) => s.businessId === biz?.id) || db.subscriptions[0] || null;
+    return { user, biz, sub };
+  } catch {
+    return { user: null, biz: null, sub: null };
+  }
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [initialState] = useState(getInitialAuthState);
+  const [currentUser, setCurrentUser] = useState<User | null>(initialState.user);
+  const [currentBusiness, setCurrentBusiness] = useState<Business | null>(initialState.biz);
+  const [subscription, setSubscription] = useState<Subscription | null>(initialState.sub);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const syncState = React.useCallback(() => {
     const savedUserId = typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null;

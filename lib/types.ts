@@ -196,6 +196,7 @@ export interface BookingItem {
   category?: string;
   isOverride?: boolean;
   isChecked?: boolean;
+  isCustom?: boolean;
   sortOrder?: number;
 }
 
@@ -222,6 +223,8 @@ export interface Booking {
   advanceAmount: number;
   balanceAmount: number;
   paymentStatus: PaymentStatus;
+  expenseAmount?: number;
+  expenseNotes?: string;
   notes?: string;
   items: BookingItem[];
   cancellationReason?: string;

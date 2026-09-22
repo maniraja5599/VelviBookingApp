@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
 import { Booking } from "@/lib/types";
-import { getTamilDate } from "@/lib/calendar/tamil";
+import { getTamilDate, formatTime12H } from "@/lib/calendar/tamil";
 import Link from "next/link";
 import {
   Plus,
@@ -68,23 +68,23 @@ interface MonthTheme {
 const MONTH_THEMES: MonthTheme[] = [
   // 0: Rose / Crimson (e.g. September)
   {
-    headerBg: "bg-[#fce7ed]/95",
-    headerBorder: "border-[#f7bac8]",
-    headerText: "text-[#881337]",
-    countBadgeBg: "bg-[#881337]/10",
-    countBadgeText: "text-[#881337]",
-    nodeBg: "bg-[#9f1239]",
+    headerBg: "bg-[#fff1f2]",
+    headerBorder: "border-[#fecdd3]",
+    headerText: "text-[#9f1239]",
+    countBadgeBg: "bg-[#ffe4e6]",
+    countBadgeText: "text-[#9f1239]",
+    nodeBg: "bg-[#be123c]",
     nodeText: "text-white",
-    railColor: "bg-[#9f1239]/40",
-    accentText: "text-[#9f1239]",
+    railColor: "bg-[#be123c]/40",
+    accentText: "text-[#be123c]",
   },
   // 1: Sacred Emerald / Green (e.g. October)
   {
-    headerBg: "bg-[#e6f7ec]/95",
-    headerBorder: "border-[#bbf0cb]",
-    headerText: "text-[#14532d]",
-    countBadgeBg: "bg-[#14532d]/10",
-    countBadgeText: "text-[#14532d]",
+    headerBg: "bg-[#f0fdf4]",
+    headerBorder: "border-[#bbf7d0]",
+    headerText: "text-[#166534]",
+    countBadgeBg: "bg-[#dcfce7]",
+    countBadgeText: "text-[#166534]",
     nodeBg: "bg-[#15803d]",
     nodeText: "text-white",
     railColor: "bg-[#15803d]/40",
@@ -92,11 +92,11 @@ const MONTH_THEMES: MonthTheme[] = [
   },
   // 2: Royal Blue / Indigo (e.g. November)
   {
-    headerBg: "bg-[#eaf1fb]/95",
-    headerBorder: "border-[#c3d8f8]",
-    headerText: "text-[#1e3a8a]",
-    countBadgeBg: "bg-[#1e3a8a]/10",
-    countBadgeText: "text-[#1e3a8a]",
+    headerBg: "bg-[#eff6ff]",
+    headerBorder: "border-[#bfdbfe]",
+    headerText: "text-[#1e40af]",
+    countBadgeBg: "bg-[#dbeafe]",
+    countBadgeText: "text-[#1e40af]",
     nodeBg: "bg-[#2563eb]",
     nodeText: "text-white",
     railColor: "bg-[#2563eb]/40",
@@ -104,11 +104,11 @@ const MONTH_THEMES: MonthTheme[] = [
   },
   // 3: Warm Amber / Haldi Gold (e.g. December)
   {
-    headerBg: "bg-[#fef3c7]/95",
+    headerBg: "bg-[#fffbeb]",
     headerBorder: "border-[#fde68a]",
-    headerText: "text-[#78350f]",
-    countBadgeBg: "bg-[#78350f]/10",
-    countBadgeText: "text-[#78350f]",
+    headerText: "text-[#92400e]",
+    countBadgeBg: "bg-[#fef3c7]",
+    countBadgeText: "text-[#92400e]",
     nodeBg: "bg-[#d97706]",
     nodeText: "text-white",
     railColor: "bg-[#d97706]/40",
@@ -116,11 +116,11 @@ const MONTH_THEMES: MonthTheme[] = [
   },
   // 4: Sacred Purple (e.g. January)
   {
-    headerBg: "bg-[#f3e8ff]/95",
+    headerBg: "bg-[#faf5ff]",
     headerBorder: "border-[#e9d5ff]",
-    headerText: "text-[#581c87]",
-    countBadgeBg: "bg-[#581c87]/10",
-    countBadgeText: "text-[#581c87]",
+    headerText: "text-[#6b21a8]",
+    countBadgeBg: "bg-[#f3e8ff]",
+    countBadgeText: "text-[#6b21a8]",
     nodeBg: "bg-[#7e22ce]",
     nodeText: "text-white",
     railColor: "bg-[#7e22ce]/40",
@@ -258,7 +258,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Background action revealed on left swipe - Clickable prominent button */}
+      {/* Background action revealed on left swipe - Only visible when swiping left */}
       <button
         type="button"
         onClick={(e) => {
@@ -268,11 +268,16 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
           currentOffsetRef.current = 0;
           setOffsetX(0);
         }}
-        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-2xl flex items-center justify-center px-3 transition-colors z-0 cursor-pointer text-right shadow-inner ${
+        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-2xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner transition-opacity ${
+          offsetX < -2 ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        } ${
           isCompleted
             ? "bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white"
             : "bg-gradient-to-l from-emerald-600 via-emerald-500 to-emerald-600 text-white"
         }`}
+        style={{
+          transition: "opacity 0.15s ease",
+        }}
         title={isCompleted ? "Reopen Booking" : "Mark as Complete"}
       >
         <div className="flex items-center gap-2.5">
@@ -302,13 +307,15 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
           transform: `translateX(${offsetX}px)`,
           transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
         }}
-        className="relative z-10 bg-white"
+        className="relative z-10 bg-white rounded-2xl"
       >
         <Link
           href={`/app/bookings/${b.id}`}
           onClick={handleClick}
           draggable={false}
-          className={`block p-3 sm:p-3.5 border rounded-2xl transition hover:shadow-xs space-y-2 ${
+          className={`relative block p-2.5 sm:px-3 sm:py-2.5 border rounded-2xl transition hover:shadow-2xs space-y-1.5 overflow-hidden ${
+            !isSelf ? "pt-3.5 sm:pt-3.5" : ""
+          } ${
             isCompleted
               ? "bg-emerald-50/40 border-emerald-300"
               : isOverdue
@@ -316,98 +323,88 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
               : "bg-white border-slate-200/90 hover:border-amber-300 shadow-2xs"
           }`}
         >
-          {/* Row 1: Customer Name, Status Badge, Time & Chevron */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-400 text-xs">👤</span>
-                <h4 className="font-black text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
-                  {b.customerName}
-                </h4>
-                {isCompleted && (
-                  <span className="text-[9.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none">
-                    முடிந்தது ✅
-                  </span>
-                )}
-                {isOverdue && (
-                  <span className="text-[9.5px] font-black bg-rose-100 text-rose-900 border border-rose-300 px-2 py-0.5 rounded-full leading-none flex items-center gap-1 shadow-2xs">
-                    <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
-                    <span>{diffDays}d Overdue</span>
-                  </span>
-                )}
-              </div>
-              <p className="text-xs font-bold text-amber-900 mt-0.5 truncate flex items-center gap-1">
+          {/* Top-Right Corner Stylish Tag for Vera Priest */}
+          {!isSelf && (
+            <div className="absolute top-0 right-0 z-20 flex items-center gap-1 bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white text-[8.5px] sm:text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg rounded-tr-2xl shadow-2xs tracking-tight">
+              <span className="text-[9px]">🪔</span>
+              <span className="truncate max-w-[85px] sm:max-w-[130px]">
+                {b.assignedIyerName && b.assignedIyerName !== "Team" && b.assignedIyerName.toLowerCase() !== "self"
+                  ? b.assignedIyerName
+                  : "Other Priest"}
+              </span>
+            </div>
+          )}
+
+          {/* Row 1: Customer Name, Status Badge, Pooja, and Fee */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1 flex items-center gap-1.5 flex-wrap">
+              <span className="text-slate-400 text-xs shrink-0">👤</span>
+              <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate leading-tight group-hover:text-emerald-950 transition-colors">
+                {b.customerName}
+              </h4>
+              {isCompleted && (
+                <span className="text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full leading-none shrink-0">
+                  முடிந்தது ✅
+                </span>
+              )}
+              {isOverdue && (
+                <span className="text-[9px] font-black bg-rose-100 text-rose-900 border border-rose-300 px-1.5 py-0.2 rounded-full leading-none flex items-center gap-0.5 shadow-2xs shrink-0">
+                  <AlertTriangle className="w-2.5 h-2.5 text-rose-600 shrink-0" />
+                  <span>{diffDays}d Overdue</span>
+                </span>
+              )}
+              <span className="text-[10.5px] sm:text-[11px] font-bold text-amber-900 truncate flex items-center gap-0.5 shrink-0 max-w-[120px] sm:max-w-[200px]">
                 <span>🪔</span>
-                <span>{b.poojaEnglishName || b.poojaTamilName}</span>
-                {b.poojaTamilName && b.poojaEnglishName && b.poojaTamilName !== b.poojaEnglishName && (
-                  <span className="text-slate-500 font-normal">({b.poojaTamilName})</span>
-                )}
-              </p>
+                <span className="truncate">{b.poojaEnglishName || b.poojaTamilName}</span>
+              </span>
             </div>
 
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="flex items-center gap-1 text-[10.5px] font-bold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-200">
-                <Clock className="w-3 h-3 text-slate-500" />
-                <span>{b.startTime}</span>
+            <div className="text-right shrink-0 flex items-center gap-1.5">
+              <div>
+                <span className="font-black text-xs sm:text-sm text-slate-900">
+                  ₹{b.totalAmount.toLocaleString("en-IN")}
+                </span>
+                <span
+                  className={`text-[9.5px] font-bold ml-1.5 ${
+                    b.paymentStatus === "PAID"
+                      ? "text-emerald-700"
+                      : "text-rose-700"
+                  }`}
+                >
+                  {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                </span>
               </div>
-              <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
             </div>
           </div>
 
-          {/* Row 2: Confirmed Date, Location & Fee */}
-          <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5 gap-2 flex-wrap">
-            <div className="flex items-center gap-1.5 truncate min-w-0 text-[11px]">
-              <span className={`font-bold px-1.5 py-0.5 rounded border flex items-center gap-1 shrink-0 ${
-                isOverdue
-                  ? "bg-rose-100/90 text-rose-950 border-rose-300"
-                  : "text-slate-800 bg-slate-100 border-slate-200/80"
-              }`}>
-                <Calendar className={`w-3 h-3 ${isOverdue ? "text-rose-600" : "text-slate-500"}`} />
-                <span>{dateInfo.dayOfMonth} {dateInfo.monthNameEn} ({dateInfo.dayOfWeekEn.slice(0, 3)})</span>
+          {/* Row 2: Booking Number, Time, Priest (Self / Other Person), Venue & Actions */}
+          <div className="flex items-center justify-between text-[10.5px] text-slate-600 gap-1.5 pt-0.5">
+            <div className="flex items-center gap-1.5 truncate min-w-0 flex-wrap">
+              <span className="font-mono text-[9px] text-slate-400 shrink-0">
+                {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
               </span>
 
+              <div className="flex items-center gap-1 font-bold text-slate-700 bg-slate-50 px-1.5 py-0.2 rounded border border-slate-200 shrink-0 text-[10px]">
+                <Clock className="w-3 h-3 text-slate-500" />
+                <span>{formatTime12H(b.startTime)}</span>
+              </div>
+
+              {isSelf && (
+                <span className="font-bold text-emerald-900 bg-emerald-100/80 px-1.5 py-0.2 rounded border border-emerald-300 text-[9.5px] shrink-0">
+                  Self
+                </span>
+              )}
+
               {b.location && (
-                <div className="flex items-center gap-1 font-semibold text-slate-600 truncate">
-                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                <div className="hidden xs:flex items-center gap-0.5 text-slate-500 truncate max-w-[80px] sm:max-w-[130px] shrink-0 text-[10px]">
+                  <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                   <span className="truncate">{b.location}</span>
                 </div>
               )}
             </div>
 
-            <div className="text-right shrink-0">
-              <span className="font-black text-slate-900 text-xs sm:text-sm">
-                ₹{b.totalAmount.toLocaleString("en-IN")}
-              </span>
-              <span
-                className={`text-[10px] font-bold ml-1.5 ${
-                  b.paymentStatus === "PAID"
-                    ? "text-emerald-700"
-                    : "text-rose-700"
-                }`}
-              >
-                {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
-              </span>
-            </div>
-          </div>
-
-          {/* Row 3: Priest Assignment & 1-tap Actions */}
-          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between gap-1 text-[10.5px]">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-mono text-[9.5px] text-slate-400">
-                {b.bookingNumber?.startsWith("#") ? b.bookingNumber : `#${b.bookingNumber}`}
-              </span>
-              {isSelf ? (
-                <span className="font-bold text-emerald-900 bg-emerald-100 px-2 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
-                  <span>🪔</span> நானே (Self)
-                </span>
-              ) : (
-                <span className="font-semibold text-blue-900 bg-blue-50 px-2 py-0.2 rounded-full border border-blue-200 flex items-center gap-1">
-                  <span>👥</span> {b.assignedIyerName || "Team"}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               {/* 1-Tap Quick Complete Toggle */}
               <button
                 type="button"
@@ -416,7 +413,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
                   e.stopPropagation();
                   onToggleComplete(b);
                 }}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold flex items-center gap-1 transition active:scale-95 cursor-pointer ${
+                className={`px-2 py-0.5 rounded-lg text-[9.5px] font-extrabold flex items-center gap-1 transition active:scale-95 cursor-pointer ${
                   isCompleted
                     ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
                     : isOverdue
@@ -441,7 +438,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
                     className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer"
                     title="Call Devotee"
                   >
-                    <Phone className="w-3.5 h-3.5" />
+                    <Phone className="w-3 h-3" />
                   </button>
                   <button
                     type="button"
@@ -453,7 +450,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
                     className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200 cursor-pointer"
                     title="WhatsApp Devotee"
                   >
-                    <MessageCircle className="w-3.5 h-3.5" />
+                    <MessageCircle className="w-3 h-3" />
                   </button>
                 </>
               )}
@@ -592,7 +589,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
-      {/* Background action revealed on left swipe - Clickable prominent button */}
+      {/* Background action revealed on left swipe - Only visible when swiping left */}
       <button
         type="button"
         onClick={(e) => {
@@ -602,11 +599,16 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
           currentOffsetRef.current = 0;
           setOffsetX(0);
         }}
-        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-xl flex items-center justify-center px-3 transition-colors z-0 cursor-pointer text-right shadow-inner ${
+        className={`absolute right-0 top-0 bottom-0 w-[140px] rounded-r-xl flex items-center justify-center px-3 z-0 cursor-pointer text-right shadow-inner transition-opacity ${
+          offsetX < -2 ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        } ${
           isCompleted
             ? "bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white"
             : "bg-gradient-to-l from-emerald-600 via-emerald-500 to-emerald-600 text-white"
         }`}
+        style={{
+          transition: "opacity 0.15s ease",
+        }}
         title={isCompleted ? "Reopen Booking" : "Mark as Complete"}
       >
         <div className="flex items-center gap-2">
@@ -636,13 +638,15 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
           transform: `translateX(${offsetX}px)`,
           transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1)",
         }}
-        className="relative z-10 bg-white"
+        className="relative z-10 bg-white rounded-xl"
       >
         <Link
           href={`/app/bookings/${b.id}`}
           onClick={handleClick}
           draggable={false}
-          className={`block p-2.5 sm:px-3.5 sm:py-2.5 border rounded-xl transition hover:shadow-2xs ${
+          className={`relative block p-2.5 sm:px-3.5 sm:py-2.5 border rounded-xl transition hover:shadow-2xs overflow-hidden ${
+            !isSelf ? "pt-3.5 sm:pt-3" : ""
+          } ${
             isCompleted
               ? "bg-emerald-50/30 border-emerald-200"
               : isOverdue
@@ -650,6 +654,18 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
               : "bg-white border-slate-200 hover:border-slate-300"
           }`}
         >
+          {/* Top-Right Corner Stylish Tag for Vera Priest */}
+          {!isSelf && (
+            <div className="absolute top-0 right-0 z-20 flex items-center gap-1 bg-gradient-to-l from-amber-600 via-amber-500 to-amber-600 text-white text-[8.5px] sm:text-[9px] font-black px-2.5 py-0.5 rounded-bl-lg rounded-tr-xl shadow-2xs tracking-tight">
+              <span className="text-[9px]">🪔</span>
+              <span className="truncate max-w-[85px] sm:max-w-[130px]">
+                {b.assignedIyerName && b.assignedIyerName !== "Team" && b.assignedIyerName.toLowerCase() !== "self"
+                  ? b.assignedIyerName
+                  : "Other Priest"}
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-2">
             {/* Left: Booking info line */}
             <div className="min-w-0 flex-1">
@@ -671,13 +687,9 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
                     <span>{diffDays}d Overdue</span>
                   </span>
                 )}
-                {isSelf ? (
-                  <span className="text-[9px] font-bold text-emerald-900 bg-emerald-100/70 px-1.5 py-0.2 rounded-full border border-emerald-200 hidden sm:inline-flex shrink-0">
+                {isSelf && (
+                  <span className="text-[9px] font-bold text-emerald-900 bg-emerald-100/80 px-1.5 py-0.2 rounded border border-emerald-300 shrink-0">
                     Self
-                  </span>
-                ) : (
-                  <span className="text-[9px] font-semibold text-blue-800 bg-blue-50 px-1.5 py-0.2 rounded-full border border-blue-200 hidden sm:inline-flex shrink-0">
-                    {b.assignedIyerName || "Team"}
                   </span>
                 )}
               </div>
@@ -688,7 +700,7 @@ const LineByLineBookingRow: React.FC<LineByLineBookingRowProps> = ({
                 </span>
                 <span>•</span>
                 <span className="font-semibold text-slate-700 shrink-0">
-                  {b.date} • {b.startTime}
+                  {b.date} • {formatTime12H(b.startTime)}
                 </span>
                 {b.location && (
                   <>
@@ -985,20 +997,6 @@ export default function BookingsListPage() {
         ))}
       </div>
 
-      {/* Overdue Alert Banner if pending & overdue */}
-      {filter === "PENDING" && overdueCount > 0 && (
-        <div className="bg-gradient-to-r from-rose-50 via-amber-50 to-orange-50 border border-rose-300/80 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 text-xs shadow-2xs animate-in fade-in">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-base shrink-0">⚠️</span>
-            <p className="text-[11px] sm:text-xs text-rose-950 font-bold leading-snug">
-              <span className="text-rose-800 font-extrabold">{overdueCount} பூஜைகள் காலாவதியாகி உள்ளன (Overdue):</span> பூஜை முடிந்திருந்தால் &apos;Complete&apos; என குறிக்கவும்.
-            </p>
-          </div>
-          <span className="shrink-0 text-[10px] font-black bg-rose-700 text-white px-2 py-0.5 rounded-full shadow-2xs">
-            {overdueCount} கவனிக்க
-          </span>
-        </div>
-      )}
 
       {/* Swipe Tip Banner */}
       <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200/80 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 text-xs shadow-2xs">
@@ -1038,10 +1036,11 @@ export default function BookingsListPage() {
             const theme = MONTH_THEMES[groupIdx % MONTH_THEMES.length];
 
             return (
-              <div key={group.monthKey} className="relative pb-6">
-                {/* WhatsApp-Style Sticky Floating Month Header */}
+              <div key={group.monthKey} className="relative">
+                {/* Month Section Header - Sticky Edge-to-Edge Shelf (Zero Shake, 100% Solid) */}
                 <div
-                  className={`sticky top-[56px] sm:top-[58px] z-20 ${theme.headerBg} backdrop-blur-md rounded-2xl px-3.5 py-2.5 border ${theme.headerBorder} shadow-sm flex items-center justify-between gap-2 mb-3 select-none`}
+                  style={{ transform: "translateZ(0)" }}
+                  className={`sticky top-[56px] sm:top-[57px] z-20 ${theme.headerBg} -mx-3 sm:-mx-5 px-3.5 sm:px-5 py-2 border-b ${theme.headerBorder} shadow-2xs flex items-center justify-between gap-2 select-none transition-colors`}
                 >
                   <div className="min-w-0">
                     <h3 className={`font-black text-sm sm:text-base ${theme.headerText} tracking-tight leading-none`}>
@@ -1062,7 +1061,7 @@ export default function BookingsListPage() {
                 </div>
 
                 {/* Timeline Container with Circular Date Nodes & Connecting Rail Line */}
-                <div className="space-y-3 relative pl-1">
+                <div className="space-y-2 relative pl-1 pt-2.5 pb-6">
                   {group.bookings.map((b, bIdx) => {
                     const dateInfo = getTamilDate(b.date);
                     const dayNumber = dateInfo.dayOfMonth < 10 ? `0${dateInfo.dayOfMonth}` : `${dateInfo.dayOfMonth}`;
@@ -1076,17 +1075,17 @@ export default function BookingsListPage() {
                       b.assignedIyerName.toLowerCase() === "self";
 
                     return (
-                      <div key={b.id} className="relative flex items-start gap-2.5 sm:gap-3 group">
+                      <div key={b.id} className="relative flex items-start gap-2 sm:gap-2.5 group">
                         {/* Left Rail & Circular Date Node */}
-                        <div className="relative flex flex-col items-center shrink-0 pt-1">
+                        <div className="relative flex flex-col items-center shrink-0 pt-0.5">
                           {/* Clear Date Node with Weekday and Day Number */}
                           <div
-                            className={`w-10 rounded-2xl ${theme.nodeBg} ${theme.nodeText} flex flex-col items-center justify-center py-1 shadow-xs border-2 border-white ring-1 ring-black/10 z-10 sm:group-hover:scale-105 transition-transform duration-200 shrink-0`}
+                            className={`w-9 sm:w-10 rounded-xl ${theme.nodeBg} ${theme.nodeText} flex flex-col items-center justify-center py-0.5 sm:py-1 shadow-xs border-2 border-white ring-1 ring-black/10 z-10 sm:group-hover:scale-105 transition-transform duration-200 shrink-0`}
                           >
-                            <span className="text-[9px] font-black uppercase tracking-wider opacity-85 leading-none">
+                            <span className="text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider opacity-85 leading-none">
                               {dateInfo.dayOfWeekEn.slice(0, 3)}
                             </span>
-                            <span className="text-sm font-black leading-tight mt-0.5">
+                            <span className="text-xs sm:text-sm font-black leading-tight mt-0.5">
                               {dayNumber}
                             </span>
                           </div>
@@ -1094,7 +1093,7 @@ export default function BookingsListPage() {
                           {/* Connecting Rail Line below node (only if not last in this month) */}
                           {!isLastInMonth && (
                             <div
-                              className={`w-1 sm:w-1.25 ${theme.railColor} absolute top-12 bottom-[-16px] left-1/2 -translate-x-1/2 rounded-full`}
+                              className={`w-1 sm:w-1.25 ${theme.railColor} absolute top-10 bottom-[-10px] left-1/2 -translate-x-1/2 rounded-full`}
                             />
                           )}
                         </div>
@@ -1227,7 +1226,7 @@ export default function BookingsListPage() {
                             🪔 {b.poojaEnglishName || b.poojaTamilName}
                           </p>
                           <p className="text-[10.5px] text-slate-500 mt-0.5">
-                            📅 {b.date} • {b.startTime} • ₹{b.totalAmount.toLocaleString("en-IN")}
+                            📅 {b.date} • {formatTime12H(b.startTime)} • ₹{b.totalAmount.toLocaleString("en-IN")}
                           </p>
                         </div>
 

@@ -19,13 +19,73 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.3.0";
+export const APP_VERSION = "2.4.2";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "20 Sep 2026, 02:00 PM IST";
+export const BUILD_DATE = "22 Sep 2026, 11:15 PM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.4.2",
+    releaseDate: "22 Sep 2026",
+    releaseTime: "11:15 PM IST",
+    title: "One-Line Samagri Checklist, Stepper Before Units & 100-Step Decrement",
+    summary:
+      "All-new one-line checklist presentation for Pooja Samagri across New Booking, Step 2 Preview, View Booking, and Edit Items. Includes smart 100-step decrement/increment for weight/volume (grams/ml), stepper before Tamil unit badge, full checklist preview without scroll cutoff, and updated receipts.",
+    isCurrent: true,
+    tag: "Feature",
+    changes: [
+      {
+        category: "UI/UX",
+        description: "One-line checklist format (1, 2, 3..) for Samagri items with checkbox, Tamil primary name, English subtitle, and delete button.",
+      },
+      {
+        category: "Enhancement",
+        description: "Positioned quantity stepper [-] [qty] [+] BEFORE the Tamil unit badge (e.g. 100 கிராம்).",
+      },
+      {
+        category: "Fix",
+        description: "Implemented smart 100-step decrement and increment for grams and ml, and 1-step for pieces.",
+      },
+      {
+        category: "UI/UX",
+        description: "Full inline checklist preview in Step 2 and Preview Modal without scroll trapping.",
+      },
+    ],
+  },
+  {
+    version: "2.4.0",
+    releaseDate: "22 Sep 2026",
+    releaseTime: "10:00 PM IST",
+    title: "Smart Samagri Modal, Quick Dakshina Customizer, Slip Image Sharing & WhatsApp 2.0",
+    summary:
+      "Comprehensive priest workflow and booking receipt upgrade: 1-click ₹100 & long-press ₹500 Dakshina adjustments, compact Samagri checklist popup with live selections, sleek Pooja slip without PDF/UPI QR, direct Save & Share Image (PNG) capability, and clean branded WhatsApp receipts without priest names.",
+    isCurrent: false,
+    tag: "Feature",
+    changes: [
+      {
+        category: "UI/UX",
+        description: "Replaced 25+ inline checklist with a compact Samagri trigger card and full-featured interactive selection modal.",
+      },
+      {
+        category: "Enhancement",
+        description: "Reliable 1-tap ₹100 decrement/increment and long-press ₹500 adjustments for Dakshina.",
+      },
+      {
+        category: "Feature",
+        description: "Replaced PDF & Print in Pooja Slip with direct high-resolution PNG Save & Share Image buttons.",
+      },
+      {
+        category: "UI/UX",
+        description: "Removed UPI QR code and streamlined logo for a compact, neat receipt aesthetic.",
+      },
+      {
+        category: "Enhancement",
+        description: "Enhanced WhatsApp sharing with numbered checklists, no priest name disclosure, and elegant Velvi App branding footer.",
+      },
+    ],
+  },
   {
     version: "2.3.0",
     releaseDate: "20 Sep 2026",
@@ -33,7 +93,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Branding Split, 10MB Media, Smart Install Popup, State Restoration & Undo Recovery",
     summary:
       "Comprehensive priest empowerment update: Split Business and Service names with live sample card previews, 10MB image uploads, 10s wait / 6s auto-dismiss install popup, automatic page scroll position preservation, global Undo recovery for deleted items, and safe sample data removal protecting real records.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {

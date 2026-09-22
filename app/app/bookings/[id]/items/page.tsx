@@ -7,7 +7,7 @@ import { useTheme } from "@/components/providers/ThemeContext";
 import { db } from "@/lib/db/store";
 import { BookingItem } from "@/lib/types";
 import { generatePoojaFlyer } from "@/lib/flyer/canvas-generator";
-import { formatPoojaItemsWhatsAppMessage } from "@/lib/whatsapp/formatter";
+import { formatPoojaItemsWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import Link from "next/link";
 import {
@@ -231,49 +231,61 @@ export default function BookingItemsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <div className="flex items-center bg-velvi-cream/40 border border-velvi-gold/30 rounded-lg p-0.5 shadow-2xs">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Stepper BEFORE Unit */}
+                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 shadow-2xs">
                     <button
                       type="button"
                       onClick={() => {
-                        const step = item.unit === "g" || item.unit === "ml" ? 50 : 1;
+                        const u = (item.unit || "").toLowerCase();
+                        const isWeight = u.includes("g") || u.includes("கிராம்") || u.includes("ml") || u.includes("மில்லி");
+                        const step = isWeight ? 100 : 1;
+                        const currentQty = Number(item.quantity) || 1;
+                        const minQty = isWeight ? (currentQty <= 100 && currentQty > 50 ? 50 : 25) : 1;
+                        const nextQty = Math.max(minQty, currentQty - step);
                         const updated = items.map((it) =>
-                          it.id === item.id ? { ...it, quantity: Math.max(1, (Number(it.quantity) || 1) - step) } : it
+                          it.id === item.id ? { ...it, quantity: nextQty } : it
                         );
                         setItems(updated);
                         booking.items = updated;
                       }}
-                      className="w-5 h-5 rounded bg-white hover:bg-velvi-cream text-velvi-brown font-bold flex items-center justify-center text-[11px] active:scale-95"
+                      className="w-6 h-6 rounded bg-white hover:bg-slate-100 text-slate-800 font-black flex items-center justify-center text-xs active:scale-95 shadow-2xs cursor-pointer"
+                      title="குறைக்க"
                     >
                       -
                     </button>
-                    <span className="font-bold text-velvi-brownDark text-xs px-1.5 min-w-[24px] text-center">
+                    <span className="font-black text-slate-900 text-xs px-1.5 min-w-[28px] text-center">
                       {item.quantity}
                     </span>
                     <button
                       type="button"
                       onClick={() => {
-                        const step = item.unit === "g" || item.unit === "ml" ? 50 : 1;
+                        const u = (item.unit || "").toLowerCase();
+                        const isWeight = u.includes("g") || u.includes("கிராம்") || u.includes("ml") || u.includes("மில்லி");
+                        const step = isWeight ? 100 : 1;
+                        const nextQty = (Number(item.quantity) || 1) + step;
                         const updated = items.map((it) =>
-                          it.id === item.id ? { ...it, quantity: (Number(it.quantity) || 1) + step } : it
+                          it.id === item.id ? { ...it, quantity: nextQty } : it
                         );
                         setItems(updated);
                         booking.items = updated;
                       }}
-                      className="w-5 h-5 rounded bg-white hover:bg-velvi-cream text-velvi-brown font-bold flex items-center justify-center text-[11px] active:scale-95"
+                      className="w-6 h-6 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-black flex items-center justify-center text-xs active:scale-95 shadow-2xs cursor-pointer"
+                      title="அதிகரிக்க"
                     >
                       +
                     </button>
                   </div>
 
-                  <span className="text-[11px] font-bold text-velvi-brown bg-amber-50 px-2 py-1 rounded-lg border border-velvi-gold/30">
-                    {item.unit}
+                  {/* Tamil Unit Badge */}
+                  <span className="text-[11px] font-extrabold text-emerald-950 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    {formatUnitTamil(item.unit) || item.unit}
                   </span>
 
                   <button
                     onClick={() => handleDeleteItem(item.id)}
-                    className="p-1 text-red-500 hover:bg-red-50 rounded transition"
-                    title="Delete item"
+                    className="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                    title="பொருளை நீக்குக"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

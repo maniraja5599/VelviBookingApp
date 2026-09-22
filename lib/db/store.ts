@@ -74,7 +74,7 @@ export class VelviDatabaseStore {
     tagline: "Sacred Ceremonies, Seamless Management",
     taglineTamil: "நல்லதே நம் நோக்கம்",
     logoUrl: "/velvi-sacred-flame.png",
-    appVersion: "2.3.0",
+    appVersion: "2.4.0",
     developerName: "Maniraja",
     developerMobile: "+91-8300030123",
     developerInstagram: "@maniraja__",
@@ -1073,6 +1073,8 @@ export class VelviDatabaseStore {
     balanceAmount: number;
     paymentStatus: PaymentStatus;
     status: BookingStatus;
+    expenseAmount?: number;
+    expenseNotes?: string;
     items?: BookingItem[];
     notes?: string;
   }): Booking {
@@ -1100,6 +1102,8 @@ export class VelviDatabaseStore {
       balanceAmount: params.balanceAmount,
       paymentStatus: params.paymentStatus,
       status: params.status || "CONFIRMED",
+      expenseAmount: params.expenseAmount || 0,
+      expenseNotes: params.expenseNotes || "",
       items: params.items || [],
       notes: params.notes || "",
       createdBy: params.assignedIyerName || "Priest",

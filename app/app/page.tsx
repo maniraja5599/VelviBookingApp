@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
-import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/calendar/tamil";
+import { getTamilDate, formatTimeRangeTo12H, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
 import { db } from "@/lib/db/store";
 import { Booking, Customer } from "@/lib/types";
 import {
@@ -948,7 +948,7 @@ export default function HomeDashboardPage() {
                                     👤 {b.customerName}
                                   </div>
                                   <div className="text-[10.5px] text-slate-600 truncate mt-0.5">
-                                    🪔 {b.poojaEnglishName} • 📅 {b.date} ({b.startTime})
+                                    🪔 {b.poojaEnglishName} • 📅 {b.date} ({formatTime12H(b.startTime)})
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">
@@ -2224,7 +2224,7 @@ export default function HomeDashboardPage() {
                       <div>
                         <div className="font-bold text-slate-900">{b.poojaEnglishName}</div>
                         <div className="text-[10.5px] text-slate-500">
-                          {b.date} • {b.startTime}
+                          {b.date} • {formatTime12H(b.startTime)}
                         </div>
                       </div>
                       <div className="text-right font-black text-slate-900">

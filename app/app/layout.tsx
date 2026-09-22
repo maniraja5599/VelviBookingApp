@@ -21,6 +21,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading && !currentUser) {
       router.replace("/login");
+      const fallbackTimer = setTimeout(() => {
+        if (typeof window !== "undefined" && !localStorage.getItem("velvi_active_user_id")) {
+          window.location.href = "/login";
+        }
+      }, 1200);
+      return () => clearTimeout(fallbackTimer);
     }
   }, [isLoading, currentUser, router]);
 
@@ -70,8 +76,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname]);
 
-  // Aggressive route prefetching for instant, zero-delay navigation
+  // Route prefetching for instant navigation in production only (disabled in dev to prevent compile bottleneck)
   useEffect(() => {
+    if (process.env.NODE_ENV === "development") return;
     const mainRoutes = [
       "/app",
       "/app/calendar",
@@ -87,7 +94,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       try {
         router.prefetch(route);
       } catch (err) {
-        // Ignore prefetch errors in development
+        // Ignore prefetch errors
       }
     });
   }, [router]);

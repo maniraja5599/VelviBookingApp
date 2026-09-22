@@ -3,7 +3,7 @@
 import React from "react";
 
 interface VelviLogoProps {
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
   variant?: "full" | "icon" | "horizontal";
   showTagline?: boolean;
   lightText?: boolean;
@@ -18,6 +18,7 @@ export const VelviLogo: React.FC<VelviLogoProps> = ({
   className = "",
 }) => {
   const iconSizes = {
+    xs: "w-6 h-6",
     sm: "w-8 h-8",
     md: "w-10 h-10",
     lg: "w-14 h-14",
@@ -25,6 +26,7 @@ export const VelviLogo: React.FC<VelviLogoProps> = ({
   };
 
   const textSizes = {
+    xs: { title: "text-xs", tag: "text-[8px]" },
     sm: { title: "text-sm", tag: "text-[9px]" },
     md: { title: "text-base", tag: "text-[10px]" },
     lg: { title: "text-xl", tag: "text-xs" },
@@ -49,6 +51,7 @@ export const VelviLogo: React.FC<VelviLogoProps> = ({
 
   if (variant === "full") {
     const fullSizes = {
+      xs: "w-20 h-20",
       sm: "w-28 h-28",
       md: "w-40 h-40",
       lg: "w-52 h-52",

@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
-import { getTamilDate } from "@/lib/calendar/tamil";
+import { getTamilDate, formatTime12H } from "@/lib/calendar/tamil";
 import {
   formatBookingConfirmationWhatsAppMessage,
   formatPoojaReminderWhatsAppMessage,
+  formatUnitTamil,
 } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
@@ -22,6 +23,8 @@ import {
   Flame,
   User,
   CheckCircle2,
+  CheckSquare,
+  Check,
   Share2,
   Image as ImageIcon,
   Edit,
@@ -306,10 +309,10 @@ export default function BookingDetailPage() {
             type="button"
             onClick={() => setShowPoojaSlipModal(true)}
             className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-800 rounded-xl text-xs font-black flex items-center gap-1.5 border border-slate-200 shadow-2xs transition active:scale-95 cursor-pointer"
-            title="Pooja Slip & Samagri PDF"
+            title="Pooja Slip & Samagri"
           >
-            <span>🪔</span>
-            <span>Pooja Slip</span>
+            <span>📜</span>
+            <span>பூஜை ரசீது</span>
           </button>
 
           {booking.status !== "CANCELLED" && (
@@ -417,7 +420,7 @@ export default function BookingDetailPage() {
                 <Clock className="w-3.5 h-3.5" />
                 <span>Ceremony Time</span>
               </div>
-              <div className="font-black text-white mt-0.5 text-sm">{booking.startTime}</div>
+              <div className="font-black text-white mt-0.5 text-sm">{formatTime12H(booking.startTime)}</div>
               <div className="text-[10px] text-emerald-100">{dateInfo.tithiTa}</div>
             </div>
           </div>
@@ -614,33 +617,33 @@ export default function BookingDetailPage() {
           </div>
         </div>
 
-        {/* 5. POOJA ITEMS & SAMAGRI CHECKLIST */}
+        {/* 5. POOJA ITEMS & SAMAGRI CHECKLIST (Checklist Format 1, 2, 3.. One-Line) */}
         <div className="p-4 space-y-2.5 bg-slate-50/60">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-amber-600" />
-              <span>Pooja Samagri Items ({booking.items?.length || 0})</span>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+              <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
+              <span>சாமக்கிரி பொருட்கள் செக்-லிஸ்ட் ({booking.items?.length || 0})</span>
             </span>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <Link
                 href={`/app/bookings/${booking.id}/items`}
-                className="text-[11px] font-bold text-amber-900 hover:underline bg-white px-2 py-0.5 rounded-md border border-slate-200"
+                className="text-[11px] font-bold text-slate-700 hover:text-emerald-800 bg-white hover:bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 transition shadow-2xs"
               >
                 Edit Items →
               </Link>
               <button
                 type="button"
                 onClick={() => setShowPoojaSlipModal(true)}
-                className="text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
-                title="Pooja Slip & Samagri PDF"
+                className="text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                title="Pooja Slip & Samagri"
               >
-                <span>🖨️ PDF Slip</span>
+                <span>📜 பூஜை ரசீது</span>
               </button>
               <button
                 type="button"
                 onClick={() => setShowItemsShareModal(true)}
-                className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1 cursor-pointer transition active:scale-95"
+                className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
               >
                 <Share2 className="w-3 h-3 text-emerald-600" />
                 <span>Share List</span>
@@ -649,28 +652,35 @@ export default function BookingDetailPage() {
           </div>
 
           {booking.items && booking.items.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+            <div className="bg-white rounded-2xl border border-emerald-200/80 divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1 shadow-2xs">
               {booking.items.map((item, idx) => (
                 <div
                   key={item.id || idx}
-                  className="bg-white p-2 rounded-lg border border-slate-200 flex items-center justify-between text-xs"
+                  className="p-2.5 flex items-center justify-between gap-2 hover:bg-emerald-50/30 transition text-xs"
                 >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="w-4 h-4 rounded bg-amber-100 text-amber-900 font-bold text-[10px] flex items-center justify-center shrink-0">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-950 font-black text-[10.5px] flex items-center justify-center shrink-0 border border-emerald-200">
                       {idx + 1}
                     </span>
-                    <span className="font-semibold text-slate-800 truncate">
-                      {item.itemEnglishName}
-                    </span>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-black text-slate-900 truncate block">
+                        {item.itemTamilName || item.itemEnglishName}
+                      </span>
+                      {item.itemEnglishName && item.itemTamilName && item.itemEnglishName !== item.itemTamilName && (
+                        <span className="text-[10px] text-slate-400 font-medium truncate block">
+                          {item.itemEnglishName}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded shrink-0">
-                    {item.quantity} {item.unit}
+                  <span className="text-[11px] font-black text-emerald-950 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                    {item.quantity} {formatUnitTamil(item.unit) || item.unit}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-xs text-slate-400 italic">No specific samagri checklist registered.</p>
+            <p className="text-xs text-slate-400 italic">சாமக்கிரி பொருட்கள் எதுவும் பதிவு செய்யப்படவில்லை.</p>
           )}
         </div>
 

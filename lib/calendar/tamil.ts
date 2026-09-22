@@ -1137,3 +1137,46 @@ export function formatTimeRangeTo12H(rangeStr?: string, includeAmPm: boolean = f
     .join(" - ");
 }
 
+/**
+ * Format any time string (e.g. "18:00", "08:00", "08:00 AM", "6:00 PM") to 12-hour AM/PM format ("06:00 PM", "08:00 AM")
+ */
+export function formatTime12H(timeStr?: string): string {
+  if (!timeStr) return "";
+  const trimmed = timeStr.trim();
+  if (!trimmed) return "";
+
+  // Handle range like "18:00 - 20:00"
+  if (trimmed.includes(" - ")) {
+    return trimmed
+      .split(" - ")
+      .map((part) => formatTime12H(part.trim()))
+      .join(" - ");
+  }
+
+  // If already contains AM or PM (e.g. "06:00 PM", "8:00 am")
+  if (/\b(am|pm)\b/i.test(trimmed)) {
+    // Ensure two-digit hour if standard format
+    const matchAmpm = trimmed.match(/^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)$/);
+    if (matchAmpm) {
+      const h = String(parseInt(matchAmpm[1], 10)).padStart(2, "0");
+      return `${h}:${matchAmpm[2]} ${matchAmpm[3].toUpperCase()}`;
+    }
+    return trimmed;
+  }
+
+  // Match 24-hr time like "18:00" or "08:00" or "8:30"
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (match) {
+    let hours = parseInt(match[1], 10);
+    const minutes = match[2];
+    if (isNaN(hours)) return trimmed;
+    const period = hours >= 12 ? "PM" : "AM";
+    if (hours === 0) hours = 12;
+    else if (hours > 12) hours -= 12;
+    return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
+  }
+
+  return trimmed;
+}
+
+

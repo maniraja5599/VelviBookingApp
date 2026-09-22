@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { VelviDatabaseStore } from "../lib/db/store";
-import { getTamilDate } from "../lib/calendar/tamil";
+import { getTamilDate, formatTime12H } from "../lib/calendar/tamil";
 import {
   normalizeIndianMobile,
   maskEmail,
@@ -497,8 +497,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(negativeRes.success).toBe(false);
   });
 
-  // TEST CASE 21: WhatsApp Formatter uses English labels, preserves Tamil calendar date, and never exposes priest to user
-  it("Test 21: WhatsApp formatter outputs clean English labels and never exposes priest to user", async () => {
+  // TEST CASE 21: WhatsApp Formatter uses clean sacred formatting, numbered checklist, Velvi App branding, and never exposes priest to user
+  it("Test 21: WhatsApp formatter outputs clean numbered checklist, stylish Velvi branding, and never exposes priest to user", async () => {
     const {
       formatPoojaItemsWhatsAppMessage,
       formatBookingConfirmationWhatsAppMessage,
@@ -509,27 +509,29 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const business = store.businesses[0];
 
     const itemsMsg = formatPoojaItemsWhatsAppMessage(booking, business);
-    expect(itemsMsg).toContain("Time: *08:00 AM*");
-    expect(itemsMsg).toContain("Devotee:");
-    expect(itemsMsg).toContain("Required Items:");
-    expect(itemsMsg).toContain("Please keep all items ready");
+    expect(itemsMsg).toContain("08:00 AM");
+    expect(itemsMsg).toContain("பக்தர்");
+    expect(itemsMsg).toContain("பூஜை சாமக்கிரி பொருட்கள்:");
+    expect(itemsMsg).toContain("1. ");
+    expect(itemsMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
     // Preserves Tamil calendar date (e.g. ஆவணி 27)
     expect(itemsMsg).toMatch(/[\u0B80-\u0BFF]+\s+[0-9]{1,2}/);
     // Never exposes priest to customer
     expect(itemsMsg).not.toContain("Priest:");
+    expect(itemsMsg).not.toContain("குருக்கள்");
 
     const confMsg = formatBookingConfirmationWhatsAppMessage(booking, business);
-    expect(confMsg).toContain("Booking Confirmed");
-    expect(confMsg).not.toContain("முன்பதிவு உறுதி செய்யப்பட்டது");
-    expect(confMsg).toContain("Date:");
-    expect(confMsg).toContain("Time:");
-    expect(confMsg).toContain("Total Fee:");
+    expect(confMsg).toContain("தேதி:");
+    expect(confMsg).toContain("நேரம்:");
+    expect(confMsg).toContain("தட்சணை:");
+    expect(confMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
     // Never exposes priest to customer
     expect(confMsg).not.toContain("Assigned Priest");
     expect(confMsg).not.toContain("குருக்கள்");
 
     const reminderMsg = formatPoojaReminderWhatsAppMessage(booking, business);
     expect(reminderMsg).not.toContain("குருக்கள்:");
+    expect(reminderMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
   });
 
   // TEST CASE 22: Version Control Registry & PWA Manifest Integrity
@@ -538,13 +540,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("2.3.0");
+    expect(APP_VERSION).toBe("2.4.2");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("2.3.0");
+    expect(latest.version).toBe("2.4.2");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
     expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
@@ -1129,6 +1131,19 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     // Verify removed from trash
     const updatedTrash = store.getRecentlyDeleted();
     expect(updatedTrash.some((t) => t.id === customer.id)).toBe(false);
+  });
+
+  it("Test 41: formatTime12H always formats time strings to 12-hour AM/PM format", () => {
+    expect(formatTime12H("18:00")).toBe("06:00 PM");
+    expect(formatTime12H("08:00")).toBe("08:00 AM");
+    expect(formatTime12H("8:30")).toBe("08:30 AM");
+    expect(formatTime12H("00:15")).toBe("12:15 AM");
+    expect(formatTime12H("12:00")).toBe("12:00 PM");
+    expect(formatTime12H("12:45")).toBe("12:45 PM");
+    expect(formatTime12H("06:00 PM")).toBe("06:00 PM");
+    expect(formatTime12H("8:00 AM")).toBe("08:00 AM");
+    expect(formatTime12H("18:00 - 20:00")).toBe("06:00 PM - 08:00 PM");
+    expect(formatTime12H("")).toBe("");
   });
 });
 

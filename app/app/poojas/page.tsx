@@ -55,71 +55,8 @@ const SAMAGRI_UNITS: Array<{
   { unit: "dozen", labelTa: "டஜன்", labelEn: "dozen", code: "dozen" },
 ];
 
-export interface SamagriCatalogItem {
-  id: string;
-  category: string;
-  ta: string;
-  en: string;
-  qty: number;
-  unit: PoojaItemTemplate["unit"];
-}
-
-const SAMAGRI_CATALOG: SamagriCatalogItem[] = [
-  // Powders & Fragrances
-  { id: "sc-turmeric", category: "powders", ta: "மஞ்சள் தூள்", en: "Turmeric Powder", qty: 100, unit: "g" },
-  { id: "sc-kumkum", category: "powders", ta: "குங்குமம்", en: "Kumkum", qty: 50, unit: "g" },
-  { id: "sc-sandal", category: "powders", ta: "சந்தனம்", en: "Sandalwood Paste", qty: 50, unit: "g" },
-  { id: "sc-vibhuti", category: "powders", ta: "திருநீறு (விபூதி)", en: "Vibhuti (Sacred Ash)", qty: 100, unit: "g" },
-  { id: "sc-camphor", category: "powders", ta: "கற்பூரம்", en: "Camphor", qty: 2, unit: "packet" },
-  { id: "sc-agarbatti", category: "powders", ta: "அகர்பத்தி", en: "Agarbatti (Incense)", qty: 1, unit: "packet" },
-  { id: "sc-javadhu", category: "powders", ta: "ஜவ்வாது", en: "Javadhu", qty: 1, unit: "packet" },
-  { id: "sc-paneer", category: "powders", ta: "பன்னீர்", en: "Rose Water (Paneer)", qty: 100, unit: "ml" },
-  { id: "sc-elaichi", category: "powders", ta: "ஏலக்காய், லவங்கம், ஜாதிக்காய்", en: "Cardamom, Clove & Nutmeg", qty: 50, unit: "g" },
-  { id: "sc-honey", category: "powders", ta: "தேன்", en: "Pure Honey", qty: 100, unit: "ml" },
-
-  // Ghee & Oils
-  { id: "sc-ghee", category: "ghee_oils", ta: "தூய பசு நெய்", en: "Pure Cow Ghee", qty: 500, unit: "ml" },
-  { id: "sc-sesame", category: "ghee_oils", ta: "நல்லெண்ணெய்", en: "Sesame Oil", qty: 1, unit: "litre" },
-  { id: "sc-deepam-oil", category: "ghee_oils", ta: "பஞ்ச தீப எண்ணெய்", en: "Pancha Deepa Oil", qty: 500, unit: "ml" },
-  { id: "sc-milk", category: "ghee_oils", ta: "பசும்பால்", en: "Fresh Cow Milk", qty: 1, unit: "litre" },
-  { id: "sc-curd", category: "ghee_oils", ta: "தயிர்", en: "Fresh Curd", qty: 500, unit: "ml" },
-
-  // Basics & Fruits
-  { id: "sc-coconut", category: "essentials", ta: "தேங்காய்", en: "Coconuts", qty: 5, unit: "nos" },
-  { id: "sc-betel", category: "essentials", ta: "வெற்றிலை பாக்கு", en: "Betel Leaves & Nut", qty: 2, unit: "bundle" },
-  { id: "sc-banana", category: "essentials", ta: "வாழைப்பழம்", en: "Banana Fruits", qty: 1, unit: "dozen" },
-  { id: "sc-lemon", category: "essentials", ta: "எலுமிச்சம்பழம்", en: "Lemons", qty: 5, unit: "nos" },
-  { id: "sc-raw-rice", category: "essentials", ta: "பச்சரிசி", en: "Raw Rice", qty: 2, unit: "kg" },
-  { id: "sc-jaggery", category: "essentials", ta: "வெல்லம்", en: "Jaggery (Vellam)", qty: 500, unit: "g" },
-  { id: "sc-sugar", category: "essentials", ta: "சர்க்கரை", en: "Sugar", qty: 500, unit: "g" },
-  { id: "sc-pori", category: "essentials", ta: "நெல்பொரி (அவல்/பொரி)", en: "Puffed Rice / Pori", qty: 200, unit: "g" },
-  { id: "sc-tender-coconut", category: "essentials", ta: "இளநீர்", en: "Tender Coconut", qty: 3, unit: "nos" },
-  { id: "sc-nuts", category: "essentials", ta: "முந்திரி & உலர்ந்த திராட்சை", en: "Cashews & Raisins", qty: 100, unit: "g" },
-
-  // Homam Samagri
-  { id: "sc-samithu", category: "homam", ta: "சமித்து கட்டை", en: "Homam Wood (Samithu)", qty: 2, unit: "bundle" },
-  { id: "sc-navadhanyam", category: "homam", ta: "நவதானியம் (9 தானியங்கள்)", en: "Navadhanyam 9 Grains", qty: 1, unit: "set" },
-  { id: "sc-ven-kadugu", category: "homam", ta: "வெண் கடுகு", en: "White Mustard Seeds", qty: 100, unit: "g" },
-  { id: "sc-homa-dravyam", category: "homam", ta: "ஹோம திரவிய பொடி", en: "Homa Dravyam Mixture", qty: 200, unit: "g" },
-  { id: "sc-kopparai", category: "homam", ta: "கொப்பரை தேங்காய்", en: "Dry Coconut (Kopparai)", qty: 2, unit: "nos" },
-  { id: "sc-dharba", category: "homam", ta: "தர்பை புல் & பவித்ரம்", en: "Dharba Grass & Pavithram", qty: 2, unit: "bundle" },
-  { id: "sc-navagraha-samithu", category: "homam", ta: "நவகிரக சமித்து செட்", en: "Navagraha Samithu Sticks", qty: 1, unit: "set" },
-
-  // Flowers & Leaves
-  { id: "sc-garland", category: "flowers", ta: "பூக்கள் & மாலை", en: "Garlands & Loose Flowers", qty: 2, unit: "nos" },
-  { id: "sc-lotus", category: "flowers", ta: "தாமரை மலர்கள்", en: "Lotus Flowers", qty: 8, unit: "nos" },
-  { id: "sc-thulasi", category: "flowers", ta: "துளசி தளம்", en: "Thulasi Holy Basil", qty: 2, unit: "bundle" },
-  { id: "sc-arugampul", category: "flowers", ta: "அருகம்புல்", en: "Arugampul Grass", qty: 2, unit: "bundle" },
-  { id: "sc-vilvam", category: "flowers", ta: "வில்வ இலை", en: "Vilvam Leaves", qty: 2, unit: "bundle" },
-  { id: "sc-mavilai", category: "flowers", ta: "மாவிலை", en: "Mango Leaves", qty: 2, unit: "bundle" },
-
-  // Vastram & Sets
-  { id: "sc-vastram", category: "vastram", ta: "வேஷ்டி & துண்டு செட்", en: "Dhothi & Angavastram", qty: 1, unit: "set" },
-  { id: "sc-navagraha-vastram", category: "vastram", ta: "நவகிரக 9 வண்ண வஸ்திரம்", en: "Navagraha 9 Colors Vastram", qty: 1, unit: "set" },
-  { id: "sc-coins-108", category: "vastram", ta: "108 நாணயங்கள் செட்", en: "108 Pooja Coins Set", qty: 1, unit: "set" },
-  { id: "sc-kalasa-thread", category: "vastram", ta: "கலச நூல் & வஸ்திரம்", en: "Kalasa Sacred Thread", qty: 1, unit: "nos" },
-  { id: "sc-modak", category: "vastram", ta: "மோதகம் / கொழுக்கட்டை", en: "Modak / Kozhukattai", qty: 21, unit: "nos" },
-];
+import { SAMAGRI_CATALOG, SamagriCatalogItem } from "@/lib/samagri/catalog";
+export type { SamagriCatalogItem };
 
 const PRESET_POOJA_TEMPLATES = [
   {
@@ -477,6 +414,11 @@ function PoojasCatalogueContent() {
       stats: poojaBookingStats[top.id],
     };
   }, [poojas, poojaBookingStats]);
+
+  // Total Dakshina revenue across all bookings
+  const totalAllRevenue = useMemo(() => {
+    return bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  }, [bookings]);
 
   const applyPoojaPreset = (preset: (typeof PRESET_POOJA_TEMPLATES)[0]) => {
     setSelectedPresetName(preset.englishName);
@@ -1030,76 +972,36 @@ function PoojasCatalogueContent() {
             </div>
           </div>
 
-          {/* Top Analytics Summary Strip & #1 Most Booked Pooja Card */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
-            {/* Top Performed Pooja Card */}
-            {topPerformedPooja && (
-              <div className="sm:col-span-2 bg-gradient-to-br from-amber-500/10 via-amber-100/40 to-emerald-50/50 rounded-3xl p-3.5 sm:p-4 border-2 border-amber-300/80 shadow-xs relative overflow-hidden flex flex-col justify-between">
-                <div className="flex items-start justify-between gap-2.5">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-bold text-xl shadow-md border border-amber-300 shrink-0">
-                      👑
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full border border-amber-300">
-                          ⭐ Top Performed (அதிக முன்பதிவு)
-                        </span>
-                        {topPerformedPooja.count > 0 && (
-                          <span className="text-[10px] font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                            🔥 {topPerformedPooja.count} Bookings
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 truncate">
-                        {topPerformedPooja.pooja.tamilName || topPerformedPooja.pooja.englishName}
-                      </h3>
-                      <p className="text-xs text-slate-600 font-medium truncate">
-                        {topPerformedPooja.pooja.englishName} • Dakshina: ₹{topPerformedPooja.pooja.basePrice.toLocaleString("en-IN")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedPooja(topPerformedPooja.pooja)}
-                    className="text-xs font-bold text-amber-900 hover:text-amber-950 bg-white hover:bg-amber-50 px-3 py-1.5 rounded-xl border border-amber-300 shadow-2xs transition active:scale-95 shrink-0 cursor-pointer"
-                  >
-                    விவரம் →
-                  </button>
-                </div>
+          {/* Kutty Smart Summary Strip (Replaced bulky top performed box) */}
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <span>🪔</span>
+                <span>பூஜைகள்</span>
               </div>
-            )}
+              <span className="text-xs sm:text-sm font-black text-slate-900 leading-tight mt-0.5">
+                {poojas.length} சேவைகள்
+              </span>
+            </div>
 
-            {/* Quick Metrics Column */}
-            <div className="grid grid-cols-2 sm:grid-cols-1 gap-2">
-              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
-                    மொத்த பூஜைகள்
-                  </span>
-                  <span className="text-sm sm:text-base font-black text-slate-900">
-                    {poojas.length} சேவைகள்
-                  </span>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-sm shrink-0">
-                  🪔
-                </div>
+            <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <span>📊</span>
+                <span>முன்பதிவுகள்</span>
               </div>
+              <span className="text-xs sm:text-sm font-black text-emerald-800 leading-tight mt-0.5">
+                {bookings.length} பூஜைகள்
+              </span>
+            </div>
 
-              <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">
-                    மொத்த முன்பதிவுகள்
-                  </span>
-                  <span className="text-sm sm:text-base font-black text-emerald-800">
-                    {bookings.length} பூஜைகள்
-                  </span>
-                </div>
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center text-sm font-bold shrink-0">
-                  📊
-                </div>
+            <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
+              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <span>🪙</span>
+                <span>மொத்த தட்சணை</span>
               </div>
+              <span className="text-xs sm:text-sm font-black text-amber-900 leading-tight mt-0.5">
+                ₹{totalAllRevenue.toLocaleString("en-IN")}
+              </span>
             </div>
           </div>
 
@@ -1124,7 +1026,7 @@ function PoojasCatalogueContent() {
           </div>
 
           {/* Poojas List */}
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {filteredPoojas.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-2xs">
                 <Flame className="w-8 h-8 text-amber-500 mx-auto mb-2" />
@@ -1134,79 +1036,107 @@ function PoojasCatalogueContent() {
                 </p>
               </div>
             ) : (
-              filteredPoojas.map((p) => (
-                <div
-                  key={p.id}
-                  onClick={() => setSelectedPooja(p)}
-                  className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition cursor-pointer flex items-center justify-between group"
-                >
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 border border-amber-200 shadow-2xs group-hover:scale-105 transition-transform">
-                      <Flame className="w-5 h-5 text-amber-600" />
-                    </div>
+              filteredPoojas.map((p) => {
+                const stats = poojaBookingStats[p.id] || { count: 0, completedCount: 0, totalDakshina: 0 };
+                const isTop = topPerformedPooja?.pooja.id === p.id && stats.count > 0;
+                const itemCount = p.items?.length || 0;
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                          {p.englishName}
-                        </h4>
-                        {p.tamilName && p.tamilName !== p.englishName && (
-                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded border border-amber-200">
-                            {p.tamilName}
-                          </span>
-                        )}
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setSelectedPooja(p)}
+                    className="bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition cursor-pointer flex items-center justify-between gap-2.5 group"
+                  >
+                    {/* Left: Flame Avatar + Names + Kutty Smart Metrics */}
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/80 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/70 shadow-2xs group-hover:scale-105 transition-transform">
+                        <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-600" />
                       </div>
 
-                      <div className="flex items-center gap-2 text-[11px] text-slate-500 font-medium mt-1 flex-wrap">
-                        <span className="text-slate-600 font-semibold">{p.items?.length || 0} items checklist</span>
-                        <span>•</span>
-                        {/* Booking Count Badge */}
-                        {poojaBookingStats[p.id]?.count > 0 ? (
-                          <span className="text-[10.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
-                            🔥 <span>{poojaBookingStats[p.id].count} Bookings</span>
+                      <div className="min-w-0 flex-1">
+                        {/* Title Row: English Name + Tamil Name + Top Performed Pill */}
+                        <div className="flex items-center gap-1.5 flex-wrap leading-tight">
+                          <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                            {p.englishName}
+                          </h4>
+                          {p.tamilName && p.tamilName !== p.englishName && (
+                            <span className="text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/80 truncate">
+                              {p.tamilName}
+                            </span>
+                          )}
+                          {isTop && (
+                            <span className="text-[9px] font-black text-amber-950 bg-amber-200 px-1.5 py-0.2 rounded-full border border-amber-300 shrink-0 inline-flex items-center gap-0.5 shadow-2xs">
+                              👑 Top
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Metrics Row: Evlo Booking + Total Amount + Items */}
+                        <div className="flex items-center gap-1.5 text-[10.5px] font-bold mt-1 flex-wrap">
+                          {/* Booking Count Pill */}
+                          {stats.count > 0 ? (
+                            <span className="text-[10px] font-black text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0 inline-flex items-center gap-1">
+                              🔥 {stats.count} {stats.count === 1 ? "Booking" : "Bookings"}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                              0 Bookings
+                            </span>
+                          )}
+
+                          {/* Total Amount Generated (மொத்த தொகை) */}
+                          {stats.count > 0 ? (
+                            <span className="text-[10px] font-black text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80 shrink-0 inline-flex items-center gap-0.5">
+                              மொத்தம்: ₹{stats.totalDakshina.toLocaleString("en-IN")}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-slate-400">
+                              மொத்தம் ₹0
+                            </span>
+                          )}
+
+                          <span className="text-slate-300">•</span>
+
+                          {/* Checklist Items Count */}
+                          <span className="text-slate-500 text-[10px] font-medium truncate">
+                            📦 {itemCount} பொருட்கள்
                           </span>
-                        ) : (
-                          <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">
-                            0 Bookings
-                          </span>
-                        )}
-                        {topPerformedPooja?.pooja.id === p.id && topPerformedPooja.count > 0 && (
-                          <span className="text-[10px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 flex items-center gap-1 shadow-2xs">
-                            👑 Top Performed
-                          </span>
-                        )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Base Dakshina Rate + Actions */}
+                    <div className="text-right flex items-center gap-1.5 shrink-0">
+                      <div>
+                        <div className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
+                          ₹{p.basePrice.toLocaleString("en-IN")}
+                        </div>
+                        <div className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
+                          கட்டணம்
+                        </div>
+                      </div>
+
+                      {/* Quick Action buttons */}
+                      <div className="flex items-center gap-0.5 ml-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => openEditModal(p)}
+                          className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+                          title="Edit Pooja"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingPooja(p)}
+                          className="p-1 text-rose-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                          title="Delete Pooja"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div className="text-right flex items-center gap-2 shrink-0">
-                    <div>
-                      <div className="text-base font-black text-slate-900">
-                        ₹{p.basePrice.toLocaleString("en-IN")}
-                      </div>
-                      <div className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider">Dakshina</div>
-                    </div>
-
-                    {/* Quick Action buttons */}
-                    <div className="flex items-center gap-1 ml-1" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => openEditModal(p)}
-                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition cursor-pointer"
-                        title="Edit Pooja"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingPooja(p)}
-                        className="p-1.5 text-rose-400 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition cursor-pointer"
-                        title="Delete Pooja"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

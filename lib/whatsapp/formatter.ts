@@ -27,31 +27,35 @@ export function formatPoojaItemsWhatsAppMessage(
 ): string {
   const tamilInfo = getTamilDate(booking.date);
 
-  const itemsList = (booking.items || [])
-    .map((item: any, idx) => {
-      const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "Item";
-      const unit = formatUnitTamil(item.unit);
-      const qty = item.quantity ? ` - ${item.quantity}` : "";
-      return `${idx + 1}. ${name}${qty} ${unit}`.trim();
-    })
-    .join("\n");
+  const itemsList = (booking.items && booking.items.length > 0)
+    ? booking.items
+        .filter((it: any) => it.isChecked !== false)
+        .map((item: any, idx) => {
+          const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "பொருள்";
+          const unit = formatUnitTamil(item.unit);
+          const qty = item.quantity ? ` — ${item.quantity} ${unit}` : "";
+          return `${idx + 1}. ${name}${qty}`.trim();
+        })
+        .join("\n")
+    : "";
 
-  return `🙏 *${booking.poojaEnglishName || booking.poojaTamilName || "Pooja Ceremony"}*
+  return `🙏 *லோகா: ஸமஸ்தா: ஸுகினோ பவந்து*
+
+🪔 *${booking.poojaEnglishName || booking.poojaTamilName || "பூஜை வழிபாடு"}*
 ${booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName ? `(${booking.poojaTamilName})\n` : ""}
-📅 *${tamilInfo.formattedDualDate}*
-🕐 Time: *${booking.startTime}*
-👤 Devotee: *${booking.customerName || "Customer"}*
-📍 Location: *${booking.location}*
+📅 தேதி: *${tamilInfo.formattedDualDate}* (${tamilInfo.dayOfWeekTa})
+⏰ நேரம்: *${booking.startTime}*
+👤 பக்தர்: *${booking.customerName || "பக்தர்"}*
+📍 இடம்: *${booking.location || "இல்லம்"}*
 
-📋 *Required Items:*
-${itemsList}
-
-🙏 Please keep all items ready before the ceremony starts.
+${itemsList ? `📋 *பூஜை சாமக்கிரி பொருட்கள்:*\n${itemsList}\n\n` : ""}🙏 தயவுசெய்து பூஜை தொடங்குவதற்கு முன் அனைத்து பொருட்களையும் தயார் நிலையில் வைத்திருக்கவும்.
 
 —
-*${business.name}*
-Contact: ${business.phone}
-${business.showWatermark ? "\n_Powered by Velvi App_" : ""}`;
+*${business.name || "வேள்வி வேத பவனம்"}*
+📞 தொடர்புக்கு: ${business.phone || business.whatsapp || ""}
+
+✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+_வேத முறை முன்பதிவு மேலாண்மை_`;
 }
 
 /**
@@ -63,27 +67,41 @@ export function formatBookingConfirmationWhatsAppMessage(
 ): string {
   const tamilInfo = getTamilDate(booking.date);
 
-  return `🙏 *Booking Confirmed*
+  const itemsList = (booking.items && booking.items.length > 0)
+    ? `\n📋 *பூஜை சாமக்கிரி பொருட்கள்:*\n` +
+      booking.items
+        .filter((it: any) => it.isChecked !== false)
+        .map((item: any, idx) => {
+          const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "பொருள்";
+          const unit = formatUnitTamil(item.unit);
+          const qty = item.quantity ? ` — ${item.quantity} ${unit}` : "";
+          return `${idx + 1}. ${name}${qty}`.trim();
+        })
+        .join("\n") + "\n"
+    : "";
 
-🪔 *${booking.poojaEnglishName || booking.poojaTamilName || "Pooja Ceremony"}*
+  const paymentDetails = booking.advanceAmount > 0
+    ? `💰 தட்சணை: ₹${booking.totalAmount.toLocaleString("en-IN")} (முன்பணம்: ₹${booking.advanceAmount.toLocaleString("en-IN")}, மீதம்: ₹${booking.balanceAmount.toLocaleString("en-IN")})`
+    : `💰 தட்சணை: ₹${booking.totalAmount.toLocaleString("en-IN")}`;
+
+  return `🙏 *சுப முகூர்த்த பூஜை முன்பதிவு உறுதியானது* 🙏
+
+🪔 *${booking.poojaEnglishName || booking.poojaTamilName || "பூஜை வழிபாடு"}*
 ${booking.poojaTamilName && booking.poojaEnglishName && booking.poojaTamilName !== booking.poojaEnglishName ? `(${booking.poojaTamilName})\n` : ""}
-
-📅 Date: *${tamilInfo.formattedDualDate}* (${tamilInfo.dayOfWeekTa})
-🕐 Time: *${booking.startTime}*
-👤 Customer: *${booking.customerName || "Customer"}*
-📍 Location: *${booking.location}*
-💰 Total Fee: ₹${booking.totalAmount.toLocaleString("en-IN")} ${
-    booking.advanceAmount > 0
-      ? `(Advance: ₹${booking.advanceAmount.toLocaleString("en-IN")}, Balance: ₹${booking.balanceAmount.toLocaleString("en-IN")})`
-      : ""
-  }
-
-Thank you!
+📅 தேதி: *${tamilInfo.formattedDualDate}* (${tamilInfo.dayOfWeekTa})
+⏰ சுப நேரம்: *${booking.startTime}*
+👤 பக்தர்: *${booking.customerName || "பக்தர்"}*
+📍 இடம்: *${booking.location || "இல்லம்"}*
+${paymentDetails}
+${itemsList}
+இறைவனின் பூரண அருள் கிடைக்க மனமார்ந்த வாழ்த்துகள்! 🙏
 
 —
-*${business.name}*
-Contact: ${business.phone}
-${business.showWatermark ? "\n_Powered by Velvi App_" : ""}`;
+*${business.name || "வேள்வி வேத பவனம்"}*
+📞 தொடர்புக்கு: ${business.phone || business.whatsapp || ""}
+
+✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+_வேத முறை முன்பதிவு மேலாண்மை_`;
 }
 
 /**
@@ -96,19 +114,19 @@ export function formatPoojaReminderWhatsAppMessage(
   const tamilInfo = getTamilDate(booking.date);
   const contactPhone = business.phone || business.whatsapp || "";
 
-  // Top 6 essential samagri items preview
-  const topItems = (booking.items || []).slice(0, 6);
+  // All checked samagri items in numbered format
+  const activeItems = (booking.items || []).filter((it: any) => it.isChecked !== false);
   const itemsText =
-    topItems.length > 0
-      ? `\n📋 *முக்கிய சாமக்கிரி பொருட்கள்:*\n` +
-        topItems
-          .map((item: any) => {
+    activeItems.length > 0
+      ? `\n📋 *பூஜை சாமக்கிரி பொருட்கள்:*\n` +
+        activeItems
+          .map((item: any, idx: number) => {
             const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "பொருள்";
-            const qty = item.quantity ? ` (${item.quantity})` : "";
-            return `  • ${name}${qty}`;
+            const unit = formatUnitTamil(item.unit);
+            const qty = item.quantity ? ` — ${item.quantity} ${unit}` : "";
+            return `${idx + 1}. ${name}${qty}`.trim();
           })
           .join("\n") +
-        (booking.items.length > 6 ? `\n  _(மற்றும் பிற ${booking.items.length - 6} பொருட்கள்)_` : "") +
         "\n"
       : "";
 
@@ -125,7 +143,7 @@ export function formatPoojaReminderWhatsAppMessage(
 
 🪔 *பூஜை:* ${booking.poojaTamilName || booking.poojaEnglishName}
 📅 *தேதி:* ${tamilInfo.tamilMonth} ${tamilInfo.tamilDay} (${tamilInfo.dayOfWeekTa}) • ${booking.date}
-🕐 *நேரம்:* ${booking.startTime}${booking.endTime ? ` – ${booking.endTime}` : ""}
+⏰ *நேரம்:* ${booking.startTime}${booking.endTime ? ` – ${booking.endTime}` : ""}
 📍 *இடம்:* ${booking.location || "உங்கள் இல்லம்"}
 ${itemsText}${balanceText}
 தயவுசெய்து பூஜை தொடங்குவதற்கு முன் ஏற்பாடுகளை தயார் நிலையில் வைத்திருக்கவும்.
@@ -133,5 +151,6 @@ ${contactPhone ? `\n📞 *தொடர்புக்கு:* ${contactPhone}` :
 
 —
 *${business.name || "வேள்வி வேத பவனம்"}*
-_நல்வாழ்த்துகளுடன் • Velvi App_`;
+✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+_வேத முறை முன்பதிவு மேலாண்மை_`;
 }

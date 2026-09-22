@@ -1,6 +1,6 @@
 {
   "name": "velvi",
-  "version": "2.3.0",
+  "version": "2.4.2",
   "private": true,
   "description": "Velvi - Pooja, Homam & Seva Management Platform for Iyers and Purohits",
   "scripts": {
@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "^2.116.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.453.0",
     "next": "^14.2.35",
     "pg": "^8.23.0",
