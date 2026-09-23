@@ -27,6 +27,7 @@ import {
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { db } from "@/lib/db/store";
+import { getTamilDate } from "@/lib/calendar/tamil";
 
 export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl?: string }> = React.memo(({
   title,
@@ -38,8 +39,25 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced">("idle");
+  const [headerTickerIndex, setHeaderTickerIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Smooth alternating ticker between Subtitle & Today's Date
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeaderTickerIndex((prev) => (prev === 0 ? 1 : 0));
+    }, 3800);
+    return () => clearInterval(timer);
+  }, []);
+
+  const todayTamilInfo = React.useMemo(() => {
+    const today = new Date();
+    const dStr = today.toISOString().split("T")[0];
+    const tamilInfo = getTamilDate(dStr);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${today.getDate()} ${months[today.getMonth()]} • ${tamilInfo.tamilMonth} ${tamilInfo.tamilDay}`;
+  }, []);
 
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
@@ -204,7 +222,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-slate-100 px-2.5 sm:px-4 py-2 transition-all">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_4px_16px_rgba(0,0,0,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
         <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
@@ -252,9 +270,30 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         App
                       </span>
                     </div>
-                    <p className="text-[10px] font-semibold text-emerald-900 truncate max-w-[130px] sm:max-w-[170px] leading-tight mt-0.5">
-                      {subtitle || currentBusiness?.name || "Pooja • Homam • Seva"}
-                    </p>
+                    {/* Smooth Vertical Scroll-up Animated Ticker (Cycles between Subtitle & Today's Date) */}
+                    <div className="h-[16px] overflow-hidden relative mt-0.5 max-w-[130px] sm:max-w-[170px]">
+                      <div
+                        className="transition-transform duration-500 ease-out"
+                        style={{
+                          transform: headerTickerIndex === 1 ? "translateY(-16px)" : "translateY(0px)",
+                        }}
+                      >
+                        {/* Slot 0: Service / Business Subtitle */}
+                        <div className="h-[16px] flex items-center min-w-0">
+                          <p className="text-[10px] font-semibold text-emerald-900 truncate leading-none">
+                            {subtitle || currentBusiness?.name || "Pooja • Homam • Seva"}
+                          </p>
+                        </div>
+
+                        {/* Slot 1: Today's Date + Tamil Solar Date */}
+                        <div className="h-[16px] flex items-center gap-1 min-w-0 text-amber-900 leading-none">
+                          <span className="text-[9.5px]">📅</span>
+                          <span className="text-[9.5px] font-black tracking-tight truncate">
+                            {todayTamilInfo}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -294,7 +333,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border max-w-[115px] sm:max-w-[145px] shrink-0 ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl transition active:scale-95 border max-w-[155px] sm:max-w-[200px] shrink-0 ${
                   isProfileMenuOpen
                     ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                     : syncState === "syncing"
@@ -334,7 +373,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 >
                   {/* Slot 0: Priest Display Name with Live Online Pulse */}
                   <div className="h-[18px] flex items-center gap-1 min-w-0">
-                    <span className="text-[10.5px] sm:text-[11px] font-bold truncate text-slate-900 text-left">
+                    <span className="text-[11px] sm:text-[11.5px] font-extrabold truncate text-slate-900 text-left">
                       {displayName}
                     </span>
                     <span
