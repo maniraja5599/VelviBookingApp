@@ -65,7 +65,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Maha Ganapathi Homam",
     tamilName: "மகா கணபதி ஹோமம்",
     description: "Invokes Lord Maha Ganapathi to overcome obstacles, grant divine blessings, and ensure auspicious beginnings for all endeavors.",
-    durationMinutes: 150,
     basePrice: 5000,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள்தூள்", quantity: 250, unit: "g" as const, category: "pooja_items" },
@@ -135,7 +134,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Vastu Shanthi Homam",
     tamilName: "வாஸ்து சாந்தி ஹோமம்",
     description: "Auspicious Vedic ceremony invoking Vastu Purusha, Dikpalakas, and Bhoomi Devi to harmonize energies and eliminate architectural defects in land or building.",
-    durationMinutes: 180,
     basePrice: 8500,
     items: [
       { itemEnglishName: "Large Vastu Padam Chart", itemTamilName: "வாஸ்துபதம் பெரிது", quantity: 1, unit: "nos" as const, category: "grihapravesam_items" },
@@ -210,7 +208,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Ayushya / Ayur Homam",
     tamilName: "ஆயுஷ்ய ஹோமம் (ஆயுர் ஹோமம்)",
     description: "Sacred ritual invoking Ayur Devata, Markandeya, Chiranjeevis, and Agni to bestow longevity, vital health, disease protection, and wellbeing.",
-    durationMinutes: 180,
     basePrice: 7000,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள்தூள்", quantity: 200, unit: "g" as const, category: "pooja_items" },
@@ -273,7 +270,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Swayamvara Parvathi Homam",
     tamilName: "சுயம்வர பார்வதி ஹோமம்",
     description: "Powerful Vedic homam invoking Goddess Parvathi to dissolve delays/doshas in marriage, find an ideal life partner, and ensure conjugal harmony.",
-    durationMinutes: 180,
     basePrice: 7500,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள்தூள்", quantity: 200, unit: "g" as const, category: "pooja_items" },
@@ -340,7 +336,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Maha Kumbabishekam & Grihapravesam",
     tamilName: "மகா கும்பாபிஷேகம் மற்றும் கிரகப்பிரவேசம்",
     description: "Complete master ceremony for sacred temple consecration & new house warming, encompassing Gomatha pooja, Vastu Shanthi, Ganapathi & Navagraha Homams.",
-    durationMinutes: 360,
     basePrice: 25000,
     items: [
       { itemEnglishName: "Turmeric Sticks", itemTamilName: "மஞ்சள் கொம்பு", quantity: 500, unit: "g" as const, category: "pooja_items" },
@@ -407,7 +402,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "108 Sangu Pooja (Shankha Pooja)",
     tamilName: "108 சங்கு பூஜை",
     description: "Grand ritual of consecrating 108 sacred conches filled with theertham and herbs, invoking Shiva/Vishnu energies for profound purification, peace, and health.",
-    durationMinutes: 180,
     basePrice: 9000,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள்தூள்", quantity: 250, unit: "g" as const, category: "pooja_items" },
@@ -465,7 +459,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Sudhi Punyahavachanam",
     tamilName: "சுத்தி புண்யாகவாசனம்",
     description: "Sacred Vedic purification ritual performed for sanctifying home, family, or premises after child birth, milestone events, or removing ritual impurities.",
-    durationMinutes: 90,
     basePrice: 4000,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள்தூள்", quantity: 200, unit: "g" as const, category: "pooja_items" },
@@ -529,7 +522,6 @@ const PRESET_POOJA_TEMPLATES = [
     englishName: "Sri Maha Lakshmi Pooja",
     tamilName: "ஸ்ரீ மகா லட்சுமி பூஜை",
     description: "Divine worship invoking Goddess Lakshmi for financial abundance, business success, family happiness, debt alleviation, and auspiciousness.",
-    durationMinutes: 90,
     basePrice: 4500,
     items: [
       { itemEnglishName: "Turmeric Powder", itemTamilName: "மஞ்சள் தூள்", quantity: 100, unit: "g" as const, category: "pooja_items" },
@@ -613,17 +605,27 @@ function PoojasCatalogueContent() {
   const [formEnglishName, setFormEnglishName] = useState("");
   const [formTamilName, setFormTamilName] = useState("");
   const [formDescription, setFormDescription] = useState("");
-  const [formDuration, setFormDuration] = useState<number>(60);
   const [formBasePrice, setFormBasePrice] = useState<number | string>("");
   const [formItems, setFormItems] = useState<PoojaItemTemplate[]>([]);
   const [formError, setFormError] = useState("");
+
+  // Step 2 checklist dual-view tab: "selected" | "browse"
+  const [modalItemTab, setModalItemTab] = useState<"selected" | "browse">("selected");
+
+  // Inline edit state for individual checklist item
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editItemTamil, setEditItemTamil] = useState<string>("");
+  const [editItemEnglish, setEditItemEnglish] = useState<string>("");
+  const [editItemCategory, setEditItemCategory] = useState<string>("pooja_items");
+  const [editItemQty, setEditItemQty] = useState<number>(1);
+  const [editItemUnit, setEditItemUnit] = useState<PoojaItemTemplate["unit"]>("nos");
 
   // New item inline input states
   const [newItemEnglish, setNewItemEnglish] = useState("");
   const [newItemTamil, setNewItemTamil] = useState("");
   const [newItemQty, setNewItemQty] = useState<number>(1);
   const [newItemUnit, setNewItemUnit] = useState<PoojaItemTemplate["unit"]>("nos");
-  const [newItemCategory, setNewItemCategory] = useState<string>("essentials");
+  const [newItemCategory, setNewItemCategory] = useState<string>("pooja_items");
 
   // Dynamic Categories and on-demand drawer states
   const [categories, setCategories] = useState<SamagriCategory[]>([]);
@@ -778,7 +780,6 @@ function PoojasCatalogueContent() {
     setFormEnglishName(preset.englishName);
     setFormTamilName(preset.tamilName);
     setFormDescription(preset.description);
-    setFormDuration(preset.durationMinutes || 60);
     setFormBasePrice(preset.basePrice);
     setFormItems(
       preset.items.map((item, idx) => ({
@@ -792,6 +793,8 @@ function PoojasCatalogueContent() {
         sortOrder: idx + 1,
       }))
     );
+    setModalItemTab("selected");
+    setEditingItemId(null);
     setFormError("");
   };
 
@@ -803,7 +806,6 @@ function PoojasCatalogueContent() {
     setFormEnglishName("");
     setFormTamilName("");
     setFormDescription("");
-    setFormDuration(60);
     setFormBasePrice("");
     setFormItems([]);
     setFormError("");
@@ -811,7 +813,9 @@ function PoojasCatalogueContent() {
     setNewItemTamil("");
     setNewItemQty(1);
     setNewItemUnit("nos");
-    setNewItemCategory(categories[0]?.id || "essentials");
+    setNewItemCategory("pooja_items");
+    setModalItemTab("browse");
+    setEditingItemId(null);
     setShowChecklistDrawer(false);
     setShowCustomItemForm(false);
     setSamagriSearchQuery("");
@@ -833,15 +837,17 @@ function PoojasCatalogueContent() {
     setFormEnglishName(p.englishName);
     setFormTamilName(p.tamilName || "");
     setFormDescription(p.description || "");
-    setFormDuration(p.durationMinutes || 120);
     setFormBasePrice(p.basePrice || 0);
-    setFormItems(p.items ? [...p.items] : []);
+    const existing = p.items ? [...p.items] : [];
+    setFormItems(existing);
+    setModalItemTab(existing.length > 0 ? "selected" : "browse");
+    setEditingItemId(null);
     setFormError("");
     setNewItemEnglish("");
     setNewItemTamil("");
     setNewItemQty(1);
     setNewItemUnit("nos");
-    setNewItemCategory(categories[0]?.id || "essentials");
+    setNewItemCategory("pooja_items");
     setShowChecklistDrawer(false);
     setShowCustomItemForm(false);
     setSamagriSearchQuery("");
@@ -888,10 +894,109 @@ function PoojasCatalogueContent() {
     setNewItemTamil("");
     setNewItemQty(1);
     setNewItemUnit("nos");
+    setShowCustomItemForm(false);
+    setModalItemTab("selected");
   };
 
   const handleRemoveItemFromForm = (itemId: string) => {
     setFormItems(formItems.filter((it) => it.id !== itemId));
+    if (editingItemId === itemId) {
+      setEditingItemId(null);
+    }
+  };
+
+  // Toggle item from catalog: 1-tap add or remove
+  const handleToggleCatalogItem = (sug: typeof SAMAGRI_CATALOG[0]) => {
+    const existingIndex = formItems.findIndex(
+      (it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en
+    );
+    if (existingIndex >= 0) {
+      // Remove
+      setFormItems(formItems.filter((_, idx) => idx !== existingIndex));
+    } else {
+      // Add
+      const item: PoojaItemTemplate = {
+        id: `item-${Date.now()}-${formItems.length + 1}`,
+        poojaId: editingPoojaId || "",
+        itemEnglishName: sug.en,
+        itemTamilName: sug.ta,
+        quantity: sug.qty,
+        unit: sug.unit,
+        category: sug.category,
+        sortOrder: formItems.length + 1,
+      };
+      setFormItems([...formItems, item]);
+    }
+  };
+
+  // Category bulk add
+  const handleBulkAddCategory = (catId: string) => {
+    const itemsInCat = SAMAGRI_CATALOG.filter((sug) =>
+      catId === "all" ? true : sug.category === catId || normalizeCategoryId(sug.category) === catId
+    );
+    const newItems: PoojaItemTemplate[] = [];
+    itemsInCat.forEach((sug) => {
+      const already = formItems.some((it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en);
+      if (!already) {
+        newItems.push({
+          id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          poojaId: editingPoojaId || "",
+          itemEnglishName: sug.en,
+          itemTamilName: sug.ta,
+          quantity: sug.qty,
+          unit: sug.unit,
+          category: sug.category,
+          sortOrder: formItems.length + newItems.length + 1,
+        });
+      }
+    });
+    if (newItems.length > 0) {
+      setFormItems([...formItems, ...newItems]);
+    }
+  };
+
+  // Category bulk remove
+  const handleBulkRemoveCategory = (catId: string) => {
+    const itemsInCat = SAMAGRI_CATALOG.filter((sug) =>
+      catId === "all" ? true : sug.category === catId || normalizeCategoryId(sug.category) === catId
+    );
+    const namesToRemove = new Set(itemsInCat.map((s) => s.ta));
+    setFormItems(formItems.filter((it) => !namesToRemove.has(it.itemTamilName)));
+  };
+
+  // Start editing individual item inline
+  const startEditItem = (item: PoojaItemTemplate) => {
+    setEditingItemId(item.id);
+    setEditItemTamil(item.itemTamilName || item.itemEnglishName || "");
+    setEditItemEnglish(item.itemEnglishName || "");
+    setEditItemCategory(item.category || "pooja_items");
+    setEditItemQty(Number(item.quantity) || 1);
+    setEditItemUnit(item.unit || "nos");
+  };
+
+  const cancelEditItem = () => {
+    setEditingItemId(null);
+  };
+
+  const saveEditItem = () => {
+    if (!editingItemId) return;
+    const finalTa = editItemTamil.trim() || editItemEnglish.trim() || "பொருள்";
+    const finalEn = editItemEnglish.trim() || editItemTamil.trim() || "Item";
+    setFormItems(
+      formItems.map((it) =>
+        it.id === editingItemId
+          ? {
+              ...it,
+              itemTamilName: finalTa,
+              itemEnglishName: finalEn,
+              category: editItemCategory,
+              quantity: Math.max(1, Number(editItemQty) || 1),
+              unit: editItemUnit,
+            }
+          : it
+      )
+    );
+    setEditingItemId(null);
   };
 
   const handleSavePooja = (e: React.FormEvent) => {
@@ -911,7 +1016,6 @@ function PoojasCatalogueContent() {
         englishName: finalEn,
         tamilName: finalTa,
         description: formDescription.trim(),
-        durationMinutes: Number(formDuration) || 120,
         basePrice: Number(formBasePrice) || 0,
         items: formItems,
       });
@@ -931,7 +1035,6 @@ function PoojasCatalogueContent() {
         englishName: finalEn,
         tamilName: finalTa,
         description: formDescription.trim(),
-        durationMinutes: Number(formDuration) || 120,
         basePrice: Number(formBasePrice) || 0,
         items: formItems,
       });
@@ -1078,7 +1181,7 @@ function PoojasCatalogueContent() {
             </div>
 
             {/* Quick Metrics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
               <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
                   தட்சணை (Dakshina)
@@ -1104,18 +1207,6 @@ function PoojasCatalogueContent() {
                 </span>
                 <span className="text-base sm:text-lg font-black text-slate-900">
                   {selectedPooja.items?.length || 0} பொருட்கள்
-                </span>
-              </div>
-
-              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
-                  கால அளவு (Duration)
-                </span>
-                <span className="text-xs sm:text-sm font-bold text-slate-700 flex items-center gap-1 mt-0.5">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                  <span>
-                    {selectedPooja.durationMinutes ? `${selectedPooja.durationMinutes} நிமி` : "2-3 மணி"}
-                  </span>
                 </span>
               </div>
             </div>
@@ -1763,245 +1854,462 @@ function PoojasCatalogueContent() {
               )}
 
               {/* ============================================================= */}
-              {/* STEP 2: SAMAGRI CHECKLIST (பொருட்கள் பட்டியல்)                 */}
+              {/* ============================================================= */}
+              {/* STEP 2: SAMAGRI CHECKLIST (பொருட்கள் பட்டியல் & தேர்வு)         */}
               {/* ============================================================= */}
               {modalStep === 2 && (
-                <div className="space-y-3.5 animate-in fade-in duration-150">
-                  {/* Header & Smart Action Buttons */}
-                  <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-100">
-                    <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                      <ListChecks className="w-4 h-4 text-emerald-700" />
-                      <span>பூஜா பொருட்கள் பட்டியல் (Selected Items Checklist)</span>
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      {formItems.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setFormItems([])}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-200 text-[10.5px] font-bold transition shadow-2xs active:scale-95 cursor-pointer"
-                          title="அனைத்து பொருட்களையும் நீக்கு"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                          <span>அனைத்தும் நீக்கு</span>
-                        </button>
-                      )}
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-300 text-[10.5px] font-extrabold shadow-2xs">
-                        <ListChecks className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>{formItems.length} பொருட்கள்</span>
+                <div className="space-y-3 animate-in fade-in duration-150">
+                  {/* Top Switcher Tabs: Selected Items VS Browse & Choose */}
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setModalItemTab("selected")}
+                      className={`py-2 px-2 sm:px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        modalItemTab === "selected"
+                          ? "bg-white text-emerald-950 shadow-xs border border-slate-200 ring-1 ring-emerald-600/20"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <ListChecks className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span className="truncate">தேர்ந்தெடுக்கப்பட்டவை</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-black border border-emerald-200 shrink-0">
+                        {formItems.length}
                       </span>
-                    </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalItemTab("browse")}
+                      className={`py-2 px-2 sm:px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                        modalItemTab === "browse"
+                          ? "bg-emerald-800 text-amber-200 shadow-xs border border-emerald-900 ring-1 ring-emerald-700/30"
+                          : "text-slate-600 hover:text-slate-900"
+                      }`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate">பொருட்கள் தேர்வு (+ சேர்)</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-400 text-amber-950 font-black shrink-0">
+                        {SAMAGRI_CATALOG.length}
+                      </span>
+                    </button>
                   </div>
 
-                  {/* 1. SELECTED ITEMS LIST (முழு நீளக் காட்சி / Full-Length View) */}
-                  <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-2.5 space-y-1.5 shadow-2xs">
-                    <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-700">
-                      <span>தேர்ந்தெடுக்கப்பட்ட பொருட்கள் ({formItems.length})</span>
-                      <span className="text-[10px] text-slate-500 font-medium">அளவு & அலகுகளை மாற்றிக்கொள்ளலாம்</span>
-                    </div>
+                  {/* Sub Action Bar: Custom item toggle + Clear all */}
+                  <div className="flex items-center justify-between gap-2 px-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomItemForm(!showCustomItemForm)}
+                      className={`text-[11px] font-bold px-2.5 py-1 rounded-xl border flex items-center gap-1.5 transition active:scale-95 cursor-pointer shadow-2xs ${
+                        showCustomItemForm
+                          ? "bg-slate-900 text-white border-slate-950"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
+                      }`}
+                    >
+                      <Plus className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>தனிப்பொருள் சேர்க்க (Add Custom Item)</span>
+                      {showCustomItemForm ? (
+                        <ChevronUp className="w-3 h-3 text-slate-400" />
+                      ) : (
+                        <ChevronDown className="w-3 h-3 text-slate-400" />
+                      )}
+                    </button>
 
-                    {formItems.length === 0 ? (
-                      <div className="py-6 text-center text-xs text-slate-500 space-y-1.5 bg-white rounded-xl border border-dashed border-slate-200">
-                        <p className="font-bold text-slate-700">📦 பொருட்கள் எதுவும் இன்னும் சேர்க்கப்படவில்லை.</p>
-                        <p className="text-[11px] text-slate-500">
-                          கீழேயுள்ள &apos;பொருட்கள் செக்லிஸ்ட்&apos; அல்லது &apos;தனிப்பொருள் சேர்க்க&apos; பட்டனைத் தட்டி தேவையான பொருட்களைச் சேர்க்கலாம்.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5 max-h-80 overflow-y-auto pr-0.5">
-                        {formItems.map((it, idx) => {
-                          const catInfo = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
-                          return (
-                            <div
-                              key={it.id}
-                              className="p-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 flex items-center justify-between gap-2 transition shadow-2xs"
-                            >
-                              {/* Item Index & Names */}
-                              <div className="min-w-0 flex-1 flex items-center gap-2">
-                                <span className="text-xs font-black text-emerald-800 bg-emerald-50 border border-emerald-200 w-6 h-6 rounded-lg flex items-center justify-center shrink-0">
-                                  #{idx + 1}
-                                </span>
-                                <span className="text-base shrink-0" title={it.itemTamilName || it.itemEnglishName}>
-                                  {getItemIcon(it, it.category)}
-                                </span>
-                                <div className="min-w-0">
-                                  <div className="font-extrabold text-xs text-slate-900 leading-tight truncate">
-                                    {it.itemTamilName || it.itemEnglishName}
-                                  </div>
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    {it.itemEnglishName && it.itemEnglishName !== it.itemTamilName && (
-                                      <span className="text-[10px] text-slate-500 font-medium truncate">
-                                        {it.itemEnglishName}
-                                      </span>
-                                    )}
-                                    {catInfo && (
-                                      <span className="text-[9px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/70 inline-flex items-center gap-1 shrink-0">
-                                        <span>{catInfo.icon}</span>
-                                        <span>{catInfo.labelTa}</span>
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Stepper + Unit Selector + Delete */}
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {/* Compact Stepper */}
-                                <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 shadow-2xs">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
-                                      setFormItems(
-                                        formItems.map((item) =>
-                                          item.id === it.id
-                                            ? { ...item, quantity: Math.max(1, (Number(item.quantity) || 1) - step) }
-                                            : item
-                                        )
-                                      );
-                                    }}
-                                    className="w-5 h-5 rounded-md bg-white hover:bg-slate-200 text-slate-700 font-black flex items-center justify-center transition active:scale-95 text-xs cursor-pointer"
-                                    title="Decrease quantity"
-                                  >
-                                    -
-                                  </button>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    value={it.quantity}
-                                    onChange={(e) => {
-                                      const val = Math.max(1, Number(e.target.value) || 1);
-                                      setFormItems(
-                                        formItems.map((item) =>
-                                          item.id === it.id ? { ...item, quantity: val } : item
-                                        )
-                                      );
-                                    }}
-                                    className="w-9 text-center font-bold text-slate-900 text-xs bg-transparent focus:outline-none"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
-                                      setFormItems(
-                                        formItems.map((item) =>
-                                          item.id === it.id
-                                            ? { ...item, quantity: (Number(item.quantity) || 1) + step }
-                                            : item
-                                        )
-                                      );
-                                    }}
-                                    className="w-5 h-5 rounded-md bg-white hover:bg-slate-200 text-slate-700 font-black flex items-center justify-center transition active:scale-95 text-xs cursor-pointer"
-                                    title="Increase quantity"
-                                  >
-                                    +
-                                  </button>
-                                </div>
-
-                                {/* Direct Unit Dropdown Badge */}
-                                <select
-                                  value={it.unit}
-                                  onChange={(e) => {
-                                    const nextUnit = e.target.value as PoojaItemTemplate["unit"];
-                                    setFormItems(
-                                      formItems.map((item) =>
-                                        item.id === it.id ? { ...item, unit: nextUnit } : item
-                                      )
-                                    );
-                                  }}
-                                  className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 px-1.5 py-1 rounded-lg text-[10px] font-bold focus:outline-none cursor-pointer transition"
-                                  title="Change unit"
-                                >
-                                  {SAMAGRI_UNITS.map((u) => (
-                                    <option key={u.unit} value={u.unit}>
-                                      {u.code}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {/* Remove button */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleRemoveItemFromForm(it.id)}
-                                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition active:scale-95 cursor-pointer"
-                                  title="Remove item"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    {formItems.length > 0 && modalItemTab === "selected" && (
+                      <button
+                        type="button"
+                        onClick={() => setFormItems([])}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-200 text-[10.5px] font-bold transition shadow-2xs active:scale-95 cursor-pointer"
+                        title="அனைத்து பொருட்களையும் நீக்கு"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                        <span>அனைத்தும் நீக்கு</span>
+                      </button>
                     )}
                   </div>
 
-                  {/* 2. ON-DEMAND ADD ACTION BUTTONS (தேவைப்படும் போது மட்டும் திறக்கும்) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowChecklistDrawer(!showChecklistDrawer);
-                        if (!showChecklistDrawer) setShowCustomItemForm(false);
-                      }}
-                      className={`py-2.5 px-3.5 rounded-2xl text-xs font-bold transition flex items-center justify-between border cursor-pointer active:scale-98 shadow-2xs ${
-                        showChecklistDrawer
-                          ? "bg-emerald-800 text-amber-200 border-emerald-900 ring-2 ring-emerald-600/30"
-                          : "bg-emerald-50/90 hover:bg-emerald-100 text-emerald-950 border-emerald-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>பொருட்கள் செக்லிஸ்ட் (Browse Checklist)</span>
-                      </div>
-                      {showChecklistDrawer ? (
-                        <ChevronUp className="w-4 h-4 text-amber-200" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-emerald-700" />
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCustomItemForm(!showCustomItemForm);
-                        if (!showCustomItemForm) setShowChecklistDrawer(false);
-                      }}
-                      className={`py-2.5 px-3.5 rounded-2xl text-xs font-bold transition flex items-center justify-between border cursor-pointer active:scale-98 shadow-2xs ${
-                        showCustomItemForm
-                          ? "bg-slate-900 text-white border-slate-950 ring-2 ring-slate-700/30"
-                          : "bg-slate-100/90 hover:bg-slate-200 text-slate-800 border-slate-300"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>தனிப்பொருள் சேர்க்க (Add Custom Item)</span>
-                      </div>
-                      {showCustomItemForm ? (
-                        <ChevronUp className="w-4 h-4 text-white" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-600" />
-                      )}
-                    </button>
-                  </div>
-
-                  {/* 3. CHECKLIST DRAWER (ON-DEMAND) */}
-                  {showChecklistDrawer && (
-                    <div className="bg-white p-3 rounded-2xl border-2 border-emerald-300/80 shadow-md space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                  {/* CUSTOM ITEM FORM (ON-DEMAND) */}
+                  {showCustomItemForm && (
+                    <div className="bg-slate-50 p-3 rounded-2xl border-2 border-emerald-300/80 space-y-2.5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-150">
                       <div className="flex items-center justify-between">
-                        <div className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>பொருட்கள் செக்லிஸ்ட் (1-கிளிக் சேர்க்கை)</span>
+                        <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
+                          <Plus className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>புதிய பொருள் விவரங்கள்</span>
                         </div>
                         <button
                           type="button"
-                          onClick={() => setShowChecklistDrawer(false)}
-                          className="text-[10px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-2 py-0.5 rounded-lg transition cursor-pointer"
+                          onClick={() => setShowCustomItemForm(false)}
+                          className="text-[10px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 bg-white hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 transition cursor-pointer"
                         >
                           <X className="w-3 h-3" />
                           <span>மடிக்க</span>
                         </button>
                       </div>
 
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
+                            பொருள் பெயர் (தமிழ்)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="எ.கா. பஞ்சபாத்திரம்"
+                            value={newItemTamil}
+                            onChange={(e) => setNewItemTamil(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
+                            Item Name (English)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Pancha Paathiram"
+                            value={newItemEnglish}
+                            onChange={(e) => setNewItemEnglish(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">வகை (Category)</label>
+                          <select
+                            value={newItemCategory}
+                            onChange={(e) => setNewItemCategory(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer shadow-2xs"
+                          >
+                            {categories.map((cat) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.icon} {cat.labelTa}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அளவு (Qty)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={newItemQty}
+                            onChange={(e) => setNewItemQty(Number(e.target.value))}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600 text-center shadow-2xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அலகு / Unit</label>
+                          <select
+                            value={newItemUnit}
+                            onChange={(e) => setNewItemUnit(e.target.value as PoojaItemTemplate["unit"])}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer shadow-2xs"
+                          >
+                            {SAMAGRI_UNITS.map((u) => (
+                              <option key={u.unit} value={u.unit}>
+                                {u.labelTa} ({u.code})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={handleAddItemToForm}
+                          className="px-4 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-amber-300" />
+                          <span>பட்டியலில் சேர்</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VIEW 1: SELECTED ITEMS LIST (தேர்ந்தெடுக்கப்பட்டவை) */}
+                  {modalItemTab === "selected" && (
+                    <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-2.5 space-y-2 shadow-2xs">
+                      <div className="flex items-center justify-between px-1 text-[11px] font-bold text-slate-700">
+                        <span className="flex items-center gap-1.5">
+                          <span>தேர்ந்தெடுக்கப்பட்ட பொருட்கள் ({formItems.length})</span>
+                          <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
+                            • அளவு & அலகுகளை மாற்றலாம் / திருத்தலாம்
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setModalItemTab("browse")}
+                          className="text-[10.5px] font-extrabold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 hover:underline cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>மேலும் பொருட்கள் சேர்க்க</span>
+                        </button>
+                      </div>
+
+                      {formItems.length === 0 ? (
+                        <div className="py-8 text-center text-xs text-slate-500 space-y-2 bg-white rounded-xl border border-dashed border-slate-300 p-4">
+                          <p className="text-2xl">📦</p>
+                          <p className="font-extrabold text-slate-800">பொருட்கள் எதுவும் இன்னும் சேர்க்கப்படவில்லை.</p>
+                          <p className="text-[11px] text-slate-500">
+                            மேலேயுள்ள &apos;பொருட்கள் தேர்வு (+ சேர்)&apos; டேப்பைத் தட்டி 160+ சாமக்கிரி பொருட்களிலிருந்து 1-கிளிக்கில் தேவையானவற்றைச் சேர்க்கலாம்.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setModalItemTab("browse")}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-amber-200 font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer mt-1"
+                          >
+                            <Sparkles className="w-4 h-4 text-amber-300" />
+                            <span>பொருட்கள் தேர்வுப் பக்கத்திற்குச் செல்</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 max-h-80 overflow-y-auto pr-0.5">
+                          {formItems.map((it, idx) => {
+                            const catInfo = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
+                            const isBeingEdited = editingItemId === it.id;
+
+                            if (isBeingEdited) {
+                              return (
+                                <div
+                                  key={it.id}
+                                  className="p-3 rounded-2xl bg-amber-50/90 border-2 border-amber-400 shadow-sm space-y-2.5 animate-in fade-in duration-100"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-black text-amber-950 flex items-center gap-1.5">
+                                      <Edit2 className="w-3.5 h-3.5 text-amber-700" />
+                                      <span>பொருள் திருத்து #{idx + 1}</span>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={cancelEditItem}
+                                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+                                      title="ரத்து"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">தமிழ்ப் பெயர்</label>
+                                      <input
+                                        type="text"
+                                        value={editItemTamil}
+                                        onChange={(e) => setEditItemTamil(e.target.value)}
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">English Name</label>
+                                      <input
+                                        type="text"
+                                        value={editItemEnglish}
+                                        onChange={(e) => setEditItemEnglish(e.target.value)}
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">வகை</label>
+                                      <select
+                                        value={editItemCategory}
+                                        onChange={(e) => setEditItemCategory(e.target.value)}
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                                      >
+                                        {categories.map((c) => (
+                                          <option key={c.id} value={c.id}>
+                                            {c.icon} {c.labelTa}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அளவு (Qty)</label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={editItemQty}
+                                        onChange={(e) => setEditItemQty(Number(e.target.value))}
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-xs font-black text-slate-900 text-center focus:outline-none focus:border-emerald-600"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அலகு</label>
+                                      <select
+                                        value={editItemUnit}
+                                        onChange={(e) => setEditItemUnit(e.target.value as PoojaItemTemplate["unit"])}
+                                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                                      >
+                                        {SAMAGRI_UNITS.map((u) => (
+                                          <option key={u.unit} value={u.unit}>
+                                            {u.code}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-end gap-1.5 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={cancelEditItem}
+                                      className="px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer"
+                                    >
+                                      ரத்து
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={saveEditItem}
+                                      className="px-3.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition active:scale-95 shadow-2xs flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>சேமி (Save)</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div
+                                key={it.id}
+                                className="p-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 flex items-center justify-between gap-2 transition shadow-2xs"
+                              >
+                                {/* Item Index & Names */}
+                                <div className="min-w-0 flex-1 flex items-center gap-2">
+                                  <span className="text-xs font-black text-emerald-800 bg-emerald-50 border border-emerald-200 w-6 h-6 rounded-lg flex items-center justify-center shrink-0">
+                                    #{idx + 1}
+                                  </span>
+                                  <span className="text-base shrink-0" title={it.itemTamilName || it.itemEnglishName}>
+                                    {getItemIcon(it, it.category)}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="font-extrabold text-xs text-slate-900 leading-tight truncate">
+                                      {it.itemTamilName || it.itemEnglishName}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      {it.itemEnglishName && it.itemEnglishName !== it.itemTamilName && (
+                                        <span className="text-[10px] text-slate-500 font-medium truncate">
+                                          {it.itemEnglishName}
+                                        </span>
+                                      )}
+                                      {catInfo && (
+                                        <span className="text-[9px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/70 inline-flex items-center gap-1 shrink-0">
+                                          <span>{catInfo.icon}</span>
+                                          <span>{catInfo.labelTa}</span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Right Controls: Edit Button + Stepper + Unit Selector + Delete */}
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  {/* Direct Inline Edit Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditItem(it)}
+                                    className="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-100/80 bg-amber-50 rounded-lg transition active:scale-95 cursor-pointer border border-amber-200 shadow-2xs"
+                                    title="பொருளைத் திருத்து (Edit Item)"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+
+                                  {/* Compact Stepper */}
+                                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5 shadow-2xs">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
+                                        setFormItems(
+                                          formItems.map((item) =>
+                                            item.id === it.id
+                                              ? { ...item, quantity: Math.max(1, (Number(item.quantity) || 1) - step) }
+                                              : item
+                                          )
+                                        );
+                                      }}
+                                      className="w-5 h-5 rounded-md bg-white hover:bg-slate-200 text-slate-700 font-black flex items-center justify-center transition active:scale-95 text-xs cursor-pointer"
+                                      title="Decrease quantity"
+                                    >
+                                      -
+                                    </button>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={it.quantity}
+                                      onChange={(e) => {
+                                        const val = Math.max(1, Number(e.target.value) || 1);
+                                        setFormItems(
+                                          formItems.map((item) =>
+                                            item.id === it.id ? { ...item, quantity: val } : item
+                                          )
+                                        );
+                                      }}
+                                      className="w-9 text-center font-bold text-slate-900 text-xs bg-transparent focus:outline-none"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const step = it.unit === "g" || it.unit === "ml" ? 50 : 1;
+                                        setFormItems(
+                                          formItems.map((item) =>
+                                            item.id === it.id
+                                              ? { ...item, quantity: (Number(item.quantity) || 1) + step }
+                                              : item
+                                          )
+                                        );
+                                      }}
+                                      className="w-5 h-5 rounded-md bg-white hover:bg-slate-200 text-slate-700 font-black flex items-center justify-center transition active:scale-95 text-xs cursor-pointer"
+                                      title="Increase quantity"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+
+                                  {/* Direct Unit Dropdown Badge */}
+                                  <select
+                                    value={it.unit}
+                                    onChange={(e) => {
+                                      const nextUnit = e.target.value as PoojaItemTemplate["unit"];
+                                      setFormItems(
+                                        formItems.map((item) =>
+                                          item.id === it.id ? { ...item, unit: nextUnit } : item
+                                        )
+                                      );
+                                    }}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 px-1.5 py-1 rounded-lg text-[10px] font-bold focus:outline-none cursor-pointer transition"
+                                    title="Change unit"
+                                  >
+                                    {SAMAGRI_UNITS.map((u) => (
+                                      <option key={u.unit} value={u.unit}>
+                                        {u.code}
+                                      </option>
+                                    ))}
+                                  </select>
+
+                                  {/* 1-Tap Remove button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveItemFromForm(it.id)}
+                                    className="p-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-100/80 bg-rose-50 rounded-lg transition active:scale-95 cursor-pointer border border-rose-200 shadow-2xs"
+                                    title="பொருளை நீக்கு (Remove item)"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* VIEW 2: BROWSE & CHOOSE CHECKLIST (பொருட்கள் பட்டியல் தேர்வு) */}
+                  {modalItemTab === "browse" && (
+                    <div className="bg-white p-3 rounded-2xl border-2 border-emerald-300/80 shadow-md space-y-2.5 animate-in fade-in duration-150">
                       {/* Search Bar for Samagri */}
                       <div className="relative">
                         <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
@@ -2010,13 +2318,13 @@ function PoojasCatalogueContent() {
                           placeholder="பொருளைத் தேடுக... (மஞ்சள், நெய், coconut, honey)..."
                           value={samagriSearchQuery}
                           onChange={(e) => setSamagriSearchQuery(e.target.value)}
-                          className="w-full pl-8 pr-7 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
+                          className="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
                         />
                         {samagriSearchQuery && (
                           <button
                             type="button"
                             onClick={() => setSamagriSearchQuery("")}
-                            className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-600 text-xs"
+                            className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
                           >
                             ✕
                           </button>
@@ -2069,8 +2377,54 @@ function PoojasCatalogueContent() {
                         </button>
                       </div>
 
-                      {/* Full Checklist Items with Checkbox Toggle */}
-                      <div className="max-h-72 overflow-y-auto space-y-1.5 pr-1">
+                      {/* Category Quick Bulk Action Bar */}
+                      {(() => {
+                        const itemsInCurrentScope = SAMAGRI_CATALOG.filter((item) => {
+                          const matchesCategory =
+                            selectedSamagriCategory === "all" || item.category === selectedSamagriCategory;
+                          const q = samagriSearchQuery.toLowerCase().trim();
+                          const matchesSearch =
+                            !q ||
+                            item.ta.toLowerCase().includes(q) ||
+                            item.en.toLowerCase().includes(q);
+                          return matchesCategory && matchesSearch;
+                        });
+                        const addedCount = itemsInCurrentScope.filter((sug) =>
+                          formItems.some((it) => it.itemTamilName === sug.ta || it.itemEnglishName === sug.en)
+                        ).length;
+
+                        return (
+                          <div className="flex items-center justify-between gap-1.5 px-2 py-1.5 bg-slate-50 rounded-xl border border-slate-200 text-[10.5px] font-bold">
+                            <span className="text-slate-600">
+                              காட்டப்படும் பொருட்கள்: {itemsInCurrentScope.length} | தேர்வானது:{" "}
+                              <span className="text-emerald-800 font-black">{addedCount}</span>
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleBulkAddCategory(selectedSamagriCategory)}
+                                className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-bold border border-emerald-300 cursor-pointer transition active:scale-95 shadow-2xs"
+                                title="இந்த வகை பொருட்கள் அனைத்தையும் சேர்"
+                              >
+                                + அனைத்தும் சேர்
+                              </button>
+                              {addedCount > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleBulkRemoveCategory(selectedSamagriCategory)}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 cursor-pointer transition active:scale-95 shadow-2xs"
+                                  title="இந்த வகை பொருட்கள் அனைத்தையும் நீக்கு"
+                                >
+                                  ✕ நீக்கு
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {/* Full Checklist Items with 1-Tap Toggle */}
+                      <div className="max-h-80 overflow-y-auto space-y-1.5 pr-1">
                         {SAMAGRI_CATALOG.filter((item) => {
                           const matchesCategory =
                             selectedSamagriCategory === "all" || item.category === selectedSamagriCategory;
@@ -2086,41 +2440,18 @@ function PoojasCatalogueContent() {
                           );
                           const isAdded = !!existingItem;
 
-                          const toggleOrAddItem = () => {
-                            if (isAdded) {
-                              handleRemoveItemFromForm(existingItem.id);
-                            } else {
-                              const item: PoojaItemTemplate = {
-                                id: `item-${Date.now()}-${formItems.length + 1}`,
-                                poojaId: editingPoojaId || "",
-                                itemEnglishName: sug.en,
-                                itemTamilName: sug.ta,
-                                quantity: sug.qty,
-                                unit: sug.unit,
-                                category: sug.category,
-                                sortOrder: formItems.length + 1,
-                              };
-                              setFormItems([...formItems, item]);
-                            }
-                          };
-
-                          const catInfo = categories.find((c) => c.id === sug.category || c.id === normalizeCategoryId(sug.category));
-
                           return (
                             <div
                               key={sug.id}
-                              className={`p-2 rounded-xl transition flex items-center justify-between gap-2 border select-none ${
+                              onClick={() => handleToggleCatalogItem(sug)}
+                              className={`p-2 rounded-xl transition flex items-center justify-between gap-2 border select-none cursor-pointer ${
                                 isAdded
-                                  ? "bg-emerald-50 border-emerald-300 ring-1 ring-emerald-200/80 text-slate-900 shadow-2xs"
+                                  ? "bg-emerald-50 border-emerald-400 ring-1 ring-emerald-300 text-slate-900 shadow-2xs"
                                   : "bg-white hover:bg-slate-50 border-slate-200 text-slate-800"
                               }`}
                             >
                               {/* Checklist Toggle Box + Item Name */}
-                              <div
-                                onClick={toggleOrAddItem}
-                                className="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer"
-                              >
-                                {/* Checkbox Icon */}
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <div
                                   className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition ${
                                     isAdded
@@ -2135,9 +2466,9 @@ function PoojasCatalogueContent() {
                                   {getItemIcon({ itemTamilName: sug.ta, itemEnglishName: sug.en, category: sug.category })}
                                 </span>
 
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div
-                                    className={`text-xs font-extrabold truncate ${
+                                    className={`text-xs font-black truncate leading-tight ${
                                       isAdded ? "text-emerald-950 font-black" : "text-slate-900"
                                     }`}
                                   >
@@ -2149,44 +2480,32 @@ function PoojasCatalogueContent() {
                                 </div>
                               </div>
 
-                              {/* Standard Default Qty Badge */}
-                              <span className="text-[10px] font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 shrink-0">
-                                {sug.qty} {sug.unit}
-                              </span>
+                              {/* Right: Default Qty Badge + 1-Tap Toggle Button */}
+                              <div className="shrink-0 flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                                  {sug.qty} {sug.unit}
+                                </span>
 
-                              {/* Right Action: Added Status with Stepper OR + சேர் Button */}
-                              <div className="shrink-0 flex items-center gap-1">
                                 {isAdded ? (
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-lg border border-emerald-300">
-                                      {existingItem.quantity} {existingItem.unit}
-                                    </span>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        const step = sug.unit === "g" || sug.unit === "ml" ? 50 : 1;
-                                        setFormItems(
-                                          formItems.map((it) =>
-                                            it.id === existingItem.id
-                                              ? { ...it, quantity: (Number(it.quantity) || 1) + step }
-                                              : it
-                                          )
-                                        );
-                                      }}
-                                      className="w-6 h-6 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs flex items-center justify-center transition active:scale-95 cursor-pointer shadow-2xs"
-                                      title="Add more"
-                                    >
-                                      +
-                                    </button>
-                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleCatalogItem(sug)}
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-100 hover:bg-rose-50 text-emerald-950 hover:text-rose-700 border border-emerald-300 hover:border-rose-300 text-xs font-black transition active:scale-95 cursor-pointer shadow-2xs group flex items-center gap-1"
+                                    title="நீக்க தட்டவும்"
+                                  >
+                                    <Check className="w-3 h-3 group-hover:hidden" />
+                                    <X className="w-3 h-3 hidden group-hover:inline text-rose-600" />
+                                    <span className="group-hover:hidden">தேர்வானது ✓</span>
+                                    <span className="hidden group-hover:inline">நீக்கு ✕</span>
+                                  </button>
                                 ) : (
                                   <button
                                     type="button"
-                                    onClick={toggleOrAddItem}
+                                    onClick={() => handleToggleCatalogItem(sug)}
                                     className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95 cursor-pointer"
                                   >
                                     <Plus className="w-3.5 h-3.5 text-amber-300" />
-                                    <span>சேர்</span>
+                                    <span>+ சேர்</span>
                                   </button>
                                 )}
                               </div>
@@ -2194,142 +2513,21 @@ function PoojasCatalogueContent() {
                           );
                         })}
                       </div>
-                    </div>
-                  )}
 
-                  {/* 4. CUSTOM ITEM FORM (ON-DEMAND) */}
-                  {showCustomItemForm && (
-                    <div className="bg-slate-50 p-3.5 rounded-2xl border-2 border-slate-300 space-y-2.5 shadow-md animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="flex items-center justify-between">
-                        <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
-                          <Plus className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>பட்டியலில் இல்லாத தனிப்பொருள் சேர்க்க (Add Custom Item)</span>
-                        </div>
+                      {/* Bottom Switch to Selected bar */}
+                      <div className="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+                        <span className="text-xs font-black text-emerald-950 flex items-center gap-1">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                          <span>மொத்தம் {formItems.length} பொருட்கள் தேர்வாகியுள்ளது</span>
+                        </span>
                         <button
                           type="button"
-                          onClick={() => setShowCustomItemForm(false)}
-                          className="text-[10px] font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 bg-white hover:bg-slate-200 px-2 py-0.5 rounded-lg border border-slate-200 transition cursor-pointer"
+                          onClick={() => setModalItemTab("selected")}
+                          className="px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-amber-200 rounded-xl text-xs font-bold transition shadow-2xs active:scale-95 flex items-center gap-1 cursor-pointer"
                         >
-                          <X className="w-3 h-3" />
-                          <span>மடிக்க</span>
+                          <span>பட்டியலை பார்க்க ({formItems.length})</span>
+                          <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
                         </button>
-                      </div>
-
-                      {/* Category Selection Row */}
-                      <div>
-                        <div className="flex items-center justify-between mb-0.5">
-                          <label className="text-[10px] font-bold text-slate-600 block">
-                            பொருளின் வகை (Category):
-                          </label>
-                          <button
-                            type="button"
-                            onClick={() => setShowCategoryModal(true)}
-                            className="text-[10px] font-bold text-emerald-800 hover:underline flex items-center gap-1 cursor-pointer"
-                          >
-                            <Settings className="w-3 h-3 text-emerald-700" />
-                            <span>வகைகள் மேலாண்மை</span>
-                          </button>
-                        </div>
-                        <select
-                          value={newItemCategory}
-                          onChange={(e) => setNewItemCategory(e.target.value)}
-                          className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600 cursor-pointer shadow-2xs"
-                        >
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.icon} {cat.labelTa} ({cat.labelEn})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                            பொருள் பெயர் (தமிழ்)
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="எ.கா. பஞ்சபாத்திரம்"
-                            value={newItemTamil}
-                            onChange={(e) => setNewItemTamil(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">
-                            Item Name (English)
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Pancha Patram"
-                            value={newItemEnglish}
-                            onChange={(e) => setNewItemEnglish(e.target.value)}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-[9.5px] text-emerald-800 font-medium">
-                        (தமிழ் அல்லது ஆங்கிலம் — ஏதேனும் ஒரு பெயர் போதுமானது)
-                      </p>
-
-                      <div className="flex items-center gap-2 pt-1">
-                        <div className="w-24">
-                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அளவு (Qty)</label>
-                          <input
-                            type="number"
-                            min={1}
-                            placeholder="Qty"
-                            value={newItemQty}
-                            onChange={(e) => setNewItemQty(Number(e.target.value))}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600 text-center"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <label className="text-[10px] font-bold text-slate-600 block mb-0.5">அலகு / Unit</label>
-                          <select
-                            value={newItemUnit}
-                            onChange={(e) => setNewItemUnit(e.target.value as PoojaItemTemplate["unit"])}
-                            className="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-bold focus:outline-none focus:border-emerald-600"
-                          >
-                            {SAMAGRI_UNITS.map((u) => (
-                              <option key={u.unit} value={u.unit}>
-                                {u.labelTa} ({u.code})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="pt-3.5">
-                          <button
-                            type="button"
-                            id="add-custom-item-submit-btn"
-                            onClick={() => {
-                              const eng = newItemEnglish.trim() || newItemTamil.trim();
-                              const tam = newItemTamil.trim() || newItemEnglish.trim();
-                              if (!eng && !tam) return;
-                              const item: PoojaItemTemplate = {
-                                id: `item-${Date.now()}-${formItems.length + 1}`,
-                                poojaId: editingPoojaId || "",
-                                itemEnglishName: eng,
-                                itemTamilName: tam,
-                                quantity: Number(newItemQty) || 1,
-                                unit: newItemUnit,
-                                category: newItemCategory,
-                                sortOrder: formItems.length + 1,
-                              };
-                              setFormItems([...formItems, item]);
-                              setNewItemEnglish("");
-                              setNewItemTamil("");
-                              setNewItemQty(1);
-                            }}
-                            className="px-4 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl transition shrink-0 shadow-sm active:scale-95 flex items-center gap-1 cursor-pointer"
-                          >
-                            <Plus className="w-3.5 h-3.5 text-amber-300" />
-                            <span>சேர்</span>
-                          </button>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -2349,7 +2547,7 @@ function PoojasCatalogueContent() {
                       onClick={handleNextModalStep}
                       className="flex-1 py-3 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-2xl text-xs font-bold transition shadow-sm cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
                     >
-                      <span>அடுத்த படி: முழு சரிபார்ப்பு</span>
+                      <span>அடுத்த படி: முழு சரிபார்ப்பு ({formItems.length} பொருட்கள்)</span>
                       <ArrowRight className="w-4 h-4 text-amber-300" />
                     </button>
                   </div>

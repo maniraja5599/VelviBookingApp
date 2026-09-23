@@ -2972,8 +2972,7 @@ function QuickBookingContent() {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <span className="text-[10.5px] font-bold text-slate-500 block">கால அளவு: {currentPooja.durationMinutes || 120} நிமிடம்</span>
-                  <span className="text-xs font-black text-emerald-950 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-300 inline-block mt-0.5">
+                  <span className="text-xs font-black text-emerald-950 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-300 inline-block">
                     ₹{(currentPooja.basePrice || 0).toLocaleString("en-IN")}
                   </span>
                 </div>

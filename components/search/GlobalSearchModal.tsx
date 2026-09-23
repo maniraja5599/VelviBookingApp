@@ -640,9 +640,6 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                                 <span className="font-extrabold text-xs text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                                   ₹{p.basePrice?.toLocaleString()}
                                 </span>
-                                <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                                  ⏳ {p.durationMinutes || 120} mins ({(p.durationMinutes || 120) / 60} மணி நேரம்)
-                                </span>
                                 {p.items && p.items.length > 0 && (
                                   <span className="text-[11px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                                     📦 {p.items.length} பொருட்கள்

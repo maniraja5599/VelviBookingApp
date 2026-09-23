@@ -173,7 +173,7 @@ export interface Pooja {
   englishName: string;
   tamilName: string;
   description: string;
-  durationMinutes: number;
+  durationMinutes?: number;
   basePrice: number;
   procedure?: string;
   active: boolean;

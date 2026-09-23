@@ -111,7 +111,7 @@ const GUIDE_TOPICS: GuideTopic[] = [
     summary: "Customize rituals, dakshina fees, and item checklists organized with 32+ sacred spiritual icons.",
     steps: [
       "Go to Settings > 'Pooja & Seva Catalog' to browse pre-loaded rituals (Ganapathi Homam, Navagraha Homam, etc.).",
-      "Tap any pooja to edit its default Dakshina fee, duration, and required item checklist.",
+      "Tap any pooja to edit its default Dakshina fee and required item checklist.",
       "Go to Settings > 'Samagri Categories' to manage categories (Fruits, Ghee, Flowers, Vastram, etc.).",
       "When adding a category, type keywords in Tamil or English (e.g., 'மலர் மாலை', 'பழங்கள்')—Velvi auto-detects and selects the ideal sacred emoji icon!",
       "You can also pick from the 32+ curated spiritual icons with a single tap.",
