@@ -996,11 +996,13 @@ export default function CalendarPage() {
                     className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
                       isSelected
                         ? "bg-amber-100/90 ring-2 ring-amber-600 ring-inset z-10 font-bold shadow-2xs"
-                        : hasBookings
-                        ? "bg-emerald-50/80 hover:bg-emerald-100/80"
                         : isToday
                         ? "bg-slate-100/80 hover:bg-slate-100"
-                        : "bg-white hover:bg-gray-50/80"
+                        : "bg-white hover:bg-slate-50/90"
+                    } ${
+                      hasBookings && !isSelected
+                        ? "before:absolute before:top-0 before:inset-x-2 before:h-0.5 before:bg-amber-500 before:rounded-full"
+                        : ""
                     }`}
                   >
                     {/* Top Row: English Day Number (Bigger & Crisp) & Tamil Solar Day Number */}
@@ -1034,11 +1036,11 @@ export default function CalendarPage() {
                       <div className="h-3" />
                     )}
 
-                    {/* Bottom: Highlighted Booking Badge with Homa Fire Icon & Bold Number */}
+                    {/* Bottom: Smart Highlighted Booking Count Badge without green background */}
                     {hasBookings ? (
                       <div className="w-full mt-0.5 flex justify-center">
-                        <span className="text-[9px] sm:text-[10.5px] md:text-[11.5px] px-1.5 sm:px-2 py-0.5 rounded-full font-black inline-flex items-center justify-center gap-1 leading-none bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-amber-300 ring-1 ring-amber-400/60 shadow-xs">
-                          <span className="text-[9.5px] sm:text-[11px]">🔥</span>
+                        <span className="text-[9px] sm:text-[10.5px] md:text-[11px] px-2 py-0.5 rounded-full font-black inline-flex items-center justify-center gap-1 leading-none bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-xs ring-1 ring-amber-400/80 group-hover:scale-105 transition-transform">
+                          <span className="text-[8.5px] sm:text-[9.5px]">🔥</span>
                           <span className="font-extrabold tracking-tight">{dayBookings.length}</span>
                         </span>
                       </div>

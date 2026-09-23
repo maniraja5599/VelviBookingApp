@@ -382,7 +382,15 @@ export class VelviDatabaseStore {
   // TENANT ISOLATION: Strict business_id Filtering
   // -------------------------------------------------------------
   public getCustomers(businessId: string): Customer[] {
-    return this.customers.filter((c) => c.businessId === businessId);
+    const list = this.customers.filter((c) => c.businessId === businessId);
+    const seen = new Set<string>();
+    return list.filter((c) => {
+      const cleanMobile = c.mobile ? normalizeIndianMobile(c.mobile) : "";
+      const key = cleanMobile ? `m:${cleanMobile}` : `id:${c.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   public getBookings(businessId: string): Booking[] {
@@ -1226,6 +1234,26 @@ export class VelviDatabaseStore {
     rasi?: string;
   }): Customer {
     const normalizedMobile = params.mobile?.trim() ? normalizeIndianMobile(params.mobile) : "";
+
+    // Prevent duplicate customers with the same mobile for this business
+    if (normalizedMobile) {
+      const existing = this.customers.find(
+        (c) => c.businessId === params.businessId && c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile
+      );
+      if (existing) {
+        if (params.name) existing.name = params.name.trim();
+        if (params.city) existing.city = params.city.trim();
+        if (params.address) existing.address = params.address.trim();
+        if (params.notes) existing.notes = params.notes.trim();
+        if (params.gothram) existing.gothram = params.gothram.trim();
+        if (params.nakshatram) existing.nakshatram = params.nakshatram.trim();
+        if (params.rasi) existing.rasi = params.rasi.trim();
+        this.saveToLocalStorage();
+        this.notifyListeners();
+        return existing;
+      }
+    }
+
     const newCustomer: Customer = {
       id: `c-${Date.now()}`,
       businessId: params.businessId,

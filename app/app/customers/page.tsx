@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
@@ -25,6 +26,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Trash2,
+  Sparkles,
+  ChevronRight,
 } from "lucide-react";
 
 export default function CustomersPage() {
@@ -78,12 +81,62 @@ export default function CustomersPage() {
     }
   };
 
-  const filteredCustomers = customers.filter(
-    (c) =>
-      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.mobile.includes(searchQuery) ||
-      c.city?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const uniqueCustomers = React.useMemo(() => {
+    const seen = new Set<string>();
+    return customers.filter((c) => {
+      const cleanMobile = c.mobile ? normalizeIndianMobile(c.mobile) : "";
+      const key = cleanMobile ? `m:${cleanMobile}` : `id:${c.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [customers]);
+
+  const filteredCustomers = React.useMemo(() => {
+    return uniqueCustomers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.mobile && c.mobile.includes(searchQuery)) ||
+        (c.city && c.city.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [uniqueCustomers, searchQuery]);
+
+  const members = React.useMemo(() => db.getMembers(businessId), [businessId]);
+
+  // Bookings for selected customer
+  const selectedCustomerBookings = React.useMemo(() => {
+    if (!selectedCustomer) return [];
+    return db.getBookings(businessId).filter(
+      (b) => b.customerId === selectedCustomer.id || (selectedCustomer.mobile && b.customerMobile === selectedCustomer.mobile)
+    );
+  }, [selectedCustomer, businessId]);
+
+  // Associated Priest: check latest booking's assigned priest or business default
+  const associatedPriest = React.useMemo(() => {
+    if (!selectedCustomer) return null;
+    const latestWithPriest = selectedCustomerBookings.find((b) => b.assignedIyerName || b.assignedIyerId);
+    if (latestWithPriest) {
+      const foundMember = members.find((m) => m.id === latestWithPriest.assignedIyerId || m.name === latestWithPriest.assignedIyerName);
+      return {
+        id: foundMember?.id || latestWithPriest.assignedIyerId,
+        name: latestWithPriest.assignedIyerName || foundMember?.name || "வேள்வி தலைமை குருக்கள்",
+        mobile: foundMember?.mobile || "",
+        role: foundMember?.role || "ASSISTANT",
+      };
+    }
+    const owner = members.find((m) => m.role === "OWNER") || members[0];
+    return owner ? {
+      id: owner.id,
+      name: owner.name,
+      mobile: owner.mobile,
+      role: owner.role,
+    } : {
+      id: "default",
+      name: currentBusiness?.name || "வேள்வி தலைமை குருக்கள்",
+      mobile: currentBusiness?.phone || "",
+      role: "OWNER",
+    };
+  }, [selectedCustomer, selectedCustomerBookings, members, currentBusiness]);
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
@@ -411,50 +464,99 @@ export default function CustomersPage() {
               </div>
             </div>
 
+            {/* Associated Priest Card (Connecting Devotee with Priest & Team) */}
+            {associatedPriest && (
+              <div className="p-3 bg-gradient-to-br from-amber-50/90 via-white to-amber-100/50 rounded-2xl border border-amber-300 shadow-2xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>ஒதுக்கப்பட்ட வாத்யார் (Assigned Priest)</span>
+                  </span>
+                  <Link
+                    href="/app/team"
+                    className="text-[10.5px] font-extrabold text-amber-900 hover:text-amber-950 flex items-center gap-0.5 underline transition"
+                    title="வாத்யார்கள் & குழு மேலாண்மை"
+                  >
+                    <span>குழு பட்டியல் (Team)</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
+
+                <div className="flex items-center justify-between gap-2.5 bg-white/95 p-2.5 rounded-xl border border-amber-200 shadow-2xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-600 to-amber-800 text-amber-100 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                      {associatedPriest.name.slice(0, 1)}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="font-extrabold text-xs text-slate-900 truncate">
+                        {associatedPriest.name}
+                      </h4>
+                      <p className="text-[10.5px] text-amber-800 font-bold truncate flex items-center gap-1">
+                        <span>வாத்யார் • Priest</span>
+                        {associatedPriest.mobile && <span>• {associatedPriest.mobile}</span>}
+                      </p>
+                    </div>
+                  </div>
+
+                  {associatedPriest.mobile && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <a
+                        href={`https://wa.me/${associatedPriest.mobile.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg transition"
+                        title="WhatsApp Priest"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                      </a>
+                      <a
+                        href={`tel:${associatedPriest.mobile}`}
+                        className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg transition"
+                        title="Call Priest"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Booking History */}
             <div className="space-y-2">
               <h4 className="font-bold text-xs text-velvi-brown/80 uppercase tracking-wider">
                 Booking History
               </h4>
-              {db
-                .getBookings(businessId)
-                .filter(
-                  (b) =>
-                    b.customerId === selectedCustomer.id ||
-                    b.customerMobile === selectedCustomer.mobile
-                ).length === 0 ? (
+              {selectedCustomerBookings.length === 0 ? (
                 <p className="text-xs text-velvi-brown/60">No past bookings found.</p>
               ) : (
-                db
-                  .getBookings(businessId)
-                  .filter(
-                    (b) =>
-                      b.customerId === selectedCustomer.id ||
-                      b.customerMobile === selectedCustomer.mobile
-                  )
-                  .map((b) => (
-                    <div
-                      key={b.id}
-                      className="p-3 bg-velvi-cream/30 rounded-xl border border-velvi-gold/15 flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-velvi-brownDark">
-                          {b.poojaEnglishName}
-                        </div>
-                        <div className="text-[11px] text-velvi-brown/60">
-                          {b.date} • {b.startTime}
-                        </div>
+                selectedCustomerBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="p-3 bg-velvi-cream/30 rounded-xl border border-velvi-gold/15 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <div className="font-bold text-velvi-brownDark">
+                        {b.poojaEnglishName}
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-velvi-brownDark">
-                          ₹{b.totalAmount.toLocaleString("en-IN")}
-                        </div>
-                        <span className="text-[10px] text-green-700 font-semibold">
-                          {b.status}
-                        </span>
+                      <div className="text-[11px] text-velvi-brown/60">
+                        {b.date} • {b.startTime}
+                      </div>
+                      <div className="text-[10px] font-bold text-amber-900 mt-0.5 flex items-center gap-1">
+                        <span>👤 வாத்யார்:</span>
+                        <span>{b.assignedIyerName || associatedPriest?.name || "வேள்வி வாத்யார்"}</span>
                       </div>
                     </div>
-                  ))
+                    <div className="text-right">
+                      <div className="font-bold text-velvi-brownDark">
+                        ₹{b.totalAmount.toLocaleString("en-IN")}
+                      </div>
+                      <span className="text-[10px] text-green-700 font-semibold">
+                        {b.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
 
@@ -462,15 +564,22 @@ export default function CustomersPage() {
               <button
                 type="button"
                 onClick={() => handleDeleteCustomer(selectedCustomer)}
-                className="py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition border border-rose-200/80 flex items-center justify-center gap-1.5 cursor-pointer"
+                className="py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition border border-rose-200/80 flex items-center justify-center gap-1 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                 <span>Delete</span>
               </button>
+              <Link
+                href={`/app/bookings/quick?customerId=${selectedCustomer.id}&name=${encodeURIComponent(selectedCustomer.name)}&mobile=${encodeURIComponent(selectedCustomer.mobile || "")}`}
+                className="flex-1 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition text-center cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>புதிய பதிவு (Book Pooja)</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(null)}
-                className="flex-1 py-3 bg-velvi-brown text-white text-xs font-bold rounded-xl shadow-sm hover:bg-velvi-brownLight transition cursor-pointer"
+                className="py-2.5 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
               >
                 Close
               </button>

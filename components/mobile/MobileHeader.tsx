@@ -438,50 +438,72 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 {daysToExpiry !== null && (
                   <div>
                     {isExpired ? (
-                      <div className="p-2.5 bg-rose-50 border border-rose-300 rounded-2xl flex items-center justify-between text-xs text-rose-950 shadow-2xs">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 animate-pulse" />
+                      <div className="p-2.5 bg-gradient-to-r from-rose-50 to-red-50/70 border border-rose-200 rounded-2xl flex items-center justify-between text-xs text-rose-950 shadow-2xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center shrink-0">
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                          </div>
                           <div className="min-w-0">
-                            <span className="font-extrabold text-[11px] block text-rose-900 leading-tight">சந்தா முடிவடைந்தது (Plan Expired)</span>
-                            <span className="text-[10px] text-rose-700">புதுப்பிக்க தட்டவும்</span>
+                            <span className="font-black text-[11px] block text-rose-950 leading-tight">
+                              Plan Expired
+                            </span>
+                            <span className="text-[9.5px] font-semibold text-rose-700">
+                              Renew to continue
+                            </span>
                           </div>
                         </div>
                         <Link
                           href="/app/subscription"
                           onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-[10.5px] font-black shrink-0 transition shadow-2xs"
+                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
                         >
                           Renew Now
                         </Link>
                       </div>
                     ) : isExpiringSoon ? (
-                      <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs text-amber-950 shadow-2xs">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Clock className="w-4 h-4 text-amber-700 shrink-0 animate-pulse" />
+                      <div className="p-2.5 bg-gradient-to-r from-amber-50 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs text-amber-950 shadow-2xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+                            <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
+                          </div>
                           <div className="min-w-0">
-                            <span className="font-extrabold text-[11px] block text-amber-900 leading-tight">
-                              இன்னும் {daysToExpiry} நாட்களில் முடிகிறது!
+                            <span className="font-black text-[11px] block text-amber-950 leading-tight">
+                              {daysToExpiry} {daysToExpiry === 1 ? "Day" : "Days"} Left
                             </span>
-                            <span className="text-[10px] text-amber-700">தடையின்றி தொடர புதுப்பிக்கவும்</span>
+                            <span className="text-[9.5px] font-semibold text-amber-700">
+                              Expiring Soon
+                            </span>
                           </div>
                         </div>
                         <Link
                           href="/app/subscription"
                           onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-amber-700 hover:bg-amber-800 text-white rounded-xl text-[10.5px] font-black shrink-0 transition shadow-2xs"
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
                         >
                           Renew
                         </Link>
                       </div>
                     ) : (
-                      <div className="px-3 py-1.5 bg-gradient-to-r from-amber-50/70 via-white to-emerald-50/40 border border-amber-200/80 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <span className="text-[10.5px] font-semibold text-slate-600 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-amber-600" />
-                          <span>வேள்வி Pro செல்லுபடி:</span>
-                        </span>
-                        <span className="text-[10.5px] font-black text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-lg border border-emerald-300">
-                          இன்னும் {daysToExpiry} நாட்கள்
-                        </span>
+                      <div className="p-2.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-amber-50/50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3 h-3 text-emerald-700" />
+                          </div>
+                          <div>
+                            <span className="text-[11px] font-black text-slate-800 tracking-tight block leading-tight">
+                              Pro Plan Active
+                            </span>
+                            <span className="text-[9.5px] font-semibold text-slate-500">
+                              Account Validity
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-1 rounded-xl border border-emerald-300/80 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-[10.5px] font-black text-emerald-950 tracking-tight">
+                            {daysToExpiry} {daysToExpiry === 1 ? "Day" : "Days"} Left
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
