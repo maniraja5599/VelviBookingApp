@@ -37,6 +37,7 @@ import {
 import Link from "next/link";
 import { SamagriCategory } from "@/lib/types";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
+import { getItemIcon } from "@/lib/samagri/icons";
 
 const SAMAGRI_UNITS: Array<{
   unit: PoojaItemTemplate["unit"];
@@ -652,8 +653,7 @@ function PoojasCatalogueContent() {
       "",
       "பொருட்கள் (Materials Checklist):",
       ...selectedPooja.items.map((it, idx) => {
-        const cat = categories.find((c) => c.id === it.category || c.id === normalizeCategoryId(it.category));
-        const icon = cat?.icon || "•";
+        const icon = getItemIcon(it, it.category);
         const unit = getUnitBadgeLabel(it.unit);
         return `${idx + 1}. ${icon} ${it.itemTamilName || it.itemEnglishName} (${it.itemEnglishName}) - ${it.quantity} ${unit}`;
       }),
@@ -1230,9 +1230,9 @@ function PoojasCatalogueContent() {
                           #{idx + 1}
                         </div>
 
-                        {/* Category Icon */}
-                        <span className="text-base shrink-0" title={catInfo?.labelTa}>
-                          {catInfo?.icon || "✨"}
+                        {/* Item Icon */}
+                        <span className="text-base shrink-0" title={it.itemTamilName || it.itemEnglishName}>
+                          {getItemIcon(it, it.category)}
                         </span>
 
                         {/* Item Names & Category Badge */}
@@ -1820,6 +1820,9 @@ function PoojasCatalogueContent() {
                                 <span className="text-xs font-black text-emerald-800 bg-emerald-50 border border-emerald-200 w-6 h-6 rounded-lg flex items-center justify-center shrink-0">
                                   #{idx + 1}
                                 </span>
+                                <span className="text-base shrink-0" title={it.itemTamilName || it.itemEnglishName}>
+                                  {getItemIcon(it, it.category)}
+                                </span>
                                 <div className="min-w-0">
                                   <div className="font-extrabold text-xs text-slate-900 leading-tight truncate">
                                     {it.itemTamilName || it.itemEnglishName}
@@ -2128,8 +2131,8 @@ function PoojasCatalogueContent() {
                                   {isAdded && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                                 </div>
 
-                                <span className="text-base shrink-0">
-                                  {catInfo?.icon || "✨"}
+                                <span className="text-base shrink-0" title={sug.ta}>
+                                  {getItemIcon({ itemTamilName: sug.ta, itemEnglishName: sug.en, category: sug.category })}
                                 </span>
 
                                 <div className="min-w-0">

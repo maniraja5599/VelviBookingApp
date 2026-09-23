@@ -9,6 +9,7 @@ import { BookingItem } from "@/lib/types";
 import { generatePoojaFlyer } from "@/lib/flyer/canvas-generator";
 import { formatPoojaItemsWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
+import { getItemIcon } from "@/lib/samagri/icons";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -206,6 +207,10 @@ export default function BookingItemsPage() {
                   >
                     {item.isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </div>
+
+                  <span className="text-base shrink-0">
+                    {getItemIcon(item, item.category)}
+                  </span>
 
                   <div className="min-w-0">
                     <div

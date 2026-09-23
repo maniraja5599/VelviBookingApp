@@ -22,6 +22,7 @@ import {
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil } from "@/lib/whatsapp/formatter";
 import { copyToClipboard } from "@/lib/utils/clipboard";
+import { getItemIcon } from "@/lib/samagri/icons";
 
 interface PoojaSlipModalProps {
   booking: Booking;
@@ -47,17 +48,18 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
       ? booking.items.map((it) => ({
           id: it.id,
           name: it.itemTamilName || it.itemEnglishName,
+          icon: getItemIcon(it, (it as any).category),
           qty: `${it.quantity} ${formatUnitTamil(it.unit || "nos") || it.unit}`,
         }))
       : [
-          { id: "1", name: "மஞ்சள் தூள் (Turmeric Powder)", qty: "100 கிராம்" },
-          { id: "2", name: "குங்குமம் (Kumkum)", qty: "50 கிராம்" },
-          { id: "3", name: "சந்தனம் (Sandal Powder)", qty: "1 பாக்கெட்" },
-          { id: "4", name: "கற்பூரம் (Camphor)", qty: "1 பாக்கெட்" },
-          { id: "5", name: "ஊதுபத்தி (Agarbathi)", qty: "1 பாக்கெட்" },
-          { id: "6", name: "வெற்றிலை பாக்கு (Betel Leaves & Nuts)", qty: "10 செட்" },
-          { id: "7", name: "தேங்காய் (Coconuts)", qty: "3 எண்ணிக்கை" },
-          { id: "8", name: "பூக்கள் மாலை மற்றும் உதிரி (Flowers)", qty: "1 முழம் & உதிரி" },
+          { id: "1", name: "மஞ்சள் தூள் (Turmeric Powder)", icon: "🟡", qty: "100 கிராம்" },
+          { id: "2", name: "குங்குமம் (Kumkum)", icon: "🔴", qty: "50 கிராம்" },
+          { id: "3", name: "சந்தனம் (Sandal Powder)", icon: "🪵", qty: "1 பாக்கெட்" },
+          { id: "4", name: "கற்பூரம் (Camphor)", icon: "🕯️", qty: "1 பாக்கெட்" },
+          { id: "5", name: "ஊதுபத்தி (Agarbathi)", icon: "🪔", qty: "1 பாக்கெட்" },
+          { id: "6", name: "வெற்றிலை பாக்கு (Betel Leaves & Nuts)", icon: "🍃", qty: "10 செட்" },
+          { id: "7", name: "தேங்காய் (Coconuts)", icon: "🥥", qty: "3 எண்ணிக்கை" },
+          { id: "8", name: "பூக்கள் மாலை மற்றும் உதிரி (Flowers)", icon: "🌺", qty: "1 முழம் & உதிரி" },
         ];
   }, [booking.items]);
 
@@ -148,7 +150,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
     let msg = `வேள்வி — பூஜை சாமக்கிரி பொருட்கள் (${booking.customerName} - ${booking.poojaTamilName || booking.poojaEnglishName}):\n\n`;
     samagriList.forEach((it, i) => {
       const isChecked = checkedItems[it.id] !== false;
-      msg += `${i + 1}. ${isChecked ? "✅" : "⬜"} ${it.name} - ${it.qty}\n`;
+      msg += `${i + 1}. ${isChecked ? "✅" : "⬜"} ${it.icon ? `${it.icon} ` : ""}${it.name} - ${it.qty}\n`;
     });
     msg += `\n📅 நாள்: ${booking.date} (${booking.startTime}) | 📍 இடம்: ${booking.customerAddress || booking.location || "Namakkal"}`;
     if (business?.name) {
@@ -439,6 +441,7 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
                       >
                         {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
                       </span>
+                      {item.icon && <span className="text-sm shrink-0">{item.icon}</span>}
                       <span className={`font-bold truncate ${isChecked ? "text-slate-900" : "text-slate-400"}`}>
                         {idx + 1}. {item.name}
                       </span>

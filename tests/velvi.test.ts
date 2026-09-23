@@ -1388,6 +1388,39 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(newBizWithCustom.length).toBe(9);
     expect(newBizWithCustom.some((p) => p.id === custom.id)).toBe(true);
   });
+
+  // TEST CASE 47: Samagri Item Colorful Icons
+  it("Test 47: getItemIcon returns accurate vibrant icons for all key items and falls back appropriately", async () => {
+    const { getItemIcon } = await import("@/lib/samagri/icons");
+
+    // Key sacred items
+    expect(getItemIcon({ itemTamilName: "தேங்காய் (Coconut)", category: "fruits_food" })).toBe("🥥");
+    expect(getItemIcon({ itemTamilName: "வாழைப்பழம் (Banana)", category: "fruits_food" })).toBe("🍌");
+    expect(getItemIcon({ itemTamilName: "எலுமிச்சம்பழம் (Lemon)", category: "fruits_food" })).toBe("🍋");
+    expect(getItemIcon({ itemTamilName: "தாமரை மலர் (Lotus)", category: "flowers_garlands" })).toBe("🪷");
+    expect(getItemIcon({ itemTamilName: "மல்லிகை பூ (Jasmine)", category: "flowers_garlands" })).toBe("🌸");
+    expect(getItemIcon({ itemTamilName: "ரோஜா மாலை (Rose)", category: "flowers_garlands" })).toBe("🌹");
+    expect(getItemIcon({ itemTamilName: "பசு நெய் (Pure Ghee)", category: "homam_items" })).toBe("🧈");
+    expect(getItemIcon({ itemTamilName: "சுத்தமான தேன் (Honey)", category: "pooja_items" })).toBe("🍯");
+    expect(getItemIcon({ itemTamilName: "பசும்பால் (Milk)", category: "pooja_items" })).toBe("🥛");
+    expect(getItemIcon({ itemTamilName: "கற்பூரம் (Camphor)", category: "pooja_items" })).toBe("🕯️");
+    expect(getItemIcon({ itemTamilName: "மஞ்சள் தூள் (Turmeric)", category: "pooja_items" })).toBe("🟡");
+    expect(getItemIcon({ itemTamilName: "குங்குமம் (Kumkum)", category: "pooja_items" })).toBe("🔴");
+    expect(getItemIcon({ itemTamilName: "விபூதி (Vibhuti)", category: "pooja_items" })).toBe("⚪");
+    expect(getItemIcon({ itemTamilName: "வெற்றிலை பாக்கு (Betel)", category: "pooja_items" })).toBe("🍃");
+    expect(getItemIcon({ itemTamilName: "சமித்து கட்டுகள் (Samithu)", category: "homam_items" })).toBe("🪵");
+    expect(getItemIcon({ itemTamilName: "பூசணிக்காய் (Ash Gourd)", category: "fruits_food" })).toBe("🎃");
+    expect(getItemIcon({ itemTamilName: "வலம்புரி சங்கு (Conch)", category: "vessels_utensils" })).toBe("🐚");
+    expect(getItemIcon({ itemTamilName: "மணி (Pooja Bell)", category: "vessels_utensils" })).toBe("🔔");
+    expect(getItemIcon({ itemTamilName: "பட்டு வஸ்திரம் (Silk Vastram)", category: "vastram_clothes" })).toBe("🥻");
+    expect(getItemIcon({ itemTamilName: "வேஷ்டி (Dhoti)", category: "vastram_clothes" })).toBe("🧣");
+    expect(getItemIcon({ itemTamilName: "கலச சொம்பு (Kalasam)", category: "vessels_utensils" })).toBe("🏺");
+
+    // Fallback to category icon for unknown item
+    expect(getItemIcon({ itemTamilName: "அறியப்படாத விசேஷ பொருள்", category: "homam_items" })).toBe("🔥");
+    expect(getItemIcon({ itemTamilName: "அறியப்படாத நவகிரக தானியம்", category: "navagraha_items" })).toBe("🪐");
+    expect(getItemIcon({ itemTamilName: "அறியப்படாத ஆடை", category: "vastram_clothes" })).toBe("🧣");
+  });
 });
 
 

@@ -39,6 +39,7 @@ import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil, formatUnitShort } from "@/lib/whatsapp/formatter";
 import { SAMAGRI_CATALOG, SamagriCatalogItem, normalizeCategoryId } from "@/lib/samagri/catalog";
 import { getSamagriItemDetail } from "@/lib/samagri/details";
+import { getItemIcon } from "@/lib/samagri/icons";
 
 const convert24To12 = (timeStr: string): string => {
   const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})$/);
@@ -1346,6 +1347,9 @@ function QuickBookingContent() {
                                 ) : (
                                   <div className="w-5 h-5 rounded-md border-2 border-slate-300 bg-white shrink-0 hover:border-emerald-600" />
                                 )}
+                                <span className="text-base shrink-0">
+                                  {getItemIcon({ itemTamilName: catItem.ta, itemEnglishName: catItem.en, category: catItem.category })}
+                                </span>
                                 <div className="min-w-0 flex-1">
                                   <span className="text-xs font-black truncate block">
                                     {catItem.ta}
@@ -1466,6 +1470,9 @@ function QuickBookingContent() {
                             ) : (
                               <div className="w-5 h-5 rounded-md border-2 border-slate-300 bg-white shrink-0 hover:border-emerald-600" />
                             )}
+                            <span className="text-base shrink-0">
+                              {getItemIcon(it, it.category)}
+                            </span>
                             <div className="min-w-0 flex-1">
                               <div className="text-xs font-black text-slate-900 truncate">
                                 {idx + 1}. {it.itemTamilName || it.itemEnglishName}

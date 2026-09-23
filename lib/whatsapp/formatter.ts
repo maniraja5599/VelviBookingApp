@@ -1,5 +1,6 @@
 import { Booking, Business } from "@/lib/types";
 import { getTamilDate } from "@/lib/calendar/tamil";
+import { getItemIcon } from "@/lib/samagri/icons";
 
 export function formatUnitTamil(unit?: string): string {
   if (!unit) return "";
@@ -68,10 +69,11 @@ export function formatPoojaItemsWhatsAppMessage(
     ? booking.items
         .filter((it: any) => it.isChecked !== false)
         .map((item: any, idx) => {
+          const icon = getItemIcon(item, item.category);
           const name = item.itemTamilName || item.itemEnglishName || item.nameTa || item.nameEn || "பொருள்";
           const unit = formatUnitTamil(item.unit);
           const qty = item.quantity ? ` — ${item.quantity} ${unit}` : "";
-          return `${idx + 1}. ${name}${qty}`.trim();
+          return `${idx + 1}. ${icon} ${name}${qty}`.trim();
         })
         .join("\n")
     : "";

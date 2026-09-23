@@ -12,6 +12,7 @@ import {
 } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
+import { getItemIcon } from "@/lib/samagri/icons";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -652,6 +653,9 @@ export default function BookingDetailPage() {
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-950 font-black text-[10.5px] flex items-center justify-center shrink-0 border border-emerald-200">
                       {idx + 1}
+                    </span>
+                    <span className="text-base shrink-0">
+                      {getItemIcon(item, item.category)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <span className="font-black text-slate-900 truncate block">
