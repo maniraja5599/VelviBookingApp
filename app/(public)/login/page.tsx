@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
+import { ComplianceFooter } from "@/components/ui/ComplianceFooter";
 import { loadGoogleIdentityScript, parseGoogleJwt, GoogleUserPayload } from "@/lib/auth/google";
 
 export default function LoginPage() {
@@ -607,10 +608,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Developer Credit Footer */}
-        <div className="text-center pt-2">
-          <DeveloperCredit />
-        </div>
+        {/* Compliance Footer for Cashfree & Legal Policies */}
+        <ComplianceFooter />
       </div>
     </div>
   );
