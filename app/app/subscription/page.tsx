@@ -119,6 +119,63 @@ export default function SubscriptionPage() {
       const verifyData = await res.json();
 
       if (verifyData.verified) {
+        // 1. Sync subscription returned from Cashfree verification into client db
+        let updatedSub: any = null;
+        if (verifyData.subscription) {
+          const clientSubIndex = db.subscriptions.findIndex(
+            (s) => s.businessId === businessId
+          );
+          if (clientSubIndex >= 0) {
+            db.subscriptions[clientSubIndex] = {
+              ...db.subscriptions[clientSubIndex],
+              ...verifyData.subscription,
+              status: "ACTIVE",
+              planCode: "VELVI_PRO",
+            };
+            updatedSub = db.subscriptions[clientSubIndex];
+          } else {
+            db.subscriptions.push(verifyData.subscription);
+            updatedSub = verifyData.subscription;
+          }
+        } else {
+          // If server didn't return subscription object, fallback to extending client db
+          const daysToAdd = selectedCycle === "MONTHLY" ? 30 : 365;
+          const res = db.adjustSubscriptionValidity({
+            businessId,
+            adminUserId: "u-super-admin-01",
+            adminName: "Cashfree Payment Gateway",
+            adjustmentType: "EXTEND",
+            days: daysToAdd,
+            reason: `Cashfree verified payment (${selectedCycle})`,
+          });
+          updatedSub = res.subscription;
+        }
+
+        // 2. Add payment record to client db
+        const existingPayment = db.payments.find((p) => p.orderId === oid);
+        if (!existingPayment) {
+          db.payments.push({
+            id: `pay-${Date.now()}`,
+            businessId,
+            userId: currentUser?.id || "u-priest-01",
+            orderId: oid,
+            gateway: "CASHFREE",
+            gatewayPaymentId: verifyData.gatewayPaymentId || `cf_${Date.now()}`,
+            amount: verifyData.amount || (selectedCycle === "MONTHLY" ? 499 : 4999),
+            currency: "INR",
+            status: "SUCCESS",
+            billingCycle: selectedCycle,
+            createdAt: new Date().toISOString(),
+          });
+        }
+
+        // 3. Save to localStorage & broadcast
+        db.saveToLocalStorage();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("velvi:db-change"));
+        }
+
+        // 4. Confetti animation
         try {
           confetti({
             particleCount: 60,
@@ -127,10 +184,11 @@ export default function SubscriptionPage() {
           });
         } catch {}
 
-        refreshSubscription();
+        // 5. Refresh React AuthContext state immediately
+        refreshSubscription(updatedSub || undefined);
 
-        const newExpiry = verifyData.subscription?.currentPeriodEnd
-          ? new Date(verifyData.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
+        const newExpiry = updatedSub?.currentPeriodEnd
+          ? new Date(updatedSub.currentPeriodEnd).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
               year: "numeric",
@@ -146,7 +204,7 @@ export default function SubscriptionPage() {
         const daysToAdd = selectedCycle === "MONTHLY" ? 30 : 365;
         const amount = selectedCycle === "MONTHLY" ? 499 : 4999;
 
-        db.adjustSubscriptionValidity({
+        const res = db.adjustSubscriptionValidity({
           businessId,
           adminUserId: "u-super-admin-01",
           adminName: "Cashfree Webhook Gateway",
@@ -170,6 +228,10 @@ export default function SubscriptionPage() {
         });
         db.saveToLocalStorage();
 
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("velvi:db-change"));
+        }
+
         try {
           confetti({
             particleCount: 60,
@@ -178,9 +240,17 @@ export default function SubscriptionPage() {
           });
         } catch {}
 
-        refreshSubscription();
+        refreshSubscription(res.subscription);
+        const newExpiry = res.subscription?.currentPeriodEnd
+          ? new Date(res.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : selectedProjectedDate;
+
         setPaymentSuccessMessage(
-          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${selectedProjectedDate} வரை நீட்டிக்கப்பட்டுள்ளது (+${selectedDaysAdded} நாட்கள்).`
+          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${selectedDaysAdded} நாட்கள்).`
         );
         setShowCheckoutModal(false);
       }

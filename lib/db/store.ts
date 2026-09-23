@@ -1036,6 +1036,7 @@ export class VelviDatabaseStore {
     if (params.adjustmentType === "EXTEND") {
       newEndDate = calculateNewExpiryDate(previousEndDate, params.days).newExpiry;
       sub.status = "ACTIVE";
+      sub.planCode = "VELVI_PRO";
     } else if (params.adjustmentType === "REDUCE") {
       newEndDate = new Date(new Date(previousEndDate).getTime() - params.days * 86400000);
     } else if (params.adjustmentType === "EXPIRE") {
@@ -1044,6 +1045,7 @@ export class VelviDatabaseStore {
     } else if (params.adjustmentType === "ACTIVATE" || params.adjustmentType === "RESTORE") {
       newEndDate = calculateNewExpiryDate(new Date().toISOString(), params.days || 30).newExpiry;
       sub.status = "ACTIVE";
+      sub.planCode = "VELVI_PRO";
     } else {
       newEndDate = new Date(previousEndDate);
     }
@@ -1077,6 +1079,11 @@ export class VelviDatabaseStore {
       reason: params.reason,
       createdAt: new Date().toISOString(),
     });
+
+    this.saveToLocalStorage();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
 
     return { success: true, subscription: sub };
   }
@@ -1158,6 +1165,11 @@ export class VelviDatabaseStore {
     ref.status = "REWARDED";
     ref.rewardDaysGranted = 30;
     ref.rewardedAt = new Date().toISOString();
+
+    this.saveToLocalStorage();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
 
     return { success: true };
   }

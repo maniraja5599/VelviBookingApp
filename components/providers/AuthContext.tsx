@@ -32,7 +32,7 @@ interface AuthContextType {
     userName?: string;
     error?: string;
   }>;
-  refreshSubscription: () => void;
+  refreshSubscription: (updatedSub?: Subscription) => void;
   updateBusiness: (updates: Partial<Business>) => void;
   updateUser: (updates: Partial<User>) => void;
   completeOnboarding: (data: {
@@ -235,6 +235,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (window as any).velviDb = db;
     }
   }, [syncState]);
+
+  useEffect(() => {
+    const handleDbChange = () => {
+      if (currentBusiness) {
+        const sub = db.getSubscription(currentBusiness.id);
+        if (sub) {
+          setSubscription({ ...sub });
+        }
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("velvi:db-change", handleDbChange);
+      return () => window.removeEventListener("velvi:db-change", handleDbChange);
+    }
+  }, [currentBusiness]);
 
   useEffect(() => {
     if (currentBusiness?.id) {
@@ -486,7 +501,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const refreshSubscription = React.useCallback(() => {
+  const refreshSubscription = React.useCallback((updatedSub?: Subscription) => {
+    if (updatedSub) {
+      setSubscription({ ...updatedSub });
+      return;
+    }
     if (currentBusiness) {
       const sub = db.getSubscription(currentBusiness.id);
       if (sub) setSubscription({ ...sub });
