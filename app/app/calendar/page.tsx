@@ -993,7 +993,7 @@ export default function CalendarPage() {
                     onDoubleClick={() => router.push(`/app/bookings/new?date=${dateStr}`)}
                     style={{ touchAction: "manipulation" }}
                     title="இருமுறை கிளிக்: புதிய பதிவு | அழுத்திப் பிடிக்க: நாள் விவரங்கள்"
-                    className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
+                    className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 pb-2.5 sm:pb-3 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
                       isSelected
                         ? "bg-amber-100/90 ring-2 ring-amber-600 ring-inset z-10 font-bold shadow-2xs"
                         : isToday
@@ -1032,16 +1032,19 @@ export default function CalendarPage() {
                       <div className="h-3" />
                     )}
 
-                    {/* Bottom: Smart Clean Notch ("மேடு") inside bottom of date cell without ugly orange bg */}
+                    {/* Bottom: Full bottom line with uneven raised mound ("மேடு") for booking count */}
                     {hasBookings ? (
-                      <div className="w-full flex justify-center -mb-1 sm:-mb-1.5 z-1">
-                        <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-t-md bg-emerald-950 text-amber-300 text-[9px] sm:text-[10px] md:text-[10.5px] font-black border-t border-x border-emerald-800/80 shadow-2xs group-hover:-translate-y-0.5 transition-transform">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                          <span className="leading-none">{dayBookings.length}</span>
+                      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center pointer-events-none">
+                        {/* Raised organic mound / crest ("மேடு") */}
+                        <div className="inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-t-xl sm:rounded-t-2xl bg-gradient-to-t from-emerald-950 via-emerald-900 to-emerald-850 text-amber-300 text-[9px] sm:text-[10px] md:text-[10.5px] font-black border-t-2 border-x border-amber-400 shadow-xs group-hover:-translate-y-0.5 transition-transform">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                          <span className="leading-none tracking-tight">{dayBookings.length}</span>
                         </div>
+                        {/* Full bottom line spanning across cell edge to edge */}
+                        <div className="w-full h-1 sm:h-1.5 bg-gradient-to-r from-emerald-700 via-amber-500 to-emerald-700 shrink-0" />
                       </div>
                     ) : (
-                      <div className="h-2" />
+                      <div className="h-1.5" />
                     )}
                   </button>
                 );
@@ -1160,7 +1163,77 @@ export default function CalendarPage() {
               </Link>
             </div>
 
-            {/* 2. Day Bookings Card (Dotted Empty State & Diya or Bookings) */}
+            {/* 2. Auspicious Timings Card - Directly Under Calendar Date Info for Instant Live View */}
+            <div className="rounded-2xl border border-emerald-200/90 bg-[#fbfdfc] p-2.5 sm:p-3 space-y-2 shadow-2xs">
+              {/* Header: Title & Full details link */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                    <Clock className="w-3 h-3 text-emerald-800" />
+                  </div>
+                  <h4 className="font-extrabold text-xs text-slate-900">
+                    நல்ல நேரங்கள் &amp; காலங்கள்
+                  </h4>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowDayDetailsModal(true)}
+                  className="px-2.5 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition cursor-pointer"
+                >
+                  <span>முழு விவரம்</span>
+                  <ChevronRight className="w-2.5 h-2.5" />
+                </button>
+              </div>
+
+              {/* LINE 1: நல்ல நேரம் (காலை & மாலை) */}
+              <div className="bg-emerald-50/90 border border-emerald-200/80 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 text-[11px] flex-wrap">
+                <span className="font-bold text-emerald-950 flex items-center gap-1 shrink-0">
+                  <span>☀️</span> நல்ல நேரம்:
+                </span>
+                <div className="flex items-center gap-2 font-black text-emerald-900 text-right shrink-0">
+                  <span>காலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</span>
+                  <span className="text-emerald-300">•</span>
+                  <span>மாலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</span>
+                </div>
+              </div>
+
+              {/* LINE 2: கௌரி நல்ல நேரம் */}
+              <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 text-[11px] flex-wrap">
+                <span className="font-bold text-amber-950 flex items-center gap-1 shrink-0">
+                  <span>🌸</span> கௌரி நல்ல நேரம்:
+                </span>
+                <div className="flex items-center gap-2 font-bold text-amber-900 text-right shrink-0 text-[10.5px]">
+                  <span>காலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}</span>
+                  <span className="text-amber-300">•</span>
+                  <span>மாலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}</span>
+                </div>
+              </div>
+
+              {/* LINE 3: ராகு காலம், எமகண்டம், குளிகை */}
+              <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center">
+                <div className="bg-rose-50/80 border border-rose-200/60 rounded-xl py-1 px-1">
+                  <span className="font-bold text-rose-800 block text-[9.5px]">ராகு காலம்</span>
+                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
+                    {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
+                  </span>
+                </div>
+                <div className="bg-indigo-50/80 border border-indigo-200/60 rounded-xl py-1 px-1">
+                  <span className="font-bold text-indigo-900 block text-[9.5px]">எமகண்டம்</span>
+                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
+                    {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
+                  </span>
+                </div>
+                <div className="bg-amber-50/80 border border-amber-200/60 rounded-xl py-1 px-1">
+                  <span className="font-bold text-amber-900 block text-[9.5px]">குளிகை</span>
+                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
+                    {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Day Bookings Card (Dotted Empty State & Diya or Bookings) */}
             <div className="rounded-2xl border border-amber-300/70 bg-[#fffdfa] p-2.5 sm:p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="font-bold text-xs sm:text-sm text-amber-950 flex items-center gap-1.5">
@@ -1256,64 +1329,6 @@ export default function CalendarPage() {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* 3. Auspicious Timings Card - Compact 2 Lines for Mobile */}
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-2.5 sm:p-3 space-y-2 shadow-2xs">
-              {/* Header: Title & Full details link */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                    <Clock className="w-3 h-3 text-emerald-800" />
-                  </div>
-                  <h4 className="font-extrabold text-xs text-slate-900">
-                    நல்ல நேரங்கள் &amp; காலங்கள்
-                  </h4>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowDayDetailsModal(true)}
-                  className="px-2.5 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition cursor-pointer"
-                >
-                  <span>முழு விவரம்</span>
-                  <ChevronRight className="w-2.5 h-2.5" />
-                </button>
-              </div>
-
-              {/* LINE 1: நல்ல நேரம் (காலை & மாலை) */}
-              <div className="bg-emerald-50/80 border border-emerald-200/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 text-[11px] flex-wrap">
-                <span className="font-bold text-emerald-950 flex items-center gap-1 shrink-0">
-                  <span>☀️</span> நல்ல நேரம்:
-                </span>
-                <div className="flex items-center gap-2 font-black text-emerald-900 text-right shrink-0">
-                  <span>காலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</span>
-                  <span className="text-emerald-300">•</span>
-                  <span>மாலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</span>
-                </div>
-              </div>
-
-              {/* LINE 2: ராகு காலம், எமகண்டம், குளிகை */}
-              <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center">
-                <div className="bg-rose-50/80 border border-rose-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-rose-800 block text-[9.5px]">ராகு காலம்</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
-                  </span>
-                </div>
-                <div className="bg-indigo-50/80 border border-indigo-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-indigo-900 block text-[9.5px]">எமகண்டம்</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
-                  </span>
-                </div>
-                <div className="bg-amber-50/80 border border-amber-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-amber-900 block text-[9.5px]">குளிகை</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
 
