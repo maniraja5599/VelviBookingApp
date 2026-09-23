@@ -103,6 +103,22 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Lock background body/html scroll when search modal is open so page behind does not scroll
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+    };
+  }, [isOpen]);
+
   // Data fetching from store
   const customers = useMemo(() => db.getCustomers(businessId), [businessId, isOpen]);
   const bookings = useMemo(() => db.getBookings(businessId), [businessId, isOpen]);
@@ -296,11 +312,16 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center p-3 pt-14 sm:pt-16 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-[100] flex items-start justify-center p-3 pt-14 sm:pt-16 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 overflow-hidden overscroll-none"
       onClick={onClose}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 animate-in zoom-in-95"
+        className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100dvh-4.5rem)] transition-all duration-200 animate-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky Search Header with Highlighted Search Box */}
@@ -333,15 +354,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               )}
             </div>
 
-            {/* Close Button */}
+            {/* Close Button - Only X icon (No text) */}
             <button
               type="button"
               onClick={onClose}
-              className="h-10 sm:h-11 px-3 text-xs font-black text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition shrink-0 flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
               aria-label="Close search"
+              title="மூடு / Close (Esc)"
             >
-              <X className="w-4 h-4 text-slate-400" />
-              <span>மூடு</span>
+              <X className="w-5 h-5 text-slate-600 stroke-[2.2]" />
             </button>
           </div>
         </div>
@@ -408,7 +429,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         )}
 
         {/* Modal Scrollable Body */}
-        <div className={`overflow-y-auto overscroll-contain p-3 sm:p-3.5 space-y-3.5 text-slate-800 scroll-smooth ${cleanQuery ? "max-h-[60vh]" : ""}`}>
+        <div className="overflow-y-auto overscroll-contain p-3 sm:p-3.5 space-y-3.5 text-slate-800 scroll-smooth max-h-[calc(85vh-7.5rem)] sm:max-h-[calc(80vh-8.5rem)]">
           {/* ========================================================================= */}
           {/* 1. INITIAL COMPACT VIEW (When query is empty - small, sleek bar)          */}
           {/* ========================================================================= */}
@@ -938,10 +959,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             <button
               type="button"
               onClick={onClose}
-              className="text-slate-600 hover:text-slate-900 font-bold px-2.5 py-1 rounded-lg hover:bg-slate-200 transition flex items-center gap-1 cursor-pointer active:scale-95"
+              className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-200 transition flex items-center justify-center cursor-pointer active:scale-95"
+              aria-label="Close search"
+              title="Close (Esc)"
             >
-              <X className="w-3.5 h-3.5" />
-              <span>Close</span>
+              <X className="w-4 h-4 text-slate-600" />
             </button>
           </div>
         )}
