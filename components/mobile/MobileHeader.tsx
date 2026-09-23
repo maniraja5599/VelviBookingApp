@@ -222,7 +222,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-gradient-to-b from-white/98 via-white/95 to-slate-50/90 backdrop-blur-xl border-b border-amber-200/70 shadow-[0_4px_20px_rgba(11,43,23,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all relative before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-gradient-to-r before:from-amber-400/20 before:via-amber-400/80 before:to-amber-400/20">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_4px_16px_rgba(0,0,0,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
         <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
@@ -238,48 +238,43 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
             <Link
               href="/app"
-              className="flex items-center gap-2 min-w-0 group bg-white/95 hover:bg-emerald-50/40 px-2.5 py-1.5 rounded-2xl border border-amber-200/80 hover:border-amber-300 shadow-[0_2px_8px_rgba(200,146,52,0.08)] transition-all shrink-0"
+              className="flex items-center gap-1.5 sm:gap-2 min-w-0 group bg-slate-50/90 hover:bg-slate-100/90 px-2 py-1 rounded-2xl border border-slate-200/80 shadow-2xs transition-all"
             >
-              <div className="relative shrink-0">
-                <BrandLogo
-                  size="sm"
-                  variant="icon"
-                  customLogoUrl={isCustomBusinessLogo ? currentBusiness?.logoUrl : null}
-                  businessName={currentBusiness?.name}
-                  className="group-hover:scale-105 transition-transform"
-                />
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-amber-400 border border-white ring-1 ring-amber-500/30" />
-              </div>
-
+              <BrandLogo
+                size="sm"
+                variant="icon"
+                customLogoUrl={isCustomBusinessLogo ? currentBusiness?.logoUrl : null}
+                businessName={currentBusiness?.name}
+                className="group-hover:scale-105 transition-transform shrink-0"
+              />
               <div className="min-w-0">
                 {title ? (
                   <div>
                     <div className="flex items-center gap-1 leading-none mb-0.5">
-                      <span className="text-[9.5px] font-black text-emerald-950 uppercase tracking-wider">
+                      <span className="text-[9.5px] font-bold text-emerald-900 uppercase tracking-wider">
                         VELVI
                       </span>
                       <span className="text-amber-500 text-[8px]">•</span>
-                      <span className="text-[9.5px] font-bold text-slate-500 truncate max-w-[100px] sm:max-w-[130px]">
+                      <span className="text-[9.5px] font-medium text-slate-500 truncate max-w-[100px] sm:max-w-[130px]">
                         {currentBusiness?.name || "Pooja Services"}
                       </span>
                     </div>
-                    <h1 className="font-black text-slate-900 leading-tight text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[180px]">
+                    <h1 className="font-extrabold text-slate-900 leading-tight text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[180px]">
                       {title}
                     </h1>
                   </div>
                 ) : (
                   <div>
-                    <div className="flex items-center gap-1.5 leading-none">
-                      <span className="font-serif font-black tracking-wider text-emerald-950 text-[14.5px] sm:text-[16px] uppercase drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+                    <div className="flex items-center gap-1 leading-none">
+                      <span className="font-serif font-black tracking-wider text-emerald-950 text-sm sm:text-base uppercase">
                         VELVI
                       </span>
-                      <span className="text-[8.5px] font-black px-1.5 py-0.5 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 text-slate-950 rounded-md shadow-2xs leading-none tracking-tight border border-amber-500/30">
-                        APP
+                      <span className="text-[8.5px] font-extrabold px-1.5 py-0.2 bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 rounded-md border border-amber-300/80 leading-none">
+                        App
                       </span>
                     </div>
-
                     {/* Smooth Vertical Scroll-up Animated Ticker (Cycles between Subtitle & Today's Date) */}
-                    <div className="h-[16px] overflow-hidden relative mt-0.5 max-w-[135px] sm:max-w-[175px]">
+                    <div className="h-[16px] overflow-hidden relative mt-0.5 max-w-[130px] sm:max-w-[170px]">
                       <div
                         className="transition-transform duration-500 ease-out"
                         style={{
@@ -287,16 +282,15 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         }}
                       >
                         {/* Slot 0: Service / Business Subtitle */}
-                        <div className="h-[16px] flex items-center gap-1 min-w-0">
-                          <span className="text-[8.5px]">🪔</span>
-                          <p className="text-[10px] font-bold text-emerald-900 truncate leading-none">
+                        <div className="h-[16px] flex items-center min-w-0">
+                          <p className="text-[10px] font-semibold text-emerald-900 truncate leading-none">
                             {subtitle || currentBusiness?.name || "Pooja • Homam • Seva"}
                           </p>
                         </div>
 
                         {/* Slot 1: Today's Date + Tamil Solar Date */}
                         <div className="h-[16px] flex items-center gap-1 min-w-0 text-amber-900 leading-none">
-                          <span className="text-[8.5px]">📅</span>
+                          <span className="text-[9.5px]">📅</span>
                           <span className="text-[9.5px] font-black tracking-tight truncate">
                             {todayTamilInfo}
                           </span>
@@ -315,7 +309,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
             <button
               type="button"
               onClick={handleOpenSearch}
-              className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-2xl bg-white/95 hover:bg-amber-50/70 text-slate-700 flex items-center justify-center transition-all duration-200 active:scale-95 group shrink-0 relative cursor-pointer border border-amber-200/80 hover:border-amber-300 shadow-[0_2px_8px_rgba(200,146,52,0.08)]"
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 group shrink-0 relative cursor-pointer"
               title={
                 tomorrowBookingsCount > 0 && !hasDismissedNotice
                   ? `நாளை ${tomorrowBookingsCount} பூஜைகள் உள்ளன (1 Day Before Reminders)`
@@ -342,14 +336,14 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-2xl transition-all duration-200 active:scale-95 border max-w-[155px] sm:max-w-[200px] shrink-0 ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl transition active:scale-95 border max-w-[155px] sm:max-w-[200px] shrink-0 ${
                   isProfileMenuOpen
-                    ? "bg-amber-100/95 border-amber-400 text-amber-950 shadow-sm ring-2 ring-amber-400/40"
+                    ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                     : syncState === "syncing"
-                    ? "bg-amber-50/90 border-amber-300 text-amber-950 shadow-xs ring-1 ring-amber-300/40"
+                    ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
                     : syncState === "synced"
-                    ? "bg-emerald-50/80 border-emerald-300/90 text-emerald-950 shadow-xs ring-1 ring-emerald-300/30"
-                    : "bg-white/95 hover:bg-slate-50 border-amber-200/80 hover:border-amber-300 text-slate-800 shadow-[0_2px_8px_rgba(200,146,52,0.08)]"
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
+                  : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
               }`}
               title="User Profile & Sync Status"
               aria-expanded={isProfileMenuOpen}
