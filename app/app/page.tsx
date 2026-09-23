@@ -856,7 +856,7 @@ export default function HomeDashboardPage() {
                     className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs transition active:scale-95 shrink-0"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>+ Add Devotee</span>
+                    <span>Add Devotee</span>
                   </button>
                 </div>
 

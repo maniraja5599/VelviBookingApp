@@ -2086,7 +2086,7 @@ export default function CalendarPage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900 hover:bg-emerald-950 text-white rounded-xl font-bold text-xs shadow-2xs transition active:scale-95"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>+ பூஜை முன்பதிவு செய்ய</span>
+                      <span>பூஜை முன்பதிவு செய்ய</span>
                     </Link>
                   </div>
                 ) : (
@@ -2187,7 +2187,7 @@ export default function CalendarPage() {
                 className="flex-1 py-2.5 px-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>+ இந்த தேதியில் பூஜை பதிவு</span>
+                <span>இந்த தேதியில் பூஜை பதிவு</span>
               </Link>
 
               <button

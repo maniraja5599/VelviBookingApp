@@ -282,11 +282,15 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
               <button
                 type="button"
                 onClick={handleCopyCustomWhatsApp}
-                className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs active:scale-95 transition cursor-pointer"
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all duration-200 cursor-pointer ${
+                  copiedWhatsAppText
+                    ? "bg-emerald-50 border-2 border-emerald-500 text-emerald-800 scale-[1.02] ring-2 ring-emerald-400/80 shadow-md"
+                    : "bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 shadow-2xs"
+                }`}
               >
                 {copiedWhatsAppText ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-4 h-4 text-emerald-600 animate-in zoom-in-50 duration-200" />
                     <span className="text-emerald-700">Copied!</span>
                   </>
                 ) : (

@@ -1234,7 +1234,7 @@ function QuickBookingContent() {
                       className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black transition active:scale-95 shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0"
                     >
                       <Plus className="w-3.5 h-3.5 text-amber-300" />
-                      <span>{showAddItem ? "மூடுக (Close)" : "+ பொருள் தேர்வு / சேர்க்க"}</span>
+                      <span>{showAddItem ? "மூடுக (Close)" : "பொருள் தேர்வு / சேர்க்க"}</span>
                     </button>
                   </div>
 
@@ -1366,7 +1366,7 @@ function QuickBookingContent() {
                                 </span>
                                 {isAlreadyAdded ? (
                                   <span className="text-[10px] font-bold text-emerald-800">
-                                    தேர்வானது ✓
+                                    Done ✓
                                   </span>
                                 ) : (
                                   <span className="text-emerald-700 text-xs font-black">
@@ -1387,7 +1387,7 @@ function QuickBookingContent() {
                           className="text-[11px] font-bold text-amber-900 hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <Plus className="w-3 h-3 text-amber-700" />
-                          <span>+ வேறு புதிய தனிப்பயன் பொருள் சேர்க்க (Type Custom Item)</span>
+                          <span>வேறு புதிய தனிப்பயன் பொருள் சேர்க்க (Type Custom Item)</span>
                         </button>
 
                         {showCustomItemForm && (

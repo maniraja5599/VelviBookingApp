@@ -459,11 +459,15 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                                         <button
                                           type="button"
                                           onClick={(e) => handleCopyMobile(c.mobile, e)}
-                                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-700"
+                                          className={`p-1 rounded transition-all duration-150 cursor-pointer ${
+                                            copiedMobile === c.mobile
+                                              ? "bg-emerald-100 text-emerald-700 scale-110 ring-1 ring-emerald-400"
+                                              : "hover:bg-slate-100 text-slate-400 hover:text-slate-700"
+                                          }`}
                                           title="Copy number"
                                         >
                                           {copiedMobile === c.mobile ? (
-                                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                            <CheckCircle2 className="w-3 h-3 text-emerald-600 animate-in zoom-in-50 duration-200" />
                                           ) : (
                                             <Copy className="w-3 h-3" />
                                           )}

@@ -395,7 +395,7 @@ export default function BookingItemsPage() {
               className="w-full py-2.5 bg-white hover:bg-velvi-cream border border-dashed border-velvi-gold/50 rounded-2xl text-xs font-bold text-velvi-brown flex items-center justify-center gap-1.5 transition active:scale-95 shadow-xs"
             >
               <Plus className="w-4 h-4 text-velvi-gold" />
-              <span>+ பொருள் சேர்க்க / Add Custom Item</span>
+              <span>பொருள் சேர்க்க / Add Custom Item</span>
             </button>
           )}
 

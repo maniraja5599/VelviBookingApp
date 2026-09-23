@@ -97,10 +97,14 @@ export default function ReferralsPage() {
           </span>
           <button
             onClick={handleCopyCode}
-            className="px-3 py-1.5 bg-velvi-gold/15 hover:bg-velvi-gold/25 text-velvi-brownDark rounded-xl text-xs font-bold flex items-center gap-1 transition"
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all duration-200 cursor-pointer ${
+              copied
+                ? "bg-emerald-100 text-emerald-800 ring-2 ring-emerald-400 scale-105 shadow-sm"
+                : "bg-velvi-gold/15 hover:bg-velvi-gold/25 text-velvi-brownDark"
+            }`}
           >
-            {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? "Copied" : "Copy"}</span>
+            {copied ? <Check className="w-4 h-4 text-emerald-600 animate-in zoom-in-50 duration-200" /> : <Copy className="w-4 h-4" />}
+            <span>{copied ? "Copied!" : "Copy"}</span>
           </button>
         </div>
 

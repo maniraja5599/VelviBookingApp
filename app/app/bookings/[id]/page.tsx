@@ -1194,12 +1194,16 @@ export default function BookingDetailPage() {
               <button
                 type="button"
                 onClick={handleCopyWhatsApp}
-                className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center gap-2 transition-all shadow-sm"
+                className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer ${
+                  copiedWhatsApp
+                    ? "bg-emerald-50 border-2 border-emerald-500 text-emerald-800 scale-[1.02] ring-2 ring-emerald-400/80 shadow-md"
+                    : "bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 shadow-sm"
+                }`}
               >
                 {copiedWhatsApp ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700">Copied!</span>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 animate-in zoom-in-50 duration-200" />
+                    <span className="text-emerald-700 font-extrabold">Copied!</span>
                   </>
                 ) : (
                   <>

@@ -152,7 +152,7 @@ export default function CustomersPage() {
           className="px-3 py-1.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition"
         >
           <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-          <span>+ புதிய பக்தர் (Add)</span>
+          <span>புதிய பக்தர் (Add)</span>
         </button>
       </div>
 
