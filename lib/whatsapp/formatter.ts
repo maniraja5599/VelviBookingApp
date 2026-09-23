@@ -93,7 +93,7 @@ ${itemsList ? `📋 *பூஜை சாமக்கிரி பொருட்
 *${business.name || "வேள்வி வேத பவனம்"}*
 📞 தொடர்புக்கு: ${business.phone || business.whatsapp || ""}
 
-✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
 _வேத முறை முன்பதிவு மேலாண்மை_`;
 }
 
@@ -159,7 +159,7 @@ ${itemsList}
 *${business.name || "வேள்வி வேத பவனம்"}*
 📞 தொடர்புக்கு: ${business.phone || business.whatsapp || ""}
 
-✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
 _வேத முறை முன்பதிவு மேலாண்மை_`;
 }
 
@@ -210,6 +210,6 @@ ${contactPhone ? `\n📞 *தொடர்புக்கு:* ${contactPhone}` :
 
 —
 *${business.name || "வேள்வி வேத பவனம்"}*
-✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
+✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨
 _வேத முறை முன்பதிவு மேலாண்மை_`;
 }

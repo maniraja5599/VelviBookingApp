@@ -703,7 +703,8 @@ function PoojasCatalogueContent() {
       }),
       "",
       `மொத்தம்: ${selectedPooja.items.length} பொருட்கள்`,
-      "— வேள்வி செயலி (Velvi App)"
+      "",
+      "✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨"
     ];
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(lines.join("\n")).then(() => {

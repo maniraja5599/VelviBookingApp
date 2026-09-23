@@ -517,7 +517,7 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(itemsMsg).toContain("பக்தர்");
     expect(itemsMsg).toContain("பூஜை சாமக்கிரி பொருட்கள்:");
     expect(itemsMsg).toContain("1. ");
-    expect(itemsMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
+    expect(itemsMsg).toContain("✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
     // Preserves Tamil calendar date (e.g. ஆவணி 27)
     expect(itemsMsg).toMatch(/[\u0B80-\u0BFF]+\s+[0-9]{1,2}/);
     // Never exposes priest to customer
@@ -528,14 +528,14 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(confMsg).toContain("தேதி:");
     expect(confMsg).toContain("நேரம்:");
     expect(confMsg).toContain("தட்சணை:");
-    expect(confMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
+    expect(confMsg).toContain("✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
     // Never exposes priest to customer
     expect(confMsg).not.toContain("Assigned Priest");
     expect(confMsg).not.toContain("குருக்கள்");
 
     const reminderMsg = formatPoojaReminderWhatsAppMessage(booking, business);
     expect(reminderMsg).not.toContain("குருக்கள்:");
-    expect(reminderMsg).toContain("✨ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
+    expect(reminderMsg).toContain("✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨");
   });
 
   // TEST CASE 22: Version Control Registry & PWA Manifest Integrity

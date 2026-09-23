@@ -152,7 +152,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       `⏰ நேரம்: ${b.startTime || "காலை"}\n` +
       `${b.location ? `📍 இடம்: ${b.location}\n` : ""}` +
       `\nநாளை குறிப்பிட்ட நேரத்தில் பூஜை சிறப்பாக நடைபெறும். தேவையான ஏற்பாடுகளை தயார் நிலையில் வைத்திருக்கவும்.\n\n` +
-      `நன்றி,\n${currentBusiness?.name || "வேள்வி வாத்யார்"}`
+      `நன்றி,\n*${currentBusiness?.name || "வேள்வி வாத்யார்"}*\n\n` +
+      `✨ _Powered by_ 𝓥𝓮𝓵𝓿𝓲 𝓐𝓹𝓹 ✨\n_வேத முறை முன்பதிவு மேலாண்மை_`
     );
     window.open(`https://wa.me/91${cleanPhone.slice(-10)}?text=${msg}`, "_blank");
   };
@@ -302,42 +303,47 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
         className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-200 animate-in zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Sticky Search Header */}
-        <div className="p-3 sm:p-3.5 border-b border-slate-200/80 flex items-center gap-2.5 bg-gradient-to-r from-emerald-50/70 via-white to-emerald-50/40 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-300/80 flex items-center justify-center shrink-0 shadow-2xs">
-            <Search className="w-4 h-4 text-emerald-900" />
-          </div>
-          <input
-            ref={inputRef}
-            enterKeyHint="search"
-            inputMode="search"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="தேடுக: பக்தர் பெயர், மொபைல், பூஜை, பதிவு எண்..."
-            className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none"
-          />
-          {query && (
+        {/* Sticky Search Header with Highlighted Search Box */}
+        <div className="p-3 sm:p-3.5 border-b border-emerald-100 bg-gradient-to-r from-emerald-50/70 via-white to-amber-50/50 shrink-0">
+          <div className="flex items-center gap-2">
+            {/* Highlighted Search Input Box Container */}
+            <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-white rounded-2xl border-2 border-emerald-500 shadow-[0_2px_14px_rgba(16,185,129,0.18)] ring-3 ring-emerald-500/15 focus-within:ring-4 focus-within:ring-emerald-500/25 focus-within:border-emerald-600 transition-all duration-200">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs">
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300 stroke-[2.5]" />
+              </div>
+              <input
+                ref={inputRef}
+                enterKeyHint="search"
+                inputMode="search"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="தேடுக: பக்தர் பெயர், மொபைல், பூஜை, பதிவு எண்..."
+                className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition shrink-0 cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Close Button */}
             <button
               type="button"
-              onClick={() => setQuery("")}
-              className="p-1.5 rounded-full hover:bg-slate-200 text-slate-500 transition shrink-0 cursor-pointer"
-              aria-label="Clear search"
+              onClick={onClose}
+              className="h-10 sm:h-11 px-3 text-xs font-black text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
+              aria-label="Close search"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-slate-400" />
+              <span>மூடு</span>
             </button>
-          )}
-
-          {/* Close Button - Replaced "ESC" with a proper Close Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition shrink-0 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-2xs"
-            aria-label="Close search"
-          >
-            <X className="w-4 h-4 text-slate-500" />
-            <span>Close</span>
-          </button>
+          </div>
         </div>
 
         {/* Category Filter Chips (Shown only when searching) */}
