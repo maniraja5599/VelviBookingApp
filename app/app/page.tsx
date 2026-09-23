@@ -1145,9 +1145,15 @@ export default function HomeDashboardPage() {
                       const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
                       const memberBookings = memberBookingsMap.get(m.id) || [];
                       const totalCollections = memberBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-                      const directPriestAmount = memberBookings
-                        .filter((b) => b.paymentRecipient === "PRIEST")
-                        .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
+                      const directPriestAmount = memberBookings.reduce((sum, b) => {
+                        if (b.priestShareAmount !== undefined && b.priestShareAmount > 0) {
+                          return sum + b.priestShareAmount;
+                        }
+                        if (b.paymentRecipient === "PRIEST") {
+                          return sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0));
+                        }
+                        return sum;
+                      }, 0);
 
                       return (
                         <div
@@ -2615,9 +2621,15 @@ export default function HomeDashboardPage() {
         const isOwner = selectedPriestDrawer.role === "OWNER" || selectedPriestDrawer.id === ownerMember?.id;
         const priestBookings = memberBookingsMap.get(selectedPriestDrawer.id) || [];
         const totalBilled = priestBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-        const directPriestAmount = priestBookings
-          .filter((b) => b.paymentRecipient === "PRIEST")
-          .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
+        const directPriestAmount = priestBookings.reduce((sum, b) => {
+          if (b.priestShareAmount !== undefined && b.priestShareAmount > 0) {
+            return sum + b.priestShareAmount;
+          }
+          if (b.paymentRecipient === "PRIEST") {
+            return sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0));
+          }
+          return sum;
+        }, 0);
         const businessAccountAmount = totalBilled - directPriestAmount;
         const totalPending = priestBookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
 

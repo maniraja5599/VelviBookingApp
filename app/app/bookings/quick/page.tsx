@@ -183,6 +183,10 @@ function QuickBookingContent() {
   const [paymentDate, setPaymentDate] = useState<string>(todayStr);
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE">("UPI");
   const [paymentRecipient, setPaymentRecipient] = useState<"BUSINESS" | "PRIEST">("BUSINESS");
+  const [priestShareAmount, setPriestShareAmount] = useState<number>(0);
+  const [adminCommissionAmount, setAdminCommissionAmount] = useState<number>(0);
+  const [splitPreset, setSplitPreset] = useState<"100_PRIEST" | "80_20" | "70_30" | "50_50" | "CUSTOM">("100_PRIEST");
+  const [showSplitCard, setShowSplitCard] = useState<boolean>(false);
   const [paymentNotes, setPaymentNotes] = useState<string>("");
   const [isPaymentSaved, setIsPaymentSaved] = useState<boolean>(false);
   const [paymentSavedFeedback, setPaymentSavedFeedback] = useState<string>("");
@@ -648,6 +652,68 @@ function QuickBookingContent() {
     setSamagriItems((prev) => prev.filter((it) => it.id !== id));
   };
 
+  // Current Paid Amount Calculation
+  const currentPaidAmount = useMemo(() => {
+    if (paymentChoice === "FULL") return amount;
+    if (paymentChoice === "ADVANCE") return advanceAmount;
+    return 0;
+  }, [paymentChoice, amount, advanceAmount]);
+
+  const applySplitPreset = (
+    preset: "100_PRIEST" | "80_20" | "70_30" | "50_50" | "CUSTOM",
+    total: number = currentPaidAmount
+  ) => {
+    setSplitPreset(preset);
+    setIsPaymentSaved(false);
+    if (preset === "100_PRIEST") {
+      setPriestShareAmount(total);
+      setAdminCommissionAmount(0);
+    } else if (preset === "80_20") {
+      const pShare = Math.round(total * 0.8);
+      setPriestShareAmount(pShare);
+      setAdminCommissionAmount(total - pShare);
+    } else if (preset === "70_30") {
+      const pShare = Math.round(total * 0.7);
+      setPriestShareAmount(pShare);
+      setAdminCommissionAmount(total - pShare);
+    } else if (preset === "50_50") {
+      const pShare = Math.round(total * 0.5);
+      setPriestShareAmount(pShare);
+      setAdminCommissionAmount(total - pShare);
+    }
+  };
+
+  const handlePriestShareChange = (val: number) => {
+    setSplitPreset("CUSTOM");
+    setPriestShareAmount(val);
+    setAdminCommissionAmount(Math.max(0, currentPaidAmount - val));
+    setIsPaymentSaved(false);
+  };
+
+  const handleAdminCommissionChange = (val: number) => {
+    setSplitPreset("CUSTOM");
+    setAdminCommissionAmount(val);
+    setPriestShareAmount(Math.max(0, currentPaidAmount - val));
+    setIsPaymentSaved(false);
+  };
+
+  // Keep priest share and admin commission synchronized when total paid changes
+  useEffect(() => {
+    if (currentPaidAmount > 0) {
+      if (splitPreset !== "CUSTOM") {
+        applySplitPreset(splitPreset, currentPaidAmount);
+      } else if (priestShareAmount === 0 && adminCommissionAmount === 0) {
+        if (paymentRecipient === "PRIEST") {
+          setPriestShareAmount(currentPaidAmount);
+          setAdminCommissionAmount(0);
+        } else {
+          setAdminCommissionAmount(currentPaidAmount);
+          setPriestShareAmount(0);
+        }
+      }
+    }
+  }, [currentPaidAmount, splitPreset, paymentRecipient]);
+
   // Handle Payment Choice
   const handlePaymentChoiceChange = (choice: "UNPAID" | "ADVANCE" | "FULL") => {
     setPaymentChoice(choice);
@@ -675,11 +741,17 @@ function QuickBookingContent() {
           : paymentMethod === "CASH"
           ? "ரொக்கம்"
           : paymentMethod === "BANK_TRANSFER"
-          ? "வங்கி பரிவர்த்தனை"
+          ? "வங்கி"
           : "காசோலை";
-      const recipientLabel = paymentRecipient === "PRIEST" ? "வாத்யாரிடம் நேரடியாக" : "நிர்வாகக் கணக்கு";
+      const recipientLabel = paymentRecipient === "PRIEST" ? "வாத்யாரிடம் நேரடி" : "நிர்வாகக் கணக்கு";
+      
+      let splitInfo = "";
+      if (paymentRecipient === "PRIEST" || showSplitCard || priestShareAmount > 0 || adminCommissionAmount > 0) {
+        splitInfo = ` (👤 வாத்யார்: ₹${priestShareAmount.toLocaleString("en-IN")} • 🏛️ கமிஷன்: ₹${adminCommissionAmount.toLocaleString("en-IN")})`;
+      }
+
       setPaymentSavedFeedback(
-        `✓ ₹${amt.toLocaleString("en-IN")} (${methodLabel} • ${recipientLabel}) — ${paymentDate} அன்று பதிவு செய்யப்பட்டது!`
+        `✓ ₹${amt.toLocaleString("en-IN")} • ${recipientLabel}${splitInfo} • ${methodLabel} — ${paymentDate} அன்று பதிவு செய்யப்பட்டது!`
       );
     }
   };
@@ -777,6 +849,8 @@ function QuickBookingContent() {
       paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
       paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
       paymentRecipient: paymentChoice !== "UNPAID" ? paymentRecipient : undefined,
+      priestShareAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || priestShareAmount > 0 ? priestShareAmount : 0) : undefined,
+      adminCommissionAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || adminCommissionAmount > 0 ? adminCommissionAmount : (paymentRecipient === "BUSINESS" ? currentPaidAmount : 0)) : undefined,
       paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
       status: "CONFIRMED",
       assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
@@ -2257,48 +2331,230 @@ function QuickBookingContent() {
 
               {/* PAYMENT RECIPIENT SELECTOR - Business vs Priest */}
               <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
-                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
-                  தொகை யாரிடம் பெறப்பட்டது? (Payment Received By):
-                </label>
-                <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                    தொகை யாரிடம் பெறப்பட்டது? (Payment Received By):
+                  </label>
+                  {paymentRecipient === "PRIEST" && (
+                    <span className="text-[9.5px] font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                      நேரடி தட்சணை
+                    </span>
+                  )}
+                </div>
+
+                {/* Overflow-Safe Responsive 2-Option Card Selector */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-bold">
                   <button
                     type="button"
                     onClick={() => {
                       setPaymentRecipient("BUSINESS");
                       setIsPaymentSaved(false);
                     }}
-                    className={`py-2 px-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center gap-2 ${
+                    className={`p-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center justify-between gap-2 ${
                       paymentRecipient === "BUSINESS"
                         ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs ring-2 ring-emerald-500/20"
-                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
                     }`}
                   >
-                    <span className="text-base shrink-0">🏛️</span>
-                    <div className="min-w-0 text-left leading-tight">
-                      <div className="text-[11px] truncate">நிர்வாகம் / கணக்கு</div>
-                      <div className={`text-[9px] ${paymentRecipient === "BUSINESS" ? "text-emerald-200" : "text-slate-400"}`}>Business / Owner</div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg shrink-0">🏛️</span>
+                      <div className="min-w-0 text-left leading-snug">
+                        <div className="text-xs font-black truncate">நிர்வாகம் / கணக்கு</div>
+                        <div
+                          className={`text-[9.5px] truncate ${
+                            paymentRecipient === "BUSINESS" ? "text-emerald-200" : "text-slate-400"
+                          }`}
+                        >
+                          Business / Temple Account
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        paymentRecipient === "BUSINESS"
+                          ? "border-emerald-300 bg-emerald-700 text-white"
+                          : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {paymentRecipient === "BUSINESS" && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                     </div>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => {
                       setPaymentRecipient("PRIEST");
                       setIsPaymentSaved(false);
+                      if (priestShareAmount === 0 && adminCommissionAmount === 0 && currentPaidAmount > 0) {
+                        setPriestShareAmount(currentPaidAmount);
+                        setAdminCommissionAmount(0);
+                      }
                     }}
-                    className={`py-2 px-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center gap-2 ${
+                    className={`p-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center justify-between gap-2 ${
                       paymentRecipient === "PRIEST"
-                        ? "bg-amber-600 text-white border-amber-600 font-black shadow-2xs ring-2 ring-amber-500/20"
-                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                        ? "bg-amber-700 text-white border-amber-700 font-black shadow-2xs ring-2 ring-amber-500/20"
+                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
                     }`}
                   >
-                    <span className="text-base shrink-0">👤</span>
-                    <div className="min-w-0 text-left leading-tight">
-                      <div className="text-[11px] truncate">வாத்யாரிடம் நேரடியாக</div>
-                      <div className={`text-[9px] ${paymentRecipient === "PRIEST" ? "text-amber-100" : "text-slate-400"}`}>Directly to Priest</div>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg shrink-0">👤</span>
+                      <div className="min-w-0 text-left leading-snug">
+                        <div className="text-xs font-black truncate">வாத்யாரிடம் நேரடியாக</div>
+                        <div
+                          className={`text-[9.5px] truncate ${
+                            paymentRecipient === "PRIEST" ? "text-amber-200" : "text-slate-400"
+                          }`}
+                        >
+                          Directly to Priest
+                        </div>
+                      </div>
+                    </div>
+                    <div
+                      className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                        paymentRecipient === "PRIEST"
+                          ? "border-amber-300 bg-amber-800 text-white"
+                          : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {paymentRecipient === "PRIEST" && <Check className="w-2.5 h-2.5 stroke-[3]" />}
                     </div>
                   </button>
                 </div>
               </div>
+
+              {/* COMMISSION & DAKSHINA SPLIT CARD (Manual Enter & Presets) */}
+              {(paymentRecipient === "PRIEST" || showSplitCard) && (
+                <div className="p-3 bg-amber-50/80 border border-amber-200/90 rounded-2xl space-y-2.5 animate-in fade-in">
+                  <div className="flex items-center justify-between flex-wrap gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">⚖️</span>
+                      <span className="text-xs font-black text-amber-950">
+                        கட்டணப் பகிர்வு & கமிஷன் (Dakshina & Commission Split):
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+                      மொத்தம்: ₹{currentPaidAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <p className="text-[10.5px] text-amber-900/80 font-medium leading-relaxed">
+                    வாத்யாரிடம் முழுத் தொகையும் செல்லாது எனில், வாத்யார் தட்சணை மற்றும் நிர்வாகக் கமிஷனை கீழே மாற்றிக்கொள்ளலாம்.
+                  </p>
+
+                  {/* Quick Presets */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {[
+                      { key: "100_PRIEST", label: "100% வாத்யார்" },
+                      { key: "80_20", label: "80% / 20%" },
+                      { key: "70_30", label: "70% / 30%" },
+                      { key: "50_50", label: "50% / 50%" },
+                      { key: "CUSTOM", label: "✏️ சொந்த தொகை" },
+                    ].map((p) => {
+                      const isSel = splitPreset === p.key;
+                      return (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => applySplitPreset(p.key as any)}
+                          className={`text-[10.5px] font-bold px-2 py-1 rounded-lg border transition active:scale-95 cursor-pointer ${
+                            isSel
+                              ? "bg-amber-800 text-white border-amber-800 font-black shadow-2xs"
+                              : "bg-white hover:bg-amber-100 text-amber-950 border-amber-200"
+                          }`}
+                        >
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Two Manual Inputs: Priest Share & Admin Commission */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {/* Priest Share */}
+                    <div className="space-y-1 bg-white p-2.5 rounded-xl border border-amber-300 shadow-2xs">
+                      <div className="text-[10.5px] font-black text-amber-950 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span>👤</span>
+                          <span>வாத்யார் பங்கு / தட்சணை</span>
+                        </span>
+                        {currentPaidAmount > 0 && (
+                          <span className="text-[9.5px] font-extrabold text-amber-700">
+                            {Math.round((priestShareAmount / currentPaidAmount) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1.5 text-xs font-black text-amber-800">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={currentPaidAmount}
+                          value={priestShareAmount || ""}
+                          onChange={(e) => handlePriestShareChange(Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-full bg-amber-50/50 border border-amber-300 focus:border-amber-600 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Admin Commission */}
+                    <div className="space-y-1 bg-white p-2.5 rounded-xl border border-emerald-300 shadow-2xs">
+                      <div className="text-[10.5px] font-black text-emerald-950 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <span>🏛️</span>
+                          <span>நிர்வாகக் கமிஷன் / பங்கு</span>
+                        </span>
+                        {currentPaidAmount > 0 && (
+                          <span className="text-[9.5px] font-extrabold text-emerald-700">
+                            {Math.round((adminCommissionAmount / currentPaidAmount) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-2.5 top-1.5 text-xs font-black text-emerald-800">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={currentPaidAmount}
+                          value={adminCommissionAmount || ""}
+                          onChange={(e) => handleAdminCommissionChange(Number(e.target.value) || 0)}
+                          placeholder="0"
+                          className="w-full bg-emerald-50/50 border border-emerald-300 focus:border-emerald-600 rounded-lg pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Calculation Balance Status */}
+                  <div className="flex items-center justify-between text-[10px] font-bold pt-0.5">
+                    {priestShareAmount + adminCommissionAmount === currentPaidAmount ? (
+                      <span className="text-emerald-800 font-extrabold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>தொகை சரியாகப் பிரிக்கப்பட்டுள்ளது (₹{priestShareAmount} + ₹{adminCommissionAmount} = ₹{currentPaidAmount})</span>
+                      </span>
+                    ) : (
+                      <span className="text-rose-700 font-extrabold flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 text-rose-500" />
+                        <span>கூட்டுத் தொகை வேறுபடுகிறது (மொத்தம்: ₹{priestShareAmount + adminCommissionAmount} / பெறப்பட்டது: ₹{currentPaidAmount})</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Optional Toggle if paymentRecipient is BUSINESS but owner wants to allocate priest share */}
+              {paymentRecipient === "BUSINESS" && !showSplitCard && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSplitCard(true);
+                    applySplitPreset("80_20", currentPaidAmount);
+                  }}
+                  className="text-[10.5px] font-bold text-amber-800 hover:text-amber-950 flex items-center gap-1 py-0.5 cursor-pointer underline underline-offset-2"
+                >
+                  + குருக்கள் தட்சணை / கமிஷன் கணக்கிட (Set Priest Dakshina & Commission)
+                </button>
+              )}
 
               {/* PAYMENT METHOD SELECTOR */}
               <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
@@ -2307,8 +2563,8 @@ function QuickBookingContent() {
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs font-bold">
                   {[
-                    { key: "CASH", label: "ரொக்கம்", sub: "Cash", icon: "💵" },
                     { key: "UPI", label: "GPay / UPI", sub: "Online", icon: "📱" },
+                    { key: "CASH", label: "ரொக்கம்", sub: "Cash", icon: "💵" },
                     { key: "BANK_TRANSFER", label: "வங்கி", sub: "Bank", icon: "🏦" },
                     { key: "CHEQUE", label: "காசோலை", sub: "Cheque", icon: "📝" },
                   ].map((m) => {
@@ -2355,39 +2611,39 @@ function QuickBookingContent() {
                 />
               </div>
 
-              {/* SAVE PAYMENT BUTTON ("save btn vechuko") */}
+              {/* SAVE PAYMENT BUTTON */}
               <div className="pt-2 border-t border-emerald-200/90">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleSavePaymentDetails}
-                    className={`flex-1 py-2 px-3 rounded-xl text-xs font-black shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black shadow-xs transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                       isPaymentSaved
                         ? "bg-emerald-700 text-white border border-emerald-700"
                         : "bg-gradient-to-r from-emerald-800 to-[#0b2b17] hover:from-emerald-700 hover:to-emerald-900 text-amber-200 border border-emerald-900"
                     }`}
                   >
-                    <Save className="w-3.5 h-3.5 text-amber-300" />
-                    <span>{isPaymentSaved ? "✓ கட்டணம் சேமிக்கப்பட்டது (Saved)" : "💾 கட்டணத்தை சேமி (Save Payment Record)"}</span>
+                    <Save className="w-4 h-4 text-amber-300" />
+                    <span>{isPaymentSaved ? "✓ கட்டண விவரங்கள் பதிவு செய்யப்பட்டன (Saved)" : "💾 கட்டணத்தைப் பதிவு செய் (Save Payment Record)"}</span>
                   </button>
 
                   {isPaymentSaved && (
                     <button
                       type="button"
                       onClick={() => setIsPaymentSaved(false)}
-                      className="px-2.5 py-2 text-[11px] font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-xl transition cursor-pointer"
+                      className="px-3 py-2.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white border border-slate-300 rounded-xl transition cursor-pointer shadow-2xs"
                       title="Edit payment"
                     >
-                      மாற்று
+                      மாற்று / Edit
                     </button>
                   )}
                 </div>
 
                 {/* Instant Feedback Banner */}
                 {isPaymentSaved && paymentSavedFeedback && (
-                  <div className="mt-2 p-2 bg-emerald-100/90 text-emerald-950 rounded-xl border border-emerald-300 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span className="flex-1">{paymentSavedFeedback}</span>
+                  <div className="mt-2.5 p-3 bg-emerald-100/90 text-emerald-950 rounded-xl border border-emerald-300 text-xs font-bold flex items-start gap-2 animate-in fade-in shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <div className="flex-1 leading-relaxed">{paymentSavedFeedback}</div>
                   </div>
                 )}
               </div>
@@ -3182,6 +3438,13 @@ function QuickBookingContent() {
                         {paymentRecipient === "PRIEST" ? "👤 வாத்யாரிடம் நேரடியாக" : "🏛️ நிர்வாகக் கணக்கு"}
                       </span>
                     </div>
+
+                    {(paymentRecipient === "PRIEST" || showSplitCard || priestShareAmount > 0 || adminCommissionAmount > 0) && (
+                      <div className="p-2 bg-amber-100/70 rounded-lg border border-amber-200/80 flex items-center justify-between text-[11px] font-bold text-amber-950">
+                        <span>👤 வாத்யார் தட்சணை: ₹{priestShareAmount.toLocaleString("en-IN")}</span>
+                        <span>🏛️ நிர்வாகக் கமிஷன்: ₹{adminCommissionAmount.toLocaleString("en-IN")}</span>
+                      </div>
+                    )}
 
                     {paymentNotes && (
                       <div className="text-[10.5px] text-slate-600 font-medium truncate pt-1 border-t border-emerald-100">

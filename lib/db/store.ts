@@ -1351,6 +1351,8 @@ export class VelviDatabaseStore {
     paymentDate?: string;
     paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER";
     paymentRecipient?: "BUSINESS" | "PRIEST";
+    priestShareAmount?: number;
+    adminCommissionAmount?: number;
     paymentNotes?: string;
     status: BookingStatus;
     expenseAmount?: number;
@@ -1384,6 +1386,8 @@ export class VelviDatabaseStore {
       paymentDate: params.paymentDate,
       paymentMethod: params.paymentMethod,
       paymentRecipient: params.paymentRecipient || "BUSINESS",
+      priestShareAmount: params.priestShareAmount,
+      adminCommissionAmount: params.adminCommissionAmount,
       paymentNotes: params.paymentNotes,
       status: params.status || "CONFIRMED",
       expenseAmount: params.expenseAmount || 0,

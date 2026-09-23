@@ -920,9 +920,15 @@ export default function CustomersPage() {
           return b.assignedIyerId === selectedPriest.id || b.assignedIyerName === selectedPriest.name;
         });
         const totalBilled = priestBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
-        const directPriestAmount = priestBookings
-          .filter((b) => b.paymentRecipient === "PRIEST")
-          .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
+        const directPriestAmount = priestBookings.reduce((sum, b) => {
+          if (b.priestShareAmount !== undefined && b.priestShareAmount > 0) {
+            return sum + b.priestShareAmount;
+          }
+          if (b.paymentRecipient === "PRIEST") {
+            return sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0));
+          }
+          return sum;
+        }, 0);
         const businessAccountAmount = totalBilled - directPriestAmount;
         const totalPending = priestBookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
 
