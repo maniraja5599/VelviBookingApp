@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { db } from "@/lib/db/store";
-import { Customer } from "@/lib/types";
+import { Customer, BusinessMember, Booking } from "@/lib/types";
 import {
   normalizeIndianMobile,
   cleanPastedIndianMobile,
@@ -35,13 +35,27 @@ export default function CustomersPage() {
   const { t } = useLanguage();
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
+  const [activeTab, setActiveTab] = useState<"devotees" | "priests">("devotees");
   const [searchQuery, setSearchQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [members, setMembers] = useState<BusinessMember[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
+  // Priest Tab States
+  const [priestSearch, setPriestSearch] = useState("");
+  const [selectedPriest, setSelectedPriest] = useState<BusinessMember | null>(null);
+  const [showAddPriestModal, setShowAddPriestModal] = useState(false);
+  const [newPriestName, setNewPriestName] = useState("");
+  const [newPriestMobile, setNewPriestMobile] = useState("");
+  const [newPriestSpec, setNewPriestSpec] = useState("உதவி குருக்கள் (Assistant Priest)");
+  const [priestError, setPriestError] = useState("");
+
   React.useEffect(() => {
-    const update = () => setCustomers(db.getCustomers(businessId));
+    const update = () => {
+      setCustomers(db.getCustomers(businessId));
+      setMembers(db.getMembers(businessId));
+    };
     update();
     window.addEventListener("velvi:db-change", update);
     return () => window.removeEventListener("velvi:db-change", update);
@@ -81,16 +95,41 @@ export default function CustomersPage() {
     }
   };
 
+  // 1. Deduplicate Priest Members
+  const uniqueMembers = React.useMemo(() => {
+    const seen = new Set<string>();
+    return members.filter((m) => {
+      const cleanMobile = m.mobile ? normalizeIndianMobile(m.mobile) : "";
+      const key = cleanMobile ? `m:${cleanMobile}` : `id:${m.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [members]);
+
+  // 2. Index priest mobiles & names to eliminate duplicate/mismatch with devotees
+  const priestMemberMobiles = React.useMemo(() => {
+    const set = new Set<string>();
+    for (const m of uniqueMembers) {
+      if (m.mobile) set.add(normalizeIndianMobile(m.mobile));
+      if (m.name) set.add(m.name.trim().toLowerCase());
+    }
+    return set;
+  }, [uniqueMembers]);
+
+  // 3. Deduplicate Devotees and filter out priest members to avoid duplicate/mismatch
   const uniqueCustomers = React.useMemo(() => {
     const seen = new Set<string>();
     return customers.filter((c) => {
       const cleanMobile = c.mobile ? normalizeIndianMobile(c.mobile) : "";
+      if (cleanMobile && priestMemberMobiles.has(cleanMobile)) return false;
+      if (c.name && priestMemberMobiles.has(c.name.trim().toLowerCase())) return false;
       const key = cleanMobile ? `m:${cleanMobile}` : `id:${c.id}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [customers]);
+  }, [customers, priestMemberMobiles]);
 
   const filteredCustomers = React.useMemo(() => {
     return uniqueCustomers.filter(
@@ -101,7 +140,36 @@ export default function CustomersPage() {
     );
   }, [uniqueCustomers, searchQuery]);
 
-  const members = React.useMemo(() => db.getMembers(businessId), [businessId]);
+  const filteredPriests = React.useMemo(() => {
+    return uniqueMembers.filter(
+      (m) =>
+        m.name.toLowerCase().includes(priestSearch.toLowerCase()) ||
+        (m.mobile && m.mobile.includes(priestSearch)) ||
+        (m.specialization && m.specialization.toLowerCase().includes(priestSearch.toLowerCase()))
+    );
+  }, [uniqueMembers, priestSearch]);
+
+  const allBookings = React.useMemo(() => db.getBookings(businessId), [businessId]);
+
+  const handleAddPriest = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPriestName.trim()) {
+      setPriestError("குருக்கள் பெயர் அவசியம் / Priest Name is required.");
+      return;
+    }
+    setPriestError("");
+    db.createMember({
+      businessId,
+      name: newPriestName.trim(),
+      mobile: newPriestMobile.trim(),
+      role: "IYER",
+      specialization: newPriestSpec.trim() || "உதவி குருக்கள் (Assistant Priest)",
+    });
+    setNewPriestName("");
+    setNewPriestMobile("");
+    setNewPriestSpec("உதவி குருக்கள் (Assistant Priest)");
+    setShowAddPriestModal(false);
+  };
 
   // Bookings for selected customer
   const selectedCustomerBookings = React.useMemo(() => {
@@ -190,104 +258,256 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-3.5 pb-8 animate-in fade-in duration-200">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-velvi-brownDark">{t("customers")}</h2>
-          <p className="text-xs text-velvi-brown/60">
-            {filteredCustomers.length} registered devotees
-          </p>
-        </div>
-
+      {/* Sub-Tabs Switcher: Devotees vs Priests */}
+      <div className="flex items-center gap-1 p-0.5 bg-slate-100 rounded-xl text-xs font-bold border border-slate-200/80">
         <button
-          id="addCustomerBtn"
-          onClick={() => setShowAddModal(true)}
-          className="px-3 py-1.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition"
+          type="button"
+          onClick={() => setActiveTab("devotees")}
+          className={`flex-1 py-2 rounded-lg transition text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeTab === "devotees"
+              ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
         >
-          <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-          <span>புதிய பக்தர் (Add)</span>
+          <span>👥</span>
+          <span>பக்தர்கள் / Devotees ({uniqueCustomers.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("priests")}
+          className={`flex-1 py-2 rounded-lg transition text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+            activeTab === "priests"
+              ? "bg-white text-slate-900 shadow-2xs font-extrabold"
+              : "text-slate-600 hover:text-slate-900"
+          }`}
+        >
+          <span>🪔</span>
+          <span>குருக்கள் / Priests ({uniqueMembers.length})</span>
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="w-4 h-4 text-velvi-brown/40 absolute left-3 top-2.5" />
-        <input
-          type="text"
-          placeholder="Search customers by name, mobile, city..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-velvi-gold/20 text-xs text-velvi-brownDark placeholder:text-velvi-brown/40 focus:outline-none focus:border-velvi-gold transition"
-        />
-      </div>
+      {activeTab === "devotees" ? (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-velvi-brownDark">பக்தர்கள் (Devotees)</h2>
+              <p className="text-xs text-velvi-brown/60">
+                {filteredCustomers.length} registered devotees
+              </p>
+            </div>
 
-      {/* Customer List */}
-      <div className="space-y-2">
-        {filteredCustomers.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-velvi-gold/30">
-            <User className="w-8 h-8 text-velvi-gold mx-auto mb-2" />
-            <h4 className="font-bold text-sm text-velvi-brown">No customers found</h4>
-            <p className="text-xs text-velvi-brown/60 mt-1">
-              Add your first customer to quickly assign bookings.
-            </p>
+            <button
+              id="addCustomerBtn"
+              onClick={() => setShowAddModal(true)}
+              className="px-3 py-1.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
+              <span>புதிய பக்தர் (Add)</span>
+            </button>
           </div>
-        ) : (
-          filteredCustomers.map((c) => {
-            const customerBookings = db
-              .getBookings(businessId)
-              .filter((b) => b.customerId === c.id || b.customerMobile === c.mobile);
-            const initials = c.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2);
 
-            return (
-              <div
-                key={c.id}
-                onClick={() => setSelectedCustomer(c)}
-                className="bg-white rounded-2xl p-3 border border-velvi-gold/20 shadow-sm hover:border-velvi-gold/50 transition cursor-pointer flex items-center justify-between"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-velvi-gold/15 text-velvi-brown font-bold text-xs flex items-center justify-center border border-velvi-gold/30">
-                    {initials}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-velvi-brownDark">{c.name}</h4>
-                    <p className="text-xs text-velvi-brown/70 flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-velvi-gold shrink-0" />
-                      <span>{c.city || "Namakkal"}</span>
-                    </p>
-                    <p className="text-[11px] text-velvi-brown/60">{c.mobile}</p>
-                  </div>
-                </div>
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-velvi-brown/40 absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search customers by name, mobile, city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-velvi-gold/20 text-xs text-velvi-brownDark placeholder:text-velvi-brown/40 focus:outline-none focus:border-velvi-gold transition"
+            />
+          </div>
 
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`https://wa.me/${c.mobile.replace(/\D/g, "")}`}
-                    onClick={(e) => e.stopPropagation()}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl transition"
-                    title="WhatsApp"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </a>
-                  <a
-                    href={`tel:${c.mobile}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="p-2 bg-velvi-cream text-velvi-brown hover:bg-velvi-gold/20 rounded-xl transition"
-                    title="Call"
-                  >
-                    <Phone className="w-4 h-4" />
-                  </a>
-                </div>
+          {/* Customer List */}
+          <div className="space-y-2">
+            {filteredCustomers.length === 0 ? (
+              <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-velvi-gold/30">
+                <User className="w-8 h-8 text-velvi-gold mx-auto mb-2" />
+                <h4 className="font-bold text-sm text-velvi-brown">No customers found</h4>
+                <p className="text-xs text-velvi-brown/60 mt-1">
+                  Add your first customer to quickly assign bookings.
+                </p>
               </div>
-            );
-          })
-        )}
-      </div>
+            ) : (
+              filteredCustomers.map((c) => {
+                const customerBookings = db
+                  .getBookings(businessId)
+                  .filter((b) => b.customerId === c.id || b.customerMobile === c.mobile);
+                const initials = c.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2);
+
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => setSelectedCustomer(c)}
+                    className="bg-white rounded-2xl p-3 border border-velvi-gold/20 shadow-sm hover:border-velvi-gold/50 transition cursor-pointer flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-velvi-gold/15 text-velvi-brown font-bold text-xs flex items-center justify-center border border-velvi-gold/30">
+                        {initials}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-velvi-brownDark">{c.name}</h4>
+                        <p className="text-xs text-velvi-brown/70 flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3 h-3 text-velvi-gold shrink-0" />
+                          <span>{c.city || "Namakkal"}</span>
+                        </p>
+                        <p className="text-[11px] text-velvi-brown/60">{c.mobile}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`https://wa.me/${c.mobile.replace(/\D/g, "")}`}
+                        onClick={(e) => e.stopPropagation()}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-xl transition"
+                        title="WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
+                      <a
+                        href={`tel:${c.mobile}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 bg-velvi-cream text-velvi-brown hover:bg-velvi-gold/20 rounded-xl transition"
+                        title="Call"
+                      >
+                        <Phone className="w-4 h-4" />
+                      </a>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </>
+      ) : (
+        /* Priests Sub-Tab */
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-emerald-950">குருக்கள் (Priests)</h2>
+              <p className="text-xs text-slate-500">
+                {filteredPriests.length} assigned priests
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowAddPriestModal(true)}
+              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-amber-300 rounded-xl text-xs font-black flex items-center gap-1 shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>புதிய குருக்கள் (Add)</span>
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search priests by name, mobile, spec..."
+              value={priestSearch}
+              onChange={(e) => setPriestSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 transition"
+            />
+          </div>
+
+          {/* Priests List */}
+          <div className="space-y-2">
+            {filteredPriests.length === 0 ? (
+              <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-slate-200">
+                <User className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <h4 className="font-bold text-sm text-slate-800">No priests found</h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  Add your first assistant priest to assign poojas.
+                </p>
+              </div>
+            ) : (
+              filteredPriests.map((m) => {
+                const isOwner = m.role === "OWNER" || m.id === "m-owner-01";
+                const priestBookings = allBookings.filter((b) => {
+                  if (isOwner) {
+                    return (
+                      b.assignedIyerId === m.id ||
+                      b.assignedIyerName === m.name ||
+                      b.assignedIyerName === "Ravi Iyer" ||
+                      !b.assignedIyerName ||
+                      b.assignedIyerName.toLowerCase() === "self"
+                    );
+                  }
+                  return b.assignedIyerId === m.id || b.assignedIyerName === m.name;
+                });
+                const totalCollections = priestBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+
+                return (
+                  <div
+                    key={m.id}
+                    onClick={() => setSelectedPriest(m)}
+                    className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-emerald-500 transition cursor-pointer flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-950 font-black text-sm flex items-center justify-center border border-emerald-300 shrink-0">
+                        {isOwner ? "🪔" : "👥"}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-extrabold text-sm text-slate-900">{m.name}</h4>
+                          <span
+                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full border ${
+                              isOwner
+                                ? "bg-amber-100 text-amber-900 border-amber-300"
+                                : "bg-blue-50 text-blue-900 border-blue-200"
+                            }`}
+                          >
+                            {isOwner ? "Head Priest" : "Assistant"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-500 truncate mt-0.5">
+                          {m.specialization || "Vedic Rituals & Pooja"}
+                        </p>
+                        <p className="text-[11px] font-bold text-emerald-900 mt-0.5">
+                          🪔 {priestBookings.length} Poojas • ₹{totalCollections.toLocaleString("en-IN")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      {m.mobile && (
+                        <>
+                          <a
+                            href={`https://wa.me/${m.mobile.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl transition border border-emerald-200"
+                            title="WhatsApp Priest"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </a>
+                          <a
+                            href={`tel:${m.mobile}`}
+                            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition"
+                            title="Call Priest"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </>
+      )}
 
       {/* Add Customer Modal */}
       {showAddModal && (
@@ -587,6 +807,298 @@ export default function CustomersPage() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ADD PRIEST                                                         */}
+      {/* ========================================================================= */}
+      {showAddPriestModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-emerald-100">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-base text-slate-900 flex items-center gap-1.5">
+                <span>🪔</span>
+                <span>புதிய குருக்கள் சேர்க்க / Add Priest</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddPriestModal(false)}
+                className="p-1 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {priestError && (
+              <div className="p-2.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200">
+                {priestError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddPriest} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  குருக்கள் பெயர் (Priest Name) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="எ.கா: சுந்தரமூர்த்தி வாத்யார் / Sundar Iyer"
+                  value={newPriestName}
+                  onChange={(e) => setNewPriestName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  மொபைல் எண் (Mobile - Optional)
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-2 py-2 text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
+                    <span>🇮🇳</span>
+                    <span>+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="98765 43210"
+                    value={newPriestMobile}
+                    onChange={(e) => setNewPriestMobile(cleanPastedIndianMobile(e.target.value))}
+                    maxLength={10}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  பொறுப்பு / சிறப்பு (Specialization)
+                </label>
+                <input
+                  type="text"
+                  placeholder="எ.கா: உதவி குருக்கள் / ஹோமம் & பூஜா"
+                  value={newPriestSpec}
+                  onChange={(e) => setNewPriestSpec(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddPriestModal(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  ரத்து / Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-xs transition cursor-pointer"
+                >
+                  ✓ சேமி / Save Priest
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* DRAWER: PRIEST PROFILE & FULL COLLECTIONS                                 */}
+      {/* ========================================================================= */}
+      {selectedPriest && (() => {
+        const isOwner = selectedPriest.role === "OWNER" || selectedPriest.id === "m-owner-01";
+        const priestBookings = allBookings.filter((b) => {
+          if (isOwner) {
+            return (
+              b.assignedIyerId === selectedPriest.id ||
+              b.assignedIyerName === selectedPriest.name ||
+              b.assignedIyerName === "Ravi Iyer" ||
+              !b.assignedIyerName ||
+              b.assignedIyerName.toLowerCase() === "self"
+            );
+          }
+          return b.assignedIyerId === selectedPriest.id || b.assignedIyerName === selectedPriest.name;
+        });
+        const totalBilled = priestBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        const directPriestAmount = priestBookings
+          .filter((b) => b.paymentRecipient === "PRIEST")
+          .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
+        const businessAccountAmount = totalBilled - directPriestAmount;
+        const totalPending = priestBookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-t-3xl p-5 max-w-md w-full max-h-[88vh] overflow-y-auto space-y-4 shadow-2xl border-t-2 border-emerald-500 animate-in slide-in-from-bottom duration-200">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-950 font-black text-xl flex items-center justify-center border border-emerald-300 shrink-0 shadow-2xs">
+                    {isOwner ? "🪔" : "👥"}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-black text-lg text-slate-900 leading-tight">
+                        {selectedPriest.name}
+                      </h3>
+                      <span
+                        className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${
+                          isOwner
+                            ? "bg-amber-100 text-amber-900 border-amber-300"
+                            : "bg-blue-50 text-blue-900 border-blue-200"
+                        }`}
+                      >
+                        {isOwner ? "தலைமை குருக்கள்" : "உதவி குருக்கள்"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                      {selectedPriest.specialization || "Vedic Rituals & Pooja"}
+                    </p>
+                    {selectedPriest.mobile && (
+                      <p className="text-xs text-slate-600 font-bold mt-0.5 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>+91 {selectedPriest.mobile}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedPriest(null)}
+                  className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Communication Actions */}
+              {selectedPriest.mobile && (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:${selectedPriest.mobile}`}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call Priest</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${selectedPriest.mobile.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-200 transition"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+              )}
+
+              {/* Financial & Collection Summary Breakdown */}
+              <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white p-3.5 rounded-2xl space-y-2.5 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-200 flex items-center gap-1">
+                    <span>📊 மொத்த வசூல் & கணக்கு (Total Collections)</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-800/80 rounded-full text-emerald-200 border border-emerald-700">
+                    {priestBookings.length} பூஜைகள்
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                  <div className="bg-white/10 p-2 rounded-xl">
+                    <span className="text-[10px] text-slate-300 block">மொத்த தட்சணை (Billed)</span>
+                    <span className="text-base font-black text-white">₹{totalBilled.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="bg-white/10 p-2 rounded-xl">
+                    <span className="text-[10px] text-rose-300 block">மீதி நிலுவை (Pending)</span>
+                    <span className="text-base font-black text-rose-200">₹{totalPending.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                {/* Distinct Breakdown: Business Received vs Directly to Priest */}
+                <div className="space-y-1.5 pt-1 border-t border-white/10 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-emerald-200 flex items-center gap-1">
+                      <span>🏛️</span>
+                      <span>நிர்வாகக் கணக்கு (Business Account):</span>
+                    </span>
+                    <span className="font-black text-emerald-300">
+                      ₹{businessAccountAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-amber-200 flex items-center gap-1">
+                      <span>👤</span>
+                      <span>வாத்யாரிடம் நேரடி வசூல் (Direct to Priest):</span>
+                    </span>
+                    <span className="font-black text-amber-300">
+                      ₹{directPriestAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of All Poojas Done by this Priest */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                    <span>🪔</span>
+                    <span>பூஜைகள் பட்டியல் ({priestBookings.length})</span>
+                  </h4>
+                </div>
+
+                {priestBookings.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-3 text-center">இவருக்கு இன்னும் எந்த பூஜையும் ஒதுக்கப்படவில்லை.</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
+                    {priestBookings.map((b) => (
+                      <Link
+                        key={b.id}
+                        href={`/app/bookings/${b.id}`}
+                        className="p-2.5 bg-slate-50 hover:bg-emerald-50/50 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-xs transition block group"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-black text-slate-900 truncate group-hover:text-emerald-950">
+                            👤 {b.customerName}
+                          </div>
+                          <div className="text-[10.5px] text-slate-600 truncate mt-0.5">
+                            🪔 {b.poojaTamilName || b.poojaEnglishName}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            📅 {b.date} • {b.startTime}
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0 space-y-1">
+                          <div className="font-black text-slate-900 text-xs">
+                            ₹{b.totalAmount.toLocaleString("en-IN")}
+                          </div>
+                          <div>
+                            {b.paymentRecipient === "PRIEST" ? (
+                              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded text-[9.5px] font-bold border border-amber-300 block">
+                                👤 நேரடி
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-900 rounded text-[9.5px] font-bold border border-emerald-300 block">
+                                🏛️ நிர்வாகம்
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setSelectedPriest(null)}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer"
+              >
+                மூடுக / Close
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

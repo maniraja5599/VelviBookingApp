@@ -999,10 +999,6 @@ export default function CalendarPage() {
                         : isToday
                         ? "bg-slate-100/80 hover:bg-slate-100"
                         : "bg-white hover:bg-slate-50/90"
-                    } ${
-                      hasBookings && !isSelected
-                        ? "before:absolute before:top-0 before:inset-x-2 before:h-0.5 before:bg-amber-500 before:rounded-full"
-                        : ""
                     }`}
                   >
                     {/* Top Row: English Day Number (Bigger & Crisp) & Tamil Solar Day Number */}
@@ -1036,13 +1032,13 @@ export default function CalendarPage() {
                       <div className="h-3" />
                     )}
 
-                    {/* Bottom: Smart Highlighted Booking Count Badge without green background */}
+                    {/* Bottom: Smart Clean Notch ("மேடு") inside bottom of date cell without ugly orange bg */}
                     {hasBookings ? (
-                      <div className="w-full mt-0.5 flex justify-center">
-                        <span className="text-[9px] sm:text-[10.5px] md:text-[11px] px-2 py-0.5 rounded-full font-black inline-flex items-center justify-center gap-1 leading-none bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-xs ring-1 ring-amber-400/80 group-hover:scale-105 transition-transform">
-                          <span className="text-[8.5px] sm:text-[9.5px]">🔥</span>
-                          <span className="font-extrabold tracking-tight">{dayBookings.length}</span>
-                        </span>
+                      <div className="w-full flex justify-center -mb-1 sm:-mb-1.5 z-1">
+                        <div className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-t-md bg-emerald-950 text-amber-300 text-[9px] sm:text-[10px] md:text-[10.5px] font-black border-t border-x border-emerald-800/80 shadow-2xs group-hover:-translate-y-0.5 transition-transform">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                          <span className="leading-none">{dayBookings.length}</span>
+                        </div>
                       </div>
                     ) : (
                       <div className="h-2" />

@@ -163,8 +163,45 @@ export default function HomeDashboardPage() {
 
   const custMobileInspection = inspectIndianMobile(custMobile);
 
+  // 1. Deduplicate Priest Members (by ID and normalized mobile)
+  const uniqueMembers = useMemo(() => {
+    const seen = new Set<string>();
+    return members.filter((m) => {
+      const cleanMobile = m.mobile ? normalizeIndianMobile(m.mobile) : "";
+      const key = cleanMobile ? `m:${cleanMobile}` : `id:${m.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [members]);
+
+  // 2. Index priest mobiles & names to eliminate any duplicate/mismatch with devotees
+  const priestMemberMobiles = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of uniqueMembers) {
+      if (m.mobile) set.add(normalizeIndianMobile(m.mobile));
+      if (m.name) set.add(m.name.trim().toLowerCase());
+    }
+    return set;
+  }, [uniqueMembers]);
+
+  // 3. Deduplicate Devotees / Customers and filter out any priest entries to avoid duplicate/mismatch
+  const uniqueCustomers = useMemo(() => {
+    const seen = new Set<string>();
+    return customers.filter((c) => {
+      const cleanMobile = c.mobile ? normalizeIndianMobile(c.mobile) : "";
+      // Exclude if customer mobile or name is an assigned priest member
+      if (cleanMobile && priestMemberMobiles.has(cleanMobile)) return false;
+      if (c.name && priestMemberMobiles.has(c.name.trim().toLowerCase())) return false;
+      const key = cleanMobile ? `m:${cleanMobile}` : `id:${c.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [customers, priestMemberMobiles]);
+
   const filteredDevoteesList = useMemo(() => {
-    let list = customers;
+    let list = uniqueCustomers;
     const q = devoteeSearch.toLowerCase().trim();
     if (q) {
       list = list.filter(
@@ -184,10 +221,10 @@ export default function HomeDashboardPage() {
       });
     }
     return list;
-  }, [customers, devoteeSearch, devoteeFilter, customerBookingCountMap]);
+  }, [uniqueCustomers, devoteeSearch, devoteeFilter, customerBookingCountMap]);
 
   const filteredPriestsList = useMemo(() => {
-    let list = members;
+    let list = uniqueMembers;
     const q = priestSearch.toLowerCase().trim();
     if (q) {
       list = list.filter(
@@ -210,7 +247,7 @@ export default function HomeDashboardPage() {
       });
     }
     return list;
-  }, [members, priestSearch, priestFilter, memberBookingsMap]);
+  }, [uniqueMembers, priestSearch, priestFilter, memberBookingsMap]);
 
   const handleAddDevoteeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -868,7 +905,7 @@ export default function HomeDashboardPage() {
             <Users className="w-3.5 h-3.5 shrink-0 text-indigo-700" />
             <span className="whitespace-nowrap">Devotees</span>
             <span className="text-[8.5px] px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded-full font-black shrink-0">
-              {customers.length}
+              {uniqueCustomers.length}
             </span>
           </button>
         </div>
@@ -889,7 +926,7 @@ export default function HomeDashboardPage() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                👥 All Devotees ({customers.length})
+                👥 All Devotees ({uniqueCustomers.length})
               </button>
               <button
                 type="button"
@@ -900,7 +937,7 @@ export default function HomeDashboardPage() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                🪔 Assigned Priests ({members.length})
+                🪔 Assigned Priests ({uniqueMembers.length})
               </button>
             </div>
 
@@ -940,7 +977,7 @@ export default function HomeDashboardPage() {
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
-                    அனைத்தும் ({customers.length})
+                    அனைத்தும் ({uniqueCustomers.length})
                   </button>
                   <button
                     type="button"
@@ -1082,7 +1119,7 @@ export default function HomeDashboardPage() {
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
-                    அனைத்து குருக்கள் ({members.length})
+                    அனைத்து குருக்கள் ({uniqueMembers.length})
                   </button>
                   <button
                     type="button"
