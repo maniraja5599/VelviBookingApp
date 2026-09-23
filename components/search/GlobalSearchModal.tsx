@@ -50,26 +50,41 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   const [copiedMobile, setCopiedMobile] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Direct keyboard open on open (auto-focus synchronously and via RAF)
+  // Handle search open: dismiss notification icon and focus input gracefully on desktop
   useEffect(() => {
     if (isOpen) {
-      if (inputRef.current) {
-        inputRef.current.focus();
+      if (typeof window !== "undefined") {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split("T")[0];
+        localStorage.setItem("velvi_seen_upcoming_notice", tomorrowStr);
+        window.dispatchEvent(new CustomEvent("velvi:notification-dismissed"));
       }
-      const raf = requestAnimationFrame(() => {
+
+      // Avoid aggressive auto-focus on mobile touch devices so the virtual keyboard doesn't abruptly pop up over cards
+      const isTouchDevice =
+        typeof window !== "undefined" &&
+        ("ontouchstart" in window || navigator.maxTouchPoints > 0);
+
+      if (!isTouchDevice) {
         if (inputRef.current) {
           inputRef.current.focus();
         }
-      });
-      const timer = setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-        }
-      }, 30);
-      return () => {
-        cancelAnimationFrame(raf);
-        clearTimeout(timer);
-      };
+        const raf = requestAnimationFrame(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        });
+        const timer = setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.focus();
+          }
+        }, 30);
+        return () => {
+          cancelAnimationFrame(raf);
+          clearTimeout(timer);
+        };
+      }
     } else {
       setQuery("");
       setActiveCategory("ALL");
@@ -294,7 +309,6 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
           </div>
           <input
             ref={inputRef}
-            autoFocus
             enterKeyHint="search"
             inputMode="search"
             type="search"
@@ -402,8 +416,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       <Bell className="w-4 h-4 text-amber-700 animate-bounce" />
                       <span>நாளை பூஜை நினைவூட்டல் (1 Day Before Reminder)</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-extrabold text-[10px]">
-                      {tomorrowBookings.length} நிகழ்வு{tomorrowBookings.length > 1 ? "கள்" : ""}
+                    <span className="inline-flex items-center justify-center min-w-[76px] h-[22px] px-2 rounded-full bg-amber-200/90 text-amber-950 font-black text-[10px] tracking-tight shrink-0 select-none shadow-2xs pointer-events-none text-center leading-none">
+                      {tomorrowBookings.length} {tomorrowBookings.length === 1 ? "நிகழ்வு" : "நிகழ்வுகள்"}
                     </span>
                   </div>
 
@@ -460,8 +474,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       <Flame className="w-4 h-4 text-emerald-700" />
                       <span>இன்றைய பூஜைகள் (Today&apos;s Events)</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-extrabold text-[10px]">
-                      {todayBookings.length} நிகழ்வு{todayBookings.length > 1 ? "கள்" : ""}
+                    <span className="inline-flex items-center justify-center min-w-[76px] h-[22px] px-2 rounded-full bg-emerald-200/90 text-emerald-950 font-black text-[10px] tracking-tight shrink-0 select-none shadow-2xs pointer-events-none text-center leading-none">
+                      {todayBookings.length} {todayBookings.length === 1 ? "நிகழ்வு" : "நிகழ்வுகள்"}
                     </span>
                   </div>
 

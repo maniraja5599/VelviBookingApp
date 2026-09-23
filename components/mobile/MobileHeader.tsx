@@ -64,6 +64,36 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   }, []);
 
   const [tomorrowBookingsCount, setTomorrowBookingsCount] = useState<number>(0);
+  const [hasDismissedNotice, setHasDismissedNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const seen = localStorage.getItem("velvi_seen_upcoming_notice");
+      if (seen === tomorrowStr) {
+        setHasDismissedNotice(true);
+      } else {
+        setHasDismissedNotice(false);
+      }
+    }
+  }, [tomorrowStr]);
+
+  // Listen for notification-dismissed event (e.g. from GlobalSearchModal)
+  useEffect(() => {
+    const handleDismissedEvent = () => {
+      setHasDismissedNotice(true);
+    };
+    window.addEventListener("velvi:notification-dismissed", handleDismissedEvent);
+    return () => window.removeEventListener("velvi:notification-dismissed", handleDismissedEvent);
+  }, []);
+
+  const handleOpenSearch = () => {
+    setIsProfileMenuOpen(false); // Guarantee Profile dropdown does NOT open
+    setIsSearchOpen(true);
+    setHasDismissedNotice(true); // Close the notification icon immediately
+    if (typeof window !== "undefined") {
+      localStorage.setItem("velvi_seen_upcoming_notice", tomorrowStr);
+    }
+  };
 
   useEffect(() => {
     if (!businessId) return;
@@ -84,12 +114,17 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
+        setIsProfileMenuOpen(false); // Guarantee Profile dropdown does NOT open
+        setIsSearchOpen(true);
+        setHasDismissedNotice(true); // Close the notification icon immediately
+        if (typeof window !== "undefined") {
+          localStorage.setItem("velvi_seen_upcoming_notice", tomorrowStr);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [tomorrowStr]);
 
   // Listen for real-time cloud sync / database change events to trigger animated status ticker
   useEffect(() => {
@@ -227,14 +262,14 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
           </div>
 
           {/* Right side: Global Search + Compact User Profile Dropdown Button */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 relative" ref={menuRef}>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Global Search Icon Button with 1-Day Before & Notification Pulse */}
             <button
               type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 group shrink-0 relative"
+              onClick={handleOpenSearch}
+              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 group shrink-0 relative cursor-pointer"
               title={
-                tomorrowBookingsCount > 0
+                tomorrowBookingsCount > 0 && !hasDismissedNotice
                   ? `நாளை ${tomorrowBookingsCount} பூஜைகள் உள்ளன (1 Day Before Reminders)`
                   : "தேடுக / Search (Ctrl+K)"
               }
@@ -242,10 +277,10 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
             >
               <Search
                 className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform ${
-                  tomorrowBookingsCount > 0 ? "text-amber-800" : ""
+                  tomorrowBookingsCount > 0 && !hasDismissedNotice ? "text-amber-800" : ""
                 }`}
               />
-              {tomorrowBookingsCount > 0 && (
+              {tomorrowBookingsCount > 0 && !hasDismissedNotice && (
                 <>
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
                   <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-600 border border-white" />
@@ -253,16 +288,18 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               )}
             </button>
 
-            {/* Profile Button with User Name & Real-time Animated Cloud Sync Ticker */}
-            <button
-              type="button"
-              onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border max-w-[115px] sm:max-w-[145px] shrink-0 ${
-                isProfileMenuOpen
-                  ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
-                  : syncState === "syncing"
-                  ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
-                  : syncState === "synced"
+            {/* Profile Dropdown Container (Isolated ref so search never triggers profile) */}
+            <div className="relative" ref={menuRef}>
+              {/* Profile Button with User Name & Real-time Animated Cloud Sync Ticker */}
+              <button
+                type="button"
+                onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border max-w-[115px] sm:max-w-[145px] shrink-0 ${
+                  isProfileMenuOpen
+                    ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
+                    : syncState === "syncing"
+                    ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
+                    : syncState === "synced"
                   ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
                   : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
               }`}
@@ -558,6 +595,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </header>
