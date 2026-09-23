@@ -65,7 +65,7 @@ export default function SettingsHubPage() {
   const { currentUser, currentBusiness, subscription, logout } = useAuth();
   const { t } = useLanguage();
 
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   // State
   const [showCategoryModal, setShowCategoryModal] = useState(false);

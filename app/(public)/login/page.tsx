@@ -232,12 +232,14 @@ export default function LoginPage() {
   const handleDirectGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const avatarUrl =
-        "https://api.dicebear.com/7.x/initials/svg?seed=Ravi%20Iyer&backgroundColor=064e3b,047857,0f766e&textColor=fef3c7";
+      const priestId = Date.now().toString().slice(-4);
+      const email = `priest.${priestId}@gmail.com`;
+      const name = `Priest ${priestId}`;
+      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=064e3b,047857,0f766e&textColor=fef3c7`;
       const payload: GoogleUserPayload = {
-        sub: "google-ravi-01",
-        email: "ravi.iyer@gmail.com",
-        name: "Ravi Iyer",
+        sub: `google-${Date.now()}`,
+        email,
+        name,
         picture: avatarUrl,
         email_verified: true,
       };

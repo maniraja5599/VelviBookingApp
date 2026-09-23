@@ -52,7 +52,7 @@ export default function HomeDashboardPage() {
   const todayLocalDateStr = getLocalDateString();
   const todayInfo = getTamilDate(todayLocalDateStr);
 
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   // Reactive DB states
   const [bookings, setBookings] = useState<Booking[]>([]);

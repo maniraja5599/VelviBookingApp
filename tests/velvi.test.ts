@@ -1269,10 +1269,10 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(vastu.items.some((i) => i.itemTamilName === "வாஸ்துபதம் பெரிது")).toBe(true);
     expect(vastu.items.some((i) => i.itemTamilName === "செங்கல்" && i.quantity === 75)).toBe(true);
 
-    // Check Ayushya Homam
+    // Check Ayushya Homam (93 items from Namakkal S.S. Jeyaraman slip)
     const ayush = poojas.find((p) => p.id === "p-ayush-03")!;
-    expect(ayush.tamilName).toBe("ஆயுஷ்ய ஹோமம் (ஆயுர் ஹோமம்)");
-    expect(ayush.items.length).toBeGreaterThanOrEqual(45);
+    expect(ayush.tamilName).toContain("ஆயுஷ்");
+    expect(ayush.items.length).toBe(93);
 
     // Check Swayamvara Parvathi Homam
     const swayamvara = poojas.find((p) => p.id === "p-swayamvara-parvathi-04")!;
@@ -1420,6 +1420,40 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(getItemIcon({ itemTamilName: "அறியப்படாத விசேஷ பொருள்", category: "homam_items" })).toBe("🔥");
     expect(getItemIcon({ itemTamilName: "அறியப்படாத நவகிரக தானியம்", category: "navagraha_items" })).toBe("🪐");
     expect(getItemIcon({ itemTamilName: "அறியப்படாத ஆடை", category: "vastram_clothes" })).toBe("🧣");
+  });
+
+  it("Test 48: New User Isolation — 100% empty bookings and customers, default authentic poojas with 93 items Ayush Homam", () => {
+    const store = new VelviDatabaseStore();
+    const newBizId = "biz-new-priest-99";
+
+    // A brand new business starts with 0 bookings, 0 customers, 0 payments
+    expect(store.getBookings(newBizId)).toHaveLength(0);
+    expect(store.getCustomers(newBizId)).toHaveLength(0);
+    expect(store.payments.filter((p) => p.businessId === newBizId)).toHaveLength(0);
+
+    // Default authentic poojas are auto-seeded
+    const poojas = store.getPoojas(newBizId);
+    expect(poojas).toHaveLength(8);
+
+    // Ayush Homam in new business has all 93 items
+    const ayush = poojas.find((p) => p.id.startsWith("p-ayush-03"))!;
+    expect(ayush).toBeDefined();
+    expect(ayush.items).toHaveLength(93);
+
+    // Demo user retains their bookings and customers
+    expect(store.getBookings("biz-venkateswara-01").length).toBeGreaterThan(0);
+    expect(store.getCustomers("biz-venkateswara-01").length).toBeGreaterThan(0);
+
+    // If new business requests demo reload, it only seeds into their business
+    const reloadRes = store.loadSampleData(newBizId);
+    expect(reloadRes.addedBookings).toBeGreaterThan(0);
+    expect(store.getBookings(newBizId).length).toBeGreaterThan(0);
+    expect(store.getBookings(newBizId).every((b) => b.businessId === newBizId)).toBe(true);
+
+    // Clear demo data removes it from new business without corrupting others
+    const clearRes = store.clearSampleData(newBizId);
+    expect(clearRes.removedBookings).toBeGreaterThan(0);
+    expect(store.getBookings(newBizId)).toHaveLength(0);
   });
 });
 

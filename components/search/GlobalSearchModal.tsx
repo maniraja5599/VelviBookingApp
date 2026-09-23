@@ -39,8 +39,8 @@ type SearchCategory = "ALL" | "CUSTOMERS" | "BOOKINGS" | "POOJAS" | "ACTIONS";
 
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
-  const { currentBusiness } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const { currentBusiness, currentUser } = useAuth();
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<SearchCategory>("ALL");

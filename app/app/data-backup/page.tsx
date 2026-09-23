@@ -18,8 +18,8 @@ import {
 import Link from "next/link";
 
 export default function DataBackupPage() {
-  const { currentBusiness, subscription } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const { currentBusiness, currentUser, subscription } = useAuth();
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const isPaidUser =
     subscription?.status === "ACTIVE" &&
@@ -306,7 +306,7 @@ export default function DataBackupPage() {
           </button>
           <button
             onClick={() => {
-              const res = db.loadSampleData();
+              const res = db.loadSampleData(businessId);
               setExportMessage(`மாதிரி பதிவுகள் ஏற்றப்பட்டன (${res.addedBookings} முன்பதிவுகள்)!`);
               setTimeout(() => setExportMessage(""), 4000);
             }}

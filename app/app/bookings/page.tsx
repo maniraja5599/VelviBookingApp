@@ -889,7 +889,7 @@ export default function BookingsListPage() {
   const [showRecentChanges, setShowRecentChanges] = useState(false);
   const [recentChangesTab, setRecentChangesTab] = useState<"completed" | "activity">("completed");
 
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
   const [dbVersion, setDbVersion] = useState(0);
   const [completeToast, setCompleteToast] = useState<{
     booking: Booking;

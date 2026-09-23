@@ -406,7 +406,10 @@ export class VelviDatabaseStore {
     const added: Pooja[] = [];
     SEED_POOJAS.forEach((sp) => {
       const pId = businessId === "biz-venkateswara-01" ? sp.id : `${sp.id}-${businessId}`;
-      if (!existing.some((p) => p.id === pId) && !existingBaseIds.has(sp.id)) {
+      const existingIdx = this.poojas.findIndex(
+        (p) => p.businessId === businessId && (p.id === pId || p.id.startsWith(sp.id + "-"))
+      );
+      if (existingIdx === -1) {
         const newPooja: Pooja = {
           ...structuredClone(sp),
           id: pId,
@@ -419,6 +422,15 @@ export class VelviDatabaseStore {
         };
         this.poojas.push(newPooja);
         added.push(newPooja);
+      } else {
+        const existingP = this.poojas[existingIdx];
+        if (existingP.items.length < sp.items.length) {
+          existingP.items = sp.items.map((it) => ({
+            ...it,
+            id: businessId === "biz-venkateswara-01" ? it.id : `${it.id}-${businessId}`,
+            poojaId: existingP.id,
+          }));
+        }
       }
     });
 
@@ -1596,7 +1608,7 @@ export class VelviDatabaseStore {
           this.poojas = this.poojas.filter((p) => !isLegacyObsoletePooja(p));
 
           // Check if authentic 8 poojas migration has run
-          const migrationKey = "velvi_authentic_8_poojas_v7";
+          const migrationKey = "velvi_authentic_8_poojas_v8";
           const hasMigrated = localStorage.getItem(migrationKey) === "true";
 
           if (!hasMigrated) {
@@ -1618,20 +1630,20 @@ export class VelviDatabaseStore {
             }
             localStorage.setItem(migrationKey, "true");
           } else {
-            // Ensure any missing authentic pooja exists for default business
+            // Ensure any missing authentic pooja exists for default business and items are upgraded
             SEED_POOJAS.forEach((sp) => {
-              if (!this.poojas.some((p) => p.id === sp.id)) {
+              const existingIdx = this.poojas.findIndex((p) => p.id === sp.id);
+              if (existingIdx === -1) {
                 this.poojas.push(structuredClone(sp));
+              } else if (this.poojas[existingIdx].items.length < sp.items.length) {
+                this.poojas[existingIdx].items = structuredClone(sp.items);
               }
             });
 
             // Ensure every business has its 8 authentic poojas
             if (Array.isArray(this.businesses)) {
               this.businesses.forEach((b) => {
-                const bPoojas = this.poojas.filter((p) => p.businessId === b.id);
-                if (bPoojas.length === 0) {
-                  this.seedDefaultPoojasForBusiness(b.id);
-                }
+                this.seedDefaultPoojasForBusiness(b.id);
               });
             }
           }
@@ -1818,28 +1830,44 @@ export class VelviDatabaseStore {
     removedCustomers: number;
     removedPoojas: number;
   } {
+    return this.clearSampleData(businessId);
+  }
+
+  public clearSampleData(businessId?: string): {
+    removedBookings: number;
+    removedCustomers: number;
+    removedPoojas: number;
+  } {
     const seedBookingIds = new Set(SEED_BOOKINGS.map((b) => b.id));
     const seedCustomerIds = new Set(SEED_CUSTOMERS.map((c) => c.id));
-    const seedPoojaIds = new Set(SEED_POOJAS.map((p) => p.id));
 
-    const isSampleBooking = (b: Booking) =>
-      b.isSample === true ||
-      b.id.startsWith("b-sample-") ||
-      b.id.startsWith("b-82") ||
-      seedBookingIds.has(b.id) ||
-      ["b-101", "b-102", "b-103", "b-104", "b-105", "b-106"].includes(b.id);
+    const isSampleBooking = (b: Booking) => {
+      if (businessId && b.businessId !== businessId) return false;
+      return (
+        b.isSample === true ||
+        b.id.startsWith("b-sample-") ||
+        b.id.startsWith("b-82") ||
+        seedBookingIds.has(b.id) ||
+        (b.id.includes("-biz-") && Array.from(seedBookingIds).some((id) => b.id.startsWith(id))) ||
+        ["b-101", "b-102", "b-103", "b-104", "b-105", "b-106"].includes(b.id)
+      );
+    };
 
-    const isSampleCustomer = (c: Customer) =>
-      c.isSample === true ||
-      c.id.startsWith("c-sample-") ||
-      seedCustomerIds.has(c.id) ||
-      ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-vignesh-05", "c-anandhi-06", "c-balaji-07", "c-karthik-08", "c-gowri-09", "c-jayanthi-10", "c-soundar-11", "c-revathi-12"].includes(c.id);
+    const isSampleCustomer = (c: Customer) => {
+      if (businessId && c.businessId !== businessId) return false;
+      return (
+        c.isSample === true ||
+        c.id.startsWith("c-sample-") ||
+        seedCustomerIds.has(c.id) ||
+        (c.id.includes("-biz-") && Array.from(seedCustomerIds).some((id) => c.id.startsWith(id))) ||
+        ["c-ramesh-01", "c-lakshmi-02", "c-meena-03", "c-suresh-04", "c-vignesh-05", "c-anandhi-06", "c-balaji-07", "c-karthik-08", "c-gowri-09", "c-jayanthi-10", "c-soundar-11", "c-revathi-12"].includes(c.id)
+      );
+    };
 
-    const isSamplePooja = (p: Pooja) =>
-      p.isSample === true ||
-      p.id.startsWith("p-sample-") ||
-      seedPoojaIds.has(p.id) ||
-      ["p-ganapathi-01", "p-vastu-02", "p-ayush-03", "p-swayamvara-parvathi-04", "p-kumbabishekam-11", "p-sangu-pooja-06", "p-punyaham-07", "p-lakshmi-08"].includes(p.id);
+    const isSamplePooja = (p: Pooja) => {
+      if (businessId && p.businessId !== businessId) return false;
+      return p.isSample === true || p.id.startsWith("p-sample-");
+    };
 
     const prevBCount = this.bookings.length;
     const prevCCount = this.customers.length;
@@ -1862,10 +1890,28 @@ export class VelviDatabaseStore {
     return { removedBookings, removedCustomers, removedPoojas };
   }
 
-  public loadSampleData(): { addedBookings: number; addedCustomers: number; addedPoojas: number } {
-    const sampleBookings = structuredClone(SEED_BOOKINGS).map((b) => ({ ...b, isSample: true }));
-    const sampleCustomers = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
-    const samplePoojas = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
+  public loadSampleData(businessId?: string): { addedBookings: number; addedCustomers: number; addedPoojas: number } {
+    const targetBizId = businessId || "biz-venkateswara-01";
+    const sampleBookings = structuredClone(SEED_BOOKINGS).map((b) => ({
+      ...b,
+      id: targetBizId === "biz-venkateswara-01" ? b.id : `${b.id}-${targetBizId}`,
+      businessId: targetBizId,
+      customerId: targetBizId === "biz-venkateswara-01" ? b.customerId : `${b.customerId}-${targetBizId}`,
+      poojaId: targetBizId === "biz-venkateswara-01" ? b.poojaId : `${b.poojaId}-${targetBizId}`,
+      isSample: true,
+    }));
+    const sampleCustomers = structuredClone(SEED_CUSTOMERS).map((c) => ({
+      ...c,
+      id: targetBizId === "biz-venkateswara-01" ? c.id : `${c.id}-${targetBizId}`,
+      businessId: targetBizId,
+      isSample: true,
+    }));
+    const samplePoojas = structuredClone(SEED_POOJAS).map((p) => ({
+      ...p,
+      id: targetBizId === "biz-venkateswara-01" ? p.id : `${p.id}-${targetBizId}`,
+      businessId: targetBizId,
+      isSample: true,
+    }));
 
     let addedBookings = 0;
     let addedCustomers = 0;
@@ -1891,6 +1937,7 @@ export class VelviDatabaseStore {
     });
 
     if (typeof window !== "undefined") {
+      localStorage.removeItem("velvi_demo_data_cleared");
       this.saveToLocalStorage();
     }
     this.notifyListeners();

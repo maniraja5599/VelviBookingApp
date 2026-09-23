@@ -64,7 +64,7 @@ function QuickBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentBusiness, currentUser } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   // Data
   const [customers, setCustomers] = useState<Customer[]>([]);

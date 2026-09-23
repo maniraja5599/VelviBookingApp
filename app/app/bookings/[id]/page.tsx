@@ -46,7 +46,7 @@ export default function BookingDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { currentBusiness, currentUser } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const bookingId = params.id as string;
   const booking = db.bookings.find((b) => b.id === bookingId) || db.bookings[0];

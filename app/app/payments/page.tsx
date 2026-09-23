@@ -26,8 +26,8 @@ import {
 import { getLocalDateString } from "@/lib/calendar/tamil";
 
 export default function PaymentsPage() {
-  const { currentBusiness } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const { currentBusiness, currentUser } = useAuth();
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const [activeTab, setActiveTab] = useState<"customer" | "settlement">("customer");
   // 2 Clean Filter Options: ALL or PENDING (as requested by user)

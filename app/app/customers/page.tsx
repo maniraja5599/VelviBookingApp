@@ -28,9 +28,9 @@ import {
 } from "lucide-react";
 
 export default function CustomersPage() {
-  const { currentBusiness } = useAuth();
+  const { currentBusiness, currentUser } = useAuth();
   const { t } = useLanguage();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);

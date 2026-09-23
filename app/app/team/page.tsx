@@ -8,8 +8,8 @@ import { normalizeIndianMobile } from "@/lib/utils/phone";
 import { Plus, UserCheck, Phone, MessageCircle, MoreVertical, X, Sparkles, Check } from "lucide-react";
 
 export default function TeamPage() {
-  const { currentBusiness } = useAuth();
-  const businessId = currentBusiness?.id || "biz-venkateswara-01";
+  const { currentBusiness, currentUser } = useAuth();
+  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   const [members, setMembers] = useState<BusinessMember[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);

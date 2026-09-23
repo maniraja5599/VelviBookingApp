@@ -77,8 +77,55 @@ function getInitialAuthState(): {
     }
     const user = db.users.find((u) => u.id === savedUserId) || null;
     if (!user) return { user: null, biz: null, sub: null };
-    const biz = db.businesses.find((b) => b.ownerId === user.id) || db.businesses[0] || null;
-    const sub = db.subscriptions.find((s) => s.businessId === biz?.id) || db.subscriptions[0] || null;
+
+    let biz = db.businesses.find((b) => b.ownerId === user.id) || null;
+    if (!biz && user.id === "u-ravi-iyer-01") {
+      biz = db.businesses[0] || null;
+    } else if (!biz) {
+      const bizId = `biz-${user.id}`;
+      biz = {
+        id: bizId,
+        ownerId: user.id,
+        name: user.name || "Pooja Services",
+        serviceName: "Pooja • Homam • Seva",
+        iyerName: user.name || "Vadhyar",
+        phone: user.mobile || "",
+        whatsapp: user.mobile || "",
+        address: "தமிழ்நாடு, இந்தியா",
+        showWatermark: true,
+        createdAt: new Date().toISOString(),
+      };
+      db.businesses.push(biz);
+      db.seedDefaultPoojasForBusiness(bizId);
+      db.saveToLocalStorage();
+    }
+
+    let sub = db.subscriptions.find((s) => s.businessId === biz?.id) || null;
+    if (!sub && biz) {
+      if (user.id === "u-ravi-iyer-01") {
+        sub = db.subscriptions[0] || null;
+      } else {
+        const now = new Date();
+        const end = new Date(Date.now() + 30 * 86400000);
+        sub = {
+          id: `sub-${biz.id}`,
+          businessId: biz.id,
+          planName: "Velvi Pro Monthly",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: now.toISOString(),
+          trialEnd: end.toISOString(),
+          currentPeriodStart: now.toISOString(),
+          currentPeriodEnd: end.toISOString(),
+          billingCycle: "MONTHLY",
+          autoRenew: true,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        };
+        db.subscriptions.push(sub);
+        db.saveToLocalStorage();
+      }
+    }
     return { user, biz, sub };
   } catch {
     return { user: null, biz: null, sub: null };
@@ -116,7 +163,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentBusiness(db.businesses[0]);
       setSubscription(db.subscriptions[0]);
     } else {
-      const biz = db.businesses.find((b) => b.ownerId === user.id) || db.businesses[0];
+      let biz = db.businesses.find((b) => b.ownerId === user.id);
+      if (!biz && user.id === "u-ravi-iyer-01") {
+        biz = db.businesses[0];
+      } else if (!biz) {
+        const bizId = `biz-${user.id}`;
+        biz = {
+          id: bizId,
+          ownerId: user.id,
+          name: user.name || "Pooja Services",
+          serviceName: "Pooja • Homam • Seva",
+          iyerName: user.name || "Vadhyar",
+          phone: user.mobile || "",
+          whatsapp: user.mobile || "",
+          address: "தமிழ்நாடு, இந்தியா",
+          showWatermark: true,
+          createdAt: new Date().toISOString(),
+        };
+        db.businesses.push(biz);
+        db.seedDefaultPoojasForBusiness(bizId);
+        db.saveToLocalStorage();
+      }
+
       // If business logoUrl was auto-populated with user's personal Google avatar, clear it so default Velvi logo displays
       if (
         biz &&
@@ -129,8 +197,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         db.saveToLocalStorage();
       }
       setCurrentBusiness(biz ? { ...biz } : null);
-      const sub = db.subscriptions.find((s) => s.businessId === biz?.id) || db.subscriptions[0];
-      setSubscription(sub);
+
+      let sub = db.subscriptions.find((s) => s.businessId === biz?.id);
+      if (!sub && biz) {
+        if (user.id === "u-ravi-iyer-01") {
+          sub = db.subscriptions[0];
+        } else {
+          const now = new Date();
+          const end = new Date(Date.now() + 30 * 86400000);
+          sub = {
+            id: `sub-${biz.id}`,
+            businessId: biz.id,
+            planName: "Velvi Pro Monthly",
+            planCode: "VELVI_PRO",
+            status: "ACTIVE",
+            trialStart: now.toISOString(),
+            trialEnd: end.toISOString(),
+            currentPeriodStart: now.toISOString(),
+            currentPeriodEnd: end.toISOString(),
+            billingCycle: "MONTHLY",
+            autoRenew: true,
+            createdAt: now.toISOString(),
+            updatedAt: now.toISOString(),
+          };
+          db.subscriptions.push(sub);
+          db.saveToLocalStorage();
+        }
+      }
+      setSubscription(sub || null);
     }
   }, []);
 
@@ -238,7 +332,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = React.useCallback(
     async (email?: string, name?: string, avatarUrl?: string): Promise<User> => {
       setIsLoading(true);
-      const targetEmail = (email || "ravi.iyer@gmail.com").trim().toLowerCase();
+      const targetEmail = (email || `priest.${Date.now().toString().slice(-6)}@gmail.com`).trim().toLowerCase();
       const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
 
       // Find existing or mock new Google user (case-insensitive email matching)
