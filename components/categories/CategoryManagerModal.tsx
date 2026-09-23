@@ -40,13 +40,16 @@ export const SACRED_ICON_PRESETS = [
   { icon: "🕯️", label: "சூடம் / சாம்பிராணி", keywords: ["சூடம்", "கற்பூரம்", "camphor", "சாம்பிராணி", "அகர்பத்தி", "incense"] },
   // Groceries & Food Offerings
   { icon: "🌾", label: "தானியங்கள்", keywords: ["தானியம்", "grain", "நெல்", "பயறு", "நவதானியம்", "navadhanya"] },
+  { icon: "🪐", label: "நவக்கிரகம்", keywords: ["நவக்கிரகம்", "கிரகம்", "navagraha", "planet"] },
   { icon: "🍚", label: "பச்சரிசி", keywords: ["அரிசி", "rice", "பச்சரிசி", "அட்சதை", "akshata"] },
   { icon: "🍯", label: "தேன் / திரவியம்", keywords: ["தேன்", "honey", "திரவியம்", "சர்க்கரை", "sugar", "வெல்லம்", "jaggery"] },
   { icon: "🥛", label: "பால் / தயிர்", keywords: ["பால்", "milk", "தயிர்", "curd", "பஞ்சாமிர்தம்"] },
   // Sacred Foliage & Items
   { icon: "🌿", label: "துளசி / வில்வம்", keywords: ["துளசி", "வில்வம்", "அருகம்புல்", "மாவிிலை", "herb", "leaf", "வெற்றிலை", "பாக்கு"] },
   { icon: "🪙", label: "நாணயம் / தட்சிணை", keywords: ["நாணயம்", "காசு", "coin", "gold", "தங்கம்", "வெள்ளி", "silver", "தட்சிணை"] },
-  { icon: "🧵", label: "வஸ்திரம் / நூல்", keywords: ["வஸ்திரம்", "வேஷ்டி", "துணி", "cloth", "நூல்", "thread", "பூணூல்"] },
+  { icon: "🧣", label: "வஸ்திரம் / சால்வை", keywords: ["வஸ்திரம்", "வேஷ்டி", "துணி", "vastram", "cloth", "shawl", "silk", "பட்டு"] },
+  { icon: "🧵", label: "நூல் / பூணூல்", keywords: ["நூல்", "thread", "பூணூல்"] },
+  { icon: "🏠", label: "கிரகப்பிரவேசம் / வீடு", keywords: ["கிரகப்பிரவேசம்", "வீடு", "grihapravesam", "home", "house"] },
   { icon: "📿", label: "ருத்ராட்சம் / மாலை", keywords: ["ருத்ராட்சம்", "rudraksha", "மணி", "ஜபமாலை"] },
   { icon: "🏺", label: "கலசம் / பித்தளை", keywords: ["கலசம்", "பாத்திரம்", "vessel", "pot", "செம்பு", "பித்தளை", "brass"] },
   { icon: "🔔", label: "மணி", keywords: ["மணி", "bell", "பூஜை மணி"] },

@@ -37,7 +37,7 @@ import {
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitTamil, formatUnitShort } from "@/lib/whatsapp/formatter";
-import { SAMAGRI_CATALOG, SamagriCatalogItem } from "@/lib/samagri/catalog";
+import { SAMAGRI_CATALOG, SamagriCatalogItem, normalizeCategoryId } from "@/lib/samagri/catalog";
 import { getSamagriItemDetail } from "@/lib/samagri/details";
 
 const convert24To12 = (timeStr: string): string => {
@@ -417,21 +417,29 @@ function QuickBookingContent() {
     [poojas, selectedPoojaId]
   );
 
-  const SAMAGRI_CATEGORIES = [
-    { id: "all", label: "அனைத்தும்", icon: "✨" },
-    { id: "powders", label: "பொடிகள்", icon: "🌿" },
-    { id: "ghee_oils", label: "நெய் / எண்ணெய்", icon: "🪔" },
-    { id: "essentials", label: "பழங்கள் & பிரசாதம்", icon: "🥥" },
-    { id: "homam", label: "சமித்து & ஹோமம்", icon: "🪵" },
-    { id: "flowers", label: "மலர்கள் & இலைகள்", icon: "🌺" },
-    { id: "vastram", label: "வஸ்திரம்", icon: "🪙" },
-  ];
+  const categories = useMemo(() => db.getSamagriCategories(), []);
+
+  const SAMAGRI_CATEGORIES = useMemo(
+    () => [
+      { id: "all", label: "அனைத்தும்", icon: "✨" },
+      ...categories.map((c) => ({
+        id: c.id,
+        label: c.labelTa,
+        icon: c.icon,
+      })),
+    ],
+    [categories]
+  );
 
   // Filter catalog items for "Add Item" Checklist Selector
   const filteredCatalogChecklist = useMemo(() => {
     const q = itemSearchQuery.toLowerCase().trim();
     return SAMAGRI_CATALOG.filter((catItem) => {
-      const matchesCat = selectedCategory === "all" || catItem.category === selectedCategory;
+      const normCat = normalizeCategoryId(catItem.category);
+      const matchesCat =
+        selectedCategory === "all" ||
+        catItem.category === selectedCategory ||
+        normCat === selectedCategory;
       if (!matchesCat) return false;
       if (!q) return true;
       return (

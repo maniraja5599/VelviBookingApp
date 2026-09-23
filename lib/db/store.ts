@@ -57,14 +57,14 @@ export interface PlatformSettings {
 }
 
 export const DEFAULT_SAMAGRI_CATEGORIES: SamagriCategory[] = [
-  { id: "pooja_items", labelTa: "பூஜைப் பொருட்கள்", labelEn: "Pooja Items", icon: "🥥", isDefault: true },
+  { id: "pooja_items", labelTa: "பூஜைப் பொருட்கள்", labelEn: "Pooja Items", icon: "🪔", isDefault: true },
   { id: "homam_items", labelTa: "ஹோமப் பொருட்கள்", labelEn: "Homam Items", icon: "🔥", isDefault: true },
-  { id: "navagraha_items", labelTa: "நவக்கிரகப் பொருட்கள்", labelEn: "Navagraha Items", icon: "🌾", isDefault: true },
+  { id: "navagraha_items", labelTa: "நவக்கிரகப் பொருட்கள்", labelEn: "Navagraha Items", icon: "🪐", isDefault: true },
   { id: "flowers_garlands", labelTa: "பூ மற்றும் மாலை வகைகள்", labelEn: "Flowers & Garlands", icon: "🌺", isDefault: true },
-  { id: "fruits_food", labelTa: "பழங்கள் மற்றும் உணவுப் பொருட்கள்", labelEn: "Fruits & Food", icon: "🍎", isDefault: true },
+  { id: "fruits_food", labelTa: "பழங்கள் மற்றும் உணவுப் பொருட்கள்", labelEn: "Fruits & Food", icon: "🍌", isDefault: true },
   { id: "vessels_utensils", labelTa: "பூஜை உபகரணங்கள்", labelEn: "Vessels & Utensils", icon: "🏺", isDefault: true },
-  { id: "vastram_clothes", labelTa: "வஸ்திரம் / துணி வகைகள்", labelEn: "Vastram & Clothes", icon: "🧵", isDefault: true },
-  { id: "grihapravesam_items", labelTa: "கிரகப்பிரவேசப் பொருட்கள்", labelEn: "Grihapravesam Items", icon: "🥛", isDefault: true },
+  { id: "vastram_clothes", labelTa: "வஸ்திரம் / துணி வகைகள்", labelEn: "Vastram & Clothes", icon: "🧣", isDefault: true },
+  { id: "grihapravesam_items", labelTa: "கிரகப்பிரவேசப் பொருட்கள்", labelEn: "Grihapravesam Items", icon: "🏠", isDefault: true },
 ];
 
 export const AUTHENTIC_POOJA_BASE_IDS = [
@@ -1649,8 +1649,13 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.samagriCategories) && state.samagriCategories.length > 0) {
           this.samagriCategories = state.samagriCategories;
           DEFAULT_SAMAGRI_CATEGORIES.forEach((defCat) => {
-            if (!this.samagriCategories.some((c) => c.id === defCat.id)) {
+            const idx = this.samagriCategories.findIndex((c) => c.id === defCat.id);
+            if (idx === -1) {
               this.samagriCategories.push(structuredClone(defCat));
+            } else if (this.samagriCategories[idx].isDefault) {
+              this.samagriCategories[idx].icon = defCat.icon;
+              this.samagriCategories[idx].labelTa = defCat.labelTa;
+              this.samagriCategories[idx].labelEn = defCat.labelEn;
             }
           });
         }
@@ -1676,8 +1681,13 @@ export class VelviDatabaseStore {
       this.samagriCategories = structuredClone(DEFAULT_SAMAGRI_CATEGORIES);
     } else {
       DEFAULT_SAMAGRI_CATEGORIES.forEach((defCat) => {
-        if (!this.samagriCategories.some((c) => c.id === defCat.id)) {
+        const idx = this.samagriCategories.findIndex((c) => c.id === defCat.id);
+        if (idx === -1) {
           this.samagriCategories.push(structuredClone(defCat));
+        } else if (this.samagriCategories[idx].isDefault) {
+          this.samagriCategories[idx].icon = defCat.icon;
+          this.samagriCategories[idx].labelTa = defCat.labelTa;
+          this.samagriCategories[idx].labelEn = defCat.labelEn;
         }
       });
     }
