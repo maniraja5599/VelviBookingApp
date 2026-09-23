@@ -53,8 +53,10 @@ export default function PaymentsPage() {
   // Quick Payment Recording Modal
   const [paymentBooking, setPaymentBooking] = useState<Booking | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentDate, setPaymentDate] = useState<string>(todayLocalDateStr);
   const [paymentMethod, setPaymentMethod] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState<string>("");
+  const [resetConfirmBooking, setResetConfirmBooking] = useState<Booking | null>(null);
 
   // Settlement Recording Modal
   const [selectedIyerForSettlement, setSelectedIyerForSettlement] = useState<string | null>(null);
@@ -173,23 +175,46 @@ export default function PaymentsPage() {
   const handleOpenRecordPayment = (b: Booking) => {
     setPaymentBooking(b);
     setPaymentAmount(b.balanceAmount || 0);
+    setPaymentDate(todayLocalDateStr);
   };
 
   const handleConfirmRecordPayment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!paymentBooking || paymentAmount <= 0) return;
 
-    const target = db.bookings.find((b) => b.id === paymentBooking.id);
-    if (target) {
-      target.advanceAmount = (target.advanceAmount || 0) + Number(paymentAmount);
-      target.balanceAmount = Math.max(0, target.totalAmount - target.advanceAmount);
-      target.paymentStatus = target.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
-      target.updatedAt = new Date().toISOString();
+    const res = db.recordBookingPayment({
+      bookingId: paymentBooking.id,
+      amount: Number(paymentAmount),
+      paymentMethod,
+      paymentDate: paymentDate || todayLocalDateStr,
+      recordedBy: currentUser?.name || "Ravi Iyer",
+      notes: `Direct collection via ${paymentMethod}`,
+    });
+
+    if (res.success) {
       setBookings([...db.getBookings(businessId)]);
+      setPaymentSuccessMsg(`₹${Number(paymentAmount).toLocaleString("en-IN")} கட்டணம் பெறப்பட்டது (${paymentBooking.customerName})!`);
     }
 
-    setPaymentSuccessMsg(`₹${paymentAmount.toLocaleString("en-IN")} received from ${paymentBooking.customerName}!`);
     setPaymentBooking(null);
+    setTimeout(() => setPaymentSuccessMsg(""), 4000);
+  };
+
+  const handleConfirmResetPayment = () => {
+    if (!resetConfirmBooking) return;
+
+    const res = db.resetBookingPayment({
+      bookingId: resetConfirmBooking.id,
+      deletedBy: currentUser?.name || "Ravi Iyer",
+      reason: "Payment reset from payments page",
+    });
+
+    if (res.success) {
+      setBookings([...db.getBookings(businessId)]);
+      setPaymentSuccessMsg(`பதிவு #${resetConfirmBooking.bookingNumber} கட்டணம் நீக்கப்பட்டு ₹${resetConfirmBooking.totalAmount.toLocaleString("en-IN")} நிலுவையாக மாற்றப்பட்டது.`);
+    }
+
+    setResetConfirmBooking(null);
     setTimeout(() => setPaymentSuccessMsg(""), 4000);
   };
 
@@ -714,6 +739,14 @@ export default function PaymentsPage() {
                           )}
                           <span>•</span>
                           <span>📅 {b.date}</span>
+                          {b.paymentDate && (
+                            <>
+                              <span>•</span>
+                              <span className="font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-[10px]">
+                                💳 Paid on: {b.paymentDate}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -772,10 +805,21 @@ export default function PaymentsPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenRecordPayment(b)}
-                            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
+                            className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
                           >
                             <IndianRupee className="w-3.5 h-3.5" />
                             <span>கட்டணம் பதிவு</span>
+                          </button>
+                        )}
+
+                        {(b.advanceAmount || 0) > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setResetConfirmBooking(b)}
+                            className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
+                            title="கட்டணத்தை நீக்க/மீட்டமைக்க (Reset Payment)"
+                          >
+                            <span>Reset</span>
                           </button>
                         )}
 
@@ -955,6 +999,45 @@ export default function PaymentsPage() {
               </div>
 
               <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    கட்டண தேதி / Payment Date *
+                  </label>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentDate(todayLocalDateStr)}
+                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
+                        paymentDate === todayLocalDateStr
+                          ? "bg-emerald-800 text-white"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      இன்று (Today)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const yest = new Date();
+                        yest.setDate(yest.getDate() - 1);
+                        setPaymentDate(yest.toISOString().split("T")[0]);
+                      }}
+                      className="px-1.5 py-0.5 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition"
+                    >
+                      நேற்று
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  required
+                  value={paymentDate}
+                  onChange={(e) => setPaymentDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
                   செலுத்திய முறை / Payment Method
                 </label>
@@ -985,6 +1068,52 @@ export default function PaymentsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Confirm Reset Payment */}
+      {resetConfirmBooking && (
+        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-rose-200">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-rose-900 flex items-center gap-1.5">
+                <AlertCircle className="w-5 h-5 text-rose-600" />
+                <span>கட்டணத்தை நீக்க / Reset</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setResetConfirmBooking(null)}
+                className="p-1 rounded-full hover:bg-slate-100 text-slate-400"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              பக்தர் <strong className="text-slate-900">{resetConfirmBooking.customerName}</strong> அவர்களின் 
+              <strong className="text-slate-900"> #{resetConfirmBooking.bookingNumber}</strong> பதிவிற்கு செலுத்தப்பட்ட முன்பணம் 
+              <strong className="text-emerald-800"> ₹{(resetConfirmBooking.advanceAmount || 0).toLocaleString("en-IN")}</strong> நீக்கப்பட்டு, 
+              முழுத் தொகையும் (<strong className="text-amber-900">₹{resetConfirmBooking.totalAmount.toLocaleString("en-IN")}</strong>) 
+              மீண்டும் நிலுவையாக மாற்றப்படும். தொடரவா?
+            </p>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setResetConfirmBooking(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                வேண்டாம் / Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetPayment}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-2xs transition cursor-pointer"
+              >
+                ஆம், நீக்கு / Reset
+              </button>
+            </div>
           </div>
         </div>
       )}

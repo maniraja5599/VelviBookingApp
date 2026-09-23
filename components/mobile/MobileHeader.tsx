@@ -222,7 +222,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-[0_4px_16px_rgba(0,0,0,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-[0_3px_14px_rgba(0,0,0,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
         <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">

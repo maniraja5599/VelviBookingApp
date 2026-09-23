@@ -27,8 +27,50 @@ export const BottomNav: React.FC = React.memo(() => {
     return null;
   }
 
+  const [isVisible, setIsVisible] = React.useState(true);
+  const lastScrollYRef = React.useRef(0);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          const diff = currentScrollY - lastScrollYRef.current;
+
+          // Always visible near top of page
+          if (currentScrollY <= 30) {
+            setIsVisible(true);
+          } else if (diff > 8 && currentScrollY > 60) {
+            // Scrolling down (swiping up content) -> blur & hide
+            setIsVisible(false);
+          } else if (diff < -4) {
+            // Light scroll up (swiping down) -> smoothly reveal
+            setIsVisible(true);
+          }
+
+          lastScrollYRef.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed bottom-2.5 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md md:max-w-lg z-40 bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded-[26px] px-2 py-1.5 transition-all">
+    <nav
+      className={`fixed bottom-0 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md md:max-w-lg z-40 bg-white/95 backdrop-blur-xl border-t border-x border-slate-200/90 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] rounded-t-2xl sm:rounded-t-3xl px-2 pt-1.5 pb-2 sm:pb-3 transition-all duration-300 ease-out ${
+        isVisible
+          ? "translate-y-0 opacity-100 blur-none pointer-events-auto"
+          : "translate-y-full opacity-0 blur-md pointer-events-none"
+      }`}
+    >
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive =

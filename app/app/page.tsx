@@ -328,6 +328,7 @@ export default function HomeDashboardPage() {
   const [paymentSearch, setPaymentSearch] = useState("");
   const [recordPaymentBooking, setRecordPaymentBooking] = useState<Booking | null>(null);
   const [paymentAmountInput, setPaymentAmountInput] = useState<number>(0);
+  const [paymentDateInput, setPaymentDateInput] = useState<string>(todayLocalDateStr);
   const [paymentMethodInput, setPaymentMethodInput] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string>("");
 
@@ -443,6 +444,7 @@ export default function HomeDashboardPage() {
   const handleOpenRecordPayment = (b: Booking) => {
     setRecordPaymentBooking(b);
     setPaymentAmountInput(b.balanceAmount || 0);
+    setPaymentDateInput(todayLocalDateStr);
   };
 
   const handleConfirmRecordPayment = (e: React.FormEvent) => {
@@ -453,6 +455,7 @@ export default function HomeDashboardPage() {
       bookingId: recordPaymentBooking.id,
       amount: Number(paymentAmountInput),
       paymentMethod: paymentMethodInput,
+      paymentDate: paymentDateInput || todayLocalDateStr,
       recordedBy: currentUser?.name || "Ravi Iyer",
       notes: `Direct collection via ${paymentMethodInput}`,
     });
@@ -1730,6 +1733,16 @@ export default function HomeDashboardPage() {
                               #{b.bookingNumber?.replace(/^#+/, "")}
                             </span>
                             <span className="font-bold text-slate-800">🪔 {b.poojaEnglishName}</span>
+                            <span>•</span>
+                            <span>📅 {b.date}</span>
+                            {b.paymentDate && (
+                              <>
+                                <span>•</span>
+                                <span className="font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 text-[10px]">
+                                  💳 Paid on: {b.paymentDate}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -2850,6 +2863,45 @@ export default function HomeDashboardPage() {
                   value={paymentAmountInput}
                   onChange={(e) => setPaymentAmountInput(Number(e.target.value))}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-black text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-700">
+                    Payment Date (கட்டண தேதி) *
+                  </label>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentDateInput(todayLocalDateStr)}
+                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
+                        paymentDateInput === todayLocalDateStr
+                          ? "bg-emerald-800 text-white"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                      }`}
+                    >
+                      Today
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const yest = new Date();
+                        yest.setDate(yest.getDate() - 1);
+                        setPaymentDateInput(yest.toISOString().split("T")[0]);
+                      }}
+                      className="px-1.5 py-0.5 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition"
+                    >
+                      Yesterday
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  required
+                  value={paymentDateInput}
+                  onChange={(e) => setPaymentDateInput(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
                 />
               </div>
 
