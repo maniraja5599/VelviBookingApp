@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import fs from "fs";
+import path from "path";
 import { VelviDatabaseStore, DEFAULT_SAMAGRI_CATEGORIES } from "../lib/db/store";
 import { getTamilDate, formatTime12H } from "../lib/calendar/tamil";
 import {
@@ -652,12 +654,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(layoutCode).not.toContain("DevRoleSwitcher");
     expect(layoutCode).toContain("FirstTimeInstallPopup");
 
-    // 2. First-time install popup component exists and has 10-second auto-close + once-only persistence
+    // 2. First-time install popup component exists and has 5-second post-login delay + once-only persistence
     const popupPath = path.join(__dirname, "..", "components", "mobile", "FirstTimeInstallPopup.tsx");
     expect(fs.existsSync(popupPath)).toBe(true);
     const popupCode = fs.readFileSync(popupPath, "utf-8");
     expect(popupCode).toContain("velvi_first_install_prompt_seen");
-    expect(popupCode).toContain("10000"); // 10 seconds auto-dismiss
+    expect(popupCode).toContain("5000"); // 5 seconds post-login delay
+    expect(popupCode).toContain("velvi_pwa_installed");
     expect(popupCode).toContain("Install Velvi Mobile App");
 
     // 3. Super Admin Portal in Settings & More pages is strictly role-gated for SUPER_ADMIN
@@ -1454,6 +1457,56 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const clearRes = store.clearSampleData(newBizId);
     expect(clearRes.removedBookings).toBeGreaterThan(0);
     expect(store.getBookings(newBizId)).toHaveLength(0);
+  });
+
+  it("should verify App Enhancements: No blinking footer, Step 2 scroll, jewel settings icons, Days to Expiry, and 1-Day reminders", () => {
+    // 1. Developer credit footer does NOT have animate-ping
+    const devCreditPath = path.join(__dirname, "..", "components", "ui", "DeveloperCredit.tsx");
+    const devCreditCode = fs.readFileSync(devCreditPath, "utf-8");
+    expect(devCreditCode).not.toContain("animate-ping");
+    expect(devCreditCode).toContain("+91-8300030123");
+
+    // 2. Login page has restyled distinct Demo button
+    const loginPath = path.join(__dirname, "..", "app", "(public)", "login", "page.tsx");
+    const loginCode = fs.readFileSync(loginPath, "utf-8");
+    expect(loginCode).toContain("Quick Demo Experience");
+    expect(loginCode).toContain("Instant Access");
+
+    // 3. New booking step 2 top-to-bottom scroll reset
+    const quickBookingPath = path.join(__dirname, "..", "app", "app", "bookings", "quick", "page.tsx");
+    const quickBookingCode = fs.readFileSync(quickBookingPath, "utf-8");
+    expect(quickBookingCode).toContain("twoStepStage === 2");
+    expect(quickBookingCode).toContain("window.scrollTo({ top: 0");
+
+    // 4. Settings page has vibrant jewel-toned iconBg and iconColor
+    const settingsPath = path.join(__dirname, "..", "app", "app", "settings", "page.tsx");
+    const settingsCode = fs.readFileSync(settingsPath, "utf-8");
+    expect(settingsCode).toContain("iconBg");
+    expect(settingsCode).toContain("iconColor");
+    expect(settingsCode).toContain("bg-blue-100");
+    expect(settingsCode).toContain("bg-emerald-100");
+
+    // 5. MobileHeader contains Days to Expiry calculation, tomorrow 1-day alert, and Devotees button
+    const headerPath = path.join(__dirname, "..", "components", "mobile", "MobileHeader.tsx");
+    const headerCode = fs.readFileSync(headerPath, "utf-8");
+    expect(headerCode).toContain("daysToExpiry");
+    expect(headerCode).toContain("tomorrowBookingsCount");
+    expect(headerCode).toContain("/app/customers");
+    expect(headerCode).toContain("பக்தர்கள் / Devotees");
+
+    // 6. GlobalSearchModal has 1-Day Before reminder and WhatsApp action
+    const searchModalPath = path.join(__dirname, "..", "components", "search", "GlobalSearchModal.tsx");
+    const searchModalCode = fs.readFileSync(searchModalPath, "utf-8");
+    expect(searchModalCode).toContain("tomorrowBookings");
+    expect(searchModalCode).toContain("handleSendReminderWhatsApp");
+    expect(searchModalCode).toContain("1 Day Before Reminder");
+
+    // 7. App Guide has expanded topics for Ayush Homam 93-items, 1-Day Before alerts, and PWA
+    const guidePath = path.join(__dirname, "..", "app", "app", "settings", "guide", "page.tsx");
+    const guideCode = fs.readFileSync(guidePath, "utf-8");
+    expect(guideCode).toContain("ayush-homam-93");
+    expect(guideCode).toContain("one-day-before-reminders");
+    expect(guideCode).toContain("pwa-offline-usage");
   });
 });
 

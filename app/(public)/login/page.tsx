@@ -404,31 +404,37 @@ export default function LoginPage() {
               <div className="h-px bg-slate-200 flex-1" />
             </div>
 
-            {/* 1-Tap Quick Demo Access Button */}
+            {/* 1-Tap Quick Demo Access Button - Restyled & Distinguished */}
             <button
               type="button"
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
               disabled={isDemoLoading}
-              className="w-full p-3.5 bg-gradient-to-r from-amber-50/90 via-amber-100/50 to-amber-50/90 hover:from-amber-100 hover:to-amber-100 text-amber-950 font-bold text-xs rounded-2xl border border-amber-300/80 transition-all flex items-center justify-between group cursor-pointer shadow-xs hover:shadow-md active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full p-3.5 bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 hover:from-black hover:to-emerald-950 text-white rounded-2xl border border-emerald-700/50 shadow-md hover:shadow-lg transition-all flex items-center justify-between group cursor-pointer active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
-                  <Zap className="w-4 h-4 fill-amber-100 text-amber-100" />
+              {/* Subtle sacred shimmer overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-transparent pointer-events-none" />
+
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform shrink-0">
+                  <Sparkles className="w-5 h-5 text-slate-950" />
                 </div>
                 <div className="text-left">
-                  <div className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5">
-                    <span>Quick Demo Access</span>
-                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-extrabold shadow-2xs">
-                      1-TAP
+                  <div className="font-extrabold text-[13px] text-amber-200 flex items-center gap-2">
+                    <span>Quick Demo Experience</span>
+                    <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                      Instant Access
                     </span>
                   </div>
-                  <p className="text-[10.5px] text-amber-800/90 font-medium">
-                    Try as Ravi Iyer • Instant Priest Entry
+                  <p className="text-[11px] text-slate-300 font-medium mt-0.5">
+                    Explore Ravi Iyer Profile with Sample Bookings & Data
                   </p>
                 </div>
               </div>
-              <ChevronRight className="w-4 h-4 text-amber-700 group-hover:translate-x-1 transition-transform" />
+
+              <div className="w-7 h-7 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all shrink-0 relative z-10">
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </button>
 
             {/* Feature Highlights Grid */}

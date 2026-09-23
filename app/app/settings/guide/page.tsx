@@ -236,6 +236,68 @@ const GUIDE_TOPICS: GuideTopic[] = [
       "During Shravana month, Sri Ram opens Theme settings and activates 'Bilva Green'. The entire app transforms into a serene, deep forest emerald aesthetic with sacred golden accents.",
     proTip: "Always download an Excel backup at the end of each Tamil month to archive your devotee accounts locally.",
   },
+
+  // 11. Ayush Homam 93-Item Authentic Checklist
+  {
+    id: "ayush-homam-93",
+    category: "Pooja Catalog & Items",
+    categoryIcon: "🪔",
+    title: "ஆயுஷ் ஹோமம் (Ayush Homam) 93-Item Authentic Checklist",
+    summary: "Authentic, complete 93-item ritual checklist from Namakkal S.S. Jeyaraman Pooja Stores, covering holy powders, homam samithu, vastram, and brass vessels.",
+    steps: [
+      "Open Pooja Catalog (`/app/poojas`) or start a New Booking (`/app/bookings/new`).",
+      "Select 'ஆயுஷ் ஹோமம் (Ayushya / Ayur Homam)'.",
+      "All 93 authentic items load organized by category: Holy Powders (மஞ்சள்தூள், குங்குமம், ஜவ்வாது, அரகஜா), Homam Herbs (சீந்தில் கொடி, நாயுருவி, உமி, சிராத்தூள்), Dairy/Ghee (பசு நெய் 1L, நல்லெண்ணெய், கோமயம்), Garlands, Fruits, and Brass Vessels.",
+      "Adjust quantities with smart step buttons: Grams/ml items automatically adjust by 100g/50g, while count items adjust by 1 nos.",
+      "Tap 'Share List (வாட்ஸ்அப்)' to send the complete 93-item slip to the devotee or pooja store vendor in 1 tap!",
+    ],
+    exampleTitle: "Example: Preparing 1st Birthday Ayush Homam for Baby Ananya",
+    exampleScenario:
+      "A family calls Vadhyar Sri Ram to conduct their baby's 1st birthday Ayushya Homam. Sri Ram creates a booking, reviews all 93 items, fine-tunes the flower garland counts, and clicks 'WhatsApp Share'. The family receives the cleanly formatted Tamil checklist with exact store quantities.",
+    proTip: "You can tap and hold (long-press) any item in the checklist to view its sacred significance, ritual purpose, and vendor purchasing tips.",
+    badge: "93 Items",
+  },
+
+  // 12. 1-Day Before Event Reminders & Notification System
+  {
+    id: "one-day-before-reminders",
+    category: "Bookings & Timeline",
+    categoryIcon: "🔔",
+    title: "1-Day Before Upcoming Reminders & WhatsApp Alerts",
+    summary: "Automated alert engine that informs you 1 day prior to scheduled poojas, with pulsing search indicator and 1-tap devotee reminder messages.",
+    steps: [
+      "Whenever a ritual is scheduled for tomorrow (`Date + 1 day`), Velvi automatically flags it as an upcoming event.",
+      "The Search 🔍 icon in the top header animates and pulses with a golden amber notification dot.",
+      "Tap the Search icon or press Ctrl+K to open the Global Search Modal.",
+      "At the very top, view the dedicated 'நாளை பூஜை நினைவூட்டல் (1 Day Before Reminder)' card displaying devotee name, pooja, time, and address.",
+      "Tap the green 'WhatsApp Remind' button to instantly send a polite Tamil reminder to the devotee with date, time, and preparation guidance.",
+    ],
+    exampleTitle: "Example: Reminding Devotee K. Sundar the Evening Before Ganapathi Homam",
+    exampleScenario:
+      "On Friday evening, Sri Ram notices the top search icon pulsing in amber. He taps it and sees K. Sundar's Ganapathi Homam scheduled for Saturday at 6:30 AM. He taps 'WhatsApp Remind', which opens WhatsApp with a pre-composed reminder. Sundar confirms that the kolam and homa-kundam area are ready.",
+    proTip: "Devotees deeply appreciate the proactive reminder the evening before, ensuring they wake up early and arrange flowers and fruits on time.",
+    badge: "Auto Alert",
+  },
+
+  // 13. PWA Mobile App Installation & Offline Resilience
+  {
+    id: "pwa-offline-usage",
+    category: "Getting Started",
+    categoryIcon: "📱",
+    title: "Mobile App Installation & 100% Offline Capability",
+    summary: "How to install Velvi directly onto your Android or iPhone home screen and manage rituals even without cellular coverage.",
+    steps: [
+      "5 seconds after logging in, an 'Install Velvi Mobile App' prompt appears for first-time users.",
+      "Android: Tap 'Install App' for direct 1-tap installation via Google Chrome.",
+      "iPhone / iPad: Tap Safari's 'Share' button (at the bottom) > scroll down and tap 'Add to Home Screen' > tap 'Add'.",
+      "Once installed, Velvi launches full-screen with native app performance and no browser address bars.",
+      "Offline Mode: If you lose mobile network coverage during a remote village homam or temple hall, all your bookings, checklists, and devotees remain 100% accessible and can be edited locally.",
+    ],
+    exampleTitle: "Example: Updating Dakshina in a Remote Village Temple with No Signal",
+    exampleScenario:
+      "Vadhyar Sri Ram conducts a Sudarshana Homam in an ancient hill temple with zero mobile signal. Using the installed Velvi app, he checks off the items and marks the dakshina as collected. When he returns home to Wi-Fi, Velvi's real-time cloud sync ticker automatically synchronizes everything.",
+    proTip: "Add Velvi to your home screen dock so you can launch it in a fraction of a second when devotees call.",
+  },
 ];
 
 export default function AppGuidePage() {

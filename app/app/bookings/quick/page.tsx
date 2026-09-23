@@ -376,8 +376,24 @@ function QuickBookingContent() {
     setFormError("");
     setHighlightedSection(null);
     setTwoStepStage(2);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
   };
+
+  // Enforce top-to-bottom scroll reset whenever user enters Step 2
+  useEffect(() => {
+    if (twoStepStage === 2 && typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const mainEl = document.querySelector("main");
+        if (mainEl) mainEl.scrollTop = 0;
+      });
+    }
+  }, [twoStepStage]);
 
   // Preview modal state
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);

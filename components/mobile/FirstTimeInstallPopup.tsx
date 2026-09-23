@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/providers/AuthContext";
 import { Download, X, Share, PlusSquare, Smartphone, Sparkles } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 
@@ -10,6 +12,9 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const FirstTimeInstallPopup: React.FC = () => {
+  const pathname = usePathname();
+  const { currentUser } = useAuth();
+
   const [showPopup, setShowPopup] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(6);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -19,14 +24,20 @@ export const FirstTimeInstallPopup: React.FC = () => {
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // 1. Check if already installed in standalone PWA mode
+    // 1. Never show on login screen or if user is not logged in yet
+    if (!currentUser || pathname.startsWith("/login")) {
+      return;
+    }
+
+    // 2. Check if already installed in standalone PWA mode or marked installed
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+      localStorage.getItem("velvi_pwa_installed") === "true";
 
     if (isStandalone) return;
 
-    // 2. Check if first-time user has already seen this popup (only once)
+    // 3. Check if first-time user has already seen this popup (only once)
     const hasSeenPrompt = localStorage.getItem("velvi_first_install_prompt_seen");
     if (hasSeenPrompt) return;
 
@@ -42,7 +53,14 @@ export const FirstTimeInstallPopup: React.FC = () => {
     };
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    // Show popup strictly after 10 seconds for new users ("10s kalichici")
+    // Track native install completion
+    const handleAppInstalled = () => {
+      localStorage.setItem("velvi_pwa_installed", "true");
+      setShowPopup(false);
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    // Show popup strictly after 5 seconds for logged-in first-time users ("5 sec kalichu")
     const delayTimer = setTimeout(() => {
       setShowPopup(true);
       localStorage.setItem("velvi_first_install_prompt_seen", "true");
@@ -64,15 +82,16 @@ export const FirstTimeInstallPopup: React.FC = () => {
       timerRef.current = setTimeout(() => {
         setShowPopup(false);
       }, 6000);
-    }, 10000);
+    }, 5000);
 
     return () => {
       clearTimeout(delayTimer);
       if (timerRef.current) clearTimeout(timerRef.current);
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, []);
+  }, [currentUser, pathname]);
 
   const handleDismiss = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -88,6 +107,7 @@ export const FirstTimeInstallPopup: React.FC = () => {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
+        localStorage.setItem("velvi_pwa_installed", "true");
         setShowPopup(false);
       }
       setDeferredPrompt(null);

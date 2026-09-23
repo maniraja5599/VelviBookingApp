@@ -39,7 +39,7 @@ export const DeveloperCredit: React.FC<{ className?: string; light?: boolean }> 
           className="inline-flex items-center gap-1.5 font-bold text-emerald-700 hover:text-emerald-950 transition active:scale-95 group px-2 py-0.5 rounded-lg hover:bg-emerald-50"
           title="WhatsApp / Call: +91-8300030123"
         >
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
           <MessageCircle className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform shrink-0" />
           <span>+91-8300030123</span>
         </a>

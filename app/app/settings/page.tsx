@@ -51,6 +51,8 @@ interface SettingItem {
   label: string;
   desc: string;
   icon: any;
+  iconBg?: string;
+  iconColor?: string;
   badge?: string;
   highlight?: boolean;
   keywords?: string;
@@ -145,6 +147,8 @@ export default function SettingsHubPage() {
           label: "Business Profile & Branding",
           desc: currentBusiness?.name || "Logo, vadhyar name, service title & receipt watermark",
           icon: Building2,
+          iconBg: "bg-blue-100/90 border border-blue-200",
+          iconColor: "text-blue-700",
           badge: currentBusiness?.logoUrl ? "Custom Logo" : "Default Logo",
           highlight: true,
           keywords: "profile branding vadhyar name logo watermark business",
@@ -154,6 +158,8 @@ export default function SettingsHubPage() {
           label: "Pooja & Seva Catalog",
           desc: "Manage rituals, dakshina fees & item checklists",
           icon: Flame,
+          iconBg: "bg-orange-100/90 border border-orange-200",
+          iconColor: "text-orange-700",
           keywords: "pooja homam seva dakshina fee samagri checklist",
         },
         {
@@ -161,6 +167,8 @@ export default function SettingsHubPage() {
           label: "Samagri Categories",
           desc: "Create, edit & manage pooja items categories & icons",
           icon: Tag,
+          iconBg: "bg-purple-100/90 border border-purple-200",
+          iconColor: "text-purple-700",
           keywords: "category categories samagri items fruits flowers ghee vastram",
         },
         {
@@ -168,6 +176,8 @@ export default function SettingsHubPage() {
           label: "Devotees & Clients",
           desc: "Manage devotee directory, star nakshatram & history",
           icon: Users,
+          iconBg: "bg-emerald-100/90 border border-emerald-200",
+          iconColor: "text-emerald-700",
           keywords: "customer devotee client phone mobile nakshatram rasi gothram",
         },
         {
@@ -175,6 +185,8 @@ export default function SettingsHubPage() {
           label: "Team & Assistant Priests",
           desc: "Manage purohits, schedules & assignments",
           icon: UserCheck,
+          iconBg: "bg-indigo-100/90 border border-indigo-200",
+          iconColor: "text-indigo-700",
           keywords: "team assistant purohit vadhyar staff purohits iyer",
         },
       ],
@@ -187,6 +199,8 @@ export default function SettingsHubPage() {
           label: "Subscription & Plan",
           desc: isPro ? "Velvi Pro Active • Auto-renews" : "30-Day Free Trial • Upgrade to Pro",
           icon: Sparkles,
+          iconBg: "bg-amber-100/90 border border-amber-300",
+          iconColor: "text-amber-800",
           badge: isPro ? "Pro Active" : "Free Trial",
           keywords: "subscription plan pro trial billing upi payment renew validity",
         },
@@ -195,6 +209,8 @@ export default function SettingsHubPage() {
           label: "Referral & Earn Free Days",
           desc: "Invite colleagues, earn +30 days free per referral",
           icon: Gift,
+          iconBg: "bg-pink-100/90 border border-pink-200",
+          iconColor: "text-pink-700",
           keywords: "referral invite reward free days friend earn code",
         },
       ],
@@ -207,6 +223,8 @@ export default function SettingsHubPage() {
           label: "Recycle Bin & Restore Log",
           desc: `${recentlyDeleted.length} deleted item(s) • View changes & restore records`,
           icon: RotateCcw,
+          iconBg: "bg-rose-100/90 border border-rose-200",
+          iconColor: "text-rose-700",
           badge: recentlyDeleted.length > 0 ? `${recentlyDeleted.length} in trash` : undefined,
           keywords: "trash restore recycle bin delete undo recover change log history",
         },
@@ -215,6 +233,8 @@ export default function SettingsHubPage() {
           label: "Data & Cloud Backup",
           desc: "Excel export, contacts import & safe backup",
           icon: Cloud,
+          iconBg: "bg-cyan-100/90 border border-cyan-200",
+          iconColor: "text-cyan-800",
           keywords: "backup export excel csv import restore cloud data",
         },
         {
@@ -227,6 +247,8 @@ export default function SettingsHubPage() {
           label: "Clear Demo Data",
           desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
           icon: Sparkles,
+          iconBg: "bg-red-100/90 border border-red-200",
+          iconColor: "text-red-700",
           keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு",
         },
       ],
@@ -239,6 +261,8 @@ export default function SettingsHubPage() {
           label: "App Guide & Documentation",
           desc: "Comprehensive A to Z user manual with examples",
           icon: BookOpen,
+          iconBg: "bg-teal-100/90 border border-teal-200",
+          iconColor: "text-teal-700",
           badge: "A-Z Guide",
           keywords: "guide manual help docs tutorial how to use walkthrough panchangam",
         },
@@ -247,6 +271,8 @@ export default function SettingsHubPage() {
           label: "Theme & Sacred Colors",
           desc: "Traditional, Bilva Green, Royal Kumkum & Modern palettes",
           icon: Palette,
+          iconBg: "bg-fuchsia-100/90 border border-fuchsia-200",
+          iconColor: "text-fuchsia-700",
           keywords: "theme color style palette sacred dark light green kumkum",
         },
         {
@@ -254,6 +280,8 @@ export default function SettingsHubPage() {
           label: "Version & Release Notes",
           desc: `v${APP_VERSION} Stable • View changelog & updates`,
           icon: Sparkles,
+          iconBg: "bg-violet-100/90 border border-violet-200",
+          iconColor: "text-violet-700",
           badge: `v${APP_VERSION}`,
           keywords: "version release notes changelog update",
         },
@@ -278,18 +306,18 @@ export default function SettingsHubPage() {
       .filter((sec) => sec.items.length > 0);
   }, [searchQuery, allSettingSections]);
 
-  // Quick chips for common settings
+  // Quick chips for common settings with colorful styling
   const quickSettings = [
-    { label: "Profile", icon: Pencil, action: () => (window.location.href = "/app/settings/branding") },
-    { label: "Plan & Pro", icon: Sparkles, action: () => (window.location.href = "/app/subscription") },
-    { label: "Refer & Earn", icon: Gift, action: () => (window.location.href = "/app/referrals") },
-    { label: "App Guide", icon: BookOpen, action: () => (window.location.href = "/app/settings/guide") },
-    { label: "Categories", icon: Tag, action: () => setShowCategoryModal(true) },
-    { label: "Trash & Undo", icon: RotateCcw, action: () => setShowTrashModal(true) },
-    { label: "Devotees", icon: Users, action: () => (window.location.href = "/app/customers") },
-    { label: "Poojas", icon: Flame, action: () => (window.location.href = "/app/poojas") },
-    { label: "Themes", icon: Palette, action: () => (window.location.href = "/app/settings/theme") },
-    { label: "Backup", icon: Cloud, action: () => (window.location.href = "/app/data-backup") },
+    { label: "Profile", icon: Pencil, iconColor: "text-blue-700", chipBg: "hover:bg-blue-50 hover:border-blue-300", action: () => (window.location.href = "/app/settings/branding") },
+    { label: "Plan & Pro", icon: Sparkles, iconColor: "text-amber-700", chipBg: "hover:bg-amber-50 hover:border-amber-300", action: () => (window.location.href = "/app/subscription") },
+    { label: "Refer & Earn", icon: Gift, iconColor: "text-pink-700", chipBg: "hover:bg-pink-50 hover:border-pink-300", action: () => (window.location.href = "/app/referrals") },
+    { label: "App Guide", icon: BookOpen, iconColor: "text-teal-700", chipBg: "hover:bg-teal-50 hover:border-teal-300", action: () => (window.location.href = "/app/settings/guide") },
+    { label: "Categories", icon: Tag, iconColor: "text-purple-700", chipBg: "hover:bg-purple-50 hover:border-purple-300", action: () => setShowCategoryModal(true) },
+    { label: "Trash & Undo", icon: RotateCcw, iconColor: "text-rose-700", chipBg: "hover:bg-rose-50 hover:border-rose-300", action: () => setShowTrashModal(true) },
+    { label: "Devotees", icon: Users, iconColor: "text-emerald-700", chipBg: "hover:bg-emerald-50 hover:border-emerald-300", action: () => (window.location.href = "/app/customers") },
+    { label: "Poojas", icon: Flame, iconColor: "text-orange-700", chipBg: "hover:bg-orange-50 hover:border-orange-300", action: () => (window.location.href = "/app/poojas") },
+    { label: "Themes", icon: Palette, iconColor: "text-fuchsia-700", chipBg: "hover:bg-fuchsia-50 hover:border-fuchsia-300", action: () => (window.location.href = "/app/settings/theme") },
+    { label: "Backup", icon: Cloud, iconColor: "text-cyan-800", chipBg: "hover:bg-cyan-50 hover:border-cyan-300", action: () => (window.location.href = "/app/data-backup") },
   ];
 
   return (
@@ -451,9 +479,9 @@ export default function SettingsHubPage() {
                   key={idx}
                   type="button"
                   onClick={chip.action}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-amber-100/80 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/80 active:scale-95"
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200 shadow-2xs active:scale-95 ${chip.chipBg || ""}`}
                 >
-                  <ChipIcon className="w-3 h-3 text-amber-800" />
+                  <ChipIcon className={`w-3 h-3 ${chip.iconColor || "text-amber-800"}`} />
                   <span>{chip.label}</span>
                 </button>
               );
@@ -479,6 +507,9 @@ export default function SettingsHubPage() {
             <div className="bg-white rounded-3xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
               {section.items.map((item) => {
                 const Icon = item.icon;
+                const iconBgClass = (item as any).iconBg || "bg-amber-100/70 border border-amber-200";
+                const iconColorClass = (item as any).iconColor || "text-amber-900";
+
                 if (item.onClick) {
                   return (
                     <button
@@ -488,7 +519,7 @@ export default function SettingsHubPage() {
                       className="w-full text-left p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group cursor-pointer"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <div className={`w-8 h-8 rounded-xl ${iconBgClass} ${iconColorClass} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs`}>
                           <Icon className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
@@ -517,7 +548,7 @@ export default function SettingsHubPage() {
                     className="p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <div className={`w-8 h-8 rounded-xl ${iconBgClass} ${iconColorClass} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
