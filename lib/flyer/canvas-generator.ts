@@ -102,6 +102,7 @@ export interface GenerateFlyerOptions {
   themePreset?: ThemePreset;
   customCompanyName?: string;
   customPhone?: string;
+  columns?: "auto" | "1" | "2" | "3";
 }
 
 export async function generatePoojaFlyer(
@@ -123,18 +124,49 @@ export async function generatePoojaFlyer(
     ? booking.items.filter((it: any) => it.isChecked !== false)
     : [];
 
-  const isSingleCol = items.length <= 8;
-  const half = Math.ceil(items.length / 2);
-  const rowsCount = isSingleCol ? Math.max(1, items.length) : Math.max(1, half);
-  const rowHeight = isSingleCol ? 52 : 46;
+  // Determine Column Count
+  let numCols: 1 | 2 | 3 = 2;
+  if (options.columns === "1") {
+    numCols = 1;
+  } else if (options.columns === "2") {
+    numCols = 2;
+  } else if (options.columns === "3") {
+    numCols = 3;
+  } else {
+    // Smart auto selection
+    if (items.length <= 8) {
+      numCols = 1;
+    } else if (items.length <= 32) {
+      numCols = 2;
+    } else {
+      numCols = items.length > 36 ? 3 : 2;
+    }
+  }
+
+  // Calculate items per column and adaptive row height
+  const rowsCount = Math.max(1, Math.ceil(items.length / numCols));
+  let rowHeight = 48;
+  if (numCols === 1) {
+    rowHeight = 52;
+  } else if (numCols === 2) {
+    rowHeight = rowsCount > 25 ? 42 : rowsCount > 16 ? 46 : 50;
+  } else {
+    // 3 columns
+    rowHeight = rowsCount > 20 ? 38 : 42;
+  }
+
   const startY = 525;
   const itemsHeight = rowsCount * rowHeight;
-  const footerSpace = 240;
+  const footerBuffer = 45;
+  const footerStartY = startY + itemsHeight + footerBuffer;
+  const noteY = footerStartY + 35;
+  const contactY = contactPhone ? noteY + 45 : noteY;
+  const watermarkY = business.showWatermark ? contactY + 42 : contactY;
+  const calculatedHeight = watermarkY + 65;
 
-  // Dynamic canvas height to avoid giant empty white voids
-  const calculatedHeight = startY + itemsHeight + footerSpace;
+  // Fully dynamic height with NO artificial 1600px cap! (Supports any number of items)
   const width = 1080;
-  const height = Math.max(980, Math.min(1600, calculatedHeight));
+  const height = Math.max(980, calculatedHeight);
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -152,9 +184,9 @@ export async function generatePoojaFlyer(
   // 2. Temple Borders with refined inner hairline
   drawTempleBorder(ctx, width, height, colors.borderColor, colors.gold);
 
-  // 3. Compact "Cute" Logo Badge (logo kutty a - 44px diameter)
+  // 3. Compact "Cute" Logo Badge (44px diameter)
   const logoCenterY = 78;
-  const logoRadius = 22; // Small & cute!
+  const logoRadius = 22;
   const flyerLogoSrc = business.logoUrl || "/icons/velvi-logo.png";
   try {
     const logoImg = new Image();
@@ -259,49 +291,73 @@ export async function generatePoojaFlyer(
   ctx.fillStyle = colors.primary;
   ctx.fillText("📋 தேவையான பூஜை சாமக்கிரி பொருட்கள் (Items Checklist)", width / 2, listHeadingY);
 
-  // 8. Balanced Items Grid (Single column for <=8 items, balanced dual column for >8)
-  const col1X = isSingleCol ? 100 : 75;
-  const col1W = isSingleCol ? width - 200 : 445;
-  const col2X = width / 2 + 20;
-  const col2W = 445;
+  // 8. Balanced Items Grid (1, 2, or 3 columns)
+  const colConfigs: { x: number; w: number }[] = [];
+  if (numCols === 1) {
+    colConfigs.push({ x: 100, w: width - 200 });
+  } else if (numCols === 2) {
+    const leftMargin = 75;
+    const colWidth = 445;
+    const gap = width - (leftMargin * 2) - (colWidth * 2);
+    colConfigs.push({ x: leftMargin, w: colWidth });
+    colConfigs.push({ x: leftMargin + colWidth + gap, w: colWidth });
+  } else {
+    // 3 columns
+    const leftMargin = 60;
+    const gap = 16;
+    const usableW = width - (leftMargin * 2) - (gap * 2);
+    const colWidth = Math.floor(usableW / 3);
+    colConfigs.push({ x: leftMargin, w: colWidth });
+    colConfigs.push({ x: leftMargin + colWidth + gap, w: colWidth });
+    colConfigs.push({ x: leftMargin + (colWidth + gap) * 2, w: colWidth });
+  }
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const isCol2 = !isSingleCol && i >= half;
-    const colIndex = isSingleCol ? i : isCol2 ? i - half : i;
+    const col = Math.min(numCols - 1, Math.floor(i / rowsCount));
+    const row = i % rowsCount;
 
-    const x = isCol2 ? col2X : col1X;
-    const w = isCol2 ? col2W : col1W;
-    const y = startY + colIndex * rowHeight;
+    const { x, w } = colConfigs[col];
+    const y = startY + row * rowHeight;
 
-    // Subtle row background pill
-    ctx.fillStyle = i % 2 === 0 ? "rgba(200, 146, 52, 0.06)" : "rgba(255, 255, 255, 0.75)";
+    // Subtle row background pill with gentle gold outline
+    ctx.fillStyle = (col + row) % 2 === 0 ? "rgba(200, 146, 52, 0.08)" : "rgba(255, 255, 255, 0.88)";
     ctx.beginPath();
-    ctx.roundRect ? ctx.roundRect(x, y - 30, w, rowHeight - 8, 10) : ctx.rect(x, y - 30, w, rowHeight - 8);
+    ctx.roundRect
+      ? ctx.roundRect(x, y - (rowHeight - 12), w, rowHeight - 8, 8)
+      : ctx.rect(x, y - (rowHeight - 12), w, rowHeight - 8);
     ctx.fill();
+    ctx.strokeStyle = "rgba(200, 146, 52, 0.22)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     // Checkmark / Number
     ctx.textAlign = "left";
-    ctx.font = "bold 19px 'Segoe UI', sans-serif";
+    ctx.font = numCols === 3 ? "bold 15px 'Segoe UI', sans-serif" : "bold 18px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
-    ctx.fillText(`${i + 1}.`, x + 12, y - 4);
+    ctx.fillText(`${i + 1}.`, x + 10, y - 4);
 
     // Things Name (Bilingual Tamil + English)
     let itemName = "";
     const taName = (item.itemTamilName || "").trim();
     const enName = (item.itemEnglishName || "").trim();
-    if (taName && enName && taName !== enName) {
+    if (numCols === 3) {
+      itemName = taName || enName || "பொருள்";
+    } else if (taName && enName && taName !== enName) {
       itemName = `${taName} (${enName})`;
     } else {
       itemName = taName || enName || "பொருள்";
     }
 
-    ctx.font = isSingleCol
-      ? "bold 22px 'Mukta Malar', 'Segoe UI', sans-serif"
-      : "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
+    ctx.font =
+      numCols === 1
+        ? "bold 21px 'Mukta Malar', 'Segoe UI', sans-serif"
+        : numCols === 2
+        ? "bold 19px 'Mukta Malar', 'Segoe UI', sans-serif"
+        : "bold 16px 'Mukta Malar', 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textDark;
 
-    const maxNameWidth = w - (isSingleCol ? 160 : 130);
+    const maxNameWidth = w - (numCols === 1 ? 160 : numCols === 2 ? 130 : 95);
     let truncatedName = itemName;
     if (ctx.measureText(truncatedName).width > maxNameWidth) {
       while (truncatedName.length > 4 && ctx.measureText(truncatedName + "...").width > maxNameWidth) {
@@ -309,11 +365,12 @@ export async function generatePoojaFlyer(
       }
       truncatedName += "...";
     }
-    ctx.fillText(truncatedName, x + 40, y - 4);
+    const nameStartX = x + (numCols === 3 ? 32 : 38);
+    ctx.fillText(truncatedName, nameStartX, y - 4);
 
-    // Quantity Badge with Explicit Unit (No missing unit!)
+    // Quantity Badge with Explicit Unit
     ctx.textAlign = "right";
-    ctx.font = "bold 20px 'Segoe UI', sans-serif";
+    ctx.font = numCols === 3 ? "bold 16px 'Segoe UI', sans-serif" : "bold 19px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
 
     const unitRaw = (item.unit || "").trim().toLowerCase();
@@ -339,7 +396,7 @@ export async function generatePoojaFlyer(
     }
 
     const qtyText = `${item.quantity || 1} ${unitDisplay}`;
-    ctx.fillText(qtyText, x + w - 14, y - 4);
+    ctx.fillText(qtyText, x + w - 10, y - 4);
   }
 
   if (items.length === 0) {
@@ -349,8 +406,7 @@ export async function generatePoojaFlyer(
     ctx.fillText("பொருட்கள் எதுவும் சேர்க்கப்படவில்லை (No items added)", width / 2, startY + 60);
   }
 
-  // 9. Sacred Instruction Note (Dynamically placed above bottom)
-  const noteY = height - 150;
+  // 9. Sacred Instruction Note (Guaranteed safe position below items)
   ctx.textAlign = "center";
   ctx.font = "bold 20px 'Mukta Malar', 'Segoe UI', sans-serif";
   ctx.fillStyle = colors.gold;
@@ -360,14 +416,14 @@ export async function generatePoojaFlyer(
   if (contactPhone) {
     ctx.font = "bold 22px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.primary;
-    ctx.fillText(`📞 தொடர்புக்கு (Contact): ${contactPhone}`, width / 2, noteY + 45);
+    ctx.fillText(`📞 தொடர்புக்கு (Contact): ${contactPhone}`, width / 2, contactY);
   }
 
   // 11. Subtle Watermark
   if (business.showWatermark) {
     ctx.font = "16px 'Segoe UI', sans-serif";
     ctx.fillStyle = colors.textMuted;
-    ctx.fillText("✨ Powered by Velvi App • வேத முறை முன்பதிவு மேலாண்மை ✨", width / 2, height - 45);
+    ctx.fillText("✨ Powered by Velvi App • வேத முறை முன்பதிவு மேலாண்மை ✨", width / 2, watermarkY);
   }
 
   return canvas.toDataURL("image/png");

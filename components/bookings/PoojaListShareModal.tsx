@@ -45,6 +45,9 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
   const [companyName, setCompanyName] = useState<string>(
     business?.name || "வேள்வி வேத பவனம்"
   );
+  const [columnMode, setColumnMode] = useState<"auto" | "1" | "2" | "3">("auto");
+  const [previewMode, setPreviewMode] = useState<"fit" | "scroll">("fit");
+  const [showFullViewModal, setShowFullViewModal] = useState<boolean>(false);
 
   // Generate WhatsApp text message
   const whatsappMessage = React.useMemo(() => {
@@ -61,7 +64,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
     }
   }, [whatsappMessage]);
 
-  // Generate Image Flyer on open or when booking / companyName changes
+  // Generate Image Flyer on open or when booking / companyName / columnMode changes
   useEffect(() => {
     if (!isOpen || !booking || !business) return;
 
@@ -72,6 +75,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
       generatePoojaFlyer(booking, business, {
         themePreset: theme.preset,
         customCompanyName: companyName,
+        columns: columnMode,
       })
         .then((dataUrl) => {
           if (isMounted) {
@@ -91,7 +95,7 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
       isMounted = false;
       clearTimeout(timer);
     };
-  }, [isOpen, booking, business, theme.preset, companyName]);
+  }, [isOpen, booking, business, theme.preset, companyName, columnMode]);
 
   if (!isOpen) return null;
 
@@ -290,14 +294,92 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                 </p>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1">
-                <span className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>Flyer Image Preview</span>
+              {/* Column Layout Switcher */}
+              <div className="flex items-center justify-between text-xs font-bold pt-0.5 px-0.5">
+                <span className="text-[11px] text-slate-600 font-extrabold flex items-center gap-1">
+                  <span>📐 பட்டியல் அமைப்பு (Layout):</span>
                 </span>
-                <span className="text-[10px] text-emerald-850 font-black bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                  {booking.items?.length || 0} Items
-                </span>
+                <div className="flex bg-slate-100 p-0.5 rounded-xl text-[10.5px] border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setColumnMode("auto")}
+                    className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
+                      columnMode === "auto"
+                        ? "bg-white text-emerald-950 font-black shadow-2xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    Auto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setColumnMode("2")}
+                    className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
+                      columnMode === "2"
+                        ? "bg-white text-emerald-950 font-black shadow-2xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    2 Col
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setColumnMode("3")}
+                    className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
+                      columnMode === "3"
+                        ? "bg-white text-emerald-950 font-black shadow-2xs border border-slate-200"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    3 Col
+                  </button>
+                </div>
+              </div>
+
+              {/* Preview Header & Options */}
+              <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 px-1 pt-1">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Flyer Preview</span>
+                  </span>
+                  {/* View Mode Toggle */}
+                  <div className="flex bg-slate-200/80 p-0.5 rounded-lg text-[9.5px]">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode("fit")}
+                      className={`px-1.5 py-0.5 rounded transition cursor-pointer ${
+                        previewMode === "fit" ? "bg-white font-black text-slate-900 shadow-2xs" : "text-slate-600"
+                      }`}
+                    >
+                      Fit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewMode("scroll")}
+                      className={`px-1.5 py-0.5 rounded transition cursor-pointer ${
+                        previewMode === "scroll" ? "bg-white font-black text-slate-900 shadow-2xs" : "text-slate-600"
+                      }`}
+                    >
+                      Full Scroll
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  {flyerDataUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setShowFullViewModal(true)}
+                      className="text-[10px] text-emerald-700 hover:text-emerald-900 font-bold underline cursor-pointer"
+                    >
+                      🔍 பெரிதாக்கு (Zoom)
+                    </button>
+                  )}
+                  <span className="text-[10px] text-emerald-850 font-black bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    {booking.items?.filter((it: any) => it.isChecked !== false).length || 0} பொருட்கள்
+                  </span>
+                </div>
               </div>
 
               {/* Rendered Canvas Image Card */}
@@ -308,11 +390,15 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
                     <span className="text-xs font-bold">Rendering High-Res Flyer...</span>
                   </div>
                 ) : flyerDataUrl ? (
-                  <div className="w-full flex flex-col items-center">
+                  <div className={`w-full flex flex-col items-center ${previewMode === "scroll" ? "max-h-[380px] overflow-y-auto" : ""}`}>
                     <img
                       src={flyerDataUrl}
                       alt="Pooja Samagri Flyer"
-                      className="w-full max-h-[360px] object-contain rounded-xl shadow-md border border-amber-300/60"
+                      onClick={() => setShowFullViewModal(true)}
+                      className={`w-full object-contain rounded-xl shadow-md border border-amber-300/60 cursor-pointer ${
+                        previewMode === "fit" ? "max-h-[360px]" : "h-auto"
+                      }`}
+                      title="Click to view full size"
                     />
                   </div>
                 ) : (
@@ -478,6 +564,47 @@ export const PoojaListShareModal: React.FC<PoojaListShareModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Full Image Zoom Overlay Modal */}
+      {showFullViewModal && flyerDataUrl && (
+        <div className="fixed inset-0 z-[100] bg-black/85 flex flex-col items-center justify-center p-3 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-lg flex items-center justify-between pb-2 text-white">
+            <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <span>🔍 முழு நீள பார்வை (Full Poster View)</span>
+              <span className="text-[10px] bg-emerald-800 text-emerald-100 px-2 py-0.5 rounded-full">
+                HD Quality
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowFullViewModal(false)}
+              className="p-1.5 bg-white/10 hover:bg-white/20 rounded-full text-white transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="max-h-[82vh] overflow-y-auto rounded-2xl shadow-2xl border border-amber-400/40 bg-slate-900/60 p-1">
+            <img src={flyerDataUrl} alt="Full Flyer" className="w-full h-auto rounded-xl" />
+          </div>
+          <div className="pt-3 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handleDownloadImage}
+              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer active:scale-95 transition"
+            >
+              <Download className="w-4 h-4 text-amber-300" />
+              <span>Download PNG</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFullViewModal(false)}
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
+            >
+              மூடுக (Close)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
