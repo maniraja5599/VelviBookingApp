@@ -28,7 +28,7 @@ export const BottomNav: React.FC = React.memo(() => {
   }
 
   return (
-    <nav className="fixed bottom-2.5 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md md:max-w-lg z-40 bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded-[26px] px-2 py-1.5 transition-all">
+    <nav className="fixed bottom-2.5 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md md:max-w-lg z-40 bg-white/95 backdrop-blur-xl border border-amber-200/80 shadow-[0_12px_36px_rgba(200,146,52,0.14),0_4px_16px_rgba(0,0,0,0.06)] rounded-[26px] px-2 py-1.5 transition-all relative overflow-hidden before:absolute before:inset-x-8 before:top-0 before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-amber-400/80 before:to-transparent">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive =
@@ -57,9 +57,9 @@ export const BottomNav: React.FC = React.memo(() => {
               }`}
             >
               <div
-                className={`flex items-center justify-center px-3.5 py-1.5 rounded-2xl transition-all duration-200 ${
+                className={`relative flex items-center justify-center px-3.5 py-1.5 rounded-2xl transition-all duration-200 ${
                   isActive
-                    ? "bg-gradient-to-r from-emerald-900 via-[#0d3b1e] to-emerald-950 shadow-md ring-1 ring-amber-400/30 scale-105"
+                    ? "bg-gradient-to-r from-emerald-900 via-[#0d3b1e] to-emerald-950 shadow-md ring-1 ring-amber-400/50 scale-105"
                     : "group-hover:bg-slate-100/90"
                 }`}
               >
@@ -71,11 +71,14 @@ export const BottomNav: React.FC = React.memo(() => {
               </div>
               <span
                 className={`text-[10px] sm:text-[11px] mt-1 tracking-tight truncate max-w-[62px] sm:max-w-[76px] transition-colors leading-tight ${
-                  isActive ? "font-extrabold text-emerald-950" : "font-medium text-slate-500"
+                  isActive ? "font-black text-emerald-950" : "font-semibold text-slate-500"
                 }`}
               >
                 {item.label}
               </span>
+              {isActive && (
+                <span className="w-1 h-1 rounded-full bg-amber-500 mt-0.5" />
+              )}
             </Link>
           );
         })}
