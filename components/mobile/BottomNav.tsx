@@ -28,7 +28,7 @@ export const BottomNav: React.FC = React.memo(() => {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 shadow-[0_-4px_25px_rgba(0,0,0,0.08)] px-2.5 sm:px-5 py-2 sm:py-2.5 max-w-md sm:max-w-xl md:max-w-2xl lg:max-w-4xl mx-auto transition-all">
+    <nav className="fixed bottom-2.5 left-2.5 right-2.5 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md md:max-w-lg z-40 bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_8px_30px_rgba(0,0,0,0.12)] rounded-[26px] px-2 py-1.5 transition-all">
       <div className="flex items-center justify-around">
         {navItems.map((item) => {
           const isActive =

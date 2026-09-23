@@ -236,7 +236,10 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               </Link>
             ) : null}
 
-            <Link href="/app" className="flex items-center gap-1.5 sm:gap-2 min-w-0 group">
+            <Link
+              href="/app"
+              className="flex items-center gap-1.5 sm:gap-2 min-w-0 group bg-slate-50/90 hover:bg-slate-100/90 px-2 py-1 rounded-2xl border border-slate-200/80 shadow-2xs transition-all"
+            >
               <BrandLogo
                 size="sm"
                 variant="icon"

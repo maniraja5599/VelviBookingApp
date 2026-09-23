@@ -182,6 +182,7 @@ function QuickBookingContent() {
   const [paymentChoice, setPaymentChoice] = useState<"UNPAID" | "ADVANCE" | "FULL">("UNPAID");
   const [paymentDate, setPaymentDate] = useState<string>(todayStr);
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE">("UPI");
+  const [paymentRecipient, setPaymentRecipient] = useState<"BUSINESS" | "PRIEST">("BUSINESS");
   const [paymentNotes, setPaymentNotes] = useState<string>("");
   const [isPaymentSaved, setIsPaymentSaved] = useState<boolean>(false);
   const [paymentSavedFeedback, setPaymentSavedFeedback] = useState<string>("");
@@ -676,8 +677,9 @@ function QuickBookingContent() {
           : paymentMethod === "BANK_TRANSFER"
           ? "வங்கி பரிவர்த்தனை"
           : "காசோலை";
+      const recipientLabel = paymentRecipient === "PRIEST" ? "வாத்யாரிடம் நேரடியாக" : "நிர்வாகக் கணக்கு";
       setPaymentSavedFeedback(
-        `✓ ₹${amt.toLocaleString("en-IN")} (${methodLabel}) — ${paymentDate} அன்று பதிவு செய்யப்பட்டது!`
+        `✓ ₹${amt.toLocaleString("en-IN")} (${methodLabel} • ${recipientLabel}) — ${paymentDate} அன்று பதிவு செய்யப்பட்டது!`
       );
     }
   };
@@ -774,6 +776,7 @@ function QuickBookingContent() {
       paymentStatus,
       paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
       paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
+      paymentRecipient: paymentChoice !== "UNPAID" ? paymentRecipient : undefined,
       paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
       status: "CONFIRMED",
       assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
@@ -2252,6 +2255,51 @@ function QuickBookingContent() {
                 </div>
               </div>
 
+              {/* PAYMENT RECIPIENT SELECTOR - Business vs Priest */}
+              <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
+                <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                  தொகை யாரிடம் பெறப்பட்டது? (Payment Received By):
+                </label>
+                <div className="grid grid-cols-2 gap-2 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentRecipient("BUSINESS");
+                      setIsPaymentSaved(false);
+                    }}
+                    className={`py-2 px-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center gap-2 ${
+                      paymentRecipient === "BUSINESS"
+                        ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs ring-2 ring-emerald-500/20"
+                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <span className="text-base shrink-0">🏛️</span>
+                    <div className="min-w-0 text-left leading-tight">
+                      <div className="text-[11px] truncate">நிர்வாகம் / கணக்கு</div>
+                      <div className={`text-[9px] ${paymentRecipient === "BUSINESS" ? "text-emerald-200" : "text-slate-400"}`}>Business / Owner</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPaymentRecipient("PRIEST");
+                      setIsPaymentSaved(false);
+                    }}
+                    className={`py-2 px-2.5 rounded-xl border transition active:scale-95 cursor-pointer flex items-center gap-2 ${
+                      paymentRecipient === "PRIEST"
+                        ? "bg-amber-600 text-white border-amber-600 font-black shadow-2xs ring-2 ring-amber-500/20"
+                        : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <span className="text-base shrink-0">👤</span>
+                    <div className="min-w-0 text-left leading-tight">
+                      <div className="text-[11px] truncate">வாத்யாரிடம் நேரடியாக</div>
+                      <div className={`text-[9px] ${paymentRecipient === "PRIEST" ? "text-amber-100" : "text-slate-400"}`}>Directly to Priest</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* PAYMENT METHOD SELECTOR */}
               <div className="space-y-1.5 pt-1 border-t border-emerald-100/90">
                 <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
@@ -3130,9 +3178,9 @@ function QuickBookingContent() {
 
                     <div className="flex items-center justify-between text-[11px] text-slate-600 font-semibold pt-1 border-t border-emerald-100">
                       <span>📅 பணம் பெற்ற தேதி: <strong className="text-slate-900">{paymentDate}</strong></span>
-                      {paymentChoice === "ADVANCE" && (
-                        <span className="text-rose-700 font-bold">மீதம்: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")}</span>
-                      )}
+                      <span className={paymentRecipient === "PRIEST" ? "text-amber-800 font-black" : "text-emerald-800 font-black"}>
+                        {paymentRecipient === "PRIEST" ? "👤 வாத்யாரிடம் நேரடியாக" : "🏛️ நிர்வாகக் கணக்கு"}
+                      </span>
                     </div>
 
                     {paymentNotes && (

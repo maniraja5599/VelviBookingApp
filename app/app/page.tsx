@@ -5,7 +5,7 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
 import { getTamilDate, formatTimeRangeTo12H, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
 import { db } from "@/lib/db/store";
-import { Booking, Customer } from "@/lib/types";
+import { Booking, Customer, BusinessMember } from "@/lib/types";
 import {
   normalizeIndianMobile,
   cleanPastedIndianMobile,
@@ -136,11 +136,22 @@ export default function HomeDashboardPage() {
     return bookings;
   }, [bookingFilter, todayBookings, upcomingBookings, bookings]);
 
-  // Sub-Tab 2: Devotee Search & Add
+  // Sub-Tab 2: Devotee & Priest Search, Filter & Add
   const [devoteeSubTab, setDevoteeSubTab] = useState<"devotees" | "assigned">("devotees");
+  const [devoteeFilter, setDevoteeFilter] = useState<"ALL" | "TOP">("ALL");
   const [devoteeSearch, setDevoteeSearch] = useState("");
   const [showAddDevoteeModal, setShowAddDevoteeModal] = useState(false);
   const [selectedDevoteeDrawer, setSelectedDevoteeDrawer] = useState<Customer | null>(null);
+
+  // Priest Tab States
+  const [priestFilter, setPriestFilter] = useState<"ALL" | "TOP">("ALL");
+  const [priestSearch, setPriestSearch] = useState("");
+  const [selectedPriestDrawer, setSelectedPriestDrawer] = useState<BusinessMember | null>(null);
+  const [showAddPriestModal, setShowAddPriestModal] = useState(false);
+  const [newPriestName, setNewPriestName] = useState("");
+  const [newPriestMobile, setNewPriestMobile] = useState("");
+  const [newPriestSpec, setNewPriestSpec] = useState("உதவி குருக்கள் (Assistant Priest)");
+  const [priestModalError, setPriestModalError] = useState("");
 
   // New devotee form state
   const [custName, setCustName] = useState("");
@@ -153,15 +164,53 @@ export default function HomeDashboardPage() {
   const custMobileInspection = inspectIndianMobile(custMobile);
 
   const filteredDevoteesList = useMemo(() => {
+    let list = customers;
     const q = devoteeSearch.toLowerCase().trim();
-    if (!q) return customers;
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.mobile.includes(q) ||
-        (c.city && c.city.toLowerCase().includes(q))
-    );
-  }, [customers, devoteeSearch]);
+    if (q) {
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.mobile.includes(q) ||
+          (c.city && c.city.toLowerCase().includes(q))
+      );
+    }
+    if (devoteeFilter === "TOP") {
+      list = [...list].sort((a, b) => {
+        const aMobile = a.mobile?.replace(/\D/g, "");
+        const bMobile = b.mobile?.replace(/\D/g, "");
+        const aCount = (a.id && customerBookingCountMap.get(a.id)) || (aMobile && customerBookingCountMap.get(aMobile)) || 0;
+        const bCount = (b.id && customerBookingCountMap.get(b.id)) || (bMobile && customerBookingCountMap.get(bMobile)) || 0;
+        return bCount - aCount;
+      });
+    }
+    return list;
+  }, [customers, devoteeSearch, devoteeFilter, customerBookingCountMap]);
+
+  const filteredPriestsList = useMemo(() => {
+    let list = members;
+    const q = priestSearch.toLowerCase().trim();
+    if (q) {
+      list = list.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          (m.mobile && m.mobile.includes(q)) ||
+          (m.specialization && m.specialization.toLowerCase().includes(q))
+      );
+    }
+    if (priestFilter === "TOP") {
+      list = [...list].sort((a, b) => {
+        const aBookings = memberBookingsMap.get(a.id) || [];
+        const bBookings = memberBookingsMap.get(b.id) || [];
+        const aCollections = aBookings.reduce((sum, bk) => sum + (bk.totalAmount || 0), 0);
+        const bCollections = bBookings.reduce((sum, bk) => sum + (bk.totalAmount || 0), 0);
+        if (bBookings.length !== aBookings.length) {
+          return bBookings.length - aBookings.length;
+        }
+        return bCollections - aCollections;
+      });
+    }
+    return list;
+  }, [members, priestSearch, priestFilter, memberBookingsMap]);
 
   const handleAddDevoteeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -206,6 +255,26 @@ export default function HomeDashboardPage() {
     setCustMobile("");
     setCustAddress("");
     setCustNotes("");
+  };
+
+  const handleAddPriestSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPriestName.trim()) {
+      setPriestModalError("தயவுசெய்து குருக்கள் பெயரை உள்ளிடவும் / Name is required.");
+      return;
+    }
+    setPriestModalError("");
+    db.createMember({
+      businessId,
+      name: newPriestName.trim(),
+      mobile: newPriestMobile.trim(),
+      role: "IYER",
+      specialization: newPriestSpec.trim() || "உதவி குருக்கள் (Assistant Priest)",
+    });
+    setNewPriestName("");
+    setNewPriestMobile("");
+    setNewPriestSpec("உதவி குருக்கள் (Assistant Priest)");
+    setShowAddPriestModal(false);
   };
 
   // Sub-Tab 3: Payments & Receipts Filter & Modal
@@ -860,6 +929,32 @@ export default function HomeDashboardPage() {
                   </button>
                 </div>
 
+                {/* Devotees Filter: All vs ⭐ Top */}
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setDevoteeFilter("ALL")}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer ${
+                      devoteeFilter === "ALL"
+                        ? "bg-slate-900 text-white shadow-2xs"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    அனைத்தும் ({customers.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDevoteeFilter("TOP")}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1 ${
+                      devoteeFilter === "TOP"
+                        ? "bg-amber-600 text-white shadow-2xs font-extrabold"
+                        : "bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200"
+                    }`}
+                  >
+                    <span>⭐ முக்கிய பக்தர்கள் (Top Devotees)</span>
+                  </button>
+                </div>
+
                 {/* Devotees List */}
                 {filteredDevoteesList.length === 0 ? (
                   <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-500 space-y-1">
@@ -868,7 +963,7 @@ export default function HomeDashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {filteredDevoteesList.map((c) => {
+                    {filteredDevoteesList.map((c, idx) => {
                       const cMobile = c.mobile?.replace(/\D/g, "");
                       const poojaCount =
                         (c.id && customerBookingCountMap.get(c.id)) ||
@@ -888,18 +983,32 @@ export default function HomeDashboardPage() {
                           className="bg-white rounded-2xl p-3 border border-slate-200/90 shadow-2xs hover:border-amber-300 transition cursor-pointer flex items-center justify-between gap-2"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300/70 shrink-0">
-                              {initials}
+                            <div className="relative">
+                              <div className="w-9 h-9 rounded-xl bg-amber-100/80 text-amber-900 font-black text-xs flex items-center justify-center border border-amber-300/70 shrink-0">
+                                {initials}
+                              </div>
+                              {devoteeFilter === "TOP" && idx < 3 && (
+                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 text-white rounded-full text-[9px] font-black flex items-center justify-center shadow-xs border border-white">
+                                  {idx + 1}
+                                </span>
+                              )}
                             </div>
                             <div className="min-w-0">
-                              <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                                {c.name}
-                              </h4>
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                                  {c.name}
+                                </h4>
+                                {devoteeFilter === "TOP" && poojaCount >= 3 && (
+                                  <span className="text-[9px] font-black bg-amber-100 text-amber-900 px-1.5 py-0.2 rounded border border-amber-300">
+                                    ⭐ VIP
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5 truncate">
                                 <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
                                 <span>{c.city || "Namakkal"}</span>
                                 <span>•</span>
-                                <span>{poojaCount} {poojaCount === 1 ? "Pooja" : "Poojas"}</span>
+                                <span className="font-bold text-slate-700">{poojaCount} {poojaCount === 1 ? "Pooja" : "Poojas"}</span>
                               </p>
                             </div>
                           </div>
@@ -936,121 +1045,207 @@ export default function HomeDashboardPage() {
               </>
             ) : (
               /* Assigned Priests & Team View */
-              <div className="space-y-3">
-                {members.map((m) => {
-                  const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
-                  const memberBookings = memberBookingsMap.get(m.id) || [];
+              <div className="space-y-2.5">
+                {/* Search & Cute Compact Add Priest Button */}
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search priest name, mobile, spec..."
+                      value={priestSearch}
+                      onChange={(e) => setPriestSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 bg-white rounded-xl border border-slate-200 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                    />
+                  </div>
 
-                  return (
-                    <div
-                      key={m.id}
-                      className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs space-y-2.5"
-                    >
-                      {/* Priest Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-950 font-black text-sm flex items-center justify-center border border-emerald-300 shrink-0">
-                            {isOwner ? "🪔" : "👥"}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <h4 className="font-extrabold text-sm text-slate-900 truncate">
-                                {m.name}
-                              </h4>
-                              <span
-                                className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full border ${
-                                  isOwner
-                                    ? "bg-amber-100 text-amber-900 border-amber-300"
-                                    : "bg-blue-50 text-blue-900 border-blue-200"
-                                }`}
-                              >
-                                {isOwner ? "Head Priest (Self)" : "Assistant Priest"}
-                              </span>
-                            </div>
-                            <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
-                              {m.specialization || "Vedic Rituals & Pooja"}
-                            </p>
-                          </div>
-                        </div>
+                  {/* Cute Compact Add Priest Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPriestModal(true)}
+                    className="h-8 px-2.5 bg-gradient-to-r from-emerald-800 to-[#0c3116] hover:from-emerald-700 hover:to-emerald-900 text-amber-300 rounded-xl text-xs font-black flex items-center gap-1 shadow-2xs transition active:scale-95 shrink-0 border border-emerald-950/30 cursor-pointer"
+                    title="புதிய குருக்கள் சேர் / Add Priest"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span className="text-[11px]">Add Priest</span>
+                  </button>
+                </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
-                          {m.mobile && (
-                            <>
-                              <a
-                                href={`tel:${m.mobile}`}
-                                className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
-                                title="Call Priest"
-                              >
-                                <Phone className="w-3.5 h-3.5" />
-                              </a>
-                              <a
-                                href={`https://wa.me/${m.mobile.replace(/\D/g, "")}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
-                                title="WhatsApp Priest"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" />
-                              </a>
-                            </>
-                          )}
-                        </div>
-                      </div>
+                {/* Priests Filter Tabs: All vs ⭐ Top Priests */}
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPriestFilter("ALL")}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer ${
+                      priestFilter === "ALL"
+                        ? "bg-slate-900 text-white shadow-2xs"
+                        : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                    }`}
+                  >
+                    அனைத்து குருக்கள் ({members.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPriestFilter("TOP")}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer flex items-center gap-1 ${
+                      priestFilter === "TOP"
+                        ? "bg-emerald-800 text-white shadow-2xs font-extrabold"
+                        : "bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200"
+                    }`}
+                  >
+                    <span>⭐ சிறந்த குருக்கள் (Top Priests)</span>
+                  </button>
+                </div>
 
-                      {/* Assigned Bookings Preview */}
-                      <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold text-slate-700 flex items-center gap-1">
-                            <span>📅 Assigned Poojas</span>
-                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-slate-100 rounded-md text-slate-700">
-                              {memberBookings.length}
-                            </span>
-                          </span>
-                        </div>
+                {filteredPriestsList.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-slate-200 text-slate-500 space-y-1">
+                    <User className="w-6 h-6 mx-auto text-slate-400" />
+                    <p className="text-xs font-semibold">No priests found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredPriestsList.map((m, idx) => {
+                      const isOwner = m.role === "OWNER" || m.id === ownerMember?.id;
+                      const memberBookings = memberBookingsMap.get(m.id) || [];
+                      const totalCollections = memberBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+                      const directPriestAmount = memberBookings
+                        .filter((b) => b.paymentRecipient === "PRIEST")
+                        .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
 
-                        {memberBookings.length === 0 ? (
-                          <p className="text-[11px] text-slate-400 italic">
-                            No upcoming poojas assigned currently.
-                          </p>
-                        ) : (
-                          <div className="space-y-1.5">
-                            {memberBookings.slice(0, 3).map((b) => (
-                              <Link
-                                key={b.id}
-                                href={`/app/bookings/${b.id}`}
-                                className="p-2 bg-slate-50 hover:bg-amber-50/50 rounded-xl border border-slate-200/70 flex items-center justify-between gap-2 text-xs transition group"
-                              >
-                                <div className="min-w-0">
-                                  {/* Devotee Name First */}
-                                  <div className="font-black text-slate-900 truncate group-hover:text-emerald-950">
-                                    👤 {b.customerName}
-                                  </div>
-                                  <div className="text-[10.5px] text-slate-600 truncate mt-0.5">
-                                    🪔 {b.poojaEnglishName} • 📅 {b.date} ({formatTime12H(b.startTime)})
-                                  </div>
+                      return (
+                        <div
+                          key={m.id}
+                          onClick={() => setSelectedPriestDrawer(m)}
+                          className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200/90 shadow-2xs space-y-2.5 hover:border-emerald-500/80 transition cursor-pointer group"
+                        >
+                          {/* Priest Header */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="relative">
+                                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-950 font-black text-sm flex items-center justify-center border border-emerald-300 shrink-0">
+                                  {isOwner ? "🪔" : "👥"}
                                 </div>
-                                <div className="text-right shrink-0">
-                                  <span className="font-extrabold text-slate-900 block">
-                                    ₹{b.totalAmount.toLocaleString("en-IN")}
+                                {priestFilter === "TOP" && idx < 3 && (
+                                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-700 text-white rounded-full text-[9px] font-black flex items-center justify-center shadow-xs border border-white">
+                                    {idx + 1}
                                   </span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <h4 className="font-extrabold text-sm text-slate-900 truncate group-hover:text-emerald-950">
+                                    {m.name}
+                                  </h4>
                                   <span
-                                    className={`text-[9.5px] font-bold ${
-                                      b.paymentStatus === "PAID"
-                                        ? "text-emerald-700"
-                                        : "text-rose-700"
+                                    className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full border ${
+                                      isOwner
+                                        ? "bg-amber-100 text-amber-900 border-amber-300"
+                                        : "bg-blue-50 text-blue-900 border-blue-200"
                                     }`}
                                   >
-                                    {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                                    {isOwner ? "Head Priest (Self)" : "Assistant Priest"}
                                   </span>
                                 </div>
-                              </Link>
-                            ))}
+                                <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                                  {m.specialization || "Vedic Rituals & Pooja"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              {m.mobile && (
+                                <>
+                                  <a
+                                    href={`tel:${m.mobile}`}
+                                    className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition"
+                                    title="Call Priest"
+                                  >
+                                    <Phone className="w-3.5 h-3.5" />
+                                  </a>
+                                  <a
+                                    href={`https://wa.me/${m.mobile.replace(/\D/g, "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg transition border border-emerald-200"
+                                    title="WhatsApp Priest"
+                                  >
+                                    <MessageCircle className="w-3.5 h-3.5" />
+                                  </a>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+
+                          {/* Quick Collections & Pooja Metrics */}
+                          <div className="flex items-center justify-between bg-slate-50/80 px-2.5 py-1.5 rounded-xl border border-slate-100 text-[11px]">
+                            <span className="font-bold text-slate-700">
+                              🪔 {memberBookings.length} {memberBookings.length === 1 ? "Pooja" : "Poojas"}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              {directPriestAmount > 0 && (
+                                <span className="text-[9.5px] font-extrabold text-amber-900 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-300" title="Directly Collected by Priest">
+                                  👤 நேரடி: ₹{directPriestAmount.toLocaleString("en-IN")}
+                                </span>
+                              )}
+                              <span className="font-black text-emerald-950">
+                                வசூல்: ₹{totalCollections.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Assigned Bookings Preview (Max 2 items) */}
+                          <div className="pt-1.5 border-t border-slate-100 space-y-1">
+                            {memberBookings.length === 0 ? (
+                              <p className="text-[11px] text-slate-400 italic">
+                                No upcoming poojas assigned currently.
+                              </p>
+                            ) : (
+                              <div className="space-y-1">
+                                {memberBookings.slice(0, 2).map((b) => (
+                                  <div
+                                    key={b.id}
+                                    className="p-2 bg-slate-50/70 hover:bg-amber-50/50 rounded-xl border border-slate-200/60 flex items-center justify-between gap-2 text-xs transition"
+                                  >
+                                    <div className="min-w-0">
+                                      <div className="font-black text-slate-900 truncate">
+                                        👤 {b.customerName}
+                                      </div>
+                                      <div className="text-[10px] text-slate-600 truncate">
+                                        🪔 {b.poojaEnglishName} • 📅 {b.date}
+                                      </div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                      <span className="font-extrabold text-slate-900 text-xs block">
+                                        ₹{b.totalAmount.toLocaleString("en-IN")}
+                                      </span>
+                                      <span
+                                        className={`text-[9px] font-bold ${
+                                          b.paymentRecipient === "PRIEST"
+                                            ? "text-amber-800"
+                                            : b.paymentStatus === "PAID"
+                                            ? "text-emerald-700"
+                                            : "text-rose-700"
+                                        }`}
+                                      >
+                                        {b.paymentRecipient === "PRIEST" ? "வாத்யாரிடம் நேரடி" : b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* View Full History Click Hint */}
+                            <div className="flex items-center justify-between text-[10.5px] font-bold text-emerald-900 pt-1">
+                              <span>விவரங்கள் & வசூல் கணக்கு (View Details)</span>
+                              <span>→</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -2281,6 +2476,287 @@ export default function HomeDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ADD PRIEST                                                         */}
+      {/* ========================================================================= */}
+      {showAddPriestModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-emerald-100">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-base text-slate-900 flex items-center gap-1.5">
+                <span>🪔</span>
+                <span>புதிய குருக்கள் சேர்க்க / Add Priest</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAddPriestModal(false)}
+                className="p-1 rounded-full hover:bg-slate-100 text-slate-400 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {priestModalError && (
+              <div className="p-2.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200">
+                {priestModalError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddPriestSubmit} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  குருக்கள் பெயர் (Priest Name) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="எ.கா: சுந்தரமூர்த்தி வாத்யார் / Sundar Iyer"
+                  value={newPriestName}
+                  onChange={(e) => setNewPriestName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  மொபைல் எண் (Mobile - Optional)
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <div className="bg-slate-100 border border-slate-200 rounded-xl px-2 py-2 text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
+                    <span>🇮🇳</span>
+                    <span>+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    placeholder="98765 43210"
+                    value={newPriestMobile}
+                    onChange={(e) => setNewPriestMobile(cleanPastedIndianMobile(e.target.value))}
+                    maxLength={10}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">
+                  பொறுப்பு / சிறப்பு (Specialization)
+                </label>
+                <input
+                  type="text"
+                  placeholder="எ.கா: உதவி குருக்கள் / ஹோமம் & பூஜா"
+                  value={newPriestSpec}
+                  onChange={(e) => setNewPriestSpec(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddPriestModal(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  ரத்து / Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-xs transition cursor-pointer"
+                >
+                  ✓ சேமி / Save Priest
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* DRAWER: PRIEST PROFILE & FULL COLLECTIONS                                 */}
+      {/* ========================================================================= */}
+      {selectedPriestDrawer && (() => {
+        const isOwner = selectedPriestDrawer.role === "OWNER" || selectedPriestDrawer.id === ownerMember?.id;
+        const priestBookings = memberBookingsMap.get(selectedPriestDrawer.id) || [];
+        const totalBilled = priestBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        const directPriestAmount = priestBookings
+          .filter((b) => b.paymentRecipient === "PRIEST")
+          .reduce((sum, b) => sum + (b.advanceAmount || (b.paymentStatus === "PAID" ? b.totalAmount : 0)), 0);
+        const businessAccountAmount = totalBilled - directPriestAmount;
+        const totalPending = priestBookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-t-3xl p-5 max-w-md w-full max-h-[88vh] overflow-y-auto space-y-4 shadow-2xl border-t-2 border-emerald-500 animate-in slide-in-from-bottom duration-200">
+              {/* Header */}
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-950 font-black text-xl flex items-center justify-center border border-emerald-300 shrink-0 shadow-2xs">
+                    {isOwner ? "🪔" : "👥"}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-black text-lg text-slate-900 leading-tight">
+                        {selectedPriestDrawer.name}
+                      </h3>
+                      <span
+                        className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full border ${
+                          isOwner
+                            ? "bg-amber-100 text-amber-900 border-amber-300"
+                            : "bg-blue-50 text-blue-900 border-blue-200"
+                        }`}
+                      >
+                        {isOwner ? "தலைமை குருக்கள்" : "உதவி குருக்கள்"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                      {selectedPriestDrawer.specialization || "Vedic Rituals & Pooja"}
+                    </p>
+                    {selectedPriestDrawer.mobile && (
+                      <p className="text-xs text-slate-600 font-bold mt-0.5 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-slate-400" />
+                        <span>+91 {selectedPriestDrawer.mobile}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedPriestDrawer(null)}
+                  className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Communication Actions */}
+              {selectedPriestDrawer.mobile && (
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`tel:${selectedPriestDrawer.mobile}`}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>Call Priest</span>
+                  </a>
+                  <a
+                    href={`https://wa.me/${selectedPriestDrawer.mobile.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-200 transition"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                </div>
+              )}
+
+              {/* Financial & Collection Summary Breakdown */}
+              <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white p-3.5 rounded-2xl space-y-2.5 shadow-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-amber-200 flex items-center gap-1">
+                    <span>📊 மொத்த வசூல் & கணக்கு (Total Collections)</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-800/80 rounded-full text-emerald-200 border border-emerald-700">
+                    {priestBookings.length} பூஜைகள்
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
+                  <div className="bg-white/10 p-2 rounded-xl">
+                    <span className="text-[10px] text-slate-300 block">மொத்த தட்சணை (Billed)</span>
+                    <span className="text-base font-black text-white">₹{totalBilled.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="bg-white/10 p-2 rounded-xl">
+                    <span className="text-[10px] text-rose-300 block">மீதி நிலுவை (Pending)</span>
+                    <span className="text-base font-black text-rose-200">₹{totalPending.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                {/* Distinct Breakdown: Business Received vs Directly to Priest */}
+                <div className="space-y-1.5 pt-1 border-t border-white/10 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-emerald-200 flex items-center gap-1">
+                      <span>🏛️</span>
+                      <span>நிர்வாகக் கணக்கு (Business Account):</span>
+                    </span>
+                    <span className="font-black text-emerald-300">
+                      ₹{businessAccountAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-amber-200 flex items-center gap-1">
+                      <span>👤</span>
+                      <span>வாத்யாரிடம் நேரடி வசூல் (Direct to Priest):</span>
+                    </span>
+                    <span className="font-black text-amber-300">
+                      ₹{directPriestAmount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of All Poojas Done by this Priest */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                    <span>🪔</span>
+                    <span>பூஜைகள் பட்டியல் ({priestBookings.length})</span>
+                  </h4>
+                </div>
+
+                {priestBookings.length === 0 ? (
+                  <p className="text-xs text-slate-400 py-3 text-center">இவருக்கு இன்னும் எந்த பூஜையும் ஒதுக்கப்படவில்லை.</p>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
+                    {priestBookings.map((b) => (
+                      <Link
+                        key={b.id}
+                        href={`/app/bookings/${b.id}`}
+                        className="p-2.5 bg-slate-50 hover:bg-emerald-50/50 rounded-xl border border-slate-200 flex items-center justify-between gap-2 text-xs transition block group"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-black text-slate-900 truncate group-hover:text-emerald-950">
+                            👤 {b.customerName}
+                          </div>
+                          <div className="text-[10.5px] text-slate-600 truncate mt-0.5">
+                            🪔 {b.poojaTamilName || b.poojaEnglishName}
+                          </div>
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            📅 {b.date} • {formatTime12H(b.startTime)}
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0 space-y-1">
+                          <div className="font-black text-slate-900 text-xs">
+                            ₹{b.totalAmount.toLocaleString("en-IN")}
+                          </div>
+                          <div>
+                            {b.paymentRecipient === "PRIEST" ? (
+                              <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded text-[9.5px] font-bold border border-amber-300 block">
+                                👤 நேரடி
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-900 rounded text-[9.5px] font-bold border border-emerald-300 block">
+                                🏛️ நிர்வாகம்
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => setSelectedPriestDrawer(null)}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer"
+              >
+                மூடுக / Close
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ========================================================================= */}
       {/* MODAL: RECORD PAYMENT                                                     */}

@@ -521,30 +521,6 @@ export class VelviDatabaseStore {
     return this.subscriptions.find((s) => s.businessId === businessId);
   }
 
-  public createMember(params: {
-    businessId: string;
-    name: string;
-    mobile?: string;
-    role?: "OWNER" | "IYER" | "STAFF";
-    specialization?: string;
-  }): BusinessMember {
-    const newMember: BusinessMember = {
-      id: `m-${Date.now()}`,
-      businessId: params.businessId,
-      userId: `u-${Date.now()}`,
-      name: params.name.trim(),
-      mobile: params.mobile?.trim() || "",
-      role: params.role || "IYER",
-      active: true,
-      specialization: params.specialization?.trim() || "உதவி குருக்கள் (Assistant Priest)",
-      bookingCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-    this.members.push(newMember);
-    this.saveToLocalStorage();
-    this.notifyListeners();
-    return newMember;
-  }
 
   // -------------------------------------------------------------
   // DOUBLE BOOKING PREVENTION ENGINE (Point 33)
@@ -1318,6 +1294,38 @@ export class VelviDatabaseStore {
   }
 
   // -------------------------------------------------------------
+  // MEMBER MANAGEMENT (Add, Toggle, Delete)
+  // -------------------------------------------------------------
+  public createMember(params: {
+    businessId: string;
+    name: string;
+    mobile?: string;
+    role?: "OWNER" | "IYER" | "STAFF";
+    specialization?: string;
+    workingHours?: string;
+  }): BusinessMember {
+    const normalizedMobile = params.mobile ? normalizeIndianMobile(params.mobile) : "";
+    const newMember: BusinessMember = {
+      id: `m-${Date.now()}`,
+      businessId: params.businessId,
+      userId: `u-${Date.now()}`,
+      name: params.name.trim(),
+      mobile: normalizedMobile,
+      role: params.role || "IYER",
+      active: true,
+      specialization: params.specialization?.trim() || "உதவி குருக்கள் (Assistant Priest)",
+      workingDays: "All days",
+      workingHours: params.workingHours || "06:00 - 20:00",
+      bookingCount: 0,
+      createdAt: new Date().toISOString(),
+    };
+    this.members.push(newMember);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return newMember;
+  }
+
+  // -------------------------------------------------------------
   // BOOKING MANAGEMENT (Create, Get, List)
   // -------------------------------------------------------------
   public createBooking(params: {
@@ -1342,6 +1350,7 @@ export class VelviDatabaseStore {
     paymentStatus: PaymentStatus;
     paymentDate?: string;
     paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER";
+    paymentRecipient?: "BUSINESS" | "PRIEST";
     paymentNotes?: string;
     status: BookingStatus;
     expenseAmount?: number;
@@ -1374,6 +1383,7 @@ export class VelviDatabaseStore {
       paymentStatus: params.paymentStatus,
       paymentDate: params.paymentDate,
       paymentMethod: params.paymentMethod,
+      paymentRecipient: params.paymentRecipient || "BUSINESS",
       paymentNotes: params.paymentNotes,
       status: params.status || "CONFIRMED",
       expenseAmount: params.expenseAmount || 0,
