@@ -5,7 +5,8 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { openCashfreeCheckout } from "@/lib/payments/cashfree-client";
 import confetti from "canvas-confetti";
-import { Check, Sparkles, Shield, CreditCard, Clock, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Check, Sparkles, Shield, CreditCard, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 
 export default function SubscriptionPage() {
   const { currentBusiness, currentUser, subscription, refreshSubscription } = useAuth();
@@ -193,7 +194,14 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <Link
+          href="/app/settings"
+          className="p-1.5 hover:bg-velvi-cream rounded-full text-velvi-brown transition active:scale-95"
+          title="Back to Settings"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
         <div>
           <h2 className="text-base font-bold text-velvi-brownDark">
             Subscription &amp; Billing

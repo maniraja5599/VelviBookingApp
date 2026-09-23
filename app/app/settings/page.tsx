@@ -37,6 +37,7 @@ import {
   Info,
   BookOpen,
   Mail,
+  Globe,
 } from "lucide-react";
 import { PwaInstallBanner } from "@/components/mobile/PwaInstallBanner";
 import { BrandLogo } from "@/components/ui/BrandLogo";
@@ -65,13 +66,14 @@ interface SettingSection {
 
 export default function SettingsHubPage() {
   const { currentUser, currentBusiness, subscription, logout } = useAuth();
-  const { t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
 
   // State
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showTrashModal, setShowTrashModal] = useState(false);
+  const [showClearDemoModal, setShowClearDemoModal] = useState(false);
   const [trashTab, setTrashTab] = useState<"deleted" | "history">("deleted");
   const [searchQuery, setSearchQuery] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -241,12 +243,7 @@ export default function SettingsHubPage() {
           keywords: "backup export excel csv import restore cloud data",
         },
         {
-          onClick: () => {
-            if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
-              const res = db.clearDemoData();
-              alert(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) வெற்றிகரமாக நீக்கப்பட்டன!\n(Demo data cleared successfully)`);
-            }
-          },
+          onClick: () => setShowClearDemoModal(true),
           label: "Clear Demo Data",
           desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
           icon: Sparkles,
@@ -259,6 +256,21 @@ export default function SettingsHubPage() {
     {
       title: "Preferences & System (விருப்பத்தேர்வுகள் & தகவல்)",
       items: [
+        {
+          onClick: () => {
+            const nextLang = language === "ta" ? "en" : "ta";
+            setLanguage(nextLang);
+            setToastMessage(nextLang === "ta" ? "மொழி தமிழுக்கு மாற்றப்பட்டது!" : "Language switched to English!");
+            setTimeout(() => setToastMessage(null), 3000);
+          },
+          label: language === "ta" ? "செயலி மொழி (App Language)" : "App Language (செயலி மொழி)",
+          desc: language === "ta" ? "தற்போது: தமிழ் • தட்டினால் ஆங்கிலத்திற்கு மாறும்" : "Current: English • Tap to switch to தமிழ்",
+          icon: Globe,
+          iconBg: "bg-emerald-100/90 border border-emerald-200",
+          iconColor: "text-emerald-700",
+          badge: language === "ta" ? "தமிழ்" : "English",
+          keywords: "language tamil english மொழி தமிழ் ஆங்கிலம்",
+        },
         {
           href: "/app/settings/guide",
           label: "App Guide & Documentation",
@@ -290,7 +302,7 @@ export default function SettingsHubPage() {
         },
       ],
     },
-  ], [currentBusiness, counts, isPro, recentlyDeleted]);
+  ], [currentBusiness, counts, isPro, recentlyDeleted, language, setLanguage]);
 
   // Search filtering
   const filteredSections = useMemo(() => {
@@ -310,17 +322,24 @@ export default function SettingsHubPage() {
   }, [searchQuery, allSettingSections]);
 
   // Quick chips for common settings with colorful styling
-  const quickSettings = [
-    { label: "Profile", icon: Pencil, iconColor: "text-blue-700", chipBg: "hover:bg-blue-50 hover:border-blue-300", action: () => (window.location.href = "/app/settings/branding") },
-    { label: "Plan & Pro", icon: Sparkles, iconColor: "text-amber-700", chipBg: "hover:bg-amber-50 hover:border-amber-300", action: () => (window.location.href = "/app/subscription") },
-    { label: `Poojas (${counts.poojas})`, icon: Flame, iconColor: "text-orange-700", chipBg: "hover:bg-orange-50 hover:border-orange-300", action: () => (window.location.href = "/app/poojas") },
-    { label: `Devotees (${counts.customers})`, icon: Users, iconColor: "text-emerald-700", chipBg: "hover:bg-emerald-50 hover:border-emerald-300", action: () => (window.location.href = "/app/customers") },
+  const quickSettings: Array<{
+    label: string;
+    icon: any;
+    iconColor?: string;
+    chipBg?: string;
+    href?: string;
+    action?: () => void;
+  }> = [
+    { label: "Profile", icon: Pencil, iconColor: "text-blue-700", chipBg: "hover:bg-blue-50 hover:border-blue-300", href: "/app/settings/branding" },
+    { label: "Plan & Pro", icon: Sparkles, iconColor: "text-amber-700", chipBg: "hover:bg-amber-50 hover:border-amber-300", href: "/app/subscription" },
+    { label: `Poojas (${counts.poojas})`, icon: Flame, iconColor: "text-orange-700", chipBg: "hover:bg-orange-50 hover:border-orange-300", href: "/app/poojas" },
+    { label: `Devotees (${counts.customers})`, icon: Users, iconColor: "text-emerald-700", chipBg: "hover:bg-emerald-50 hover:border-emerald-300", href: "/app/customers" },
     { label: "Categories", icon: Tag, iconColor: "text-purple-700", chipBg: "hover:bg-purple-50 hover:border-purple-300", action: () => setShowCategoryModal(true) },
     { label: `Trash (${recentlyDeleted.length})`, icon: RotateCcw, iconColor: "text-rose-700", chipBg: "hover:bg-rose-50 hover:border-rose-300", action: () => setShowTrashModal(true) },
-    { label: "Themes", icon: Palette, iconColor: "text-fuchsia-700", chipBg: "hover:bg-fuchsia-50 hover:border-fuchsia-300", action: () => (window.location.href = "/app/settings/theme") },
-    { label: "Cloud Backup", icon: Cloud, iconColor: "text-cyan-800", chipBg: "hover:bg-cyan-50 hover:border-cyan-300", action: () => (window.location.href = "/app/data-backup") },
-    { label: "App Guide", icon: BookOpen, iconColor: "text-teal-700", chipBg: "hover:bg-teal-50 hover:border-teal-300", action: () => (window.location.href = "/app/settings/guide") },
-    { label: "Refer & Earn", icon: Gift, iconColor: "text-pink-700", chipBg: "hover:bg-pink-50 hover:border-pink-300", action: () => (window.location.href = "/app/referrals") },
+    { label: "Themes", icon: Palette, iconColor: "text-fuchsia-700", chipBg: "hover:bg-fuchsia-50 hover:border-fuchsia-300", href: "/app/settings/theme" },
+    { label: "Cloud Backup", icon: Cloud, iconColor: "text-cyan-800", chipBg: "hover:bg-cyan-50 hover:border-cyan-300", href: "/app/data-backup" },
+    { label: "App Guide", icon: BookOpen, iconColor: "text-teal-700", chipBg: "hover:bg-teal-50 hover:border-teal-300", href: "/app/settings/guide" },
+    { label: "Refer & Earn", icon: Gift, iconColor: "text-pink-700", chipBg: "hover:bg-pink-50 hover:border-pink-300", href: "/app/referrals" },
   ];
 
   return (
@@ -439,7 +458,7 @@ export default function SettingsHubPage() {
         {/* Live Metrics Row inside Hero Card */}
         <div className="mt-3 pt-2.5 border-t border-amber-200/60 grid grid-cols-3 gap-2">
           <Link
-            href="/app"
+            href="/app/bookings"
             className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
           >
             <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
@@ -520,15 +539,33 @@ export default function SettingsHubPage() {
             </span>
             {quickSettings.map((chip, idx) => {
               const ChipIcon = chip.icon;
+              const content = (
+                <>
+                  <ChipIcon className={`w-3 h-3 ${chip.iconColor || "text-amber-800"}`} />
+                  <span>{chip.label}</span>
+                </>
+              );
+
+              if (chip.href) {
+                return (
+                  <Link
+                    key={idx}
+                    href={chip.href}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/90 shadow-2xs active:scale-95 cursor-pointer ${chip.chipBg || ""}`}
+                  >
+                    {content}
+                  </Link>
+                );
+              }
+
               return (
                 <button
                   key={idx}
                   type="button"
                   onClick={chip.action}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/90 shadow-2xs active:scale-95 ${chip.chipBg || ""}`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/90 shadow-2xs active:scale-95 cursor-pointer ${chip.chipBg || ""}`}
                 >
-                  <ChipIcon className={`w-3 h-3 ${chip.iconColor || "text-amber-800"}`} />
-                  <span>{chip.label}</span>
+                  {content}
                 </button>
               );
             })}
@@ -867,6 +904,53 @@ export default function SettingsHubPage() {
         isOpen={showCategoryModal}
         onClose={() => setShowCategoryModal(false)}
       />
+
+      {/* Clear Demo Data Confirmation Modal */}
+      {showClearDemoModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-900">
+                  Clear Demo Data?
+                </h3>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  மாதிரித் தரவுகளை நீக்கு
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-rose-50/70 p-3 rounded-2xl border border-rose-100">
+              மாதிரி முன்பதிவுகள் (Demo Bookings) மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா? உங்கள் சொந்த முன்பதிவுகள் பாதிக்கப்படாது.
+            </p>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowClearDemoModal(false)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                ரத்து (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const res = db.clearDemoData();
+                  setShowClearDemoModal(false);
+                  setToastMessage(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) வெற்றிகரமாக நீக்கப்பட்டன!`);
+                  setTimeout(() => setToastMessage(null), 4000);
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer"
+              >
+                ஆம், நீக்கு (Clear)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

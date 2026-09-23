@@ -5,7 +5,8 @@ import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { BusinessMember } from "@/lib/types";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
-import { Plus, UserCheck, Phone, MessageCircle, MoreVertical, X, Sparkles, Check } from "lucide-react";
+import { Plus, UserCheck, Phone, MessageCircle, MoreVertical, X, Sparkles, Check, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function TeamPage() {
   const { currentBusiness, currentUser } = useAuth();
@@ -65,9 +66,18 @@ export default function TeamPage() {
     <div className="space-y-3.5 pb-8 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-velvi-brownDark">My Team</h2>
-          <p className="text-xs text-velvi-brown/60">{members.length} Iyers & Purohits</p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/app/settings"
+            className="p-1.5 hover:bg-velvi-cream rounded-full text-velvi-brown transition active:scale-95"
+            title="Back to Settings"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h2 className="text-base font-bold text-velvi-brownDark">My Team</h2>
+            <p className="text-xs text-velvi-brown/60">{members.length} Iyers &amp; Purohits</p>
+          </div>
         </div>
 
         <button
