@@ -1180,34 +1180,61 @@ function PoojasCatalogueContent() {
               </div>
             </div>
 
-            {/* Quick Metrics Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
-              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
-                  தட்சணை (Dakshina)
-                </span>
-                <span className="text-base sm:text-lg font-black text-slate-900">
-                  ₹{selectedPooja.basePrice.toLocaleString("en-IN")}
-                </span>
+            {/* Kutty & Beautiful Micro Stats Bar (Amount, Booking, List Count) */}
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5 pt-0.5">
+              {/* 1. தட்சணை (Amount) */}
+              <div className="bg-white/95 backdrop-blur-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-amber-200/90 shadow-2xs hover:border-amber-400 transition-colors flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200 text-xs shadow-2xs">
+                  🪙
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 block truncate leading-none mb-0.5">
+                    தட்சணை
+                  </span>
+                  <span className="text-xs sm:text-sm md:text-base font-black text-slate-900 block truncate leading-tight">
+                    ₹{selectedPooja.basePrice.toLocaleString("en-IN")}
+                  </span>
+                </div>
               </div>
 
-              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
-                  முன்பதிவுகள் (Bookings)
-                </span>
-                <span className="text-base sm:text-lg font-black text-emerald-800 flex items-center gap-1">
-                  <span>{poojaBookingStats[selectedPooja.id]?.count || 0}</span>
-                  <span className="text-xs font-bold text-slate-500">பூஜைகள்</span>
-                </span>
+              {/* 2. முன்பதிவுகள் (Bookings) */}
+              <div className="bg-white/95 backdrop-blur-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-emerald-200/90 shadow-2xs hover:border-emerald-400 transition-colors flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-200 text-xs shadow-2xs">
+                  📅
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 block truncate leading-none mb-0.5">
+                    முன்பதிவு
+                  </span>
+                  <div className="flex items-baseline gap-0.5 truncate leading-tight">
+                    <span className="text-xs sm:text-sm md:text-base font-black text-emerald-800">
+                      {poojaBookingStats[selectedPooja.id]?.count || 0}
+                    </span>
+                    <span className="text-[9.5px] font-bold text-slate-400">
+                      முறை
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-white/90 p-3 rounded-2xl border border-amber-200 shadow-2xs">
-                <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">
-                  தேவையான பொருட்கள்
-                </span>
-                <span className="text-base sm:text-lg font-black text-slate-900">
-                  {selectedPooja.items?.length || 0} பொருட்கள்
-                </span>
+              {/* 3. தேவையான பொருட்கள் (List Count) */}
+              <div className="bg-white/95 backdrop-blur-xs px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-amber-200/90 shadow-2xs hover:border-amber-400 transition-colors flex items-center gap-1.5 sm:gap-2.5 min-w-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg sm:rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200 text-xs shadow-2xs">
+                  📋
+                </div>
+                <div className="min-w-0 flex-1">
+                  <span className="text-[9.5px] sm:text-[10.5px] font-bold text-slate-500 block truncate leading-none mb-0.5">
+                    பொருட்கள்
+                  </span>
+                  <div className="flex items-baseline gap-0.5 truncate leading-tight">
+                    <span className="text-xs sm:text-sm md:text-base font-black text-slate-900">
+                      {selectedPooja.items?.length || 0}
+                    </span>
+                    <span className="text-[9.5px] font-bold text-slate-400">
+                      வகை
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
