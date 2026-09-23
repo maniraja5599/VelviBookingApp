@@ -46,7 +46,7 @@ export const VelviLogo: React.FC<VelviLogoProps> = ({
   );
 
   if (variant === "icon") {
-    return <div className={`inline-flex items-center ${className}`}>{IconElement}</div>;
+    return <div className={`inline-flex items-center justify-center ${className}`}>{IconElement}</div>;
   }
 
   if (variant === "full") {

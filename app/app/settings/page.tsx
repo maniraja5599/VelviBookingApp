@@ -138,9 +138,9 @@ export default function SettingsHubPage() {
     return "30-Day Free Trial";
   }, [subscription]);
 
-  const allSettingSections: SettingSection[] = [
+  const allSettingSections: SettingSection[] = useMemo(() => [
     {
-      title: "Business & Profile",
+      title: "Business & Services (வணிகம் & சேவைகள்)",
       items: [
         {
           href: "/app/settings/branding",
@@ -160,6 +160,7 @@ export default function SettingsHubPage() {
           icon: Flame,
           iconBg: "bg-orange-100/90 border border-orange-200",
           iconColor: "text-orange-700",
+          badge: `${counts.poojas} Poojas`,
           keywords: "pooja homam seva dakshina fee samagri checklist",
         },
         {
@@ -178,6 +179,7 @@ export default function SettingsHubPage() {
           icon: Users,
           iconBg: "bg-emerald-100/90 border border-emerald-200",
           iconColor: "text-emerald-700",
+          badge: `${counts.customers} Devotees`,
           keywords: "customer devotee client phone mobile nakshatram rasi gothram",
         },
         {
@@ -192,7 +194,7 @@ export default function SettingsHubPage() {
       ],
     },
     {
-      title: "Plan & Rewards",
+      title: "Plan & Rewards (திட்டம் & சலுகைகள்)",
       items: [
         {
           href: "/app/subscription",
@@ -211,12 +213,13 @@ export default function SettingsHubPage() {
           icon: Gift,
           iconBg: "bg-pink-100/90 border border-pink-200",
           iconColor: "text-pink-700",
+          badge: "+30 Days Free",
           keywords: "referral invite reward free days friend earn code",
         },
       ],
     },
     {
-      title: "Data & Security",
+      title: "Data & Security (தரவு & பாதுகாப்பு)",
       items: [
         {
           onClick: () => setShowTrashModal(true),
@@ -254,7 +257,7 @@ export default function SettingsHubPage() {
       ],
     },
     {
-      title: "Preferences & System",
+      title: "Preferences & System (விருப்பத்தேர்வுகள் & தகவல்)",
       items: [
         {
           href: "/app/settings/guide",
@@ -287,7 +290,7 @@ export default function SettingsHubPage() {
         },
       ],
     },
-  ];
+  ], [currentBusiness, counts, isPro, recentlyDeleted]);
 
   // Search filtering
   const filteredSections = useMemo(() => {
@@ -310,18 +313,18 @@ export default function SettingsHubPage() {
   const quickSettings = [
     { label: "Profile", icon: Pencil, iconColor: "text-blue-700", chipBg: "hover:bg-blue-50 hover:border-blue-300", action: () => (window.location.href = "/app/settings/branding") },
     { label: "Plan & Pro", icon: Sparkles, iconColor: "text-amber-700", chipBg: "hover:bg-amber-50 hover:border-amber-300", action: () => (window.location.href = "/app/subscription") },
-    { label: "Refer & Earn", icon: Gift, iconColor: "text-pink-700", chipBg: "hover:bg-pink-50 hover:border-pink-300", action: () => (window.location.href = "/app/referrals") },
-    { label: "App Guide", icon: BookOpen, iconColor: "text-teal-700", chipBg: "hover:bg-teal-50 hover:border-teal-300", action: () => (window.location.href = "/app/settings/guide") },
+    { label: `Poojas (${counts.poojas})`, icon: Flame, iconColor: "text-orange-700", chipBg: "hover:bg-orange-50 hover:border-orange-300", action: () => (window.location.href = "/app/poojas") },
+    { label: `Devotees (${counts.customers})`, icon: Users, iconColor: "text-emerald-700", chipBg: "hover:bg-emerald-50 hover:border-emerald-300", action: () => (window.location.href = "/app/customers") },
     { label: "Categories", icon: Tag, iconColor: "text-purple-700", chipBg: "hover:bg-purple-50 hover:border-purple-300", action: () => setShowCategoryModal(true) },
-    { label: "Trash & Undo", icon: RotateCcw, iconColor: "text-rose-700", chipBg: "hover:bg-rose-50 hover:border-rose-300", action: () => setShowTrashModal(true) },
-    { label: "Devotees", icon: Users, iconColor: "text-emerald-700", chipBg: "hover:bg-emerald-50 hover:border-emerald-300", action: () => (window.location.href = "/app/customers") },
-    { label: "Poojas", icon: Flame, iconColor: "text-orange-700", chipBg: "hover:bg-orange-50 hover:border-orange-300", action: () => (window.location.href = "/app/poojas") },
+    { label: `Trash (${recentlyDeleted.length})`, icon: RotateCcw, iconColor: "text-rose-700", chipBg: "hover:bg-rose-50 hover:border-rose-300", action: () => setShowTrashModal(true) },
     { label: "Themes", icon: Palette, iconColor: "text-fuchsia-700", chipBg: "hover:bg-fuchsia-50 hover:border-fuchsia-300", action: () => (window.location.href = "/app/settings/theme") },
-    { label: "Backup", icon: Cloud, iconColor: "text-cyan-800", chipBg: "hover:bg-cyan-50 hover:border-cyan-300", action: () => (window.location.href = "/app/data-backup") },
+    { label: "Cloud Backup", icon: Cloud, iconColor: "text-cyan-800", chipBg: "hover:bg-cyan-50 hover:border-cyan-300", action: () => (window.location.href = "/app/data-backup") },
+    { label: "App Guide", icon: BookOpen, iconColor: "text-teal-700", chipBg: "hover:bg-teal-50 hover:border-teal-300", action: () => (window.location.href = "/app/settings/guide") },
+    { label: "Refer & Earn", icon: Gift, iconColor: "text-pink-700", chipBg: "hover:bg-pink-50 hover:border-pink-300", action: () => (window.location.href = "/app/referrals") },
   ];
 
   return (
-    <div className="space-y-4 pb-8 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-24 sm:pb-28 animate-in fade-in duration-200">
       {/* Header & Page Title */}
       <div className="flex items-center justify-between">
         <div>
@@ -331,37 +334,47 @@ export default function SettingsHubPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. HERO NAME & BRANDING CARD (Enlarged Logo, Pro Highlight & Corner Badge) */}
+      {/* 1. HERO NAME & BRANDING CARD (Perfect Centered Logo, Pro Status & Metrics) */}
       {/* ========================================================================= */}
       <div
-        className={`px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl relative overflow-hidden space-y-2 transition-all ${
+        className={`p-4 sm:p-5 rounded-3xl relative overflow-hidden transition-all shadow-xs ${
           isPro
-            ? "bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/40 border-2 border-emerald-400/70 ring-1 ring-emerald-400/30 shadow-xs"
-            : "bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 border border-amber-300/80 shadow-xs"
+            ? "bg-gradient-to-br from-amber-50/95 via-white to-emerald-50/50 border border-emerald-400/80 ring-1 ring-emerald-400/20"
+            : "bg-gradient-to-br from-amber-50/95 via-white to-amber-100/50 border border-amber-300/80"
         }`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Avatar / Logo with quick edit badge - Enlarged as requested */}
+        {/* Subtle decorative background watermarks */}
+        <div className="absolute top-0 right-0 -mt-6 -mr-6 w-28 h-28 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Top Profile Header Row */}
+        <div className="flex items-center justify-between gap-3 relative">
+          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+            {/* Perfectly Centered Avatar / Logo Container */}
             <div className="relative shrink-0">
-              {currentUser?.avatarUrl ? (
-                <img
-                  src={currentUser.avatarUrl}
-                  alt={currentBusiness?.name || currentUser?.name || "Priest"}
-                  className="w-12 h-12 sm:w-13 sm:h-13 rounded-2xl object-cover ring-2 ring-amber-400/70 shadow-xs"
-                />
-              ) : (
-                <BrandLogo
-                  size="md"
-                  variant="icon"
-                  customLogoUrl={currentBusiness?.logoUrl}
-                  businessName={currentBusiness?.name}
-                  className="ring-2 ring-amber-400/50 shadow-xs !w-12 !h-12 sm:!w-13 sm:!h-13 rounded-2xl"
-                />
-              )}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-amber-300/80 ring-2 ring-amber-400/30 shadow-xs flex items-center justify-center p-1.5 overflow-hidden transition-transform">
+                {currentUser?.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={currentBusiness?.name || currentUser?.name || "Priest"}
+                    className="w-full h-full rounded-xl object-cover"
+                  />
+                ) : currentBusiness?.logoUrl ? (
+                  <img
+                    src={currentBusiness.logoUrl}
+                    alt={currentBusiness.name || "Business Logo"}
+                    className="w-full h-full rounded-xl object-contain"
+                  />
+                ) : (
+                  <img
+                    src="/icons/velvi-logo.png"
+                    alt="Velvi Logo"
+                    className="w-full h-full object-contain"
+                  />
+                )}
+              </div>
               <Link
                 href="/app/settings/branding"
-                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-xs hover:bg-emerald-900 transition active:scale-95 border-2 border-white"
+                className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-md hover:bg-emerald-900 transition active:scale-95 border-2 border-white"
                 title="Edit Profile Picture / Logo"
                 aria-label="Edit Profile"
               >
@@ -369,81 +382,114 @@ export default function SettingsHubPage() {
               </Link>
             </div>
 
-            {/* Name, Email, & Mobile number right below it */}
+            {/* Name, Business & Contact info */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <h3 className="font-extrabold text-sm sm:text-[15px] text-slate-900 tracking-tight truncate max-w-[160px] sm:max-w-xs leading-tight">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-extrabold text-[15px] sm:text-base text-slate-900 tracking-tight truncate leading-tight">
                   {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
                 </h3>
-                <Link
-                  href="/app/settings/branding"
-                  className="p-0.5 text-slate-400 hover:text-emerald-800 rounded transition"
-                  title="Edit Profile"
-                >
-                  <Pencil className="w-3 h-3 text-amber-700" />
-                </Link>
               </div>
 
-              {/* Email */}
-              {currentUser?.email && (
-                <div className="text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5 leading-tight">
-                  <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                  <span className="truncate">{currentUser.email}</span>
-                </div>
+              {/* Sub-label if business has vadhyar name */}
+              {currentBusiness?.name && currentUser?.name && currentBusiness.name !== currentUser.name && (
+                <p className="text-[11px] font-semibold text-amber-900/80 truncate mt-0.5">
+                  👤 {currentUser.name}
+                </p>
               )}
 
-              {/* Mobile number below email */}
-              {currentUser?.mobile && (
-                <div className="text-[10.5px] text-slate-700 font-bold flex items-center gap-1 mt-0.5 leading-tight">
-                  <Phone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                  <span>{currentUser.mobile}</span>
-                </div>
-              )}
+              {/* Contact info: Phone & Email */}
+              <div className="flex flex-col gap-0.5 mt-1">
+                {currentUser?.mobile && (
+                  <div className="text-[11px] text-slate-700 font-bold flex items-center gap-1 leading-tight">
+                    <Phone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                    <span>{currentUser.mobile}</span>
+                  </div>
+                )}
+                {currentUser?.email && (
+                  <div className="text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1 leading-tight">
+                    <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                    <span className="truncate">{currentUser.email}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Right Top Corner: PRO VERSION Highlight Badge & Vadhyar Role */}
-          <div className="shrink-0 flex flex-col items-end gap-1 pt-0.5">
+          {/* Right Top Badges: Plan & Role */}
+          <div className="shrink-0 flex flex-col items-end gap-1.5 self-start">
             <Link
               href="/app/subscription"
-              className={`px-2 py-0.5 rounded-full text-[9.5px] font-black tracking-wide border flex items-center gap-1 transition active:scale-95 shadow-2xs ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-wide border flex items-center gap-1 transition active:scale-95 shadow-2xs ${
                 isPro
                   ? "bg-gradient-to-r from-emerald-800 to-emerald-950 text-amber-300 border-amber-300/80 shadow-xs ring-1 ring-amber-400/40"
                   : "bg-amber-100/90 text-amber-900 border-amber-300"
               }`}
               title="Subscription Plan"
             >
-              <Sparkles className="w-2.5 h-2.5 text-amber-300" />
-              <span>{isPro ? "PRO VERSION" : "TRIAL"}</span>
+              <Sparkles className="w-3 h-3 text-amber-300" />
+              <span>{isPro ? "PRO ACTIVE" : "FREE TRIAL"}</span>
             </Link>
 
-            <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-100/90 text-amber-900 border border-amber-200/90">
+            <span className="text-[9.5px] px-2 py-0.5 rounded-md font-bold bg-amber-100/80 text-amber-900 border border-amber-200/90">
               {currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Vadhyar"}
             </span>
           </div>
         </div>
 
-        {/* Compact Validity Details & Edit Profile Link */}
-        <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-[10px] text-slate-600 flex-wrap gap-1">
-          <div className="flex items-center gap-1 text-slate-700 font-medium">
-            <Calendar className="w-3 h-3 text-amber-700 shrink-0" />
+        {/* Live Metrics Row inside Hero Card */}
+        <div className="mt-3 pt-2.5 border-t border-amber-200/60 grid grid-cols-3 gap-2">
+          <Link
+            href="/app"
+            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+          >
+            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+              {counts.bookings}
+            </div>
+            <div className="text-[10px] font-bold text-slate-500">Bookings</div>
+          </Link>
+
+          <Link
+            href="/app/customers"
+            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+          >
+            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+              {counts.customers}
+            </div>
+            <div className="text-[10px] font-bold text-slate-500">Devotees</div>
+          </Link>
+
+          <Link
+            href="/app/poojas"
+            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+          >
+            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+              {counts.poojas}
+            </div>
+            <div className="text-[10px] font-bold text-slate-500">Poojas</div>
+          </Link>
+        </div>
+
+        {/* Bottom Validity Details & Edit Profile Link */}
+        <div className="mt-2.5 pt-2 border-t border-amber-200/50 flex items-center justify-between text-[11px] text-slate-600 flex-wrap gap-2">
+          <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+            <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span>
-              <strong className="text-slate-900">Plan:</strong> {validityText}
+              <strong className="text-slate-900 font-bold">Plan:</strong> {validityText}
             </span>
           </div>
 
           <Link
             href="/app/settings/branding"
-            className="text-[10px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-0.5 bg-white/95 px-2 py-0.5 rounded-md border border-amber-300/80 shadow-2xs transition group"
+            className="text-[11px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-amber-300/80 shadow-2xs transition group active:scale-95"
           >
             <span>Edit Profile</span>
-            <ArrowUpRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-3 h-3 text-emerald-800 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. COMPACT SETTINGS SEARCH BAR & QUICK SUGGESTIONS                        */}
+      {/* 2. COMPACT SETTINGS SEARCH BAR & QUICK SHORTCUTS                          */}
       {/* ========================================================================= */}
       <div className="space-y-2">
         <div className="relative">
@@ -453,7 +499,7 @@ export default function SettingsHubPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search settings (e.g. profile, plan, catalog, backup)..."
-            className="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 transition"
+            className="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-2xs text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition"
           />
           {searchQuery && (
             <button
@@ -469,8 +515,8 @@ export default function SettingsHubPage() {
         {/* Quick Recommendation Chips */}
         {!searchQuery && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-0.5">
-            <span className="text-[10.5px] font-bold text-slate-500 whitespace-nowrap pl-1">
-              Quick Access:
+            <span className="text-[10.5px] font-bold text-slate-400 whitespace-nowrap pl-1">
+              Quick:
             </span>
             {quickSettings.map((chip, idx) => {
               const ChipIcon = chip.icon;
@@ -479,7 +525,7 @@ export default function SettingsHubPage() {
                   key={idx}
                   type="button"
                   onClick={chip.action}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200 shadow-2xs active:scale-95 ${chip.chipBg || ""}`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold transition shrink-0 border border-slate-200/90 shadow-2xs active:scale-95 ${chip.chipBg || ""}`}
                 >
                   <ChipIcon className={`w-3 h-3 ${chip.iconColor || "text-amber-800"}`} />
                   <span>{chip.label}</span>
@@ -491,24 +537,58 @@ export default function SettingsHubPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. SUBTLE INSTALL APP (Romba highlight venam - neat & compact)           */}
+      {/* 3. SUBTLE INSTALL APP (Neat & compact)                                    */}
       {/* ========================================================================= */}
       <PwaInstallBanner mode="button" />
 
       {/* ========================================================================= */}
       {/* 4. CATEGORIZED SETTINGS GROUPS (With Live Counts & Search Matches)        */}
       {/* ========================================================================= */}
-      <div className="space-y-3.5">
+      <div className="space-y-4">
         {filteredSections.map((section) => (
           <div key={section.title} className="space-y-1.5">
-            <h3 className="text-[11px] font-extrabold text-slate-600 uppercase tracking-wider px-1">
+            <h3 className="text-[11.5px] font-extrabold text-slate-600 uppercase tracking-wider px-1">
               {section.title}
             </h3>
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
+            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs divide-y divide-slate-100 overflow-hidden">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 const iconBgClass = (item as any).iconBg || "bg-amber-100/70 border border-amber-200";
                 const iconColorClass = (item as any).iconColor || "text-amber-900";
+
+                const content = (
+                  <>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl ${iconBgClass} ${iconColorClass} flex items-center justify-center shrink-0 group-hover:scale-105 transition-all shadow-2xs`}>
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-bold text-xs sm:text-[13px] text-slate-900 group-hover:text-amber-900 transition-colors">
+                            {item.label}
+                          </h4>
+                          {item.badge && (
+                            <span
+                              className={`px-1.5 py-0.5 text-[9px] font-extrabold rounded-full ${
+                                item.badge.includes("Pro")
+                                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  : item.badge.includes("trash")
+                                  ? "bg-rose-100 text-rose-800 border border-rose-200"
+                                  : "bg-amber-100 text-amber-800 border border-amber-200"
+                              }`}
+                            >
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-slate-500 font-medium leading-relaxed mt-0.5 truncate">
+                          {item.desc}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-700 group-hover:translate-x-0.5 transition-all shrink-0" />
+                  </>
+                );
 
                 if (item.onClick) {
                   return (
@@ -516,27 +596,9 @@ export default function SettingsHubPage() {
                       key={item.label}
                       type="button"
                       onClick={item.onClick}
-                      className="w-full text-left p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group cursor-pointer"
+                      className="w-full text-left p-3.5 sm:p-4 flex items-center justify-between hover:bg-amber-50/40 active:bg-amber-100/40 transition group cursor-pointer"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-8 h-8 rounded-xl ${iconBgClass} ${iconColorClass} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-xs text-slate-900">{item.label}</h4>
-                            {item.badge && (
-                              <span className="px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-emerald-100 text-emerald-800">
-                                {item.badge}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
+                      {content}
                     </button>
                   );
                 }
@@ -545,33 +607,9 @@ export default function SettingsHubPage() {
                   <Link
                     key={item.href || item.label}
                     href={item.href || "#"}
-                    className="p-3.5 flex items-center justify-between hover:bg-amber-50/40 transition group"
+                    className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-amber-50/40 active:bg-amber-100/40 transition group"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl ${iconBgClass} ${iconColorClass} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-2xs`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-bold text-xs text-slate-900">{item.label}</h4>
-                          {item.badge && (
-                            <span
-                              className={`px-1.5 py-0.2 text-[9px] font-extrabold rounded-full ${
-                                item.badge.includes("Pro")
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {item.badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 leading-tight mt-0.5 truncate">
-                          {item.desc}
-                        </p>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition-colors shrink-0" />
+                    {content}
                   </Link>
                 );
               })}

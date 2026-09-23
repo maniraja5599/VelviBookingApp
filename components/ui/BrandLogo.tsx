@@ -73,7 +73,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   );
 
   if (variant === "icon") {
-    return <div className={`inline-flex items-center ${className}`}>{CustomImage}</div>;
+    return <div className={`inline-flex items-center justify-center ${className}`}>{CustomImage}</div>;
   }
 
   if (variant === "full") {
