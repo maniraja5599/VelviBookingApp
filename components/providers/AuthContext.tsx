@@ -271,6 +271,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanDigits = mobile.replace(/\D/g, "");
       const normalized = normalizeIndianMobile(cleanDigits);
 
+      let clientIp = "106.210.142.88";
+      try {
+        const ipRes = await fetch("/api/auth/client-ip");
+        const ipData = await ipRes.json();
+        if (ipData?.ip) clientIp = ipData.ip;
+      } catch {}
+
       let user = db.users.find((u) => u.mobile && normalizeIndianMobile(u.mobile) === normalized);
       if (!user) {
         const trimmedName = name.trim() || "Vedic Priest";
@@ -285,6 +292,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: "OWNER",
           referralCode: `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
           createdAt: new Date().toISOString(),
+          registrationIp: clientIp,
+          lastLoginIp: clientIp,
         };
         db.users.push(user);
 
@@ -366,6 +375,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ? "Ravi Iyer"
           : "Vedic Priest");
 
+      let clientIp = "106.210.142.88";
+      try {
+        const ipRes = await fetch("/api/auth/client-ip");
+        const ipData = await ipRes.json();
+        if (ipData?.ip) clientIp = ipData.ip;
+      } catch {}
+
       // Find existing or mock new Google user (case-insensitive email matching)
       let user = db.users.find((u) => u.email.trim().toLowerCase() === targetEmail);
       if (!user) {
@@ -382,9 +398,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ? "VELVI-MANI-DEV"
             : `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
           createdAt: new Date().toISOString(),
+          registrationIp: clientIp,
+          lastLoginIp: clientIp,
         };
         db.users.push(user);
       } else {
+        user.lastLoginIp = clientIp;
+        if (!user.registrationIp) {
+          user.registrationIp = clientIp;
+        }
         if (isSuperAdminEmail) {
           user.role = "SUPER_ADMIN";
         }

@@ -11,6 +11,8 @@ export interface User {
   role: UserRole;
   referralCode: string;
   createdAt: string;
+  registrationIp?: string;
+  lastLoginIp?: string;
 }
 
 export interface Business {
@@ -334,4 +336,5 @@ export interface UserDirectoryMetric {
   totalEarnings: number;
   joinedDate: string;
   isSuperAdmin: boolean;
+  ipAddress?: string;
 }

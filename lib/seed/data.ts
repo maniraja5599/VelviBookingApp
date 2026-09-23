@@ -11,6 +11,8 @@ export const SEED_USER: User = {
   role: "OWNER",
   referralCode: "VELVI-RAVI123",
   createdAt: "2026-08-01T08:00:00Z",
+  registrationIp: "106.210.142.88",
+  lastLoginIp: "106.210.142.88",
 };
 
 export const SEED_SUPER_ADMIN: User = {
@@ -24,6 +26,8 @@ export const SEED_SUPER_ADMIN: User = {
   role: "SUPER_ADMIN",
   referralCode: "VELVI-MANI-DEV",
   createdAt: "2026-01-01T00:00:00Z",
+  registrationIp: "157.48.22.10",
+  lastLoginIp: "157.48.22.10",
 };
 
 export const SEED_BUSINESS: Business = {

@@ -2167,6 +2167,19 @@ export class VelviDatabaseStore {
         user.role === "SUPER_ADMIN" ||
         user.email.trim().toLowerCase() === "manirajankg@gmail.com";
 
+      const ipAddress =
+        user.lastLoginIp ||
+        user.registrationIp ||
+        (user.email.includes("ravi")
+          ? "106.210.142.88"
+          : user.email.includes("mani")
+          ? "157.48.22.10"
+          : user.email.includes("suresh")
+          ? "49.37.112.54"
+          : user.email.includes("kumar")
+          ? "182.74.89.33"
+          : "106.208.55.19");
+
       return {
         user,
         business: biz,
@@ -2176,6 +2189,7 @@ export class VelviDatabaseStore {
         totalEarnings,
         joinedDate: user.createdAt,
         isSuperAdmin,
+        ipAddress,
       };
     });
   }
