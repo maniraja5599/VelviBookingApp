@@ -179,6 +179,7 @@ export interface Pooja {
   active: boolean;
   imageUrl?: string;
   items: PoojaItemTemplate[];
+  isCustom?: boolean;
   isSample?: boolean;
   createdAt: string;
 }

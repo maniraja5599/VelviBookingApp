@@ -186,6 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
         };
         db.businesses.push(newBiz);
+        db.seedDefaultPoojasForBusiness(bizId);
 
         // Assign 30-day Pro subscription
         const now = new Date();
@@ -283,6 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
         };
         db.businesses.push(biz);
+        db.seedDefaultPoojasForBusiness(bizId);
 
         const now = new Date();
         const end = new Date(Date.now() + 30 * 86400000);
@@ -423,6 +425,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       createdAt: new Date().toISOString(),
     };
     db.businesses.push(newBiz);
+    db.seedDefaultPoojasForBusiness(newBiz.id);
 
     // Add as member
     db.members.push({

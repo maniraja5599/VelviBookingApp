@@ -67,6 +67,47 @@ export const DEFAULT_SAMAGRI_CATEGORIES: SamagriCategory[] = [
   { id: "grihapravesam_items", labelTa: "கிரகப்பிரவேசப் பொருட்கள்", labelEn: "Grihapravesam Items", icon: "🥛", isDefault: true },
 ];
 
+export const AUTHENTIC_POOJA_BASE_IDS = [
+  "p-ganapathi-01",
+  "p-vastu-02",
+  "p-ayush-03",
+  "p-swayamvara-parvathi-04",
+  "p-kumbabishekam-11",
+  "p-sangu-pooja-06",
+  "p-punyaham-07",
+  "p-lakshmi-08",
+];
+
+export const OBSOLETE_POOJA_IDS = new Set([
+  "p-ayushya-02",
+  "p-navagraha-03",
+  "p-gruhapravesam-04",
+  "p-sathyanarayana-05",
+  "p-sudarshana-06",
+  "p-rudra-07",
+  "p-lakshmi-kubera-08",
+  "p-mrityunjaya-09",
+  "p-sashtiapthapoorthi-10",
+  "p-durga-11",
+  "p-karthigai-12",
+  "p-subamuhurtha-13",
+  "p-navagraha-02",
+  "p-sudarshana-03",
+  "p-lakshmi-04",
+  "p-vastu-05",
+  "p-rudra-06",
+  "p-satya-07",
+  "p-ayush-08",
+  "p-sample-1",
+  "p-sample-2",
+  "p-sample-3",
+  "p-sample-4",
+  "p-sample-5",
+  "p-sample-6",
+  "p-sample-7",
+  "p-sample-8",
+]);
+
 export class VelviDatabaseStore {
   public platformSettings: PlatformSettings = {
     appName: "Velvi",
@@ -266,8 +307,64 @@ export class VelviDatabaseStore {
     return this.bookings.filter((b) => b.businessId === businessId);
   }
 
-  public getPoojas(businessId: string): Pooja[] {
+  public seedDefaultPoojasForBusiness(businessId: string): Pooja[] {
+    if (!businessId) return [];
+
+    // Purge any obsolete legacy dummy poojas for this business
+    this.poojas = this.poojas.filter(
+      (p) => p.businessId !== businessId || (!OBSOLETE_POOJA_IDS.has(p.id) && !p.id.startsWith("p-sample-"))
+    );
+
+    const existing = this.poojas.filter((p) => p.businessId === businessId);
+    const existingBaseIds = new Set(
+      existing.map((p) => {
+        const found = AUTHENTIC_POOJA_BASE_IDS.find((baseId) => p.id.startsWith(baseId));
+        return found || p.id;
+      })
+    );
+
+    const added: Pooja[] = [];
+    SEED_POOJAS.forEach((sp) => {
+      const pId = businessId === "biz-venkateswara-01" ? sp.id : `${sp.id}-${businessId}`;
+      if (!existing.some((p) => p.id === pId) && !existingBaseIds.has(sp.id)) {
+        const newPooja: Pooja = {
+          ...structuredClone(sp),
+          id: pId,
+          businessId: businessId,
+          items: sp.items.map((it) => ({
+            ...it,
+            id: businessId === "biz-venkateswara-01" ? it.id : `${it.id}-${businessId}`,
+            poojaId: pId,
+          })),
+        };
+        this.poojas.push(newPooja);
+        added.push(newPooja);
+      }
+    });
+
+    if (added.length > 0 && typeof window !== "undefined") {
+      this.saveToLocalStorage();
+    }
+
     return this.poojas.filter((p) => p.businessId === businessId);
+  }
+
+  public getPoojas(businessId: string): Pooja[] {
+    if (!businessId) return [];
+
+    // Purge any obsolete legacy poojas
+    this.poojas = this.poojas.filter(
+      (p) => !OBSOLETE_POOJA_IDS.has(p.id) && !p.id.startsWith("p-sample-")
+    );
+
+    const businessPoojas = this.poojas.filter((p) => p.businessId === businessId);
+
+    // If business has no poojas and the pooja catalog is active in store, seed the 8 authentic defaults
+    if (businessPoojas.length === 0 && this.poojas.length > 0) {
+      return this.seedDefaultPoojasForBusiness(businessId);
+    }
+
+    return businessPoojas;
   }
 
   public getMembers(businessId: string): BusinessMember[] {
@@ -1154,6 +1251,7 @@ export class VelviDatabaseStore {
       basePrice: Number(params.basePrice) || 0,
       procedure: params.procedure?.trim() || "",
       active: true,
+      isCustom: true,
       items: params.items || [],
       createdAt: new Date().toISOString(),
     };
@@ -1368,24 +1466,20 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.poojas)) {
           this.poojas = state.poojas;
           
+          // Unconditionally purge any legacy obsolete poojas across all businesses
+          this.poojas = this.poojas.filter(
+            (p) =>
+              !OBSOLETE_POOJA_IDS.has(p.id) &&
+              !p.id.startsWith("p-sample-") &&
+              !Array.from(OBSOLETE_POOJA_IDS).some((obs) => p.id.startsWith(obs))
+          );
+
           // Check if authentic 8 poojas migration has run
-          const migrationKey = "velvi_authentic_8_poojas_v2";
+          const migrationKey = "velvi_authentic_8_poojas_v5";
           const hasMigrated = localStorage.getItem(migrationKey) === "true";
 
-          const obsoleteOldSeedIds = new Set([
-            "p-ayushya-02", "p-navagraha-03", "p-gruhapravesam-04",
-            "p-sathyanarayana-05", "p-sudarshana-06", "p-rudra-07",
-            "p-lakshmi-kubera-08", "p-mrityunjaya-09", "p-sashtiapthapoorthi-10",
-            "p-durga-11", "p-karthigai-12", "p-subamuhurtha-13",
-            "p-navagraha-02", "p-sudarshana-03", "p-lakshmi-04",
-            "p-vastu-05", "p-rudra-06", "p-satya-07", "p-ayush-08"
-          ]);
-
           if (!hasMigrated) {
-            // Remove old obsolete sample poojas that were replaced
-            this.poojas = this.poojas.filter((p) => !obsoleteOldSeedIds.has(p.id));
-            
-            // Upsert / refresh the 8 authentic poojas with exact items & details from Iyyer documents
+            // Upsert / refresh the 8 authentic poojas for default business
             SEED_POOJAS.forEach((sp) => {
               const existingIdx = this.poojas.findIndex((p) => p.id === sp.id);
               if (existingIdx !== -1) {
@@ -1394,14 +1488,31 @@ export class VelviDatabaseStore {
                 this.poojas.push(structuredClone(sp));
               }
             });
+
+            // Ensure every business in state is seeded with the authentic 8 poojas
+            if (Array.isArray(this.businesses)) {
+              this.businesses.forEach((b) => {
+                this.seedDefaultPoojasForBusiness(b.id);
+              });
+            }
             localStorage.setItem(migrationKey, "true");
           } else {
-            // Ensure any missing authentic pooja exists
+            // Ensure any missing authentic pooja exists for default business
             SEED_POOJAS.forEach((sp) => {
               if (!this.poojas.some((p) => p.id === sp.id)) {
                 this.poojas.push(structuredClone(sp));
               }
             });
+
+            // Ensure every business has its 8 authentic poojas
+            if (Array.isArray(this.businesses)) {
+              this.businesses.forEach((b) => {
+                const bPoojas = this.poojas.filter((p) => p.businessId === b.id);
+                if (bPoojas.length === 0) {
+                  this.seedDefaultPoojasForBusiness(b.id);
+                }
+              });
+            }
           }
         }
         if (Array.isArray(state.members)) this.members = state.members;

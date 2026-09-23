@@ -1313,6 +1313,66 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       }
     }
   });
+
+  // TEST CASE 47: All users receive only the 8 authentic poojas by default, no obsolete poojas
+  it("Test 47: All users receive only the 8 authentic poojas by default, and legacy poojas are purged", () => {
+    const defaultBizPoojas = store.getPoojas("biz-venkateswara-01");
+    // Must be exactly 8 authentic poojas
+    expect(defaultBizPoojas.length).toBe(8);
+
+    const obsoleteIds = [
+      "p-ayushya-02", "p-navagraha-03", "p-gruhapravesam-04",
+      "p-sathyanarayana-05", "p-sudarshana-06", "p-rudra-07",
+      "p-lakshmi-kubera-08", "p-mrityunjaya-09", "p-sashtiapthapoorthi-10",
+      "p-durga-11", "p-karthigai-12", "p-subamuhurtha-13",
+    ];
+
+    // None of the obsolete IDs should exist
+    for (const obsId of obsoleteIds) {
+      expect(defaultBizPoojas.some((p) => p.id === obsId)).toBe(false);
+    }
+
+    // New business querying getPoojas automatically gets the 8 authentic poojas
+    const newBizId = "biz-new-swami-99";
+    const newBizPoojas = store.getPoojas(newBizId);
+    expect(newBizPoojas.length).toBe(8);
+    for (const p of newBizPoojas) {
+      expect(p.businessId).toBe(newBizId);
+      expect(p.items.length).toBeGreaterThan(0);
+      expect(p.items.every((it) => it.poojaId === p.id)).toBe(true);
+    }
+
+    // If an obsolete dummy pooja is present in store, getPoojas purges it
+    store.poojas.push({
+      id: "p-sathyanarayana-05",
+      businessId: "biz-venkateswara-01",
+      englishName: "Legacy Pooja",
+      tamilName: "பழைய பூஜை",
+      description: "Old",
+      durationMinutes: 60,
+      basePrice: 1000,
+      active: true,
+      items: [],
+      createdAt: new Date().toISOString(),
+    });
+
+    const refreshed = store.getPoojas("biz-venkateswara-01");
+    expect(refreshed.some((p) => p.id === "p-sathyanarayana-05")).toBe(false);
+    expect(refreshed.length).toBe(8);
+
+    // Custom pooja created by user is preserved
+    const custom = store.createPooja({
+      businessId: newBizId,
+      englishName: "Custom Temple Special Pooja",
+      tamilName: "கோவில் சிறப்பு பூஜை",
+      basePrice: 5000,
+    });
+    expect(custom.isCustom).toBe(true);
+
+    const newBizWithCustom = store.getPoojas(newBizId);
+    expect(newBizWithCustom.length).toBe(9);
+    expect(newBizWithCustom.some((p) => p.id === custom.id)).toBe(true);
+  });
 });
 
 
