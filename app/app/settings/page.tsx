@@ -303,86 +303,81 @@ export default function SettingsHubPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. HERO NAME & BRANDING CARD (Prominent & Elegant with Pencil Icon)       */}
+      {/* 1. HERO NAME & BRANDING CARD (Compact & Sleek with All Details Preserved) */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 p-4 sm:p-5 rounded-3xl border-2 border-amber-300/80 shadow-sacred relative overflow-hidden space-y-3.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Avatar / Logo with quick edit badge */}
+      <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-amber-300/80 shadow-xs relative overflow-hidden space-y-2">
+        <div className="flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {/* Avatar / Logo with quick edit badge */}
             <div className="relative shrink-0">
               {currentUser?.avatarUrl ? (
                 <img
                   src={currentUser.avatarUrl}
                   alt={currentBusiness?.name || currentUser?.name || "Priest"}
-                  className="w-12 h-12 rounded-2xl object-cover ring-2 ring-amber-400/60 shadow-xs"
+                  className="w-10 h-10 rounded-xl object-cover ring-1.5 ring-amber-400/60 shadow-xs"
                 />
               ) : (
                 <BrandLogo
-                  size="lg"
+                  size="sm"
                   variant="icon"
                   customLogoUrl={currentBusiness?.logoUrl}
                   businessName={currentBusiness?.name}
-                  className="ring-2 ring-amber-400/40 shadow-xs"
+                  className="ring-1.5 ring-amber-400/40 shadow-xs !w-10 !h-10 rounded-xl"
                 />
               )}
               <Link
                 href="/app/settings/branding"
-                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-md hover:bg-emerald-900 transition active:scale-95 border-2 border-white"
+                className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-xs hover:bg-emerald-900 transition active:scale-95 border border-white"
                 title="Edit Profile Picture / Logo"
                 aria-label="Edit Profile"
               >
-                <Pencil className="w-3 h-3 text-amber-300" />
+                <Pencil className="w-2.5 h-2.5 text-amber-300" />
               </Link>
             </div>
 
-            {/* Name & Service Title */}
+            {/* Name & Metadata */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-extrabold text-base text-slate-900 tracking-tight truncate max-w-[200px] sm:max-w-xs">
+              <div className="flex items-center gap-1.5">
+                <h3 className="font-extrabold text-[13.5px] sm:text-sm text-slate-900 tracking-tight truncate max-w-[180px] sm:max-w-xs leading-tight">
                   {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
                 </h3>
                 <Link
                   href="/app/settings/branding"
-                  className="p-1 text-slate-500 hover:text-emerald-800 hover:bg-amber-200/50 rounded-lg transition"
+                  className="p-0.5 text-slate-400 hover:text-emerald-800 hover:bg-amber-200/50 rounded transition"
                   title="Edit Profile"
                 >
-                  <Pencil className="w-3.5 h-3.5 text-amber-700" />
+                  <Pencil className="w-3 h-3 text-amber-700" />
                 </Link>
               </div>
 
-              {/* Service Name & Google Email */}
-              <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                <p className="text-xs font-semibold text-emerald-900 truncate max-w-[200px]">
+              {/* Service Name, Email, Phone, & Role in one compact line */}
+              <div className="flex items-center gap-1.5 flex-wrap text-[10.5px] mt-0.5 leading-none">
+                <span className="font-bold text-emerald-800 truncate max-w-[150px]">
                   {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
-                </p>
+                </span>
                 {currentUser?.email && (
-                  <span className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1">
-                    <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                  <span className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-0.5">
+                    <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                     {currentUser.email}
                   </span>
                 )}
-              </div>
-
-              {/* Phone & Role */}
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 {currentUser?.mobile && (
-                  <span className="text-[11px] text-slate-700 flex items-center gap-1 font-bold bg-white/80 px-2 py-0.5 rounded-md border border-amber-200/60 shadow-2xs">
-                    <Phone className="w-3 h-3 text-emerald-600" />
+                  <span className="text-[10px] text-slate-700 flex items-center gap-0.5 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-amber-200/70 shadow-2xs">
+                    <Phone className="w-2.5 h-2.5 text-emerald-600" />
                     {currentUser.mobile}
                   </span>
                 )}
-                <span className="text-[10px] px-2 py-0.5 rounded-md font-extrabold bg-amber-200/70 text-amber-950 border border-amber-300/80">
+                <span className="text-[9.5px] px-1.5 py-0.5 rounded font-extrabold bg-amber-200/70 text-amber-950 border border-amber-300/80">
                   {currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Vadhyar"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Compact Validity Pill (Kutty a show pannu) */}
+          {/* Compact Validity Pill */}
           <Link
             href="/app/subscription"
-            className={`shrink-0 px-2.5 py-1.5 rounded-2xl text-[10.5px] font-black border flex items-center gap-1.5 transition active:scale-95 shadow-2xs ${
+            className={`shrink-0 px-2 py-1 rounded-xl text-[10px] font-black border flex items-center gap-1 transition active:scale-95 shadow-2xs ${
               isPro
                 ? "bg-emerald-100/90 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
                 : "bg-amber-100/90 text-amber-900 border-amber-300 hover:bg-amber-200"
@@ -391,12 +386,12 @@ export default function SettingsHubPage() {
           >
             {isPro ? (
               <>
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
                 <span>Pro Active</span>
               </>
             ) : (
               <>
-                <Clock className="w-3 h-3 text-amber-700" />
+                <Clock className="w-2.5 h-2.5 text-amber-700" />
                 <span>Trial</span>
               </>
             )}
@@ -404,20 +399,20 @@ export default function SettingsHubPage() {
         </div>
 
         {/* Compact Validity Details & Edit Profile Link */}
-        <div className="pt-2.5 border-t border-amber-200/70 flex items-center justify-between text-xs flex-wrap gap-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-700 font-medium">
-            <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+        <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-[10.5px] text-slate-600 flex-wrap gap-1.5">
+          <div className="flex items-center gap-1 text-[10.5px] text-slate-700 font-medium">
+            <Calendar className="w-3 h-3 text-amber-700 shrink-0" />
             <span>
-              <strong>Plan Validity:</strong> {validityText}
+              <strong className="text-slate-900">Plan:</strong> {validityText}
             </span>
           </div>
 
           <Link
             href="/app/settings/branding"
-            className="text-xs font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-xl border border-amber-300/80 shadow-2xs transition group"
+            className="text-[10.5px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-0.5 bg-white/95 px-2 py-0.5 rounded-lg border border-amber-300/80 shadow-2xs transition group"
           >
             <span>Edit Profile</span>
-            <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
       </div>
