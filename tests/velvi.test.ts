@@ -1508,6 +1508,56 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(guideCode).toContain("one-day-before-reminders");
     expect(guideCode).toContain("pwa-offline-usage");
   });
+
+  // TEST CASE 50: Cashfree Payment Gateway for App Subscriptions
+  it("Test 50: Cashfree creates monthly/annual subscription orders and verifies webhook signatures", async () => {
+    // 1. Create monthly subscription order
+    const monthlyOrder = await cashfree.createSubscriptionOrder(
+      "biz-venkateswara-01",
+      "u-ravi-iyer-01",
+      "MONTHLY",
+      { name: "Ravi Iyer", email: "ravi.iyer@gmail.com", phone: "+919876543210" }
+    );
+    expect(monthlyOrder.orderId).toContain("order_");
+    expect(monthlyOrder.orderAmount).toBe(499);
+    expect(monthlyOrder.paymentSessionId).toBeDefined();
+
+    // 2. Create annual subscription order
+    const yearlyOrder = await cashfree.createSubscriptionOrder(
+      "biz-venkateswara-01",
+      "u-ravi-iyer-01",
+      "YEARLY",
+      { name: "Ravi Iyer", email: "ravi.iyer@gmail.com", phone: "+919876543210" }
+    );
+    expect(yearlyOrder.orderId).toContain("order_");
+    expect(yearlyOrder.orderAmount).toBe(4999);
+    expect(yearlyOrder.paymentSessionId).toBeDefined();
+
+    // 3. Webhook signature verification
+    const validSig = cashfree.verifyWebhookSignature("test-valid-signature", '{"data":{}}', "1720000000");
+    expect(validSig).toBe(true);
+
+    const invalidSig = cashfree.verifyWebhookSignature("tampered-signature", '{"data":{}}', "1720000000");
+    expect(invalidSig).toBe(false);
+
+    // 4. Extend subscription validity via verified payment
+    const beforeSub = store.subscriptions.find((s) => s.businessId === "biz-venkateswara-01")!;
+    const beforeEnd = new Date(beforeSub.currentPeriodEnd).getTime();
+
+    const adjustRes = store.adjustSubscriptionValidity({
+      businessId: "biz-venkateswara-01",
+      adminUserId: "u-super-admin-01",
+      adminName: "Cashfree Payment Gateway",
+      adjustmentType: "EXTEND",
+      days: 30,
+      reason: "Cashfree verified test payment",
+    });
+    expect(adjustRes.success).toBe(true);
+    expect(adjustRes.subscription?.status).toBe("ACTIVE");
+
+    const afterEnd = new Date(adjustRes.subscription!.currentPeriodEnd).getTime();
+    expect(afterEnd).toBeGreaterThan(beforeEnd);
+  });
 });
 
 
