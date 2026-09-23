@@ -14,6 +14,18 @@ export default function SubscriptionPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState("");
+  const [cashfreeStatus, setCashfreeStatus] = useState<{
+    isConfigured: boolean;
+    environment: string;
+  } | null>(null);
+
+  // Check Cashfree Gateway status
+  React.useEffect(() => {
+    fetch("/api/cashfree/status")
+      .then((res) => res.json())
+      .then((data) => setCashfreeStatus(data))
+      .catch(() => {});
+  }, []);
 
   const endDate = subscription?.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : new Date();
   const now = new Date();
@@ -53,6 +65,18 @@ export default function SubscriptionPage() {
   const businessId =
     currentBusiness?.id ||
     (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "biz-default");
+
+  // Listen for Cashfree redirect return_url with order_id in query params (e.g. after UPI redirect)
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const returnOrderId = params.get("order_id");
+      if (returnOrderId) {
+        completeVerification(returnOrderId);
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
 
   const handleStartPayment = async () => {
     setIsProcessing(true);
@@ -264,21 +288,28 @@ export default function SubscriptionPage() {
   return (
     <div className="space-y-4 pb-20 animate-in fade-in duration-200">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href="/app/settings"
-          className="p-1.5 hover:bg-velvi-cream rounded-full text-velvi-brown transition active:scale-95"
-          title="Back to Settings"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h2 className="text-base font-bold text-velvi-brownDark">
-            Subscription &amp; Billing
-          </h2>
-          <p className="text-xs text-velvi-brown/60">
-            Manage your Velvi Pro membership plan
-          </p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/app/settings"
+            className="p-1.5 hover:bg-velvi-cream rounded-full text-velvi-brown transition active:scale-95"
+            title="Back to Settings"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h2 className="text-base font-bold text-velvi-brownDark">
+              Subscription &amp; Billing
+            </h2>
+            <p className="text-xs text-velvi-brown/60">
+              Manage your Velvi Pro membership plan
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border shrink-0 bg-velvi-cream/60 border-velvi-gold/30 text-velvi-brownDark">
+          <Shield className="w-3 h-3 text-velvi-gold" />
+          <span>Cashfree {cashfreeStatus?.isConfigured ? "Live" : "PG"}</span>
         </div>
       </div>
 
