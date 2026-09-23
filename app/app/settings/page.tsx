@@ -303,10 +303,10 @@ export default function SettingsHubPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. HERO NAME & BRANDING CARD (Compact & Sleek with All Details Preserved) */}
+      {/* 1. HERO NAME & BRANDING CARD (Ultra Compact & Streamlined)                */}
       {/* ========================================================================= */}
-      <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl border border-amber-300/80 shadow-xs relative overflow-hidden space-y-2">
-        <div className="flex items-center justify-between gap-2.5">
+      <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/40 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl border border-amber-300/80 shadow-xs relative overflow-hidden space-y-1.5">
+        <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {/* Avatar / Logo with quick edit badge */}
             <div className="relative shrink-0">
@@ -327,7 +327,7 @@ export default function SettingsHubPage() {
               )}
               <Link
                 href="/app/settings/branding"
-                className="absolute -bottom-0.5 -right-0.5 w-4.5 h-4.5 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-xs hover:bg-emerald-900 transition active:scale-95 border border-white"
+                className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-800 text-white flex items-center justify-center shadow-xs hover:bg-emerald-900 transition active:scale-95 border border-white"
                 title="Edit Profile Picture / Logo"
                 aria-label="Edit Profile"
               >
@@ -335,72 +335,72 @@ export default function SettingsHubPage() {
               </Link>
             </div>
 
-            {/* Name & Metadata */}
+            {/* Name, Email, & Mobile number right below it */}
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <h3 className="font-extrabold text-[13.5px] sm:text-sm text-slate-900 tracking-tight truncate max-w-[180px] sm:max-w-xs leading-tight">
+              <div className="flex items-center gap-1">
+                <h3 className="font-extrabold text-[13.5px] sm:text-sm text-slate-900 tracking-tight truncate max-w-[160px] sm:max-w-xs leading-none">
                   {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
                 </h3>
                 <Link
                   href="/app/settings/branding"
-                  className="p-0.5 text-slate-400 hover:text-emerald-800 hover:bg-amber-200/50 rounded transition"
+                  className="p-0.5 text-slate-400 hover:text-emerald-800 rounded transition"
                   title="Edit Profile"
                 >
                   <Pencil className="w-3 h-3 text-amber-700" />
                 </Link>
               </div>
 
-              {/* Service Name, Email, Phone, & Role in one compact line */}
-              <div className="flex items-center gap-1.5 flex-wrap text-[10.5px] mt-0.5 leading-none">
-                <span className="font-bold text-emerald-800 truncate max-w-[150px]">
-                  {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
-                </span>
-                {currentUser?.email && (
-                  <span className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-0.5">
-                    <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                    {currentUser.email}
-                  </span>
-                )}
-                {currentUser?.mobile && (
-                  <span className="text-[10px] text-slate-700 flex items-center gap-0.5 font-bold bg-white/90 px-1.5 py-0.5 rounded border border-amber-200/70 shadow-2xs">
-                    <Phone className="w-2.5 h-2.5 text-emerald-600" />
-                    {currentUser.mobile}
-                  </span>
-                )}
-                <span className="text-[9.5px] px-1.5 py-0.5 rounded font-extrabold bg-amber-200/70 text-amber-950 border border-amber-300/80">
-                  {currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Vadhyar"}
-                </span>
-              </div>
+              {/* Email */}
+              {currentUser?.email && (
+                <div className="text-[10px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5 leading-tight">
+                  <Mail className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{currentUser.email}</span>
+                </div>
+              )}
+
+              {/* Mobile number below email */}
+              {currentUser?.mobile && (
+                <div className="text-[10px] text-slate-700 font-bold flex items-center gap-1 mt-0.5 leading-tight">
+                  <Phone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                  <span>{currentUser.mobile}</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Compact Validity Pill */}
-          <Link
-            href="/app/subscription"
-            className={`shrink-0 px-2 py-1 rounded-xl text-[10px] font-black border flex items-center gap-1 transition active:scale-95 shadow-2xs ${
-              isPro
-                ? "bg-emerald-100/90 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
-                : "bg-amber-100/90 text-amber-900 border-amber-300 hover:bg-amber-200"
-            }`}
-            title="Subscription Validity"
-          >
-            {isPro ? (
-              <>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                <span>Pro Active</span>
-              </>
-            ) : (
-              <>
-                <Clock className="w-2.5 h-2.5 text-amber-700" />
-                <span>Trial</span>
-              </>
-            )}
-          </Link>
+          {/* Right Top Corner: Vadhyar Role Badge & Subscription Status */}
+          <div className="shrink-0 flex items-center gap-1.5 pt-0.5">
+            <span className="text-[9.5px] px-1.5 py-0.5 rounded-md font-extrabold bg-amber-200/80 text-amber-950 border border-amber-300/90 shadow-2xs">
+              {currentUser?.role === "SUPER_ADMIN" ? "Super Admin" : "Vadhyar"}
+            </span>
+
+            <Link
+              href="/app/subscription"
+              className={`px-1.5 py-0.5 rounded-md text-[9.5px] font-black border flex items-center gap-1 transition active:scale-95 shadow-2xs ${
+                isPro
+                  ? "bg-emerald-100/90 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
+                  : "bg-amber-100/90 text-amber-900 border-amber-300 hover:bg-amber-200"
+              }`}
+              title="Subscription Validity"
+            >
+              {isPro ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                  <span>Pro</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-2.5 h-2.5 text-amber-700" />
+                  <span>Trial</span>
+                </>
+              )}
+            </Link>
+          </div>
         </div>
 
         {/* Compact Validity Details & Edit Profile Link */}
-        <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-[10.5px] text-slate-600 flex-wrap gap-1.5">
-          <div className="flex items-center gap-1 text-[10.5px] text-slate-700 font-medium">
+        <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-[10px] text-slate-600 flex-wrap gap-1">
+          <div className="flex items-center gap-1 text-slate-700 font-medium">
             <Calendar className="w-3 h-3 text-amber-700 shrink-0" />
             <span>
               <strong className="text-slate-900">Plan:</strong> {validityText}
@@ -409,10 +409,10 @@ export default function SettingsHubPage() {
 
           <Link
             href="/app/settings/branding"
-            className="text-[10.5px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-0.5 bg-white/95 px-2 py-0.5 rounded-lg border border-amber-300/80 shadow-2xs transition group"
+            className="text-[10px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-0.5 bg-white/95 px-2 py-0.5 rounded-md border border-amber-300/80 shadow-2xs transition group"
           >
             <span>Edit Profile</span>
-            <ArrowUpRight className="w-3 h-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            <ArrowUpRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </div>
       </div>
