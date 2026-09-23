@@ -83,10 +83,26 @@ export async function initCloudSync(businessId: string) {
  * Pulls latest records (Bookings, Customers, Poojas) from Supabase into local store.
  */
 export async function pullFromCloud(businessId: string): Promise<boolean> {
+  // Check offline state
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:sync-state", {
+          detail: { state: "error", error: "இணைய இணைப்பு இல்லை (Offline)" },
+        })
+      );
+    }
+    return false;
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase || isSyncing) return false;
 
   isSyncing = true;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("velvi:sync-state", { detail: { state: "syncing" } }));
+  }
+
   try {
     // 1. Fetch Customers
     const { data: cloudCustomers, error: cErr } = await supabase
@@ -94,7 +110,11 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
       .select("*")
       .eq("business_id", businessId);
 
-    if (!cErr && Array.isArray(cloudCustomers) && cloudCustomers.length > 0) {
+    if (cErr) {
+      throw new Error(`Customers sync failed: ${cErr.message}`);
+    }
+
+    if (Array.isArray(cloudCustomers) && cloudCustomers.length > 0) {
       cloudCustomers.forEach((c) => {
         const mappedCust: Customer = {
           id: c.id,
@@ -126,7 +146,11 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
       .select("*")
       .eq("business_id", businessId);
 
-    if (!pErr && Array.isArray(cloudPoojas) && cloudPoojas.length > 0) {
+    if (pErr) {
+      throw new Error(`Poojas sync failed: ${pErr.message}`);
+    }
+
+    if (Array.isArray(cloudPoojas) && cloudPoojas.length > 0) {
       cloudPoojas.forEach((p) => {
         const mappedPooja: Pooja = {
           id: p.id,
@@ -159,7 +183,11 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
       .select("*")
       .eq("business_id", businessId);
 
-    if (!bErr && Array.isArray(cloudBookings) && cloudBookings.length > 0) {
+    if (bErr) {
+      throw new Error(`Bookings sync failed: ${bErr.message}`);
+    }
+
+    if (Array.isArray(cloudBookings) && cloudBookings.length > 0) {
       const mapped: Booking[] = cloudBookings.map((b) => ({
         id: b.id,
         bookingNumber: b.booking_number,
@@ -203,13 +231,46 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 
     db.saveToLocalStorage();
     db.notifyListeners();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:sync-state", { detail: { state: "synced" } }));
+    }
     return true;
-  } catch (err) {
+  } catch (err: any) {
     console.error("[CloudSync] Pull error:", err);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:sync-state", {
+          detail: {
+            state: "error",
+            error: err?.message || "மேகக்கணி ஒத்திசைவு தோல்வி (Sync Failed)",
+          },
+        })
+      );
+    }
     return false;
   } finally {
     isSyncing = false;
   }
+}
+
+/**
+ * Manually retries two-way cloud sync with user feedback.
+ */
+export async function retryCloudSync(businessId: string): Promise<{ ok: boolean; message?: string }> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    const error = "இணைய இணைப்பு இல்லை (Offline)";
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:sync-state", { detail: { state: "error", error } }));
+    }
+    return { ok: false, message: error };
+  }
+
+  const success = await pullFromCloud(businessId);
+  return {
+    ok: success,
+    message: success ? "ஒத்திசைவு வெற்றிகரமாக முடிந்தது!" : "ஒத்திசைவு தோல்வியடைந்தது.",
+  };
 }
 
 /**

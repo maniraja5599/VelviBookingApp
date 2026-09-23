@@ -23,11 +23,13 @@ import {
   Flame,
   AlertCircle,
   Clock,
+  WifiOff,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
 import { db } from "@/lib/db/store";
 import { getTamilDate } from "@/lib/calendar/tamil";
+import { retryCloudSync } from "@/lib/supabase/sync";
 
 export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl?: string }> = React.memo(({
   title,
@@ -38,7 +40,10 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced">("idle");
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("idle");
+  const [isOnline, setIsOnline] = useState<boolean>(true);
+  const [syncErrorMsg, setSyncErrorMsg] = useState<string | null>(null);
+  const [isRetryingSync, setIsRetryingSync] = useState<boolean>(false);
   const [headerTickerIndex, setHeaderTickerIndex] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -144,21 +149,63 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [tomorrowStr]);
 
-  // Listen for real-time cloud sync / database change events to trigger animated status ticker
+  // Listen for real-time cloud sync, online/offline, and database change events
   useEffect(() => {
+    // Initial connectivity check
+    if (typeof navigator !== "undefined") {
+      const online = navigator.onLine;
+      setIsOnline(online);
+      if (!online) {
+        setSyncState("error");
+        setSyncErrorMsg("இணைய இணைப்பு இல்லை (Offline)");
+      }
+    }
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setSyncState("syncing");
+      setSyncErrorMsg(null);
+      if (currentBusiness?.id) {
+        retryCloudSync(currentBusiness.id);
+      }
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setSyncState("error");
+      setSyncErrorMsg("இணைய இணைப்பு இல்லை (Offline)");
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
     const handleSyncTrigger = (e?: Event) => {
-      const customEvent = e as CustomEvent<{ state?: "syncing" | "synced" | "idle" }>;
+      const customEvent = e as CustomEvent<{ state?: "syncing" | "synced" | "idle" | "error"; error?: string }>;
       const explicitState = customEvent?.detail?.state;
+      const errorDetail = customEvent?.detail?.error;
 
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
       }
 
+      if (explicitState === "error" || errorDetail) {
+        setSyncState("error");
+        setSyncErrorMsg(errorDetail || "மேகக்கணி ஒத்திசைவு பிழை");
+        return;
+      }
+
       if (explicitState === "synced") {
         setSyncState("synced");
+        setSyncErrorMsg(null);
         syncTimeoutRef.current = setTimeout(() => {
           setSyncState("idle");
         }, 2200);
+        return;
+      }
+
+      if (explicitState === "syncing") {
+        setSyncState("syncing");
+        setSyncErrorMsg(null);
         return;
       }
 
@@ -176,13 +223,15 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     window.addEventListener("velvi:sync-state", handleSyncTrigger);
 
     return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
       window.removeEventListener("velvi:db-change", handleSyncTrigger);
       window.removeEventListener("velvi:sync-state", handleSyncTrigger);
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
       }
     };
-  }, []);
+  }, [currentBusiness?.id]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -339,99 +388,187 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl transition active:scale-95 border max-w-[155px] sm:max-w-[200px] shrink-0 ${
                   isProfileMenuOpen
                     ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
+                    : !isOnline || syncState === "error"
+                    ? "bg-rose-50 border-rose-300 text-rose-950 ring-1 ring-rose-300 shadow-2xs"
                     : syncState === "syncing"
                     ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
                     : syncState === "synced"
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
-                  : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
-              }`}
-              title="User Profile & Sync Status"
-              aria-expanded={isProfileMenuOpen}
-            >
-              {/* Priest Avatar with Google Profile Picture or Sacred Icon Badge */}
-              {currentUser?.avatarUrl ? (
-                <img
-                  src={currentUser.avatarUrl}
-                  alt={displayName}
-                  className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
-                />
-              ) : (
-                <div className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
-                  <User className="w-3 h-3 text-amber-300 stroke-[2.5]" />
-                </div>
-              )}
-
-              {/* Smooth Vertical Scroll-up Animated Ticker (Compact & No Screen Overflow) */}
-              <div className="flex-1 min-w-0 h-[18px] overflow-hidden relative">
-                <div
-                  className="transition-transform duration-300 ease-out"
-                  style={{
-                    transform:
-                      syncState === "syncing"
-                        ? "translateY(-18px)"
-                        : syncState === "synced"
-                        ? "translateY(-36px)"
-                        : "translateY(0px)",
-                  }}
-                >
-                  {/* Slot 0: Priest Display Name with Live Online Pulse */}
-                  <div className="h-[18px] flex items-center gap-1 min-w-0">
-                    <span className="text-[11px] sm:text-[11.5px] font-extrabold truncate text-slate-900 text-left">
-                      {displayName}
-                    </span>
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"
-                      title="Cloud connected"
-                    />
-                  </div>
-
-                  {/* Slot 1: Syncing State (Spinning indicator) */}
-                  <div className="h-[18px] flex items-center gap-1 min-w-0 text-amber-800">
-                    <svg
-                      className="animate-spin w-2.5 h-2.5 text-amber-700 shrink-0"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
-                    </svg>
-                    <span className="text-[9.5px] font-extrabold truncate leading-none">
-                      Syncing
-                    </span>
-                  </div>
-
-                  {/* Slot 2: Cloud Synced State (Emerald Checkmark) */}
-                  <div className="h-[18px] flex items-center gap-1 min-w-0 text-emerald-800">
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0 stroke-[2.5]" />
-                    <span className="text-[9.5px] font-extrabold truncate leading-none">
-                      Synced
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <ChevronRight
-                className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
-                  isProfileMenuOpen ? "rotate-90 text-amber-800" : ""
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
+                    : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
                 }`}
-              />
-            </button>
+                title={
+                  !isOnline
+                    ? "இணைய இணைப்பு இல்லை (Offline)"
+                    : syncState === "error"
+                    ? `Cloud Sync Error: ${syncErrorMsg || "Failed"}`
+                    : "User Profile & Sync Status"
+                }
+                aria-expanded={isProfileMenuOpen}
+              >
+                {/* Priest Avatar with Google Profile Picture or Sacred Icon Badge */}
+                {currentUser?.avatarUrl ? (
+                  <img
+                    src={currentUser.avatarUrl}
+                    alt={displayName}
+                    className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
+                  />
+                ) : (
+                  <div className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                    <User className="w-3 h-3 text-amber-300 stroke-[2.5]" />
+                  </div>
+                )}
 
-            {/* Profile Dropdown Menu */}
-            {isProfileMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
+                {/* Smooth Vertical Scroll-up Animated Ticker (Compact & No Screen Overflow) */}
+                <div className="flex-1 min-w-0 h-[18px] overflow-hidden relative">
+                  <div
+                    className="transition-transform duration-300 ease-out"
+                    style={{
+                      transform:
+                        syncState === "syncing"
+                          ? "translateY(-18px)"
+                          : syncState === "synced"
+                          ? "translateY(-36px)"
+                          : !isOnline || syncState === "error"
+                          ? "translateY(-54px)"
+                          : "translateY(0px)",
+                    }}
+                  >
+                    {/* Slot 0: Priest Display Name with Live Online / Offline Dot */}
+                    <div className="h-[18px] flex items-center gap-1 min-w-0">
+                      <span className="text-[11px] sm:text-[11.5px] font-extrabold truncate text-slate-900 text-left">
+                        {displayName}
+                      </span>
+                      {!isOnline || syncState === "error" ? (
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 ring-2 ring-rose-400/50 animate-pulse"
+                          title={syncErrorMsg || "Cloud sync offline / error"}
+                        />
+                      ) : (
+                        <span
+                          className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"
+                          title="Cloud connected"
+                        />
+                      )}
+                    </div>
+
+                    {/* Slot 1: Syncing State (Spinning indicator) */}
+                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-amber-800">
+                      <svg
+                        className="animate-spin w-2.5 h-2.5 text-amber-700 shrink-0"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      <span className="text-[9.5px] font-extrabold truncate leading-none">
+                        Syncing
+                      </span>
+                    </div>
+
+                    {/* Slot 2: Cloud Synced State (Emerald Checkmark) */}
+                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-emerald-800">
+                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0 stroke-[2.5]" />
+                      <span className="text-[9.5px] font-extrabold truncate leading-none">
+                        Synced
+                      </span>
+                    </div>
+
+                    {/* Slot 3: Cloud Sync Error State (Red Alert / Offline) */}
+                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-rose-700">
+                      <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0 animate-pulse" />
+                      <span className="text-[9.5px] font-black truncate leading-none text-rose-700">
+                        {!isOnline ? "Offline" : "Sync Error"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <ChevronRight
+                  className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
+                    isProfileMenuOpen ? "rotate-90 text-amber-800" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
+                  {/* Dedicated Cloud Sync Status Banner with Exact Error Display & Retry */}
+                  <div
+                    className={`p-2.5 rounded-2xl border text-xs shadow-2xs space-y-1.5 ${
+                      !isOnline || syncState === "error"
+                        ? "bg-rose-50/90 border-rose-300 text-rose-950"
+                        : syncState === "syncing"
+                        ? "bg-amber-50 border-amber-300 text-amber-950"
+                        : "bg-emerald-50/80 border-emerald-200 text-emerald-950"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                            !isOnline || syncState === "error"
+                              ? "bg-rose-600 ring-2 ring-rose-300 animate-ping"
+                              : syncState === "syncing"
+                              ? "bg-amber-500 animate-spin"
+                              : "bg-emerald-600"
+                          }`}
+                        />
+                        <span className="font-extrabold text-[11px] truncate">
+                          {!isOnline
+                            ? "இணைய இணைப்பு இல்லை (Offline)"
+                            : syncState === "error"
+                            ? "மேகக்கணி ஒத்திசைவு பிழை"
+                            : syncState === "syncing"
+                            ? "ஒத்திசைக்கப்படுகிறது..."
+                            : "மேகக்கணி பாதுகாப்பானது (Synced)"}
+                        </span>
+                      </div>
+
+                      {(!isOnline || syncState === "error") && (
+                        <button
+                          type="button"
+                          disabled={isRetryingSync}
+                          onClick={async () => {
+                            setIsRetryingSync(true);
+                            setSyncState("syncing");
+                            if (currentBusiness?.id) {
+                              const res = await retryCloudSync(currentBusiness.id);
+                              if (!res.ok) {
+                                setSyncState("error");
+                                setSyncErrorMsg(res.message || "Retry failed");
+                              }
+                            }
+                            setIsRetryingSync(false);
+                          }}
+                          className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[9.5px] font-black transition active:scale-95 shadow-2xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
+                        >
+                          <RotateCcw className={`w-2.5 h-2.5 ${isRetryingSync ? "animate-spin" : ""}`} />
+                          <span>{isRetryingSync ? "..." : "மீண்டும் ஒத்திசை"}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {(!isOnline || syncState === "error") && syncErrorMsg && (
+                      <div className="bg-white/95 p-2 rounded-xl border border-rose-200 text-[10.5px] font-bold text-rose-800 flex items-start gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                        <span className="break-words leading-tight">{syncErrorMsg}</span>
+                      </div>
+                    )}
+                  </div>
                 {/* User Info Header */}
                 <div className="p-3 bg-gradient-to-br from-amber-50/90 to-amber-100/40 rounded-2xl border border-amber-200/70">
                   <div className="flex items-center gap-2.5">
