@@ -308,3 +308,30 @@ export interface AuditLog {
   ipAddress?: string;
   createdAt: string;
 }
+
+export type CouponDiscountType = "FREE_VALIDITY" | "PERCENTAGE" | "FLAT";
+
+export interface Coupon {
+  id: string;
+  code: string;
+  description: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  validityDaysBonus: number;
+  maxUses: number;
+  usedCount: number;
+  validUntil: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface UserDirectoryMetric {
+  user: User;
+  business?: Business;
+  subscription?: Subscription;
+  bookingCount: number;
+  completedBookingsCount: number;
+  totalEarnings: number;
+  joinedDate: string;
+  isSuperAdmin: boolean;
+}

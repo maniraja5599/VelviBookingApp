@@ -655,8 +655,8 @@ export default function SettingsHubPage() {
         ))}
       </div>
 
-      {/* Super Admin Portal (ONLY VISIBLE FOR SUPER_ADMIN ROLE) */}
-      {currentUser?.role === "SUPER_ADMIN" && (
+      {/* Super Admin Portal (VISIBLE FOR SUPER_ADMIN ROLE & DEVELOPER) */}
+      {(currentUser?.role === "SUPER_ADMIN" || currentUser?.email?.toLowerCase() === "manirajankg@gmail.com") && (
         <Link
           href="/admin"
           className="block bg-gradient-to-r from-emerald-950 via-[#0d3b1e] to-emerald-950 p-3.5 rounded-2xl text-white shadow-md hover:opacity-95 transition"

@@ -20,6 +20,8 @@ import {
   BookingStatus,
   PaymentStatus,
   SamagriCategory,
+  Coupon,
+  CouponDiscountType,
 } from "@/lib/types";
 import {
   SEED_USER,
@@ -190,6 +192,72 @@ if (typeof window !== "undefined") {
   } catch (e) {}
 }
 
+export const DEFAULT_COUPONS: Coupon[] = [
+  {
+    id: "coup-01",
+    code: "VELVIPRO100",
+    description: "100% Free Velvi Pro Extension (Special Developer Pass)",
+    discountType: "FREE_VALIDITY",
+    discountValue: 100,
+    validityDaysBonus: 30,
+    maxUses: 1000,
+    usedCount: 0,
+    validUntil: "2030-12-31T23:59:59Z",
+    isActive: true,
+    createdAt: "2026-08-01T00:00:00Z",
+  },
+  {
+    id: "coup-02",
+    code: "DIWALI30",
+    description: "Festive Offer: +30 Days Free Bonus Validity",
+    discountType: "FREE_VALIDITY",
+    discountValue: 0,
+    validityDaysBonus: 30,
+    maxUses: 500,
+    usedCount: 0,
+    validUntil: "2027-12-31T23:59:59Z",
+    isActive: true,
+    createdAt: "2026-08-15T00:00:00Z",
+  },
+  {
+    id: "coup-03",
+    code: "FESTIVAL50",
+    description: "50% Flat Discount on Monthly & Annual Plans",
+    discountType: "PERCENTAGE",
+    discountValue: 50,
+    validityDaysBonus: 0,
+    maxUses: 200,
+    usedCount: 0,
+    validUntil: "2027-12-31T23:59:59Z",
+    isActive: true,
+    createdAt: "2026-08-20T00:00:00Z",
+  },
+  {
+    id: "coup-04",
+    code: "MANIDEV",
+    description: "Developer Special: 1-Year (365 Days) Free Pro Access",
+    discountType: "FREE_VALIDITY",
+    discountValue: 100,
+    validityDaysBonus: 365,
+    maxUses: 100,
+    usedCount: 0,
+    validUntil: "2030-12-31T23:59:59Z",
+    isActive: true,
+    createdAt: "2026-09-01T00:00:00Z",
+  },
+];
+
+export interface UserDirectoryMetric {
+  user: User;
+  business?: Business;
+  subscription?: Subscription;
+  bookingCount: number;
+  completedBookingsCount: number;
+  totalEarnings: number;
+  joinedDate: string;
+  isSuperAdmin: boolean;
+}
+
 export class VelviDatabaseStore {
   public platformSettings: PlatformSettings = {
     appName: "Velvi",
@@ -206,6 +274,7 @@ export class VelviDatabaseStore {
     maintenanceMode: false,
   };
 
+  public coupons: Coupon[] = structuredClone(DEFAULT_COUPONS);
   public samagriCategories: SamagriCategory[] = structuredClone(DEFAULT_SAMAGRI_CATEGORIES);
 
   public users: User[] = [
@@ -1628,6 +1697,7 @@ export class VelviDatabaseStore {
         auditLogs: this.auditLogs,
         referrals: this.referrals,
         referralRewards: this.referralRewards,
+        coupons: this.coupons,
         samagriCategories: this.samagriCategories,
         recentlyDeleted: this.recentlyDeleted,
       };
@@ -1712,6 +1782,9 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.referrals)) this.referrals = state.referrals;
         if (Array.isArray(state.referralRewards)) this.referralRewards = state.referralRewards;
         if (Array.isArray(state.recentlyDeleted)) this.recentlyDeleted = state.recentlyDeleted;
+        if (Array.isArray(state.coupons) && state.coupons.length > 0) {
+          this.coupons = state.coupons;
+        }
         if (Array.isArray(state.samagriCategories) && state.samagriCategories.length > 0) {
           this.samagriCategories = state.samagriCategories;
           DEFAULT_SAMAGRI_CATEGORIES.forEach((defCat) => {
@@ -2061,6 +2134,268 @@ export class VelviDatabaseStore {
       this.saveToLocalStorage();
     }
     this.notifyListeners();
+  }
+
+  // -------------------------------------------------------------
+  // SUPER ADMIN: DIRECTORY & EARNINGS METRICS
+  // -------------------------------------------------------------
+  public getAllUsersDirectoryMetrics(): UserDirectoryMetric[] {
+    return this.users.map((user) => {
+      const biz =
+        this.businesses.find((b) => b.ownerId === user.id) ||
+        (user.id === "u-ravi-iyer-01" ? this.businesses[0] : undefined);
+
+      const sub = biz
+        ? this.subscriptions.find((s) => s.businessId === biz.id) ||
+          (user.id === "u-ravi-iyer-01" ? this.subscriptions[0] : undefined)
+        : undefined;
+
+      const userBookings = this.bookings.filter((b) => {
+        if (biz && b.businessId === biz.id) return true;
+        if (b.assignedIyerId === user.id) return true;
+        return false;
+      });
+
+      const bookingCount = userBookings.length;
+      const completedBookings = userBookings.filter((b) => b.status === "COMPLETED");
+      const totalEarnings = userBookings.reduce(
+        (sum, b) => sum + (Number(b.totalAmount) || 0),
+        0
+      );
+
+      const isSuperAdmin =
+        user.role === "SUPER_ADMIN" ||
+        user.email.trim().toLowerCase() === "manirajankg@gmail.com";
+
+      return {
+        user,
+        business: biz,
+        subscription: sub,
+        bookingCount,
+        completedBookingsCount: completedBookings.length,
+        totalEarnings,
+        joinedDate: user.createdAt,
+        isSuperAdmin,
+      };
+    });
+  }
+
+  // -------------------------------------------------------------
+  // SUPER ADMIN: COUPON MANAGEMENT ENGINE
+  // -------------------------------------------------------------
+  public createCoupon(params: {
+    code: string;
+    description: string;
+    discountType: CouponDiscountType;
+    discountValue: number;
+    validityDaysBonus: number;
+    maxUses: number;
+    validUntil: string;
+    isActive?: boolean;
+  }): { success: boolean; coupon?: Coupon; error?: string } {
+    const cleanCode = params.code.trim().toUpperCase();
+    if (!cleanCode) return { success: false, error: "Coupon code is required" };
+
+    const existing = this.coupons.find((c) => c.code === cleanCode);
+    if (existing) return { success: false, error: "A coupon with this code already exists" };
+
+    const newCoupon: Coupon = {
+      id: `coup-${Date.now()}`,
+      code: cleanCode,
+      description: params.description.trim(),
+      discountType: params.discountType,
+      discountValue: params.discountValue,
+      validityDaysBonus: params.validityDaysBonus || 0,
+      maxUses: params.maxUses || 100,
+      usedCount: 0,
+      validUntil: params.validUntil,
+      isActive: params.isActive !== false,
+      createdAt: new Date().toISOString(),
+    };
+
+    this.coupons.unshift(newCoupon);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return { success: true, coupon: newCoupon };
+  }
+
+  public toggleCouponStatus(couponId: string): boolean {
+    const coup = this.coupons.find((c) => c.id === couponId);
+    if (!coup) return false;
+    coup.isActive = !coup.isActive;
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return true;
+  }
+
+  public deleteCoupon(couponId: string): boolean {
+    const idx = this.coupons.findIndex((c) => c.id === couponId);
+    if (idx === -1) return false;
+    this.coupons.splice(idx, 1);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return true;
+  }
+
+  public validateCoupon(
+    rawCode: string,
+    cycle: "MONTHLY" | "YEARLY"
+  ): {
+    valid: boolean;
+    error?: string;
+    coupon?: Coupon;
+    originalAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+    bonusDays: number;
+  } {
+    const baseAmount = cycle === "MONTHLY" ? 499 : 4999;
+    const cleanCode = (rawCode || "").trim().toUpperCase();
+    if (!cleanCode) {
+      return {
+        valid: false,
+        error: "Please enter a coupon code",
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        bonusDays: 0,
+      };
+    }
+
+    const coup = this.coupons.find((c) => c.code === cleanCode);
+    if (!coup) {
+      return {
+        valid: false,
+        error: "Invalid or non-existent coupon code",
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        bonusDays: 0,
+      };
+    }
+
+    if (!coup.isActive) {
+      return {
+        valid: false,
+        error: "This coupon is currently inactive",
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        bonusDays: 0,
+      };
+    }
+
+    if (coup.usedCount >= coup.maxUses) {
+      return {
+        valid: false,
+        error: "This coupon has reached its maximum usage limit",
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        bonusDays: 0,
+      };
+    }
+
+    if (coup.validUntil && new Date(coup.validUntil).getTime() < Date.now()) {
+      return {
+        valid: false,
+        error: "This coupon has expired",
+        originalAmount: baseAmount,
+        discountAmount: 0,
+        finalAmount: baseAmount,
+        bonusDays: 0,
+      };
+    }
+
+    let discountAmount = 0;
+    if (coup.discountType === "FREE_VALIDITY") {
+      discountAmount = baseAmount; // 100% discount
+    } else if (coup.discountType === "PERCENTAGE") {
+      discountAmount = Math.round((baseAmount * coup.discountValue) / 100);
+    } else if (coup.discountType === "FLAT") {
+      discountAmount = Math.min(baseAmount, coup.discountValue);
+    }
+
+    const finalAmount = Math.max(0, baseAmount - discountAmount);
+    const bonusDays = coup.validityDaysBonus || 0;
+
+    return {
+      valid: true,
+      coupon: coup,
+      originalAmount: baseAmount,
+      discountAmount,
+      finalAmount,
+      bonusDays,
+    };
+  }
+
+  public redeemCoupon(params: {
+    code: string;
+    businessId: string;
+    cycle: "MONTHLY" | "YEARLY";
+    userId?: string;
+  }): {
+    success: boolean;
+    error?: string;
+    subscription?: Subscription;
+    daysAdded?: number;
+    finalAmount?: number;
+    coupon?: Coupon;
+  } {
+    const validation = this.validateCoupon(params.code, params.cycle);
+    if (!validation.valid || !validation.coupon) {
+      return { success: false, error: validation.error || "Invalid coupon" };
+    }
+
+    const coup = validation.coupon;
+    coup.usedCount += 1;
+
+    const baseCycleDays = params.cycle === "MONTHLY" ? 30 : 365;
+    const totalDaysToAdd = baseCycleDays + (coup.validityDaysBonus || 0);
+
+    const adjustResult = this.adjustSubscriptionValidity({
+      businessId: params.businessId,
+      adminUserId: params.userId || "u-super-admin-01",
+      adminName: `Coupon: ${coup.code}`,
+      adjustmentType: "EXTEND",
+      days: totalDaysToAdd,
+      reason: `Coupon ${coup.code} applied (${coup.description}) - Added ${totalDaysToAdd} days`,
+    });
+
+    if (!adjustResult.success) {
+      return { success: false, error: adjustResult.error || "Failed to extend subscription" };
+    }
+
+    // Record in payments ledger
+    this.payments.push({
+      id: `pay-${Date.now()}`,
+      businessId: params.businessId,
+      userId: params.userId || "u-priest-01",
+      orderId: `coupon_${coup.code}_${Date.now()}`,
+      gateway: "CASHFREE",
+      gatewayPaymentId: `promo_${coup.code}`,
+      amount: validation.finalAmount,
+      currency: "INR",
+      status: "SUCCESS",
+      billingCycle: params.cycle,
+      paymentMethod:
+        validation.finalAmount === 0
+          ? "Coupon 100% Free"
+          : `Coupon ${coup.code} Discounted`,
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return {
+      success: true,
+      subscription: adjustResult.subscription,
+      daysAdded: totalDaysToAdd,
+      finalAmount: validation.finalAmount,
+      coupon: coup,
+    };
   }
 }
 

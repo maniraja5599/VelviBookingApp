@@ -16,13 +16,13 @@ export const SEED_USER: User = {
 export const SEED_SUPER_ADMIN: User = {
   id: "u-super-admin-01",
   googleId: "google-admin-9999",
-  email: "admin@velvi.app",
-  name: "Velvi Admin",
+  email: "manirajankg@gmail.com",
+  name: "Maniraja (Super Admin)",
   avatarUrl: "",
-  mobile: "+919999999999",
+  mobile: "+918300030123",
   mobileVerified: true,
   role: "SUPER_ADMIN",
-  referralCode: "VELVI-ADMIN",
+  referralCode: "VELVI-MANI-DEV",
   createdAt: "2026-01-01T00:00:00Z",
 };
 

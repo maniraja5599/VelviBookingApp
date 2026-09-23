@@ -1558,6 +1558,116 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const afterEnd = new Date(adjustRes.subscription!.currentPeriodEnd).getTime();
     expect(afterEnd).toBeGreaterThan(beforeEnd);
   });
+
+  // TEST CASE 51: Super Admin Directory & Vadhyar Earnings Metrics
+  it("Test 51: Super Admin directory metrics compute joined date, total bookings, and dakshina earnings", () => {
+    const metrics = store.getAllUsersDirectoryMetrics();
+    expect(metrics.length).toBeGreaterThan(0);
+
+    // Verify Ravi Iyer metrics
+    const raviMetric = metrics.find((m) => m.user.id === "u-ravi-iyer-01");
+    expect(raviMetric).toBeDefined();
+    expect(raviMetric!.bookingCount).toBeGreaterThan(0);
+    expect(raviMetric!.totalEarnings).toBeGreaterThan(0);
+    expect(raviMetric!.joinedDate).toBeDefined();
+
+    // Verify Super Admin identification
+    const superAdminMetric = metrics.find(
+      (m) => m.user.email.toLowerCase() === "manirajankg@gmail.com"
+    );
+    expect(superAdminMetric).toBeDefined();
+    expect(superAdminMetric!.isSuperAdmin).toBe(true);
+  });
+
+  // TEST CASE 52: Super Admin Coupon Management Engine
+  it("Test 52: Super Admin coupon engine creates, toggles, validates discounts and enforces limits", () => {
+    // 1. Create a percentage coupon
+    const createRes = store.createCoupon({
+      code: "TEST50",
+      description: "50% Test Discount",
+      discountType: "PERCENTAGE",
+      discountValue: 50,
+      validityDaysBonus: 15,
+      maxUses: 2,
+      validUntil: "2030-12-31T23:59:59Z",
+      isActive: true,
+    });
+    expect(createRes.success).toBe(true);
+    expect(createRes.coupon?.code).toBe("TEST50");
+
+    // 2. Validate monthly calculation
+    const valMonthly = store.validateCoupon("TEST50", "MONTHLY");
+    expect(valMonthly.valid).toBe(true);
+    expect(valMonthly.originalAmount).toBe(499);
+    expect(valMonthly.discountAmount).toBe(250); // Math.round(499 * 0.5)
+    expect(valMonthly.finalAmount).toBe(249);
+    expect(valMonthly.bonusDays).toBe(15);
+
+    // 3. Validate yearly calculation
+    const valYearly = store.validateCoupon("TEST50", "YEARLY");
+    expect(valYearly.valid).toBe(true);
+    expect(valYearly.originalAmount).toBe(4999);
+    expect(valYearly.discountAmount).toBe(2500); // Math.round(4999 * 0.5)
+    expect(valYearly.finalAmount).toBe(2499);
+
+    // 4. Test 100% Free Validity Coupon
+    const freeVal = store.validateCoupon("VELVIPRO100", "MONTHLY");
+    expect(freeVal.valid).toBe(true);
+    expect(freeVal.discountAmount).toBe(499);
+    expect(freeVal.finalAmount).toBe(0);
+    expect(freeVal.bonusDays).toBe(30);
+
+    // 5. Test Inactive Coupon
+    store.toggleCouponStatus(createRes.coupon!.id);
+    const valInactive = store.validateCoupon("TEST50", "MONTHLY");
+    expect(valInactive.valid).toBe(false);
+    expect(valInactive.error).toContain("inactive");
+
+    // Re-activate
+    store.toggleCouponStatus(createRes.coupon!.id);
+    expect(store.validateCoupon("TEST50", "MONTHLY").valid).toBe(true);
+  });
+
+  // TEST CASE 53: Coupon Redemption in Subscription Flow
+  it("Test 53: Redeeming coupon extends validity, increments usedCount, and logs payment", () => {
+    // 1. Create a 100% Free Developer coupon
+    store.createCoupon({
+      code: "MANISPECIAL",
+      description: "Developer 1-Year Free Pass",
+      discountType: "FREE_VALIDITY",
+      discountValue: 100,
+      validityDaysBonus: 365,
+      maxUses: 10,
+      validUntil: "2030-12-31T23:59:59Z",
+    });
+
+    const targetBizId = "biz-venkateswara-01";
+    const subBefore = store.subscriptions.find((s) => s.businessId === targetBizId)!;
+    const endBefore = new Date(subBefore.currentPeriodEnd).getTime();
+
+    // 2. Redeem coupon for monthly cycle
+    const redeemRes = store.redeemCoupon({
+      code: "MANISPECIAL",
+      businessId: targetBizId,
+      cycle: "MONTHLY",
+      userId: "u-super-admin-01",
+    });
+
+    expect(redeemRes.success).toBe(true);
+    expect(redeemRes.daysAdded).toBe(395); // 30 (monthly) + 365 (bonus)
+    expect(redeemRes.finalAmount).toBe(0);
+    expect(redeemRes.coupon?.usedCount).toBe(1);
+
+    const endAfter = new Date(redeemRes.subscription!.currentPeriodEnd).getTime();
+    const daysDiff = Math.round((endAfter - endBefore) / (1000 * 60 * 60 * 24));
+    expect(daysDiff).toBe(395);
+
+    // 3. Verify payment ledger entry
+    const lastPayment = store.payments[store.payments.length - 1];
+    expect(lastPayment.orderId).toContain("coupon_MANISPECIAL");
+    expect(lastPayment.amount).toBe(0);
+    expect(lastPayment.paymentMethod).toBe("Coupon 100% Free");
+  });
 });
 
 

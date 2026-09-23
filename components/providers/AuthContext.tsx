@@ -78,6 +78,10 @@ function getInitialAuthState(): {
     const user = db.users.find((u) => u.id === savedUserId) || null;
     if (!user) return { user: null, biz: null, sub: null };
 
+    if (user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+      user.role = "SUPER_ADMIN";
+    }
+
     let biz = db.businesses.find((b) => b.ownerId === user.id) || null;
     if (!biz && user.id === "u-ravi-iyer-01") {
       biz = db.businesses[0] || null;
@@ -157,7 +161,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    setCurrentUser(user);
+    if (user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+      user.role = "SUPER_ADMIN";
+    }
+
+    setCurrentUser({ ...user });
 
     if (user.role === "SUPER_ADMIN") {
       setCurrentBusiness(db.businesses[0]);
@@ -348,25 +356,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     async (email?: string, name?: string, avatarUrl?: string): Promise<User> => {
       setIsLoading(true);
       const targetEmail = (email || `priest.${Date.now().toString().slice(-6)}@gmail.com`).trim().toLowerCase();
-      const targetName = name || (targetEmail === "ravi.iyer@gmail.com" ? "Ravi Iyer" : "Vedic Priest");
+      const isSuperAdminEmail =
+        targetEmail === "manirajankg@gmail.com" || targetEmail === "admin@velvi.app";
+      const targetName =
+        name ||
+        (isSuperAdminEmail
+          ? "Maniraja (Super Admin)"
+          : targetEmail === "ravi.iyer@gmail.com"
+          ? "Ravi Iyer"
+          : "Vedic Priest");
 
       // Find existing or mock new Google user (case-insensitive email matching)
       let user = db.users.find((u) => u.email.trim().toLowerCase() === targetEmail);
       if (!user) {
         user = {
-          id: `u-${Date.now()}`,
+          id: isSuperAdminEmail ? "u-super-admin-01" : `u-${Date.now()}`,
           googleId: `google-${Date.now()}`,
           email: targetEmail,
           name: targetName,
           avatarUrl: avatarUrl || undefined,
-          mobile: "",
-          mobileVerified: false,
-          role: "OWNER",
-          referralCode: `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
+          mobile: isSuperAdminEmail ? "+918300030123" : "",
+          mobileVerified: isSuperAdminEmail,
+          role: isSuperAdminEmail ? "SUPER_ADMIN" : "OWNER",
+          referralCode: isSuperAdminEmail
+            ? "VELVI-MANI-DEV"
+            : `VELVI-${Math.floor(1000 + Math.random() * 9000)}`,
           createdAt: new Date().toISOString(),
         };
         db.users.push(user);
       } else {
+        if (isSuperAdminEmail) {
+          user.role = "SUPER_ADMIN";
+        }
         if (avatarUrl) {
           user.avatarUrl = avatarUrl;
         }

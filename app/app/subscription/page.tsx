@@ -6,7 +6,20 @@ import { db } from "@/lib/db/store";
 import { openCashfreeCheckout } from "@/lib/payments/cashfree-client";
 import confetti from "canvas-confetti";
 import Link from "next/link";
-import { Check, Sparkles, Shield, CreditCard, Clock, ArrowRight, ArrowLeft } from "lucide-react";
+import {
+  Check,
+  Sparkles,
+  Shield,
+  CreditCard,
+  Clock,
+  ArrowLeft,
+  Tag,
+  Gift,
+  Percent,
+  XCircle,
+  Copy,
+} from "lucide-react";
+import { Coupon } from "@/lib/types";
 
 export default function SubscriptionPage() {
   const { currentBusiness, currentUser, subscription, refreshSubscription } = useAuth();
@@ -17,6 +30,17 @@ export default function SubscriptionPage() {
   const [cashfreeStatus, setCashfreeStatus] = useState<{
     isConfigured: boolean;
     environment: string;
+  } | null>(null);
+
+  // Coupon Engine State
+  const [couponCodeInput, setCouponCodeInput] = useState("");
+  const [couponError, setCouponError] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscountInfo, setCouponDiscountInfo] = useState<{
+    originalAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+    bonusDays: number;
   } | null>(null);
 
   // Check Cashfree Gateway status
@@ -41,30 +65,44 @@ export default function SubscriptionPage() {
     year: "numeric",
   });
 
-  // Calculate projected new validity date based on current plan
+  // Calculate base & coupon-adjusted validity
   const baseRenewalDate = isCurrentlyActive ? endDate : now;
+  const baseCycleDays = selectedCycle === "MONTHLY" ? 30 : 365;
+  const baseCycleAmount = selectedCycle === "MONTHLY" ? 499 : 4999;
+  const bonusDays = couponDiscountInfo?.bonusDays || 0;
+  const totalDaysToAdd = baseCycleDays + bonusDays;
+  const payableAmount = couponDiscountInfo ? couponDiscountInfo.finalAmount : baseCycleAmount;
+  const isFreeRedemption = appliedCoupon !== null && payableAmount === 0;
 
-  const projectedMonthlyDate = new Date(baseRenewalDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const projectedYearlyDate = new Date(baseRenewalDate.getTime() + 365 * 24 * 60 * 60 * 1000);
-
-  const formattedProjectedMonthly = projectedMonthlyDate.toLocaleDateString("en-IN", {
+  const projectedDateObj = new Date(baseRenewalDate.getTime() + totalDaysToAdd * 24 * 60 * 60 * 1000);
+  const formattedProjectedDate = projectedDateObj.toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-
-  const formattedProjectedYearly = projectedYearlyDate.toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-
-  const selectedProjectedDate = selectedCycle === "MONTHLY" ? formattedProjectedMonthly : formattedProjectedYearly;
-  const selectedDaysAdded = selectedCycle === "MONTHLY" ? 30 : 365;
 
   const businessId =
     currentBusiness?.id ||
     (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "biz-default");
+
+  // Re-validate coupon when billing cycle toggles
+  React.useEffect(() => {
+    if (appliedCoupon) {
+      const val = db.validateCoupon(appliedCoupon.code, selectedCycle);
+      if (val.valid && val.coupon) {
+        setCouponDiscountInfo({
+          originalAmount: val.originalAmount,
+          discountAmount: val.discountAmount,
+          finalAmount: val.finalAmount,
+          bonusDays: val.bonusDays,
+        });
+      } else {
+        setAppliedCoupon(null);
+        setCouponDiscountInfo(null);
+        setCouponError(val.error || "Coupon not applicable for this plan");
+      }
+    }
+  }, [selectedCycle]);
 
   // Listen for Cashfree redirect return_url with order_id in query params (e.g. after UPI redirect)
   React.useEffect(() => {
@@ -78,7 +116,88 @@ export default function SubscriptionPage() {
     }
   }, []);
 
+  const handleApplyCoupon = (codeToApply?: string) => {
+    const code = (codeToApply || couponCodeInput).trim().toUpperCase();
+    if (!code) {
+      setCouponError("கூப்பன் குறியீட்டை உள்ளிடவும் (Please enter coupon code)");
+      return;
+    }
+    const val = db.validateCoupon(code, selectedCycle);
+    if (!val.valid || !val.coupon) {
+      setCouponError(val.error || "செல்லுபடியாகாத கூப்பன் குறியீடு (Invalid coupon code)");
+      setAppliedCoupon(null);
+      setCouponDiscountInfo(null);
+      return;
+    }
+
+    setAppliedCoupon(val.coupon);
+    setCouponDiscountInfo({
+      originalAmount: val.originalAmount,
+      discountAmount: val.discountAmount,
+      finalAmount: val.finalAmount,
+      bonusDays: val.bonusDays,
+    });
+    setCouponError("");
+    setCouponCodeInput(code);
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponDiscountInfo(null);
+    setCouponCodeInput("");
+    setCouponError("");
+  };
+
+  const handleRedeemFreeCoupon = async () => {
+    if (!appliedCoupon) return;
+    setIsProcessing(true);
+    setPaymentSuccessMessage("");
+
+    try {
+      const res = db.redeemCoupon({
+        code: appliedCoupon.code,
+        businessId,
+        cycle: selectedCycle,
+        userId: currentUser?.id || "u-priest-01",
+      });
+
+      if (res.success && res.subscription) {
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        } catch {}
+
+        refreshSubscription(res.subscription);
+        const newExpiry = new Date(res.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+
+        setPaymentSuccessMessage(
+          `கூப்பன் '${appliedCoupon.code}' வெற்றிகரமாக ஏற்கப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${res.daysAdded} நாட்கள் இலவசம்).`
+        );
+        handleRemoveCoupon();
+      } else {
+        setCouponError(res.error || "கூப்பன் பயன்படுத்த முடியவில்லை");
+      }
+    } catch (e: any) {
+      setCouponError(e.message || "Failed to redeem coupon");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleStartPayment = async () => {
+    // If 100% Free coupon is applied, redeem immediately without gateway redirect
+    if (isFreeRedemption) {
+      await handleRedeemFreeCoupon();
+      return;
+    }
+
     setIsProcessing(true);
     setPaymentSuccessMessage("");
 
@@ -162,20 +281,25 @@ export default function SubscriptionPage() {
             updatedSub = verifyData.subscription;
           }
         } else {
-          // If server didn't return subscription object, fallback to extending client db
-          const daysToAdd = selectedCycle === "MONTHLY" ? 30 : 365;
-          const res = db.adjustSubscriptionValidity({
+          const resAdj = db.adjustSubscriptionValidity({
             businessId,
-            adminUserId: "u-super-admin-01",
-            adminName: "Cashfree Payment Gateway",
+            adminUserId: currentUser?.id || "u-priest-01",
+            adminName: appliedCoupon ? `Cashfree + Coupon: ${appliedCoupon.code}` : "Cashfree Payment Gateway",
             adjustmentType: "EXTEND",
-            days: daysToAdd,
-            reason: `Cashfree verified payment (${selectedCycle})`,
+            days: totalDaysToAdd,
+            reason: appliedCoupon
+              ? `Cashfree verified payment of ₹${payableAmount} with Coupon ${appliedCoupon.code} (+${totalDaysToAdd} days)`
+              : `Cashfree verified payment (${selectedCycle})`,
           });
-          updatedSub = res.subscription;
+          updatedSub = resAdj.subscription;
         }
 
-        // 2. Add payment record to client db
+        // 2. Track coupon usage if coupon applied
+        if (appliedCoupon) {
+          appliedCoupon.usedCount += 1;
+        }
+
+        // 3. Add payment record to client db
         const existingPayment = db.payments.find((p) => p.orderId === oid);
         if (!existingPayment) {
           db.payments.push({
@@ -185,30 +309,31 @@ export default function SubscriptionPage() {
             orderId: oid,
             gateway: "CASHFREE",
             gatewayPaymentId: verifyData.gatewayPaymentId || `cf_${Date.now()}`,
-            amount: verifyData.amount || (selectedCycle === "MONTHLY" ? 499 : 4999),
+            amount: payableAmount,
             currency: "INR",
             status: "SUCCESS",
             billingCycle: selectedCycle,
+            paymentMethod: appliedCoupon ? `Cashfree (Coupon ${appliedCoupon.code})` : "Cashfree UPI/Card",
             createdAt: new Date().toISOString(),
           });
         }
 
-        // 3. Save to localStorage & broadcast
+        // 4. Save to localStorage & broadcast
         db.saveToLocalStorage();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new CustomEvent("velvi:db-change"));
         }
 
-        // 4. Confetti animation
+        // 5. Confetti animation
         try {
           confetti({
-            particleCount: 60,
-            spread: 60,
+            particleCount: 70,
+            spread: 65,
             origin: { y: 0.6 },
           });
         } catch {}
 
-        // 5. Refresh React AuthContext state immediately
+        // 6. Refresh React AuthContext state immediately
         refreshSubscription(updatedSub || undefined);
 
         const newExpiry = updatedSub?.currentPeriodEnd
@@ -217,25 +342,27 @@ export default function SubscriptionPage() {
               month: "short",
               year: "numeric",
             })
-          : selectedProjectedDate;
+          : formattedProjectedDate;
 
         setPaymentSuccessMessage(
-          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${selectedDaysAdded} நாட்கள்).`
+          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${totalDaysToAdd} நாட்கள்).`
         );
+        handleRemoveCoupon();
         setShowCheckoutModal(false);
       } else {
         // Local simulation fallback
-        const daysToAdd = selectedCycle === "MONTHLY" ? 30 : 365;
-        const amount = selectedCycle === "MONTHLY" ? 499 : 4999;
-
-        const res = db.adjustSubscriptionValidity({
+        const resAdj = db.adjustSubscriptionValidity({
           businessId,
-          adminUserId: "u-super-admin-01",
-          adminName: "Cashfree Webhook Gateway",
+          adminUserId: currentUser?.id || "u-priest-01",
+          adminName: appliedCoupon ? `Cashfree + Coupon: ${appliedCoupon.code}` : "Cashfree Webhook Gateway",
           adjustmentType: "EXTEND",
-          days: daysToAdd,
-          reason: `Cashfree verified payment of ₹${amount} (${selectedCycle})`,
+          days: totalDaysToAdd,
+          reason: `Cashfree verified payment of ₹${payableAmount} (${selectedCycle})${appliedCoupon ? ` with Coupon ${appliedCoupon.code}` : ""}`,
         });
+
+        if (appliedCoupon) {
+          appliedCoupon.usedCount += 1;
+        }
 
         db.payments.push({
           id: `pay-${Date.now()}`,
@@ -244,10 +371,11 @@ export default function SubscriptionPage() {
           orderId: oid,
           gateway: "CASHFREE",
           gatewayPaymentId: `cf_${Date.now()}`,
-          amount,
+          amount: payableAmount,
           currency: "INR",
           status: "SUCCESS",
           billingCycle: selectedCycle,
+          paymentMethod: appliedCoupon ? `Cashfree (Coupon ${appliedCoupon.code})` : "Cashfree UPI/Card",
           createdAt: new Date().toISOString(),
         });
         db.saveToLocalStorage();
@@ -258,24 +386,25 @@ export default function SubscriptionPage() {
 
         try {
           confetti({
-            particleCount: 60,
-            spread: 60,
+            particleCount: 70,
+            spread: 65,
             origin: { y: 0.6 },
           });
         } catch {}
 
-        refreshSubscription(res.subscription);
-        const newExpiry = res.subscription?.currentPeriodEnd
-          ? new Date(res.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
+        refreshSubscription(resAdj.subscription);
+        const newExpiry = resAdj.subscription?.currentPeriodEnd
+          ? new Date(resAdj.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
               year: "numeric",
             })
-          : selectedProjectedDate;
+          : formattedProjectedDate;
 
         setPaymentSuccessMessage(
-          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${selectedDaysAdded} நாட்கள்).`
+          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${totalDaysToAdd} நாட்கள்).`
         );
+        handleRemoveCoupon();
         setShowCheckoutModal(false);
       }
     } catch {
@@ -286,7 +415,7 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <div className="space-y-4 pb-20 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-20 animate-in fade-in duration-200 max-w-xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-3">
@@ -314,7 +443,7 @@ export default function SubscriptionPage() {
       </div>
 
       {paymentSuccessMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
+        <div className="bg-green-50 border border-green-200 text-green-800 p-3.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-2xs">
           <div className="flex items-center gap-2">
             <Check className="w-4 h-4 text-green-600 shrink-0" />
             <span className="font-semibold">{paymentSuccessMessage}</span>
@@ -322,14 +451,14 @@ export default function SubscriptionPage() {
           <button
             type="button"
             onClick={() => setPaymentSuccessMessage("")}
-            className="text-green-700 font-bold p-1 cursor-pointer"
+            className="text-green-700 font-bold p-1 cursor-pointer hover:opacity-75"
           >
             ✕
           </button>
         </div>
       )}
 
-      {/* Main Subscription Card (Matching Mockup Screen 14) */}
+      {/* Main Subscription Card */}
       <div className="bg-gradient-to-br from-velvi-creamLight to-velvi-cream rounded-3xl p-5 border border-velvi-gold/30 shadow-sacred space-y-4">
         <div className="flex items-center justify-between">
           <span
@@ -381,7 +510,7 @@ export default function SubscriptionPage() {
             <div className="w-4 h-4 rounded-full bg-velvi-sacredGreen/15 text-velvi-sacredGreen flex items-center justify-center">
               <Check className="w-3 h-3 stroke-[3]" />
             </div>
-            <span>Team &amp; Iyer Settlements</span>
+            <span>Team &amp; Iyer Dakshina Settlements</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -392,19 +521,39 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        {/* Extend Action */}
-        <button
-          type="button"
-          onClick={handleStartPayment}
-          disabled={isProcessing}
-          className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer disabled:opacity-60"
-        >
-          <Sparkles className="w-4 h-4 text-velvi-goldLight" />
-          <span>{isProcessing ? "Processing..." : "Extend Validity"}</span>
-        </button>
+        {/* Extend Action Button */}
+        {isFreeRedemption ? (
+          <button
+            type="button"
+            onClick={handleStartPayment}
+            disabled={isProcessing}
+            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer disabled:opacity-60"
+          >
+            <Gift className="w-4 h-4" />
+            <span>
+              {isProcessing
+                ? "செயல்படுத்துகிறது..."
+                : `🎁 Redeem Free Velvi Pro (+${totalDaysToAdd} Days)`}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleStartPayment}
+            disabled={isProcessing}
+            className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer disabled:opacity-60"
+          >
+            <Sparkles className="w-4 h-4 text-velvi-goldLight" />
+            <span>
+              {isProcessing
+                ? "Processing..."
+                : `Extend Validity • ₹${payableAmount} (+${totalDaysToAdd} Days)`}
+            </span>
+          </button>
+        )}
       </div>
 
-      {/* Plan Pricing Options (Point 13) */}
+      {/* Plan Pricing Options */}
       <div className="bg-white rounded-2xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
         <h4 className="font-bold text-xs text-velvi-brown/80 uppercase tracking-wide">
           Choose Renewal Cycle
@@ -424,7 +573,7 @@ export default function SubscriptionPage() {
             <div className="text-base font-extrabold text-velvi-brownDark mt-0.5">₹499</div>
             <div className="text-[10px] text-velvi-brown/70">Per month billed</div>
             <div className="text-[10px] font-semibold text-emerald-800 mt-1 pt-1 border-t border-velvi-gold/20">
-              Valid: <strong>{formattedProjectedMonthly}</strong>
+              +30 Days Pro
             </div>
           </button>
 
@@ -444,16 +593,151 @@ export default function SubscriptionPage() {
             <div className="text-base font-extrabold text-velvi-brownDark mt-0.5">₹4,999</div>
             <div className="text-[10px] text-velvi-sacredGreen font-semibold">17% Savings</div>
             <div className="text-[10px] font-semibold text-emerald-800 mt-1 pt-1 border-t border-velvi-gold/20">
-              Valid: <strong>{formattedProjectedYearly}</strong>
+              +365 Days Pro
             </div>
           </button>
         </div>
 
-        {/* Light Sub-info showing projected expiry date */}
+        {/* Projected Validity Information */}
         <div className="text-[11px] text-velvi-brown/80 bg-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/20 flex items-center justify-between">
           <span>புதிய செல்லுபடியாகும் தேதி (New Validity):</span>
-          <strong className="text-velvi-brownDark font-bold">{selectedProjectedDate} (+{selectedDaysAdded} days)</strong>
+          <strong className="text-velvi-brownDark font-bold">
+            {formattedProjectedDate} (+{totalDaysToAdd} days)
+          </strong>
         </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* COUPON & PROMO CODE ENGINE                                                */}
+      {/* ========================================================================= */}
+      <div className="bg-white rounded-2xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Tag className="w-4 h-4 text-velvi-goldDark" />
+            <h4 className="font-bold text-xs text-velvi-brownDark">
+              Promo / Coupon Code (கூப்பன் குறியீடு)
+            </h4>
+          </div>
+          {appliedCoupon && (
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+              Coupon Applied!
+            </span>
+          )}
+        </div>
+
+        {appliedCoupon ? (
+          /* Applied Coupon Banner */
+          <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 bg-emerald-600 text-white rounded-lg font-mono font-bold text-xs tracking-wider">
+                  {appliedCoupon.code}
+                </span>
+                <span className="text-emerald-800 font-semibold text-[11px]">
+                  {appliedCoupon.description}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleRemoveCoupon}
+                className="text-red-600 hover:text-red-700 text-xs font-bold underline cursor-pointer"
+              >
+                Remove
+              </button>
+            </div>
+
+            {/* Price & Days Breakdown */}
+            <div className="pt-2 border-t border-emerald-200/60 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+              <div>
+                <span className="text-gray-500 block">Original Price:</span>
+                <span className="font-bold line-through text-gray-400">
+                  ₹{couponDiscountInfo?.originalAmount}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Discount:</span>
+                <span className="font-bold text-emerald-700">
+                  -₹{couponDiscountInfo?.discountAmount}
+                  {appliedCoupon.discountType === "FREE_VALIDITY" && " (100% Free)"}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Validity Bonus:</span>
+                <span className="font-bold text-emerald-800">
+                  +{bonusDays} Days
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Payable Now:</span>
+                <span className="font-extrabold text-base text-emerald-900">
+                  ₹{payableAmount}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Coupon Input Form */
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponCodeInput}
+                onChange={(e) => {
+                  setCouponCodeInput(e.target.value.toUpperCase());
+                  setCouponError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleApplyCoupon();
+                  }
+                }}
+                placeholder="Enter code (e.g. VELVIPRO100, MANIDEV)"
+                className="flex-1 px-3 py-2 bg-velvi-cream/30 border border-velvi-gold/30 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-velvi-brownDark placeholder:normal-case placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-velvi-gold"
+              />
+              <button
+                type="button"
+                onClick={() => handleApplyCoupon()}
+                className="px-4 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition active:scale-95 cursor-pointer shadow-xs"
+              >
+                Apply
+              </button>
+            </div>
+
+            {couponError && (
+              <p className="text-[11px] text-red-600 font-medium flex items-center gap-1">
+                <span>⚠️ {couponError}</span>
+              </p>
+            )}
+
+            {/* Quick Available Promo Suggestions */}
+            <div className="pt-2">
+              <span className="text-[10px] font-bold text-velvi-brown/60 uppercase tracking-wide block mb-1.5">
+                Special Offers &amp; Promo Codes:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { code: "VELVIPRO100", label: "100% Free Pass", badge: "FREE" },
+                  { code: "MANIDEV", label: "+365d Dev Bonus", badge: "1 YEAR" },
+                  { code: "FESTIVAL50", label: "50% Discount", badge: "50% OFF" },
+                  { code: "DIWALI30", label: "+30d Festive", badge: "+30 DAYS" },
+                ].map((promo) => (
+                  <button
+                    key={promo.code}
+                    type="button"
+                    onClick={() => handleApplyCoupon(promo.code)}
+                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-velvi-brownDark rounded-lg text-[10px] font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <span className="font-mono font-bold text-amber-900">{promo.code}</span>
+                    <span className="text-[9px] bg-amber-200/80 px-1 py-0.2 rounded text-amber-950 font-bold">
+                      {promo.badge}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Cashfree Checkout Modal */}
@@ -474,23 +758,32 @@ export default function SubscriptionPage() {
               </button>
             </div>
 
-            <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20 text-xs space-y-1">
+            <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20 text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-velvi-brown/60">Plan:</span>
                 <span className="font-bold text-velvi-brownDark">
                   Velvi Pro ({selectedCycle})
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-velvi-brown/60">Amount:</span>
-                <span className="font-extrabold text-velvi-brownDark">
-                  ₹{selectedCycle === "MONTHLY" ? "499" : "4,999"}
+
+              {appliedCoupon && (
+                <div className="flex justify-between text-emerald-800">
+                  <span>Coupon ({appliedCoupon.code}):</span>
+                  <span className="font-bold">-₹{couponDiscountInfo?.discountAmount}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between pt-1 border-t border-velvi-gold/20">
+                <span className="text-velvi-brown/60">Total Payable:</span>
+                <span className="font-extrabold text-base text-velvi-brownDark">
+                  ₹{payableAmount}
                 </span>
               </div>
+
               <div className="flex justify-between">
                 <span className="text-velvi-brown/60">New Validity:</span>
                 <span className="font-bold text-emerald-800">
-                  {selectedProjectedDate} (+{selectedDaysAdded} days)
+                  {formattedProjectedDate} (+{totalDaysToAdd} days)
                 </span>
               </div>
               <div className="flex justify-between">
@@ -500,7 +793,7 @@ export default function SubscriptionPage() {
             </div>
 
             <p className="text-[11px] text-velvi-brown/60 leading-normal">
-              🔒 Cashfree நேரடி Payment Gateway வழி செலுத்துதல். தற்போதைய சந்தா முடிவடைந்த நாளிலிருந்து மேலும் {selectedDaysAdded} நாட்கள் நீட்டிக்கப்படும்.
+              🔒 Cashfree நேரடி Payment Gateway வழி செலுத்துதல். தற்போதைய சந்தா முடிவடைந்த நாளிலிருந்து மேலும் {totalDaysToAdd} நாட்கள் நீட்டிக்கப்படும்.
             </p>
 
             <div className="space-y-2 pt-1">
@@ -511,7 +804,9 @@ export default function SubscriptionPage() {
                 className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-98 cursor-pointer disabled:opacity-60"
               >
                 <CreditCard className="w-4 h-4 text-velvi-goldLight" />
-                <span>{isProcessing ? "Verifying..." : "Confirm & Pay via Cashfree"}</span>
+                <span>
+                  {isProcessing ? "Verifying..." : `Confirm & Pay ₹${payableAmount} via Cashfree`}
+                </span>
               </button>
 
               <button
