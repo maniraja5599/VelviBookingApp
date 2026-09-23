@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
-import { db } from "@/lib/db/store";
+import { db, isLegacyObsoletePooja } from "@/lib/db/store";
 import { Booking, Customer, Pooja, BookingItem, BusinessMember, PaymentStatus } from "@/lib/types";
 import {
   ArrowLeft,
@@ -72,7 +72,7 @@ function QuickBookingContent() {
 
   useEffect(() => {
     setCustomers(db.getCustomers(businessId));
-    setPoojas(db.getPoojas(businessId));
+    setPoojas(db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p)));
     setAllMembers(db.getMembers(businessId));
   }, [businessId]);
 

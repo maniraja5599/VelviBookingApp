@@ -1342,12 +1342,12 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       expect(p.items.every((it) => it.poojaId === p.id)).toBe(true);
     }
 
-    // If an obsolete dummy pooja is present in store, getPoojas purges it
+    // If an obsolete dummy pooja is present in store (e.g. tenant-suffixed or name-based), getPoojas purges it
     store.poojas.push({
-      id: "p-sathyanarayana-05",
+      id: "p-sathyanarayana-05-biz-priest-77",
       businessId: "biz-venkateswara-01",
       englishName: "Legacy Pooja",
-      tamilName: "பழைய பூஜை",
+      tamilName: "சத்தியநாராயண பூஜை",
       description: "Old",
       durationMinutes: 60,
       basePrice: 1000,
@@ -1356,14 +1356,29 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       createdAt: new Date().toISOString(),
     });
 
+    store.poojas.push({
+      id: "p-random-custom-999",
+      businessId: "biz-venkateswara-01",
+      englishName: "Navagraha Homam",
+      tamilName: "நவகிரக ஹோமம்",
+      description: "Old Navagraha",
+      durationMinutes: 60,
+      basePrice: 2000,
+      active: true,
+      items: [],
+      createdAt: new Date().toISOString(),
+    });
+
     const refreshed = store.getPoojas("biz-venkateswara-01");
-    expect(refreshed.some((p) => p.id === "p-sathyanarayana-05")).toBe(false);
+    expect(refreshed.some((p) => p.id === "p-sathyanarayana-05-biz-priest-77")).toBe(false);
+    expect(refreshed.some((p) => p.tamilName.includes("சத்தியநாராயண"))).toBe(false);
+    expect(refreshed.some((p) => p.tamilName.includes("நவகிரக ஹோமம்"))).toBe(false);
     expect(refreshed.length).toBe(8);
 
     // Custom pooja created by user is preserved
     const custom = store.createPooja({
       businessId: newBizId,
-      englishName: "Custom Temple Special Pooja",
+      englishName: "Custom Special Pooja",
       tamilName: "கோவில் சிறப்பு பூஜை",
       basePrice: 5000,
     });

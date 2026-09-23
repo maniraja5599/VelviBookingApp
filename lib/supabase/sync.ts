@@ -1,5 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./client";
-import { db } from "@/lib/db/store";
+import { db, isLegacyObsoletePooja } from "@/lib/db/store";
 import { Booking, Customer, Pooja, Payment } from "@/lib/types";
 
 let isSyncing = false;
@@ -141,6 +141,9 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
           items: p.items || [],
           createdAt: p.created_at,
         };
+        if (isLegacyObsoletePooja(mappedPooja)) {
+          return;
+        }
         const idx = db.poojas.findIndex((item) => item.id === mappedPooja.id);
         if (idx >= 0) {
           db.poojas[idx] = { ...db.poojas[idx], ...mappedPooja };
@@ -473,6 +476,10 @@ function handleCloudPoojaChange(payload: any) {
       items: p.items || [],
       createdAt: p.created_at,
     };
+
+    if (isLegacyObsoletePooja(updated)) {
+      return;
+    }
 
     if (existingIndex >= 0) {
       db.poojas[existingIndex] = updated;

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { useLanguage } from "@/components/providers/LanguageContext";
-import { db } from "@/lib/db/store";
+import { db, isLegacyObsoletePooja } from "@/lib/db/store";
 import { Pooja, PoojaItemTemplate, Booking } from "@/lib/types";
 import {
   Flame,
@@ -592,10 +592,10 @@ function PoojasCatalogueContent() {
   const [selectedPooja, setSelectedPooja] = useState<Pooja | null>(null);
 
   useEffect(() => {
-    setPoojas(db.getPoojas(businessId));
+    setPoojas(db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p)));
     setBookings(db.getBookings(businessId));
     const handleDbChange = () => {
-      setPoojas([...db.getPoojas(businessId)]);
+      setPoojas([...db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p))]);
       setBookings([...db.getBookings(businessId)]);
     };
     window.addEventListener("velvi:db-change", handleDbChange);
@@ -695,12 +695,14 @@ function PoojasCatalogueContent() {
   const [deletingPooja, setDeletingPooja] = useState<Pooja | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
 
-  const filteredPoojas = poojas.filter(
-    (p) =>
-      p.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.tamilName && p.tamilName.includes(searchQuery)) ||
-      (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredPoojas = poojas
+    .filter((p) => !isLegacyObsoletePooja(p))
+    .filter(
+      (p) =>
+        p.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.tamilName && p.tamilName.includes(searchQuery)) ||
+        (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
 
   // Booking statistics per pooja and top performed pooja
   const poojaBookingStats = useMemo(() => {
