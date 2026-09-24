@@ -827,7 +827,7 @@ export default function SuperAdminDashboardPage() {
           { id: "overview", label: "Overview", icon: LayoutDashboard },
           {
             id: "directory",
-            label: "Vadhyars & Earnings",
+            label: "Users & Directory",
             icon: Users,
             badge: totalUsersCount,
           },
@@ -881,12 +881,12 @@ export default function SuperAdminDashboardPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
               <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
-                <span>Total Vadhyars</span>
+                <span>Total Users</span>
                 <Users className="w-3.5 h-3.5 text-amber-400" />
               </div>
               <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white">{realUsersCount}</div>
               <div className="text-[10px] sm:text-[11px] text-amber-400/90 font-medium truncate">
-                Real Priests ({demoDirectoryMetrics.length} Demo)
+                Registered Users ({demoDirectoryMetrics.length} Demo)
               </div>
             </div>
 
@@ -909,7 +909,7 @@ export default function SuperAdminDashboardPage() {
                 <Activity className="w-3.5 h-3.5 text-amber-400" />
               </div>
               <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-300">{realBookingsCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">Real Priests data</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">Live Bookings data</div>
             </div>
 
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
@@ -1061,7 +1061,7 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setActiveTab("directory")}
                 className="w-full mt-3 py-2 bg-zinc-800/80 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700/80 text-center transition cursor-pointer"
               >
-                View Full Vadhyar Directory →
+                View Full Users Directory →
               </button>
             </div>
           </div>
@@ -1160,7 +1160,7 @@ export default function SuperAdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* SUB-TAB 2: VADHYAR DIRECTORY & EARNINGS                                */}
+      {/* SUB-TAB 2: USER DIRECTORY & EARNINGS                                  */}
       {/* ===================================================================== */}
       {activeTab === "directory" && (
         <div className="space-y-4">
@@ -1211,7 +1211,7 @@ export default function SuperAdminDashboardPage() {
                       </span>
                     </h3>
                     <p className="text-[11px] text-slate-400">
-                      Super Admin has full access. Promoted team members have Edit-Only access to assist priests and manage validity.
+                      Super Admin has full access. Promoted team members have Edit-Only access to assist users and manage validity.
                     </p>
                   </div>
                 </div>
@@ -1309,7 +1309,7 @@ export default function SuperAdminDashboardPage() {
           <div className="sm:hidden space-y-3">
             {filteredMetrics.length === 0 ? (
               <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-zinc-800">
-                No vadhyars found matching &quot;{directorySearch}&quot;
+                No users found matching &quot;{directorySearch}&quot;
               </div>
             ) : (
               filteredMetrics.map((item) => {
@@ -1337,7 +1337,7 @@ export default function SuperAdminDashboardPage() {
                     key={item.user.id}
                     className="bg-[#0f172a]/90 rounded-2xl border border-zinc-800 p-3.5 space-y-3 shadow-md"
                   >
-                    {/* Top: Name + Super Admin / Editor Admin / Priest Badge + Status Pill */}
+                    {/* Top: Name + Super Admin / Editor Admin / User Badge + Status Pill */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
@@ -1352,7 +1352,7 @@ export default function SuperAdminDashboardPage() {
                             </span>
                           ) : (
                             <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
-                              🪔 Priest
+                              {item.user.role === "IYER" ? "🪔 Priest" : "👤 User"}
                             </span>
                           )}
                           {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
@@ -1362,7 +1362,7 @@ export default function SuperAdminDashboardPage() {
                           )}
                         </div>
                         <div className="text-[11px] text-amber-400/90 font-medium">
-                          {biz?.name || "Independent Practitioner"}
+                          {biz?.name || "Services"}
                         </div>
                       </div>
 
@@ -1482,7 +1482,7 @@ export default function SuperAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-300 min-w-[800px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
-                    <th className="p-4">Vadhyar &amp; Business</th>
+                    <th className="p-4">User &amp; Business</th>
                     <th className="p-4">IP &amp; Location</th>
                     <th className="p-4">Joined Date</th>
                     <th className="p-4">Bookings</th>
@@ -1496,7 +1496,7 @@ export default function SuperAdminDashboardPage() {
                   {filteredMetrics.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-slate-400">
-                        No vadhyars found matching &quot;{directorySearch}&quot;
+                        No users found matching &quot;{directorySearch}&quot;
                       </td>
                     </tr>
                   ) : (
@@ -1537,7 +1537,7 @@ export default function SuperAdminDashboardPage() {
                                 </span>
                               ) : (
                                 <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
-                                  🪔 Priest
+                                  {item.user.role === "IYER" ? "🪔 Priest" : "👤 User"}
                                 </span>
                               )}
                               {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
@@ -1547,7 +1547,7 @@ export default function SuperAdminDashboardPage() {
                               )}
                             </div>
                             <div className="text-[11px] text-amber-400/90 font-medium">
-                              {biz?.name || "Independent Practitioner"}
+                              {biz?.name || "Services"}
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono">
                               {item.user.mobile} • {item.user.email}
@@ -3244,14 +3244,14 @@ export default function SuperAdminDashboardPage() {
               {/* User & Contact Information */}
               <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
                 <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
-                  1. Vadhyar Profile &amp; Contact
+                  1. User Profile &amp; Contact
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">Priest Name:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Name:</span>
                     <strong className="text-white font-semibold">
-                      {selectedLedgerEntry.user?.name || selectedLedgerEntry.biz?.name || "Independent"}
+                      {selectedLedgerEntry.user?.name || selectedLedgerEntry.biz?.name || "User"}
                     </strong>
                   </div>
 

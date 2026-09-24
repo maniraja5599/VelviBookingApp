@@ -37,7 +37,7 @@ export default function LoginPage() {
   const [googleUser, setGoogleUser] = useState<GoogleUserPayload | null>(null);
 
   // Profile setup state
-  const [priestName, setPriestName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -154,7 +154,7 @@ export default function LoginPage() {
   const processGoogleUser = async (userPayload: GoogleUserPayload) => {
     const user = await loginWithGoogle(userPayload.email, userPayload.name, userPayload.picture);
     setGoogleUser(userPayload);
-    setPriestName(user.name || userPayload.name);
+    setFullName(user.name || userPayload.name || userPayload.email.split("@")[0]);
 
     // If account already has a registered mobile number, enter the app directly without asking again
     if (user.mobile && user.mobile.length >= 10 && user.mobileVerified) {
@@ -224,7 +224,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!priestName.trim()) {
+    if (!fullName.trim()) {
       setError("Please enter your name.");
       return;
     }
@@ -238,14 +238,13 @@ export default function LoginPage() {
     try {
       const normalizedMobile = `+91${mobileNumber}`;
       updateUser({
-        name: priestName.trim(),
+        name: fullName.trim(),
         avatarUrl: googleUser?.picture || undefined,
         mobile: normalizedMobile,
         mobileVerified: true,
       });
       updateBusiness({
-        iyerName: priestName.trim(),
-        name: priestName.trim(),
+        name: fullName.trim(),
         phone: normalizedMobile,
         whatsapp: normalizedMobile,
       });
@@ -563,17 +562,17 @@ export default function LoginPage() {
                 {googleUser?.picture ? (
                   <img
                     src={googleUser.picture}
-                    alt={priestName}
+                    alt={fullName || "User"}
                     className="w-10 h-10 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-emerald-900 text-amber-300 flex items-center justify-center font-black text-sm shrink-0 shadow-2xs ring-1 ring-amber-400">
-                    {priestName ? priestName[0].toUpperCase() : "V"}
+                    {fullName ? fullName[0].toUpperCase() : "U"}
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
                   <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate">
-                    {priestName || "Vedic Priest"}
+                    {fullName || googleUser?.name || "User"}
                   </h4>
                   <p className="text-[10.5px] text-slate-500 font-semibold truncate flex items-center gap-1 mt-0.5">
                     <Mail className="w-3 h-3 text-slate-400 shrink-0" />
@@ -593,15 +592,15 @@ export default function LoginPage() {
                 <span>Complete Your Profile</span>
               </h2>
               <p className="text-xs text-slate-500 font-medium">
-                Enter your mobile number to enable WhatsApp devotee receipts and booking reminders.
+                Enter your mobile number to enable WhatsApp receipts and booking reminders.
               </p>
             </div>
 
             <form onSubmit={handleCompleteSetup} className="space-y-4">
-              {/* Field 1: Priest Name */}
+              {/* Field 1: User Full Name */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Priest / Vadhyar Name <span className="text-rose-500">*</span>
+                  Your Full Name / உங்கள் பெயர் <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -609,9 +608,9 @@ export default function LoginPage() {
                   </div>
                   <input
                     type="text"
-                    value={priestName}
-                    onChange={(e) => setPriestName(e.target.value)}
-                    placeholder="e.g. Sundara Sastrigal"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Karthick G / Sundara Sastrigal"
                     required
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition"
                   />

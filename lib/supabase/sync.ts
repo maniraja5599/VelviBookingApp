@@ -34,7 +34,7 @@ export async function pushUserToCloud(user: User): Promise<boolean> {
       id: user.id,
       google_id: user.googleId || null,
       email: user.email || `${user.id}@velvi.app`,
-      name: user.name || "Priest",
+      name: user.name || (user.email ? user.email.split("@")[0] : "User"),
       avatar_url: user.avatarUrl || null,
       mobile: user.mobile || null,
       mobile_verified: Boolean(user.mobileVerified),
@@ -1256,7 +1256,7 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
                 notes: b.notes,
                 cancellationReason: b.cancellation_reason,
                 cancelledAt: b.cancelled_at,
-                createdBy: b.created_by || b.assigned_iyer_name || "Priest",
+                createdBy: b.created_by || b.assigned_iyer_name || "Organizer",
                 createdAt: b.created_at,
                 updatedAt: b.updated_at,
               };
@@ -1444,7 +1444,7 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
           notes: b.notes,
           cancellationReason: b.cancellation_reason,
           cancelledAt: b.cancelled_at,
-          createdBy: b.created_by || b.assigned_iyer_name || "Priest",
+          createdBy: b.created_by || b.assigned_iyer_name || "Organizer",
           createdAt: b.created_at,
           updatedAt: b.updated_at,
         };

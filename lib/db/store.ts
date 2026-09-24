@@ -1692,7 +1692,7 @@ export class VelviDatabaseStore {
     this.auditLogs.push({
       id: `audit-${Date.now()}`,
       businessId: entry.item.businessId || "biz-venkateswara-01",
-      actorName: "Priest",
+      actorName: "User",
       action: "RESTORE_ITEM",
       targetType: entry.type.toUpperCase() as any,
       targetId: entry.id,

@@ -44,7 +44,7 @@ export async function POST(req: Request) {
             user.id,
             user.googleId || null,
             user.email || `${user.id}@velvi.app`,
-            user.name || "Priest",
+            user.name || (user.email ? user.email.split("@")[0] : "User"),
             user.avatarUrl || null,
             user.mobile || null,
             Boolean(user.mobileVerified),

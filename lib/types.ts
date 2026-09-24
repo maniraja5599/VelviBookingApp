@@ -24,7 +24,7 @@ export interface Business {
   ownerId: string;
   name: string;
   serviceName?: string;
-  iyerName: string;
+  iyerName?: string;
   logoUrl?: string;
   phone: string;
   whatsapp?: string;

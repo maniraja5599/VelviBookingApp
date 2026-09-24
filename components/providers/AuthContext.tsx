@@ -91,9 +91,9 @@ function getInitialAuthState(): {
       biz = {
         id: bizId,
         ownerId: user.id,
-        name: user.name || "Pooja Services",
-        serviceName: "Pooja • Homam • Seva",
-        iyerName: user.name || "Vadhyar",
+        name: user.name || "Services",
+        serviceName: "Pooja • Homam • Event Services",
+        iyerName: undefined,
         phone: user.mobile || "",
         whatsapp: user.mobile || "",
         address: "தமிழ்நாடு, இந்தியா",
@@ -178,9 +178,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       biz = {
         id: bizId,
         ownerId: user.id,
-        name: user.name || (user.role === "SUPER_ADMIN" ? "Velvi Admin Services" : "Pooja Services"),
-        serviceName: "Pooja • Homam • Seva",
-        iyerName: user.name || "Vadhyar",
+        name: user.name || (user.role === "SUPER_ADMIN" ? "Velvi Admin Services" : "Services"),
+        serviceName: "Pooja • Homam • Event Services",
+        iyerName: undefined,
         phone: user.mobile || "",
         whatsapp: user.mobile || "",
         address: "தமிழ்நாடு, இந்தியா",
@@ -313,8 +313,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       let user = db.users.find((u) => u.mobile && normalizeIndianMobile(u.mobile) === normalized);
       if (!user) {
-        const trimmedName = name.trim() || "Vedic Priest";
-        const sanitizedName = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, "") || "priest";
+        const trimmedName = name.trim() || `User ${normalized.slice(-4)}`;
+        const sanitizedName = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
         user = {
           id: `u-${Date.now()}`,
           googleId: `phone-${Date.now()}`,
@@ -334,14 +334,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         db.users.push(user);
 
-        // Also create a business profile for this priest
+        // Also create a business profile for this user
         const bizId = `biz-${Date.now()}`;
         const newBiz: Business = {
           id: bizId,
           ownerId: user.id,
           name: trimmedName,
-          serviceName: "Pooja • Homam • Seva",
-          iyerName: trimmedName,
+          serviceName: "Pooja • Homam • Event Services",
+          iyerName: undefined,
           phone: normalized,
           whatsapp: normalized,
           address: "தமிழ்நாடு, இந்தியா",
@@ -515,16 +515,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loginWithGoogle = React.useCallback(
     async (email?: string, name?: string, avatarUrl?: string): Promise<User> => {
       setIsLoading(true);
-      const targetEmail = (email || `priest.${Date.now().toString().slice(-6)}@gmail.com`).trim().toLowerCase();
+      const targetEmail = (email || `user.${Date.now().toString().slice(-6)}@gmail.com`).trim().toLowerCase();
       const isSuperAdminEmail =
         targetEmail === "manirajankg@gmail.com" || targetEmail === "admin@velvi.app";
       const targetName =
         name ||
         (isSuperAdminEmail
           ? "Maniraja (Super Admin)"
-          : targetEmail === "ravi.iyer@gmail.com"
-          ? "Ravi Iyer"
-          : "Vedic Priest");
+          : targetEmail
+          ? targetEmail
+              .split("@")[0]
+              .replace(/[._-]/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase())
+          : "User");
 
       let clientIp = "106.210.142.88";
       let clientCity = "Chennai";
@@ -643,7 +646,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ipAddress: clientIp,
         city: clientCity,
         country: clientCountry,
-        reason: isSuperAdminEmail ? "Super Admin logged in" : "Priest signed in with Google",
+        reason: isSuperAdminEmail ? "Super Admin logged in" : "User signed in with Google",
         newValue: { ip: clientIp, city: clientCity, country: clientCountry, email: targetEmail },
       });
 
@@ -662,9 +665,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         biz = {
           id: targetBizId,
           ownerId: user.id,
-          name: cloudBizName || user.name || "Pooja Services",
-          serviceName: "Pooja • Homam • Seva",
-          iyerName: user.name || "Vadhyar",
+          name: cloudBizName || user.name || "Services",
+          serviceName: "Pooja • Homam • Event Services",
+          iyerName: undefined,
           logoUrl: undefined, // Default to Velvi sacred logo
           phone: user.mobile || "",
           whatsapp: user.mobile || "",
