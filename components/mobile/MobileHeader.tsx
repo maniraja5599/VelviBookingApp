@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Clock,
   WifiOff,
+  Shield,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
@@ -65,6 +66,10 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   }, []);
 
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
+
+  const isSuperAdmin =
+    currentUser?.role === "SUPER_ADMIN" ||
+    currentUser?.email?.trim().toLowerCase() === "manirajankg@gmail.com";
 
   // Calculate Days to Expiry for subscription plan
   const daysToExpiry = React.useMemo(() => {
@@ -529,12 +534,12 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         />
                         <span className="font-extrabold text-[11px] truncate">
                           {!isOnline
-                            ? "இணைய இணைப்பு இல்லை (Offline)"
+                            ? "Offline Mode"
                             : syncState === "error"
-                            ? "மேகக்கணி ஒத்திசைவு பிழை"
+                            ? "Sync Issue"
                             : syncState === "syncing"
-                            ? "ஒத்திசைக்கப்படுகிறது..."
-                            : "மேகக்கணி பாதுகாப்பானது (Synced)"}
+                            ? "Syncing..."
+                            : "Cloud Synced"}
                         </span>
                       </div>
 
@@ -557,7 +562,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                           className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[9.5px] font-black transition active:scale-95 shadow-2xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
                         >
                           <RotateCcw className={`w-2.5 h-2.5 ${isRetryingSync ? "animate-spin" : ""}`} />
-                          <span>{isRetryingSync ? "..." : "மீண்டும் ஒத்திசை"}</span>
+                          <span>{isRetryingSync ? "..." : "Retry Sync"}</span>
                         </button>
                       )}
                     </div>
@@ -688,9 +693,33 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   </div>
                 )}
 
-                {/* Quick Menu Links - Including Devotees & Important Actions */}
+                {/* Quick Menu Links - Clean English Actions */}
                 <div className="space-y-1 text-xs">
-                  {/* Devotees / Customers Direct Button (Requested) */}
+                  {/* Super Admin Console Shortcut */}
+                  {isSuperAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-950 transition font-bold group mb-1.5"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-800 flex items-center justify-center">
+                          <Shield className="w-3.5 h-3.5 text-amber-700" />
+                        </div>
+                        <div>
+                          <span className="font-extrabold text-amber-950 text-xs block">
+                            Super Admin Console
+                          </span>
+                          <span className="text-[10px] text-amber-800 font-medium block">
+                            Platform Management &amp; Tenants
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-amber-700 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  )}
+
+                  {/* Devotees & Priests Shortcut */}
                   <Link
                     href="/app/customers"
                     onClick={() => setIsProfileMenuOpen(false)}
@@ -701,7 +730,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         <Users className="w-3.5 h-3.5 text-emerald-700" />
                       </div>
                       <span className="font-bold text-slate-900 group-hover:text-emerald-950">
-                        பக்தர்கள் / Devotees
+                        Devotees &amp; Priests
                       </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700" />
@@ -717,7 +746,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
                         <Sparkles className="w-3.5 h-3.5 text-amber-700" />
                       </div>
-                      <span>புதிய பதிவு / New Booking</span>
+                      <span className="font-bold text-slate-900 group-hover:text-amber-950">
+                        New Booking
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -732,7 +763,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-orange-100 text-orange-800 flex items-center justify-center">
                         <Flame className="w-3.5 h-3.5 text-orange-700" />
                       </div>
-                      <span>பூஜைகள் &amp; கட்டணம்</span>
+                      <span className="font-bold text-slate-900 group-hover:text-orange-950">
+                        Poojas &amp; Rates
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -747,7 +780,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
                         <Pencil className="w-3.5 h-3.5 text-blue-700" />
                       </div>
-                      <span>Edit Profile &amp; Logo</span>
+                      <span className="font-bold text-slate-900 group-hover:text-blue-950">
+                        Edit Profile &amp; Logo
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -762,7 +797,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
                         <Settings className="w-3.5 h-3.5" />
                       </div>
-                      <span>Settings</span>
+                      <span className="font-bold text-slate-900 group-hover:text-slate-950">
+                        Settings
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>
@@ -777,7 +814,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       <div className="w-7 h-7 rounded-lg bg-fuchsia-100 text-fuchsia-700 flex items-center justify-center">
                         <Palette className="w-3.5 h-3.5" />
                       </div>
-                      <span>Sacred Themes</span>
+                      <span className="font-bold text-slate-900 group-hover:text-fuchsia-950">
+                        Sacred Themes
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700" />
                   </Link>

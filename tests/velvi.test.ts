@@ -1538,13 +1538,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(settingsCode).toContain("bg-blue-100");
     expect(settingsCode).toContain("bg-emerald-100");
 
-    // 5. MobileHeader contains Days to Expiry calculation, tomorrow 1-day alert, and Devotees button
+    // 5. MobileHeader contains Days to Expiry calculation, tomorrow 1-day alert, and Devotees & Priests button
     const headerPath = path.join(__dirname, "..", "components", "mobile", "MobileHeader.tsx");
     const headerCode = fs.readFileSync(headerPath, "utf-8");
     expect(headerCode).toContain("daysToExpiry");
     expect(headerCode).toContain("tomorrowBookingsCount");
     expect(headerCode).toContain("/app/customers");
-    expect(headerCode).toContain("பக்தர்கள் / Devotees");
+    expect(headerCode).toContain("Devotees & Priests");
 
     // 6. GlobalSearchModal has 1-Day Before reminder and WhatsApp action
     const searchModalPath = path.join(__dirname, "..", "components", "search", "GlobalSearchModal.tsx");

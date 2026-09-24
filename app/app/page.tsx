@@ -1844,16 +1844,26 @@ export default function HomeDashboardPage() {
         {activeSubTab === "analytics" && (
           <div className="space-y-3 animate-in fade-in duration-150">
             {bookings.length === 0 && (
-              <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 text-amber-900 font-bold min-w-0">
-                  <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                  <span className="truncate">Workspace data is cleared (0 bookings). Load sample data from Settings.</span>
+              <div className="p-3.5 bg-gradient-to-r from-amber-50 via-amber-100/50 to-orange-50 border border-amber-200/90 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-800 flex items-center justify-center shrink-0 text-base">
+                    💡
+                  </div>
+                  <div className="min-w-0">
+                    <span className="font-extrabold text-amber-950 block text-[12px]">
+                      Tip: Your booking schedule is empty!
+                    </span>
+                    <span className="text-[11px] text-amber-800/90 block">
+                      Tap &apos;+ New Booking&apos; or &apos;Quick Booking&apos; to schedule your first pooja ceremony.
+                    </span>
+                  </div>
                 </div>
                 <Link
-                  href="/app/settings"
-                  className="px-2.5 py-1 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-[10.5px] font-black shrink-0 shadow-2xs"
+                  href="/app/bookings/quick"
+                  className="px-3 py-1.5 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-[11px] font-bold shrink-0 shadow-xs flex items-center gap-1 active:scale-95 transition"
                 >
-                  Settings
+                  <span>Book Now</span>
+                  <span>→</span>
                 </Link>
               </div>
             )}
