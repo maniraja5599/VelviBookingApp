@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Business, Subscription, UserRole } from "@/lib/types";
 import { db } from "@/lib/db/store";
 import { normalizeIndianMobile, maskEmail } from "@/lib/utils/phone";
-import { initCloudSync } from "@/lib/supabase/sync";
+import { initCloudSync, pushBusinessToCloud, pushUserToCloud } from "@/lib/supabase/sync";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -786,6 +786,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       db.businesses[bizIndex] = { ...db.businesses[bizIndex], ...updates };
       db.saveToLocalStorage();
       setCurrentBusiness({ ...db.businesses[bizIndex] });
+      pushBusinessToCloud(db.businesses[bizIndex]).catch(() => {});
     }
   }, [currentBusiness, currentUser]);
 
@@ -797,6 +798,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       db.users[userIndex] = { ...db.users[userIndex], ...updates };
       db.saveToLocalStorage();
       setCurrentUser({ ...db.users[userIndex] });
+      pushUserToCloud(db.users[userIndex]).catch(() => {});
     }
   }, [currentUser]);
 
