@@ -25,6 +25,8 @@ import {
   Clock,
   WifiOff,
   Shield,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
@@ -429,21 +431,30 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   {displayName}
                 </span>
 
-                {/* Always-Visible Crisp Sync Status Pill */}
+                {/* Compact Cloud Icon & Live Status Dot (Kutty Cloud / Dot without text) */}
                 {syncState === "syncing" ? (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[9.5px] font-black shrink-0 animate-pulse">
-                    <span className="w-2 h-2 rounded-full border-2 border-amber-700 border-t-transparent animate-spin" />
-                    Syncing
+                  <span
+                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-amber-100/90 text-amber-700 shrink-0"
+                    title="Cloud Syncing..."
+                  >
+                    <Cloud className="w-3.5 h-3.5 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
                   </span>
                 ) : !isOnline || syncState === "error" ? (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-100 border border-rose-300 text-rose-900 text-[9.5px] font-black shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
-                    {!isOnline ? "Offline" : "Error"}
+                  <span
+                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-700 shrink-0"
+                    title={!isOnline ? "Offline" : "Cloud Sync Error"}
+                  >
+                    <CloudOff className="w-3.5 h-3.5" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[9.5px] font-black shrink-0">
-                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 stroke-[3]" />
-                    Synced
+                  <span
+                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100/90 text-emerald-700 shrink-0"
+                    title="Cloud Synced (Supabase)"
+                  >
+                    <Cloud className="w-3.5 h-3.5 stroke-[2.2]" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-1 ring-white" />
                   </span>
                 )}
 
