@@ -40,6 +40,7 @@ import {
   deleteCustomerFromCloud,
   pushPoojaToCloud,
   deletePoojaFromCloud,
+  clearCloudBusinessData,
 } from "@/lib/supabase/sync";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
 
@@ -2021,38 +2022,45 @@ export class VelviDatabaseStore {
     return { removedBookings, removedCustomers, removedPoojas };
   }
 
-  public factoryResetBusiness(businessId: string): {
+  public async factoryResetBusiness(businessId: string): Promise<{
     deletedBookings: number;
     deletedCustomers: number;
     deletedPayments: number;
     restoredPoojas: number;
-  } {
+  }> {
     const prevBCount = this.bookings.filter((b) => b.businessId === businessId).length;
     const prevCCount = this.customers.filter((c) => c.businessId === businessId).length;
     const prevPayCount = this.payments.filter((p) => p.businessId === businessId).length;
 
-    // 1. Remove all bookings for this business
+    // 1. Remove all bookings for this business (Guaranteed 0)
     this.bookings = this.bookings.filter((b) => b.businessId !== businessId);
 
-    // 2. Remove all customers for this business
+    // 2. Remove all customers for this business (Guaranteed 0)
     this.customers = this.customers.filter((c) => c.businessId !== businessId);
 
-    // 3. Remove all payments for this business
+    // 3. Remove all payments for this business (Guaranteed 0)
     this.payments = this.payments.filter((p) => p.businessId !== businessId);
 
-    // 4. Remove all custom/altered poojas and re-seed default authentic 8 Vedic Poojas
+    // 4. Reset poojas to default authentic 8 Vedic Poojas
     this.poojas = this.poojas.filter((p) => p.businessId !== businessId);
     this.seedDefaultPoojasForBusiness(businessId);
     const restoredPoojas = this.poojas.filter((p) => p.businessId === businessId).length;
 
-    // 5. Mark cleared and persist
+    // 5. Mark cleared and persist locally
     if (typeof window !== "undefined") {
       localStorage.setItem("velvi_demo_data_cleared", "true");
       this.saveToLocalStorage();
     }
     this.notifyListeners();
 
-    // 6. Record in audit logs for Super Admin review
+    // 6. Delete from Supabase Cloud so cloud database also resets to 0
+    try {
+      await clearCloudBusinessData(businessId);
+    } catch (e) {
+      console.warn("[FactoryReset] Cloud clear notice:", e);
+    }
+
+    // 7. Record in audit logs for Super Admin review
     this.logAudit({
       actorId: businessId,
       actorName: "Business Owner",

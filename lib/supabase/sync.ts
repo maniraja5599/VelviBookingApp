@@ -322,6 +322,32 @@ export async function deleteBookingFromCloud(bookingId: string): Promise<boolean
 }
 
 /**
+ * Permanently deletes all bookings, customers, and payments for a business in Supabase Cloud (Factory Reset).
+ */
+export async function clearCloudBusinessData(businessId: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase || !businessId) return false;
+
+  try {
+    // 1. Delete payments
+    await supabase.from("payments").delete().eq("business_id", businessId);
+
+    // 2. Delete bookings
+    const { error: bkErr } = await supabase.from("bookings").delete().eq("business_id", businessId);
+    if (bkErr) console.warn("[CloudSync] Delete bookings warning:", bkErr.message);
+
+    // 3. Delete customers
+    const { error: cErr } = await supabase.from("customers").delete().eq("business_id", businessId);
+    if (cErr) console.warn("[CloudSync] Delete customers warning:", cErr.message);
+
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] clearCloudBusinessData exception:", err);
+    return false;
+  }
+}
+
+/**
  * Pushes all local entities (business, user, customers, poojas, bookings) for a business up to Supabase.
  */
 export async function pushAllToCloud(businessId: string): Promise<boolean> {

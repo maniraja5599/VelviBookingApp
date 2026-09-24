@@ -5,6 +5,7 @@ import { User, Business, Subscription, UserRole } from "@/lib/types";
 import { db } from "@/lib/db/store";
 import { normalizeIndianMobile, maskEmail } from "@/lib/utils/phone";
 import { initCloudSync, pushBusinessToCloud, pushUserToCloud } from "@/lib/supabase/sync";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -510,6 +511,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Find existing or mock new Google user (case-insensitive email matching)
       let user = db.users.find((u) => u.email.trim().toLowerCase() === targetEmail);
+      let cloudBizId: string | null = null;
+      let cloudBizName: string | null = null;
+
+      // Query Supabase to find if user already exists in Cloud by email
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data: cloudUsers } = await supabase
+            .from("users")
+            .select("*")
+            .ilike("email", targetEmail)
+            .limit(1);
+
+          if (cloudUsers && cloudUsers.length > 0) {
+            const cloudUser = cloudUsers[0];
+            if (!user) {
+              user = {
+                id: cloudUser.id,
+                googleId: cloudUser.google_id || `google-${Date.now()}`,
+                email: cloudUser.email,
+                name: cloudUser.name || targetName,
+                avatarUrl: avatarUrl || cloudUser.avatar_url || undefined,
+                mobile: cloudUser.mobile || (isSuperAdminEmail ? "+918300030123" : ""),
+                mobileVerified: Boolean(cloudUser.mobile_verified) || isSuperAdminEmail,
+                role: isSuperAdminEmail ? "SUPER_ADMIN" : ((cloudUser.role as any) || "OWNER"),
+                referralCode: cloudUser.referral_code || (isSuperAdminEmail ? "VELVI-MANI-DEV" : `VELVI-${Math.floor(1000 + Math.random() * 9000)}`),
+                createdAt: cloudUser.created_at || new Date().toISOString(),
+                registrationIp: clientIp,
+                lastLoginIp: clientIp,
+              };
+              db.users.push(user);
+            } else {
+              user.id = cloudUser.id; // Align ID with Cloud
+            }
+
+            // Find matching business in cloud
+            const { data: cloudBizList } = await supabase
+              .from("businesses")
+              .select("*")
+              .eq("owner_id", cloudUser.id)
+              .limit(1);
+
+            if (cloudBizList && cloudBizList.length > 0) {
+              cloudBizId = cloudBizList[0].id;
+              cloudBizName = cloudBizList[0].name;
+            }
+          }
+        } catch (e) {
+          console.warn("[AuthContext] Cloud user lookup warning:", e);
+        }
+      }
+
       if (!user) {
         user = {
           id: isSuperAdminEmail ? "u-super-admin-01" : `u-${Date.now()}`,
@@ -567,13 +620,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       // Ensure business profile exists for this user
-      let biz = db.businesses.find((b) => b.ownerId === user.id);
+      let biz = isSuperAdminEmail
+        ? db.businesses[0]
+        : (cloudBizId ? db.businesses.find((b) => b.id === cloudBizId) : null) ||
+          db.businesses.find((b) => b.ownerId === user.id);
+
       if (!biz) {
-        const bizId = `biz-${Date.now()}`;
+        const bizId = isSuperAdminEmail
+          ? "biz-venkateswara-01"
+          : cloudBizId || `biz-${user.id}`;
+
         biz = {
           id: bizId,
           ownerId: user.id,
-          name: user.name || "Pooja Services",
+          name: cloudBizName || user.name || "Pooja Services",
           serviceName: "Pooja • Homam • Seva",
           iyerName: user.name || "Vadhyar",
           logoUrl: undefined, // Default to Velvi sacred logo
@@ -618,14 +678,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("velvi_active_user_id", user.id);
-    }
-    db.saveToLocalStorage();
-    syncState();
-    setIsLoading(false);
-    return user;
-  }, [syncState]);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("velvi_active_user_id", user.id);
+      }
+      db.saveToLocalStorage();
+      syncState();
+      setIsLoading(false);
+
+      if (biz?.id) {
+        initCloudSync(biz.id).catch(() => {});
+      }
+      return user;
+    },
+    [syncState]
+  );
 
   const logout = React.useCallback(() => {
     if (typeof window !== "undefined") {

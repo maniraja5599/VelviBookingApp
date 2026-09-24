@@ -41,20 +41,20 @@ export default function DataBackupPage() {
   const customerCount = db.getCustomers(businessId).length;
   const paymentCount = db.payments.filter((p) => p.businessId === businessId).length;
 
-  const handlePerformFactoryReset = () => {
+  const handlePerformFactoryReset = async () => {
     if (resetConfirmationText.trim().toUpperCase() !== "RESET") return;
     setIsResetting(true);
     try {
-      const res = db.factoryResetBusiness(businessId);
+      const res = await db.factoryResetBusiness(businessId);
       setShowResetModal(false);
       setResetConfirmationText("");
       setDataVersion((v) => v + 1);
       setExportMessage(
-        `தொழிற்சாலை மீட்டமைப்பு முடிந்தது! நீக்கப்பட்டவை: ${res.deletedBookings} முன்பதிவுகள், ${res.deletedCustomers} பக்தர்கள், ${res.deletedPayments} கட்டணங்கள். ஆரம்பநிலை 8 வேத பூஜைகள் மீட்டமைக்கப்பட்டன.`
+        `Factory Reset completed! All account data reset to 0 (Wiped: ${res.deletedBookings} Bookings, ${res.deletedCustomers} Customers, ${res.deletedPayments} Payments).`
       );
       setTimeout(() => setExportMessage(""), 6000);
     } catch (e: any) {
-      setExportMessage("மீட்டமைப்பு தோல்வியுற்றது: " + (e?.message || "Error"));
+      setExportMessage("Reset failed: " + (e?.message || "Error"));
     } finally {
       setIsResetting(false);
     }
@@ -322,12 +322,12 @@ export default function DataBackupPage() {
         )}
       </div>
 
-      {/* Factory Reset / தொழிற்சாலை மீட்டமைப்பு for ALL Users */}
+      {/* Factory Reset for ALL Users */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-rose-200/80 shadow-sm space-y-3.5 relative overflow-hidden">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
             <RotateCcw className="w-4 h-4 text-rose-600 shrink-0" />
-            <span>தொழிற்சாலை மீட்டமைப்பு (Factory Reset)</span>
+            <span>Factory Reset</span>
           </h3>
           <span className="text-[10px] bg-rose-100 text-rose-800 font-extrabold px-2.5 py-0.5 rounded-full border border-rose-200 flex items-center gap-1 shrink-0">
             <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
@@ -336,22 +336,22 @@ export default function DataBackupPage() {
         </div>
 
         <p className="text-xs text-slate-600 leading-relaxed font-medium">
-          உங்கள் கணக்கின் அனைத்து முன்பதிவுகள், பக்தர்கள் பதிவுகள் மற்றும் கட்டண கணக்குகளை முழுமையாக அழித்து புத்தம் புதிய ஆரம்ப நிலைக்கு (Clean Slate) கொண்டுவரலாம்.
+          Permanently erase all bookings, devotees contacts, and payment records for this account, resetting your data back to 0.
         </p>
 
         {/* Current Data Metrics to be wiped */}
         <div className="grid grid-cols-3 gap-2 text-center py-0.5">
           <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
             <div className="text-base font-black text-rose-900">{bookingCount}</div>
-            <div className="text-[10px] font-bold text-rose-700/80">முன்பதிவுகள்</div>
+            <div className="text-[10px] font-bold text-rose-700/80">Bookings</div>
           </div>
           <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
             <div className="text-base font-black text-rose-900">{customerCount}</div>
-            <div className="text-[10px] font-bold text-rose-700/80">பக்தர்கள்</div>
+            <div className="text-[10px] font-bold text-rose-700/80">Devotees</div>
           </div>
           <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
             <div className="text-base font-black text-rose-900">{paymentCount}</div>
-            <div className="text-[10px] font-bold text-rose-700/80">கட்டணங்கள்</div>
+            <div className="text-[10px] font-bold text-rose-700/80">Payments</div>
           </div>
         </div>
 
@@ -365,7 +365,7 @@ export default function DataBackupPage() {
             className="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition active:scale-[0.99] cursor-pointer"
           >
             <RotateCcw className="w-4 h-4 text-white shrink-0" />
-            <span>தொழிற்சாலை மீட்டமைப்பைத் தொடங்கு (Reset All Data)</span>
+            <span>Factory Reset (Reset All Data to 0)</span>
           </button>
         </div>
       </div>
@@ -375,23 +375,23 @@ export default function DataBackupPage() {
         <div className="bg-white rounded-3xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-velvi-gold" /> மாதிரி பதிவுகள் மேலாண்மை (Demo Data)
+              <Sparkles className="w-4 h-4 text-velvi-gold" /> Demo Data Management
             </h3>
           </div>
           <p className="text-xs text-velvi-brown/70">
-            மாதிரி முன்பதிவுகளை மீண்டும் ஏற்ற வேண்டுமானால் கீழே உள்ள பட்டனை பயன்படுத்தலாம்.
+            You can reload sample demo bookings anytime if you want to test features.
           </p>
           <div className="pt-1">
             <button
               onClick={() => {
                 const res = db.loadSampleData(businessId);
                 setDataVersion((v) => v + 1);
-                setExportMessage(`மாதிரி பதிவுகள் ஏற்றப்பட்டன (${res.addedBookings} முன்பதிவுகள்)!`);
+                setExportMessage(`Demo sample data loaded (${res.addedBookings} Bookings)!`);
                 setTimeout(() => setExportMessage(""), 4000);
               }}
               className="w-full py-2.5 px-4 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown font-bold border border-velvi-gold/30 rounded-xl text-xs cursor-pointer transition"
             >
-              மாதிரி ஏற்று (Reload Demo)
+              Reload Demo Data
             </button>
           </div>
         </div>
@@ -413,39 +413,39 @@ export default function DataBackupPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-black text-base text-slate-900 leading-tight">
-                  தொழிற்சாலை மீட்டமைப்பு எச்சரிக்கை
+                  Factory Reset Warning
                 </h3>
                 <p className="text-[11px] font-bold text-rose-600 mt-0.5">
-                  Factory Reset Warning • Cannot be undone
+                  Permanent action • Cannot be undone
                 </p>
               </div>
             </div>
 
             <div className="bg-rose-50 rounded-2xl p-3.5 border border-rose-200 space-y-2 text-xs text-rose-900 font-medium">
               <p className="font-bold">
-                ⚠️ எச்சரிக்கை: இந்த செயல்முறை உங்கள் கணக்கின் அனைத்து தரவுகளையும் நிரந்தரமாக நீக்கும்:
+                ⚠️ Warning: This action will permanently erase your data and reset counts to 0:
               </p>
               <ul className="list-disc pl-4 space-y-1 text-[11.5px] text-rose-800">
-                <li>அனைத்து <strong>முன்பதிவுகள் ({bookingCount})</strong> முழுமையாக அழிக்கப்படும்.</li>
-                <li>அனைத்து <strong>பக்தர்கள் தொடர்பு எண்கள் ({customerCount})</strong> அழிக்கப்படும்.</li>
-                <li>அனைத்து <strong>வரவு-செலவு மற்றும் தக்ஷிணை பதிவுகள் ({paymentCount})</strong> நீக்கப்படும்.</li>
-                <li>பூஜைகள் பட்டியல் ஆரம்பநிலை <strong>8 வேத பூஜைகளாக</strong> மீட்டமைக்கப்படும்.</li>
+                <li>All <strong>Bookings ({bookingCount})</strong> will be completely deleted.</li>
+                <li>All <strong>Devotees &amp; Customer contacts ({customerCount})</strong> will be deleted.</li>
+                <li>All <strong>Payment &amp; Dakshina records ({paymentCount})</strong> will be cleared.</li>
+                <li>Pooja list will be refreshed to default authentic 8 Vedic Poojas.</li>
               </ul>
               <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-[10.5px] font-bold text-emerald-800 flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>உங்கள் Google லாகின் &amp; Velvi Pro சந்தா பத்திரமாக இருக்கும்!</span>
+                <span>Your Google Login &amp; Velvi Pro subscription remain safe and active!</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <label className="block text-[11px] font-bold text-slate-700">
-                உறுதிப்படுத்த கீழே உள்ள பெட்டியில் <span className="font-mono text-rose-600 font-black">RESET</span> என தட்டச்சு செய்யவும்:
+                To confirm, type <span className="font-mono text-rose-600 font-black">RESET</span> in the box below:
               </label>
               <input
                 type="text"
                 value={resetConfirmationText}
                 onChange={(e) => setResetConfirmationText(e.target.value)}
-                placeholder="RESET என டைப் செய்யவும்"
+                placeholder="Type RESET to confirm"
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 focus:border-rose-500 focus:bg-white rounded-xl text-xs font-mono font-bold tracking-widest outline-none transition"
               />
             </div>
@@ -456,7 +456,7 @@ export default function DataBackupPage() {
                 onClick={() => setShowResetModal(false)}
                 className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
               >
-                ரத்து செய் (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
@@ -465,11 +465,11 @@ export default function DataBackupPage() {
                 className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black rounded-xl text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
               >
                 {isResetting ? (
-                  <span>மீட்டமைக்கப்படுகிறது...</span>
+                  <span>Resetting...</span>
                 ) : (
                   <>
                     <RotateCcw className="w-3.5 h-3.5" />
-                    <span>ஆம், மீட்டமை (Reset)</span>
+                    <span>Yes, Factory Reset</span>
                   </>
                 )}
               </button>
