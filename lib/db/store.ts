@@ -256,6 +256,9 @@ export interface UserDirectoryMetric {
   totalEarnings: number;
   joinedDate: string;
   isSuperAdmin: boolean;
+  ipAddress?: string;
+  city?: string;
+  country?: string;
 }
 
 export class VelviDatabaseStore {
@@ -280,50 +283,6 @@ export class VelviDatabaseStore {
   public users: User[] = [
     SEED_USER,
     SEED_SUPER_ADMIN,
-    {
-      id: "u-suresh-iyer-02",
-      googleId: "google-20394857",
-      email: "suresh.iyer@gmail.com",
-      name: "Suresh Iyer",
-      mobile: "+919876543211",
-      mobileVerified: true,
-      role: "IYER",
-      referralCode: "VELVI-SURESH456",
-      createdAt: "2026-08-05T10:00:00Z",
-    },
-    {
-      id: "u-kumar-iyer-03",
-      googleId: "google-30495867",
-      email: "kumar.iyer@gmail.com",
-      name: "Kumar Iyer",
-      mobile: "+919876543212",
-      mobileVerified: true,
-      role: "IYER",
-      referralCode: "VELVI-KUMAR789",
-      createdAt: "2026-08-10T11:00:00Z",
-    },
-    {
-      id: "u-mani-04",
-      googleId: "google-40596879",
-      email: "mani.iyer@gmail.com",
-      name: "Mani",
-      mobile: "+919876543299",
-      mobileVerified: true,
-      role: "OWNER",
-      referralCode: "VELVI-MANI101",
-      createdAt: "2026-08-22T09:00:00Z",
-    },
-    {
-      id: "u-ravi-temple-05",
-      googleId: "google-50697880",
-      email: "ravi.temple@gmail.com",
-      name: "Ravi Iyer (Temple Trust)",
-      mobile: "+919876543210",
-      mobileVerified: true,
-      role: "OWNER",
-      referralCode: "VELVI-TEMPLE55",
-      createdAt: "2026-08-25T14:00:00Z",
-    },
   ];
   public businesses: Business[] = structuredClone([SEED_BUSINESS]);
   public members: BusinessMember[] = structuredClone(SEED_MEMBERS);
@@ -1748,7 +1707,19 @@ export class VelviDatabaseStore {
       const state = JSON.parse(raw);
       if (state) {
         if (Array.isArray(state.users) && state.users.length > 0) {
-          this.users = state.users;
+          const dummyUserIds = new Set([
+            "u-suresh-iyer-02",
+            "u-kumar-iyer-03",
+            "u-mani-04",
+            "u-ravi-temple-05",
+          ]);
+          this.users = state.users.filter((u: User) => !dummyUserIds.has(u.id));
+          if (!this.users.some((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase())) {
+            this.users.push(SEED_SUPER_ADMIN);
+          }
+          if (!this.users.some((u) => u.email.toLowerCase() === SEED_USER.email.toLowerCase())) {
+            this.users.push(SEED_USER);
+          }
         }
         if (Array.isArray(state.businesses) && state.businesses.length > 0) {
           this.businesses = state.businesses;
@@ -2200,36 +2171,9 @@ export class VelviDatabaseStore {
         user.role === "SUPER_ADMIN" ||
         user.email.trim().toLowerCase() === "manirajankg@gmail.com";
 
-      const ipAddress =
-        user.lastLoginIp ||
-        user.registrationIp ||
-        (user.email.includes("ravi")
-          ? "106.210.142.88"
-          : user.email.includes("mani")
-          ? "157.48.22.10"
-          : user.email.includes("suresh")
-          ? "49.37.112.54"
-          : user.email.includes("kumar")
-          ? "182.74.89.33"
-          : "106.208.55.19");
-
-      const city =
-        user.lastLoginCity ||
-        user.registrationCity ||
-        (user.email.includes("ravi")
-          ? "Chennai"
-          : user.email.includes("mani")
-          ? "Namakkal"
-          : user.email.includes("suresh")
-          ? "Madurai"
-          : user.email.includes("kumar")
-          ? "Coimbatore"
-          : "Chennai");
-
-      const country =
-        user.lastLoginCountry ||
-        user.registrationCountry ||
-        "India";
+      const ipAddress = user.lastLoginIp || user.registrationIp || undefined;
+      const city = user.lastLoginCity || user.registrationCity || undefined;
+      const country = user.lastLoginCountry || user.registrationCountry || undefined;
 
       return {
         user,
@@ -2245,6 +2189,26 @@ export class VelviDatabaseStore {
         country,
       };
     });
+  }
+
+  public purgeLegacyDummyData(): { removedUsers: number } {
+    const dummyUserIds = new Set([
+      "u-suresh-iyer-02",
+      "u-kumar-iyer-03",
+      "u-mani-04",
+      "u-ravi-temple-05",
+    ]);
+    const initialCount = this.users.length;
+    this.users = this.users.filter((u) => !dummyUserIds.has(u.id));
+    if (!this.users.some((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase())) {
+      this.users.push(SEED_SUPER_ADMIN);
+    }
+    if (!this.users.some((u) => u.email.toLowerCase() === SEED_USER.email.toLowerCase())) {
+      this.users.push(SEED_USER);
+    }
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return { removedUsers: Math.max(0, initialCount - this.users.length) };
   }
 
   // -------------------------------------------------------------

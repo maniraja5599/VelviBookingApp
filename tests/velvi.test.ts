@@ -54,6 +54,30 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
   // TEST CASE 2B: Multi-Account Lookup by Mobile Number (Point 3)
   it("Test 2B: Multi-account lookup returns all accounts linked to the same mobile", () => {
+    // Dynamically insert test accounts for multi-account lookup verification
+    store.users.push({
+      id: "u-ravi-temple-05",
+      googleId: "google-50697880",
+      email: "ravi.temple@gmail.com",
+      name: "Ravi Iyer (Temple Trust)",
+      mobile: "+919876543210",
+      mobileVerified: true,
+      role: "OWNER",
+      referralCode: "VELVI-TEMPLE55",
+      createdAt: "2026-08-25T14:00:00Z",
+    });
+    store.users.push({
+      id: "u-suresh-iyer-02",
+      googleId: "google-20394857",
+      email: "suresh.iyer@gmail.com",
+      name: "Suresh Iyer",
+      mobile: "+919876543211",
+      mobileVerified: true,
+      role: "IYER",
+      referralCode: "VELVI-SURESH456",
+      createdAt: "2026-08-05T10:00:00Z",
+    });
+
     const multiAccounts = store.findUsersByMobile("98765 43210");
     expect(multiAccounts.length).toBeGreaterThanOrEqual(2);
     const emails = multiAccounts.map((u) => u.email);
@@ -97,6 +121,20 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
   // TEST CASE 4: Referral Reward Does Not Happen on Signup Alone
   it("Test 4: Referral reward does not trigger on signup alone", () => {
+    if (!store.users.some((u) => u.id === "u-kumar-iyer-03")) {
+      store.users.push({
+        id: "u-kumar-iyer-03",
+        googleId: "google-30495867",
+        email: "kumar.iyer@gmail.com",
+        name: "Kumar Iyer",
+        mobile: "+919876543212",
+        mobileVerified: true,
+        role: "IYER",
+        referralCode: "VELVI-KUMAR789",
+        createdAt: "2026-08-10T11:00:00Z",
+      });
+    }
+
     const pendingRef = store.referrals.find((r) => r.id === "ref-02");
     expect(pendingRef?.status).toBe("PENDING");
     expect(pendingRef?.rewardDaysGranted).toBe(0);
@@ -112,6 +150,20 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
 
   // TEST CASE 5: Referral Reward Happens Only After Verified Payment
   it("Test 5: Referral reward succeeds when first payment is verified", () => {
+    if (!store.users.some((u) => u.id === "u-kumar-iyer-03")) {
+      store.users.push({
+        id: "u-kumar-iyer-03",
+        googleId: "google-30495867",
+        email: "kumar.iyer@gmail.com",
+        name: "Kumar Iyer",
+        mobile: "+919876543212",
+        mobileVerified: true,
+        role: "IYER",
+        referralCode: "VELVI-KUMAR789",
+        createdAt: "2026-08-10T11:00:00Z",
+      });
+    }
+
     // Setup referee subscription
     store.subscriptions.push({
       id: "sub-kumar-99",

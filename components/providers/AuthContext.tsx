@@ -271,9 +271,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const cleanDigits = mobile.replace(/\D/g, "");
       const normalized = normalizeIndianMobile(cleanDigits);
 
-      let clientIp = "106.210.142.88";
-      let clientCity = "Chennai";
-      let clientCountry = "India";
+      let clientIp = "";
+      let clientCity = "";
+      let clientCountry = "";
       try {
         const ipRes = await fetch("/api/auth/client-ip");
         const ipData = await ipRes.json();
@@ -360,9 +360,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginDemo = React.useCallback(async (): Promise<User> => {
     setIsLoading(true);
-    let clientIp = "106.210.142.88";
-    let clientCity = "Chennai";
-    let clientCountry = "India";
+    let clientIp = "";
+    let clientCity = "";
+    let clientCountry = "";
     try {
       const ipRes = await fetch("/api/auth/client-ip");
       const ipData = await ipRes.json();

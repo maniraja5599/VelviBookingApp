@@ -13,6 +13,10 @@ export const SEED_USER: User = {
   createdAt: "2026-08-01T08:00:00Z",
   registrationIp: "106.210.142.88",
   lastLoginIp: "106.210.142.88",
+  registrationCity: "Chennai",
+  registrationCountry: "India",
+  lastLoginCity: "Chennai",
+  lastLoginCountry: "India",
 };
 
 export const SEED_SUPER_ADMIN: User = {
@@ -28,6 +32,10 @@ export const SEED_SUPER_ADMIN: User = {
   createdAt: "2026-01-01T00:00:00Z",
   registrationIp: "157.48.22.10",
   lastLoginIp: "157.48.22.10",
+  registrationCity: "Namakkal",
+  registrationCountry: "India",
+  lastLoginCity: "Namakkal",
+  lastLoginCountry: "India",
 };
 
 export const SEED_BUSINESS: Business = {

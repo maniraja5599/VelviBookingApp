@@ -33,6 +33,7 @@ import {
   Smartphone,
   Mail,
   AlertTriangle,
+  RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
@@ -273,6 +274,23 @@ export default function SuperAdminDashboardPage() {
     showToast("Platform branding & system updates saved successfully!");
   };
 
+  // Reset to 100% Real Data
+  const handleResetToRealData = () => {
+    const res = db.purgeLegacyDummyData();
+    db.logAudit({
+      actorId: "u-super-admin-01",
+      actorName: "Maniraja (Super Admin)",
+      action: "RESET_REAL_DATA",
+      targetType: "DATABASE_STORE",
+      reason: "Purged mock users & synchronized to verified real data",
+    });
+    showToast(
+      res.removedUsers > 0
+        ? `Cleaned ${res.removedUsers} mock accounts! Real tenant data synchronized.`
+        : "Store already contains 100% verified real data only."
+    );
+  };
+
   // Platform KPIs
   const totalUsersCount = directoryMetrics.length;
   const activePaidCount = directoryMetrics.filter(
@@ -286,6 +304,96 @@ export default function SuperAdminDashboardPage() {
     (acc, cur) => acc + cur.bookingCount,
     0
   );
+
+  // Dynamic 6-month Platform Revenue Trend from real db.bookings & db.payments
+  const monthlyRevenueTrend = useMemo(() => {
+    const months: {
+      label: string;
+      yearMonth: string;
+      total: number;
+      isCurrent: boolean;
+    }[] = [];
+
+    const now = new Date();
+    // Build last 6 months list (from 5 months ago to current month)
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleDateString("en-IN", { month: "short" });
+      const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months.push({
+        label,
+        yearMonth,
+        total: 0,
+        isCurrent: i === 0,
+      });
+    }
+
+    // Accumulate actual booking earnings
+    (db.bookings || []).forEach((b) => {
+      if (b.status === "CANCELLED") return;
+      const dateStr = b.date || b.createdAt;
+      if (!dateStr) return;
+      const bMonth = dateStr.slice(0, 7);
+      const match = months.find((m) => m.yearMonth === bMonth);
+      if (match) {
+        match.total += Number(b.totalAmount) || 0;
+      }
+    });
+
+    // Accumulate actual Cashfree payments
+    (db.payments || []).forEach((p) => {
+      if (p.status !== "SUCCESS") return;
+      const pMonth = p.createdAt ? p.createdAt.slice(0, 7) : "";
+      const match = months.find((m) => m.yearMonth === pMonth);
+      if (match) {
+        match.total += Number(p.amount) || 0;
+      }
+    });
+
+    const maxVal = Math.max(...months.map((m) => m.total), 1);
+
+    const prevMonthTotal = months.length >= 2 ? months[months.length - 2].total : 0;
+    const currMonthTotal = months[months.length - 1].total;
+    let growthText = "Real Data";
+    if (prevMonthTotal > 0) {
+      const diffPct = Math.round(((currMonthTotal - prevMonthTotal) / prevMonthTotal) * 100);
+      growthText = diffPct >= 0 ? `+${diffPct}% vs Prev` : `${diffPct}% vs Prev`;
+    } else if (currMonthTotal > 0) {
+      growthText = "Active Month";
+    }
+
+    const bars = months.map((m) => {
+      const pct = m.total > 0 ? Math.max(14, Math.round((m.total / maxVal) * 100)) : 8;
+      const formattedVal =
+        m.total >= 100000
+          ? `₹${(m.total / 100000).toFixed(1)}L`
+          : m.total >= 1000
+          ? `₹${(m.total / 1000).toFixed(1)}k`
+          : `₹${m.total}`;
+
+      return {
+        m: m.label,
+        v: formattedVal,
+        raw: m.total,
+        h: `${pct}%`,
+        current: m.isCurrent,
+      };
+    });
+
+    return { bars, growthText };
+  }, [actionSuccess, activeTab]);
+
+  // Upcoming Expiries: sorted by currentPeriodEnd ascending
+  const upcomingExpiries = useMemo(() => {
+    return [...directoryMetrics]
+      .filter((m) => m.subscription?.currentPeriodEnd && m.subscription.status !== "EXPIRED")
+      .sort((a, b) => {
+        const timeA = new Date(a.subscription!.currentPeriodEnd!).getTime();
+        const timeB = new Date(b.subscription!.currentPeriodEnd!).getTime();
+        return timeA - timeB;
+      })
+      .slice(0, 4);
+  }, [directoryMetrics]);
 
   if (!isMounted) {
     return (
@@ -319,7 +427,16 @@ export default function SuperAdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto relative z-10">
+        <div className="flex items-center gap-2 self-start sm:self-auto relative z-10 flex-wrap">
+          <button
+            type="button"
+            onClick={handleResetToRealData}
+            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer"
+            title="Purge legacy dummy data and synchronize store with verified real records"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+            <span>Sync Real Data</span>
+          </button>
           <Link
             href="/app"
             className="px-3.5 py-2 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
@@ -472,34 +589,31 @@ export default function SuperAdminDashboardPage() {
                   <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">
                     Platform Revenue Trend
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black text-white mt-0.5">₹62,400</div>
+                  <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white mt-0.5">
+                    ₹{totalPlatformEarnings.toLocaleString("en-IN")}
+                  </div>
                 </div>
                 <span className="text-[10px] sm:text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 sm:px-2.5 py-1 rounded-full font-bold">
-                  +24% vs Prev
+                  {monthlyRevenueTrend.growthText}
                 </span>
               </div>
 
               <div className="pt-3 border-t border-zinc-800">
                 <div className="text-[10px] sm:text-[11px] text-slate-400 mb-2">Monthly Cashflow Trend</div>
                 <div className="flex items-end justify-between h-32 sm:h-36 gap-2 pt-2 px-1">
-                  {[
-                    { m: "Apr", v: "₹28k", h: "45%" },
-                    { m: "May", v: "₹34k", h: "55%" },
-                    { m: "Jun", v: "₹42k", h: "68%" },
-                    { m: "Jul", v: "₹48.5k", h: "78%" },
-                    { m: "Aug", v: "₹52k", h: "83%" },
-                    { m: "Sep", v: "₹62.4k", h: "100%", current: true },
-                  ].map((bar) => (
+                  {monthlyRevenueTrend.bars.map((bar) => (
                     <div
                       key={bar.m}
                       className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end"
                     >
-                      <span className="text-[8px] sm:text-[9px] text-slate-400">{bar.v}</span>
+                      <span className="text-[8px] sm:text-[9px] text-slate-400 font-mono font-medium">{bar.v}</span>
                       <div
                         style={{ height: bar.h }}
                         className={`w-full rounded-t-lg transition-all duration-300 ${
                           bar.current
                             ? "bg-gradient-to-t from-amber-600 to-amber-400 shadow-md shadow-amber-500/20"
+                            : bar.raw > 0
+                            ? "bg-amber-800/50 hover:bg-amber-700/60"
                             : "bg-zinc-800 hover:bg-zinc-700"
                         }`}
                       />
@@ -519,43 +633,49 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 <div className="space-y-2 mt-2.5">
-                  {directoryMetrics.slice(0, 4).map((metric) => {
-                    const sub = metric.subscription;
-                    const expiryDate = sub?.currentPeriodEnd
-                      ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                        })
-                      : "Trial";
-                    return (
-                      <div
-                        key={metric.user.id}
-                        className="p-2.5 bg-[#090d16] rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs"
-                      >
-                        <div className="min-w-0 pr-2">
-                          <h4 className="font-bold text-white truncate text-xs">{metric.user.name}</h4>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {metric.business?.name || "Independent"}
-                          </p>
+                  {upcomingExpiries.length === 0 ? (
+                    <div className="p-3 text-center text-slate-400 text-xs bg-[#090d16] rounded-xl border border-zinc-800/80">
+                      No active subscriptions due for expiry.
+                    </div>
+                  ) : (
+                    upcomingExpiries.map((metric) => {
+                      const sub = metric.subscription;
+                      const expiryDate = sub?.currentPeriodEnd
+                        ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })
+                        : "Trial";
+                      return (
+                        <div
+                          key={metric.user.id}
+                          className="p-2.5 bg-[#090d16] rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <h4 className="font-bold text-white truncate text-xs">{metric.user.name}</h4>
+                            <p className="text-[10px] text-slate-400 truncate">
+                              {metric.business?.name || "Independent"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="text-[10px] text-amber-400 font-bold">{expiryDate}</span>
+                            {metric.business && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleQuickExtend(metric.business!.id, 30, metric.user.name)
+                                }
+                                className="px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded text-[10px] font-bold transition cursor-pointer"
+                                title="Extend 30 Days"
+                              >
+                                +30d
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="text-[10px] text-amber-400 font-bold">{expiryDate}</span>
-                          {metric.business && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleQuickExtend(metric.business!.id, 30, metric.user.name)
-                              }
-                              className="px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded text-[10px] font-bold transition cursor-pointer"
-                              title="Extend 30 Days"
-                            >
-                              +30d
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -584,6 +704,10 @@ export default function SuperAdminDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {(db.auditLogs || []).slice(0, 6).map((log) => {
                 const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
+                const displayIp = log.ipAddress || "Local / Direct";
+                const displayLocation = log.city
+                  ? `${log.city}${log.country ? `, ${log.country}` : ""}`
+                  : "Location pending";
                 return (
                   <div
                     key={log.id}
@@ -603,13 +727,13 @@ export default function SuperAdminDashboardPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-                      <span className="flex items-center gap-1 font-mono text-amber-300/90">
-                        <Globe className="w-3 h-3 text-amber-400" />
-                        {log.ipAddress || "106.210.142.88"}
+                      <span className="flex items-center gap-1 font-mono text-amber-300/90 truncate max-w-[130px]">
+                        <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+                        {displayIp}
                       </span>
-                      <span className="flex items-center gap-1 text-slate-300">
-                        <MapPin className="w-3 h-3 text-emerald-400" />
-                        {log.city || "Chennai"}, {log.country || "India"}
+                      <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
+                        <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                        {displayLocation}
                       </span>
                     </div>
 
@@ -748,11 +872,11 @@ export default function SuperAdminDashboardPage() {
                       <div className="flex items-center justify-between gap-1 text-[10px] text-amber-400/90 font-mono pt-0.5 border-t border-zinc-800/60 flex-wrap">
                         <span className="flex items-center gap-1">
                           <Globe className="w-3 h-3 text-amber-400 shrink-0" />
-                          <span>IP: {item.ipAddress || "106.210.142.88"}</span>
+                          <span>IP: {item.ipAddress || "Pending Login"}</span>
                         </span>
                         <span className="flex items-center gap-1 text-slate-300 font-sans">
                           <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span>{item.city || "Chennai"}, {item.country || "India"}</span>
+                          <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "Location pending"}</span>
                         </span>
                       </div>
                     </div>
@@ -898,11 +1022,11 @@ export default function SuperAdminDashboardPage() {
                             <div className="space-y-1">
                               <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-300/90 bg-[#090d16] px-2 py-0.5 rounded-lg border border-zinc-800 w-fit">
                                 <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                                <span>{item.ipAddress || "106.210.142.88"}</span>
+                                <span>{item.ipAddress || "Pending Login"}</span>
                               </div>
                               <div className="flex items-center gap-1 text-[10px] text-slate-400 pl-0.5">
                                 <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                                <span>{item.city || "Chennai"}, {item.country || "India"}</span>
+                                <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "—"}</span>
                               </div>
                             </div>
                           </td>
