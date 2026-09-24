@@ -1475,7 +1475,22 @@ export class VelviDatabaseStore {
     this.bookings.unshift(newBooking);
     this.saveToLocalStorage();
     this.notifyListeners();
-    try { pushBookingToCloud(newBooking).catch(() => {}); } catch (_) {}
+    try {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("velvi:sync-state", { detail: { state: "syncing" } }));
+      }
+      pushBookingToCloud(newBooking)
+        .then((ok) => {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("velvi:sync-state", {
+                detail: { state: ok ? "synced" : "error", lastSyncedAt: new Date().toISOString() },
+              })
+            );
+          }
+        })
+        .catch(() => {});
+    } catch (_) {}
     return newBooking;
   }
 

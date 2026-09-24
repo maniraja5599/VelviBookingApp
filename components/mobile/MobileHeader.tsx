@@ -41,7 +41,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("idle");
+  const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("synced");
+  const [lastSyncedTime, setLastSyncedTime] = useState<string>("Just now");
+  const [manualSyncMsg, setManualSyncMsg] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [syncErrorMsg, setSyncErrorMsg] = useState<string | null>(null);
   const [isRetryingSync, setIsRetryingSync] = useState<boolean>(false);
@@ -185,9 +187,22 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     window.addEventListener("offline", handleOffline);
 
     const handleSyncTrigger = (e?: Event) => {
-      const customEvent = e as CustomEvent<{ state?: "syncing" | "synced" | "idle" | "error"; error?: string }>;
+      const customEvent = e as CustomEvent<{
+        state?: "syncing" | "synced" | "idle" | "error";
+        error?: string;
+        lastSyncedAt?: string;
+        bookingsCount?: number;
+      }>;
       const explicitState = customEvent?.detail?.state;
       const errorDetail = customEvent?.detail?.error;
+      const lastSync = customEvent?.detail?.lastSyncedAt;
+
+      if (lastSync) {
+        try {
+          const d = new Date(lastSync);
+          setLastSyncedTime(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        } catch (_) {}
+      }
 
       if (syncTimeoutRef.current) {
         clearTimeout(syncTimeoutRef.current);
@@ -199,29 +214,17 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
         return;
       }
 
-      if (explicitState === "synced") {
-        setSyncState("synced");
-        setSyncErrorMsg(null);
-        syncTimeoutRef.current = setTimeout(() => {
-          setSyncState("idle");
-        }, 2200);
-        return;
-      }
-
       if (explicitState === "syncing") {
         setSyncState("syncing");
         setSyncErrorMsg(null);
         return;
       }
 
-      // Default animated cycle: Syncing... -> Cloud Synced -> Return to Name
-      setSyncState("syncing");
-      syncTimeoutRef.current = setTimeout(() => {
+      if (explicitState === "synced") {
         setSyncState("synced");
-        syncTimeoutRef.current = setTimeout(() => {
-          setSyncState("idle");
-        }, 2200);
-      }, 750);
+        setSyncErrorMsg(null);
+        return;
+      }
     };
 
     window.addEventListener("velvi:db-change", handleSyncTrigger);
@@ -386,27 +389,25 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
             {/* Profile Dropdown Container (Isolated ref so search never triggers profile) */}
             <div className="relative" ref={menuRef}>
-              {/* Profile Button with User Name & Real-time Animated Cloud Sync Ticker */}
+              {/* Profile Button with User Name & Real-time Cloud Sync Status Pill */}
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl transition active:scale-95 border max-w-[155px] sm:max-w-[200px] shrink-0 ${
+                className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border shrink-0 ${
                   isProfileMenuOpen
                     ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                     : !isOnline || syncState === "error"
                     ? "bg-rose-50 border-rose-300 text-rose-950 ring-1 ring-rose-300 shadow-2xs"
                     : syncState === "syncing"
                     ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
-                    : syncState === "synced"
-                    ? "bg-emerald-50 border-emerald-300 text-emerald-950 shadow-2xs"
-                    : "bg-slate-50/80 hover:bg-slate-100 border-slate-200 text-slate-800 shadow-2xs"
+                    : "bg-emerald-50/80 hover:bg-emerald-100/60 border-emerald-300 text-emerald-950 shadow-2xs"
                 }`}
                 title={
                   !isOnline
-                    ? "இணைய இணைப்பு இல்லை (Offline)"
+                    ? "Offline Mode"
                     : syncState === "error"
                     ? `Cloud Sync Error: ${syncErrorMsg || "Failed"}`
-                    : "User Profile & Sync Status"
+                    : "Cloud Synced with Supabase"
                 }
                 aria-expanded={isProfileMenuOpen}
               >
@@ -415,91 +416,36 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   <img
                     src={currentUser.avatarUrl}
                     alt={displayName}
-                    className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
+                    className="w-5 h-5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
                   />
                 ) : (
-                  <div className="w-5 h-5 sm:w-5.5 sm:h-5.5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
                     <User className="w-3 h-3 text-amber-300 stroke-[2.5]" />
                   </div>
                 )}
 
-                {/* Smooth Vertical Scroll-up Animated Ticker (Compact & No Screen Overflow) */}
-                <div className="flex-1 min-w-0 h-[18px] overflow-hidden relative">
-                  <div
-                    className="transition-transform duration-300 ease-out"
-                    style={{
-                      transform:
-                        syncState === "syncing"
-                          ? "translateY(-18px)"
-                          : syncState === "synced"
-                          ? "translateY(-36px)"
-                          : !isOnline || syncState === "error"
-                          ? "translateY(-54px)"
-                          : "translateY(0px)",
-                    }}
-                  >
-                    {/* Slot 0: Priest Display Name with Live Online / Offline Dot */}
-                    <div className="h-[18px] flex items-center gap-1 min-w-0">
-                      <span className="text-[11px] sm:text-[11.5px] font-extrabold truncate text-slate-900 text-left">
-                        {displayName}
-                      </span>
-                      {!isOnline || syncState === "error" ? (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 ring-2 ring-rose-400/50 animate-pulse"
-                          title={syncErrorMsg || "Cloud sync offline / error"}
-                        />
-                      ) : (
-                        <span
-                          className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse"
-                          title="Cloud connected"
-                        />
-                      )}
-                    </div>
+                {/* Display Name */}
+                <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[85px] sm:max-w-[120px] text-left">
+                  {displayName}
+                </span>
 
-                    {/* Slot 1: Syncing State (Spinning indicator) */}
-                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-amber-800">
-                      <svg
-                        className="animate-spin w-2.5 h-2.5 text-amber-700 shrink-0"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8H4z"
-                        />
-                      </svg>
-                      <span className="text-[9.5px] font-extrabold truncate leading-none">
-                        Syncing
-                      </span>
-                    </div>
-
-                    {/* Slot 2: Cloud Synced State (Emerald Checkmark) */}
-                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-emerald-800">
-                      <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 shrink-0 stroke-[2.5]" />
-                      <span className="text-[9.5px] font-extrabold truncate leading-none">
-                        Synced
-                      </span>
-                    </div>
-
-                    {/* Slot 3: Cloud Sync Error State (Red Alert / Offline) */}
-                    <div className="h-[18px] flex items-center gap-1 min-w-0 text-rose-700">
-                      <span className="w-2 h-2 rounded-full bg-rose-600 shrink-0 animate-pulse" />
-                      <span className="text-[9.5px] font-black truncate leading-none text-rose-700">
-                        {!isOnline ? "Offline" : "Sync Error"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                {/* Always-Visible Crisp Sync Status Pill */}
+                {syncState === "syncing" ? (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[9.5px] font-black shrink-0 animate-pulse">
+                    <span className="w-2 h-2 rounded-full border-2 border-amber-700 border-t-transparent animate-spin" />
+                    Syncing
+                  </span>
+                ) : !isOnline || syncState === "error" ? (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-rose-100 border border-rose-300 text-rose-900 text-[9.5px] font-black shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                    {!isOnline ? "Offline" : "Error"}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 text-[9.5px] font-black shrink-0">
+                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 stroke-[3]" />
+                    Synced
+                  </span>
+                )}
 
                 <ChevronRight
                   className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
@@ -511,14 +457,14 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               {/* Profile Dropdown Menu */}
               {isProfileMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
-                  {/* Dedicated Cloud Sync Status Banner with Exact Error Display & Retry */}
+                  {/* Dedicated Cloud Sync Dashboard Banner */}
                   <div
-                    className={`p-2.5 rounded-2xl border text-xs shadow-2xs space-y-1.5 ${
+                    className={`p-3 rounded-2xl border text-xs shadow-2xs space-y-2 ${
                       !isOnline || syncState === "error"
                         ? "bg-rose-50/90 border-rose-300 text-rose-950"
                         : syncState === "syncing"
                         ? "bg-amber-50 border-amber-300 text-amber-950"
-                        : "bg-emerald-50/80 border-emerald-200 text-emerald-950"
+                        : "bg-emerald-50/90 border-emerald-300 text-emerald-950"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-1.5">
@@ -529,43 +475,89 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                               ? "bg-rose-600 ring-2 ring-rose-300 animate-ping"
                               : syncState === "syncing"
                               ? "bg-amber-500 animate-spin"
-                              : "bg-emerald-600"
+                              : "bg-emerald-600 ring-2 ring-emerald-300"
                           }`}
                         />
-                        <span className="font-extrabold text-[11px] truncate">
-                          {!isOnline
-                            ? "Offline Mode"
-                            : syncState === "error"
-                            ? "Sync Issue"
-                            : syncState === "syncing"
-                            ? "Syncing..."
-                            : "Cloud Synced"}
-                        </span>
+                        <div>
+                          <span className="font-black text-[12px] block leading-none">
+                            {!isOnline
+                              ? "Offline Mode"
+                              : syncState === "error"
+                              ? "Cloud Sync Error"
+                              : syncState === "syncing"
+                              ? "Syncing with Cloud..."
+                              : "Cloud Sync Active & Connected"}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
+                            Supabase Cloud PostgreSQL
+                          </span>
+                        </div>
                       </div>
 
-                      {(!isOnline || syncState === "error") && (
-                        <button
-                          type="button"
-                          disabled={isRetryingSync}
-                          onClick={async () => {
-                            setIsRetryingSync(true);
-                            setSyncState("syncing");
-                            if (currentBusiness?.id) {
-                              const res = await retryCloudSync(currentBusiness.id);
-                              if (!res.ok) {
-                                setSyncState("error");
-                                setSyncErrorMsg(res.message || "Retry failed");
-                              }
+                      {/* Always-Available Sync Now Button */}
+                      <button
+                        type="button"
+                        disabled={isRetryingSync}
+                        onClick={async () => {
+                          setIsRetryingSync(true);
+                          setSyncState("syncing");
+                          setManualSyncMsg(null);
+                          if (currentBusiness?.id) {
+                            const res = await retryCloudSync(currentBusiness.id);
+                            if (res.ok) {
+                              setSyncState("synced");
+                              setSyncErrorMsg(null);
+                              setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                              setManualSyncMsg(`Cloud sync successful! ${res.count ?? db.getBookings(businessId).length} bookings active.`);
+                              setTimeout(() => setManualSyncMsg(null), 3500);
+                            } else {
+                              setSyncState("error");
+                              setSyncErrorMsg(res.message || "Sync failed");
                             }
-                            setIsRetryingSync(false);
-                          }}
-                          className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[9.5px] font-black transition active:scale-95 shadow-2xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
-                        >
-                          <RotateCcw className={`w-2.5 h-2.5 ${isRetryingSync ? "animate-spin" : ""}`} />
-                          <span>{isRetryingSync ? "..." : "Retry Sync"}</span>
-                        </button>
-                      )}
+                          }
+                          setIsRetryingSync(false);
+                        }}
+                        className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[10px] font-black transition active:scale-95 shadow-xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        <RotateCcw className={`w-3 h-3 ${isRetryingSync ? "animate-spin" : ""}`} />
+                        <span>{isRetryingSync ? "Syncing..." : "Sync Now"}</span>
+                      </button>
                     </div>
+
+                    {/* Live Cloud Database Stats Grid */}
+                    <div className="grid grid-cols-3 gap-1 pt-1 border-t border-emerald-200/60 text-center">
+                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
+                        <span className="block text-[12px] font-black text-emerald-950">
+                          {db.getBookings(businessId).length}
+                        </span>
+                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
+                          Bookings
+                        </span>
+                      </div>
+                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
+                        <span className="block text-[12px] font-black text-emerald-950">
+                          {db.getCustomers(businessId).length}
+                        </span>
+                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
+                          Devotees
+                        </span>
+                      </div>
+                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
+                        <span className="block text-[10.5px] font-black text-emerald-950 truncate">
+                          {lastSyncedTime}
+                        </span>
+                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
+                          Last Sync
+                        </span>
+                      </div>
+                    </div>
+
+                    {manualSyncMsg && (
+                      <div className="bg-emerald-100 p-2 rounded-xl border border-emerald-300 text-[10.5px] font-bold text-emerald-900 flex items-center gap-1.5 animate-in fade-in">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                        <span>{manualSyncMsg}</span>
+                      </div>
+                    )}
 
                     {(!isOnline || syncState === "error") && syncErrorMsg && (
                       <div className="bg-white/95 p-2 rounded-xl border border-rose-200 text-[10.5px] font-bold text-rose-800 flex items-start gap-1.5">

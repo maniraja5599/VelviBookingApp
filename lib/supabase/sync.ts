@@ -352,7 +352,7 @@ export async function clearCloudBusinessData(businessId: string): Promise<boolea
  */
 export async function pushAllToCloud(businessId: string): Promise<boolean> {
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase || !businessId) return false;
 
   try {
     // 1. Business & User Profile
@@ -361,24 +361,100 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
       await pushBusinessToCloud(biz);
     }
 
-    // 2. Customers
+    // 2. Batch upsert customers for this business
     const customers = db.customers.filter((c) => c.businessId === businessId);
-    for (const c of customers) {
-      await pushCustomerToCloud(c);
+    if (customers.length > 0) {
+      const custPayload = customers.map((c) => ({
+        id: c.id,
+        business_id: c.businessId || businessId,
+        name: c.name || "Devotee",
+        mobile: c.mobile || null,
+        whatsapp: c.whatsapp || null,
+        address: c.address || null,
+        city: c.city || "Namakkal",
+        notes: c.notes || null,
+        gothram: c.gothram || null,
+        nakshatram: c.nakshatram || null,
+        rasi: c.rasi || null,
+        updated_at: new Date().toISOString(),
+      }));
+      await supabase.from("customers").upsert(custPayload);
     }
 
-    // 3. Poojas
+    // 3. Batch upsert poojas for this business
     const poojas = db.poojas.filter(
       (p) => p.businessId === businessId && !isLegacyObsoletePooja(p)
     );
-    for (const p of poojas) {
-      await pushPoojaToCloud(p);
+    if (poojas.length > 0) {
+      const poojaPayload = poojas.map((p) => ({
+        id: p.id,
+        business_id: p.businessId || businessId,
+        english_name: p.englishName || p.tamilName || "Pooja",
+        tamil_name: p.tamilName || p.englishName || "பூஜை",
+        description: p.description || null,
+        duration_minutes: p.durationMinutes || 120,
+        base_price: p.basePrice || 0,
+        procedure: p.procedure || null,
+        items: p.items || [],
+        is_custom: Boolean(p.isCustom),
+        updated_at: new Date().toISOString(),
+      }));
+      await supabase.from("poojas").upsert(poojaPayload);
     }
 
-    // 4. Bookings
+    // 4. Batch upsert bookings for this business
     const bookings = db.bookings.filter((b) => b.businessId === businessId);
-    for (const b of bookings) {
-      await pushBookingToCloud(b);
+    if (bookings.length > 0) {
+      const bookingPayload = bookings.map((b) => {
+        const validPaymentStatus = ["PAID", "PARTIALLY_PAID", "PENDING"].includes(
+          b.paymentStatus as any
+        )
+          ? b.paymentStatus
+          : b.balanceAmount === 0
+          ? "PAID"
+          : (b.advanceAmount || 0) > 0
+          ? "PARTIALLY_PAID"
+          : "PENDING";
+
+        const validStatus = ["ENQUIRY", "CONFIRMED", "COMPLETED", "CANCELLED"].includes(
+          b.status as any
+        )
+          ? b.status
+          : "CONFIRMED";
+
+        return {
+          id: b.id,
+          booking_number: b.bookingNumber || "#8001",
+          business_id: b.businessId || businessId,
+          customer_id: b.customerId || null,
+          customer_name: b.customerName || "Devotee",
+          customer_mobile: b.customerMobile || null,
+          customer_address: b.customerAddress || null,
+          pooja_id: b.poojaId || null,
+          pooja_english_name: b.poojaEnglishName || b.poojaTamilName || "Pooja",
+          pooja_tamil_name: b.poojaTamilName || b.poojaEnglishName || "பூஜை",
+          assigned_iyer_id: b.assignedIyerId || null,
+          assigned_iyer_name: b.assignedIyerName || null,
+          date: b.date || new Date().toISOString().split("T")[0],
+          start_time: b.startTime || "09:00 AM",
+          end_time: b.endTime || null,
+          duration_minutes: b.durationMinutes || 120,
+          location: b.location || "Namakkal",
+          total_amount: Number(b.totalAmount || 0),
+          advance_amount: Number(b.advanceAmount || 0),
+          balance_amount: Number(b.balanceAmount || 0),
+          payment_status: validPaymentStatus,
+          status: validStatus,
+          items: b.items || [],
+          notes: b.notes || null,
+          cancellation_reason: b.cancellationReason || null,
+          cancelled_at: b.cancelledAt || null,
+          created_by: b.createdBy || b.assignedIyerName || "Priest",
+          created_at: b.createdAt || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      });
+      await supabase.from("bookings").upsert(bookingPayload);
     }
 
     return true;
@@ -404,7 +480,7 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
   }
 
   const supabase = getSupabaseClient();
-  if (!supabase) return false;
+  if (!supabase || !businessId) return false;
 
   try {
     // 1. Fetch Customers
@@ -485,7 +561,7 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 
     if (bErr) {
       console.warn("[CloudSync] Bookings fetch notice:", bErr.message);
-    } else if (Array.isArray(cloudBookings) && cloudBookings.length > 0) {
+    } else if (Array.isArray(cloudBookings)) {
       const mapped: Booking[] = cloudBookings.map((b) => ({
         id: b.id,
         bookingNumber: b.booking_number,
@@ -518,6 +594,7 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
         updatedAt: b.updated_at,
       }));
 
+      // Upsert / merge cloud bookings into local store
       mapped.forEach((cb) => {
         const idx = db.bookings.findIndex((b) => b.id === cb.id);
         if (idx >= 0) {
@@ -530,6 +607,20 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 
     db.saveToLocalStorage();
     db.notifyListeners();
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:sync-state", {
+          detail: {
+            state: "synced",
+            lastSyncedAt: new Date().toISOString(),
+            bookingsCount: cloudBookings?.length || 0,
+            customersCount: cloudCustomers?.length || 0,
+          },
+        })
+      );
+    }
+
     return true;
   } catch (err: any) {
     console.error("[CloudSync] Pull error:", err);
@@ -538,9 +629,9 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 }
 
 /**
- * Performs full bidirectional cloud synchronization (Push Local -> Cloud, then Pull Cloud -> Local).
+ * Performs full bidirectional cloud synchronization (Pulls Cloud -> Local first, then Pushes Local -> Cloud).
  */
-export async function syncAll(businessId: string): Promise<{ ok: boolean; message?: string }> {
+export async function syncAll(businessId: string): Promise<{ ok: boolean; message?: string; count?: number }> {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     const error = "இணைய இணைப்பு இல்லை (Offline)";
     if (typeof window !== "undefined") {
@@ -561,21 +652,30 @@ export async function syncAll(businessId: string): Promise<{ ok: boolean; messag
   }
 
   try {
-    // 1. Push local changes up to Supabase Cloud
+    // 1. Pull remote records FIRST so multi-device updates appear immediately
+    await pullFromCloud(businessId);
+
+    // 2. Push any local changes up to Supabase Cloud
     await pushAllToCloud(businessId);
 
-    // 2. Pull remote records down from Supabase Cloud
-    await pullFromCloud(businessId);
+    const count = db.getBookings(businessId).length;
 
     if (typeof window !== "undefined") {
       window.dispatchEvent(
-        new CustomEvent("velvi:sync-state", { detail: { state: "synced" } })
+        new CustomEvent("velvi:sync-state", {
+          detail: {
+            state: "synced",
+            lastSyncedAt: new Date().toISOString(),
+            bookingsCount: count,
+          },
+        })
       );
     }
 
     return {
       ok: true,
       message: "மேகக்கணி ஒத்திசைவு வெற்றிகரமாக முடிந்தது! (Cloud Synced)",
+      count,
     };
   } catch (err: any) {
     console.error("[CloudSync] syncAll failed:", err);
@@ -595,7 +695,7 @@ export async function syncAll(businessId: string): Promise<{ ok: boolean; messag
 /**
  * User-triggered manual retry of cloud synchronization.
  */
-export async function retryCloudSync(businessId: string): Promise<{ ok: boolean; message?: string }> {
+export async function retryCloudSync(businessId: string): Promise<{ ok: boolean; message?: string; count?: number }> {
   return await syncAll(businessId);
 }
 
@@ -603,14 +703,22 @@ export async function retryCloudSync(businessId: string): Promise<{ ok: boolean;
  * Initializes two-way synchronization between LocalStorage and Supabase Cloud.
  */
 export async function initCloudSync(businessId: string) {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !businessId) {
     return;
   }
 
   const supabase = getSupabaseClient();
   if (!supabase) return;
 
-  // 1. Full Initial Sync (Push local records + Pull cloud records)
+  // Clean up any stale subscription channel so we subscribe to the active business channel
+  if (realtimeSubscription) {
+    try {
+      supabase.removeChannel(realtimeSubscription);
+    } catch (_) {}
+    realtimeSubscription = null;
+  }
+
+  // 1. Full Initial Sync (Pull first, then push)
   try {
     await syncAll(businessId);
   } catch (err) {
@@ -618,50 +726,58 @@ export async function initCloudSync(businessId: string) {
   }
 
   // 2. Realtime subscription: listen for updates from other devices / Super Admin
-  if (!realtimeSubscription) {
-    try {
-      realtimeSubscription = supabase
-        .channel(`business-${businessId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "bookings",
-            filter: `business_id=eq.${businessId}`,
-          },
-          (payload: any) => {
-            handleCloudBookingChange(payload);
+  try {
+    realtimeSubscription = supabase
+      .channel(`business-${businessId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudBookingChange(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "customers",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudCustomerChange(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "poojas",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudPoojaChange(payload);
+        }
+      )
+      .subscribe((status: string) => {
+        if (status === "SUBSCRIBED") {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("velvi:sync-state", {
+                detail: { state: "synced", lastSyncedAt: new Date().toISOString() },
+              })
+            );
           }
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "customers",
-            filter: `business_id=eq.${businessId}`,
-          },
-          (payload: any) => {
-            handleCloudCustomerChange(payload);
-          }
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "poojas",
-            filter: `business_id=eq.${businessId}`,
-          },
-          (payload: any) => {
-            handleCloudPoojaChange(payload);
-          }
-        )
-        .subscribe();
-    } catch (subErr) {
-      console.warn("[CloudSync] Realtime subscribe notice:", subErr);
-    }
+        }
+      });
+  } catch (subErr) {
+    console.warn("[CloudSync] Realtime subscribe notice:", subErr);
   }
 }
 
@@ -709,12 +825,26 @@ function handleCloudBookingChange(payload: any) {
     }
     db.saveToLocalStorage();
     db.notifyListeners();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:sync-state", {
+          detail: { state: "synced", lastSyncedAt: new Date().toISOString() },
+        })
+      );
+    }
   } else if (payload.eventType === "DELETE") {
     const oldId = payload.old?.id;
     if (oldId) {
       db.bookings = db.bookings.filter((b) => b.id !== oldId);
       db.saveToLocalStorage();
       db.notifyListeners();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("velvi:sync-state", {
+            detail: { state: "synced", lastSyncedAt: new Date().toISOString() },
+          })
+        );
+      }
     }
   }
 }
@@ -747,12 +877,26 @@ function handleCloudCustomerChange(payload: any) {
     }
     db.saveToLocalStorage();
     db.notifyListeners();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("velvi:sync-state", {
+          detail: { state: "synced", lastSyncedAt: new Date().toISOString() },
+        })
+      );
+    }
   } else if (payload.eventType === "DELETE") {
     const oldId = payload.old?.id;
     if (oldId) {
       db.customers = db.customers.filter((c) => c.id !== oldId);
       db.saveToLocalStorage();
       db.notifyListeners();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("velvi:sync-state", {
+            detail: { state: "synced", lastSyncedAt: new Date().toISOString() },
+          })
+        );
+      }
     }
   }
 }

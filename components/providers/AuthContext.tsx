@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Business, Subscription, UserRole } from "@/lib/types";
 import { db } from "@/lib/db/store";
 import { normalizeIndianMobile, maskEmail } from "@/lib/utils/phone";
-import { initCloudSync, pushBusinessToCloud, pushUserToCloud } from "@/lib/supabase/sync";
+import { initCloudSync, syncAll, pushBusinessToCloud, pushUserToCloud } from "@/lib/supabase/sync";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface AuthContextType {
@@ -169,7 +169,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentUser({ ...user });
 
     if (user.role === "SUPER_ADMIN") {
-      setCurrentBusiness(db.businesses[0]);
+      const saBiz = db.businesses.find((b) => b.id === "biz-venkateswara-01") || db.businesses[0];
+      setCurrentBusiness(saBiz ? { ...saBiz } : null);
       setSubscription(db.subscriptions[0]);
     } else {
       let biz = db.businesses.find((b) => b.ownerId === user.id);
@@ -621,17 +622,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Ensure business profile exists for this user
       let biz = isSuperAdminEmail
-        ? db.businesses[0]
+        ? db.businesses.find((b) => b.id === "biz-venkateswara-01") || db.businesses[0]
         : (cloudBizId ? db.businesses.find((b) => b.id === cloudBizId) : null) ||
           db.businesses.find((b) => b.ownerId === user.id);
 
-      if (!biz) {
-        const bizId = isSuperAdminEmail
-          ? "biz-venkateswara-01"
-          : cloudBizId || `biz-${user.id}`;
+      const targetBizId = isSuperAdminEmail
+        ? "biz-venkateswara-01"
+        : cloudBizId || (biz ? biz.id : `biz-${user.id}`);
 
+      if (!biz) {
         biz = {
-          id: bizId,
+          id: targetBizId,
           ownerId: user.id,
           name: cloudBizName || user.name || "Pooja Services",
           serviceName: "Pooja • Homam • Seva",
@@ -644,13 +645,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
         };
         db.businesses.push(biz);
-        db.seedDefaultPoojasForBusiness(bizId);
+        db.seedDefaultPoojasForBusiness(targetBizId);
 
         const now = new Date();
         const end = new Date(Date.now() + 30 * 86400000);
         db.subscriptions.push({
           id: `sub-${Date.now()}`,
-          businessId: bizId,
+          businessId: targetBizId,
           planName: "Velvi Pro Monthly",
           planCode: "VELVI_PRO",
           status: "ACTIVE",
@@ -678,16 +679,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
+      // Guarantee cloud contains user & business mapping
+      try {
+        await pushUserToCloud(user);
+        if (biz) {
+          await pushBusinessToCloud(biz);
+        }
+      } catch (_) {}
+
       if (typeof window !== "undefined") {
         localStorage.setItem("velvi_active_user_id", user.id);
       }
       db.saveToLocalStorage();
       syncState();
-      setIsLoading(false);
 
+      // FULL AWAIT of Cloud Sync before returning so Mobile 2 immediately gets all bookings!
       if (biz?.id) {
-        initCloudSync(biz.id).catch(() => {});
+        try {
+          await syncAll(biz.id);
+          initCloudSync(biz.id);
+        } catch (e) {
+          console.warn("[AuthContext] Cloud sync during login notice:", e);
+        }
       }
+
+      setIsLoading(false);
       return user;
     },
     [syncState]
