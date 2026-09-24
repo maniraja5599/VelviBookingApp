@@ -29,6 +29,7 @@ import {
   Activity,
   DollarSign,
   Globe,
+  MapPin,
   Smartphone,
   Mail,
   AlertTriangle,
@@ -68,7 +69,7 @@ export default function SuperAdminDashboardPage() {
   // ---------------------------------------------------------------------------
   const [directorySearch, setDirectorySearch] = useState("");
   const [directoryFilter, setDirectoryFilter] = useState<
-    "ALL" | "ACTIVE" | "TRIAL" | "EXPIRED"
+    "ALL" | "ACTIVE" | "TRIAL" | "EXPIRED" | "DEMO"
   >("ALL");
 
   // Selected Business for custom validity adjustment modal
@@ -85,7 +86,7 @@ export default function SuperAdminDashboardPage() {
     "Developer promotional extension"
   );
 
-  // Live Directory Metrics with IP Addresses
+  // Live Directory Metrics with IP Addresses & Geo Locations
   const directoryMetrics: UserDirectoryMetric[] = useMemo(() => {
     return db.getAllUsersDirectoryMetrics();
   }, [actionSuccess, activeTab]);
@@ -93,19 +94,26 @@ export default function SuperAdminDashboardPage() {
   const filteredMetrics = useMemo(() => {
     return directoryMetrics.filter((item) => {
       const q = directorySearch.toLowerCase();
+      const isDemo =
+        item.user.id === "u-ravi-iyer-01" ||
+        item.business?.id === "biz-venkateswara-01";
+
       const matchesSearch =
         item.user.name.toLowerCase().includes(q) ||
         item.user.email.toLowerCase().includes(q) ||
         item.user.mobile.includes(q) ||
         (item.ipAddress && item.ipAddress.includes(q)) ||
+        (item.city && item.city.toLowerCase().includes(q)) ||
+        (item.country && item.country.toLowerCase().includes(q)) ||
         (item.business?.name && item.business.name.toLowerCase().includes(q));
 
       const subStatus = item.subscription?.status || "TRIAL";
       const matchesFilter =
         directoryFilter === "ALL" ||
-        (directoryFilter === "ACTIVE" && subStatus === "ACTIVE") ||
-        (directoryFilter === "TRIAL" && subStatus === "TRIAL") ||
-        (directoryFilter === "EXPIRED" && subStatus === "EXPIRED");
+        (directoryFilter === "ACTIVE" && subStatus === "ACTIVE" && !isDemo) ||
+        (directoryFilter === "TRIAL" && subStatus === "TRIAL" && !isDemo) ||
+        (directoryFilter === "EXPIRED" && subStatus === "EXPIRED") ||
+        (directoryFilter === "DEMO" && isDemo);
 
       return matchesSearch && matchesFilter;
     });
@@ -560,6 +568,65 @@ export default function SuperAdminDashboardPage() {
               </button>
             </div>
           </div>
+
+          {/* Recent Logins & Geo Audit Stream */}
+          <div className="bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-3 shadow-md">
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-amber-400" />
+                <h3 className="font-bold text-xs sm:text-sm text-white">Live Session Logins &amp; Locations</h3>
+              </div>
+              <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold">
+                Real-Time
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {(db.auditLogs || []).slice(0, 6).map((log) => {
+                const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
+                return (
+                  <div
+                    key={log.id}
+                    className="p-3 bg-[#090d16] rounded-xl border border-zinc-800/80 space-y-1.5 text-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-white truncate text-xs">{log.actorName}</span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                          isDemo
+                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                        }`}
+                      >
+                        {isDemo ? "🚀 Quick Demo" : log.action.replace("_", " ")}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                      <span className="flex items-center gap-1 font-mono text-amber-300/90">
+                        <Globe className="w-3 h-3 text-amber-400" />
+                        {log.ipAddress || "106.210.142.88"}
+                      </span>
+                      <span className="flex items-center gap-1 text-slate-300">
+                        <MapPin className="w-3 h-3 text-emerald-400" />
+                        {log.city || "Chennai"}, {log.country || "India"}
+                      </span>
+                    </div>
+
+                    <div className="text-[9.5px] text-slate-500 font-mono flex items-center justify-between border-t border-zinc-800/60 pt-1">
+                      <span className="truncate max-w-[170px]">{log.reason || "Authenticated Session"}</span>
+                      <span className="shrink-0">
+                        {new Date(log.createdAt).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
 
@@ -574,7 +641,7 @@ export default function SuperAdminDashboardPage() {
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search name, phone, email, or IP address..."
+                placeholder="Search name, phone, email, IP, city, or country..."
                 value={directorySearch}
                 onChange={(e) => setDirectorySearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-[#0c1220] border border-zinc-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
@@ -582,7 +649,7 @@ export default function SuperAdminDashboardPage() {
             </div>
 
             <div className="flex gap-1 text-xs font-semibold overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-              {["ALL", "ACTIVE", "TRIAL", "EXPIRED"].map((f) => (
+              {["ALL", "ACTIVE", "TRIAL", "EXPIRED", "DEMO"].map((f) => (
                 <button
                   key={f}
                   type="button"
@@ -593,7 +660,7 @@ export default function SuperAdminDashboardPage() {
                       : "bg-[#0c1220] text-slate-400 border border-zinc-800 hover:text-white"
                   }`}
                 >
-                  {f}
+                  {f === "DEMO" ? "🚀 DEMO" : f}
                 </button>
               ))}
             </div>
@@ -643,6 +710,11 @@ export default function SuperAdminDashboardPage() {
                               Super Admin
                             </span>
                           )}
+                          {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
+                            <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[9px] font-black uppercase">
+                              Demo (20 Cap)
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-amber-400/90 font-medium">
                           {biz?.name || "Independent Practitioner"}
@@ -673,9 +745,15 @@ export default function SuperAdminDashboardPage() {
                           {item.user.email}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] text-amber-400/90 font-mono pt-0.5 border-t border-zinc-800/60">
-                        <Globe className="w-3 h-3 text-amber-400 shrink-0" />
-                        <span>IP: {item.ipAddress || "106.210.142.88"}</span>
+                      <div className="flex items-center justify-between gap-1 text-[10px] text-amber-400/90 font-mono pt-0.5 border-t border-zinc-800/60 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>IP: {item.ipAddress || "106.210.142.88"}</span>
+                        </span>
+                        <span className="flex items-center gap-1 text-slate-300 font-sans">
+                          <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                          <span>{item.city || "Chennai"}, {item.country || "India"}</span>
+                        </span>
                       </div>
                     </div>
 
@@ -752,7 +830,7 @@ export default function SuperAdminDashboardPage() {
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
                     <th className="p-4">Vadhyar &amp; Business</th>
-                    <th className="p-4">Client IP Address</th>
+                    <th className="p-4">IP &amp; Location</th>
                     <th className="p-4">Joined Date</th>
                     <th className="p-4">Bookings</th>
                     <th className="p-4">Dakshina Total</th>
@@ -792,13 +870,18 @@ export default function SuperAdminDashboardPage() {
                       return (
                         <tr key={item.user.id} className="hover:bg-zinc-800/30 transition">
                           <td className="p-4">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-white text-sm">
                                 {item.user.name}
                               </span>
                               {item.isSuperAdmin && (
                                 <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase">
                                   Super Admin
+                                </span>
+                              )}
+                              {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
+                                <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[9px] font-black uppercase">
+                                  Demo (20 Cap)
                                 </span>
                               )}
                             </div>
@@ -810,11 +893,17 @@ export default function SuperAdminDashboardPage() {
                             </div>
                           </td>
 
-                          {/* IP Address Column */}
+                          {/* IP Address & Location Column */}
                           <td className="p-4 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-300/90 bg-[#090d16] px-2 py-1 rounded-lg border border-zinc-800 w-fit">
-                              <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                              <span>{item.ipAddress || "106.210.142.88"}</span>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-300/90 bg-[#090d16] px-2 py-0.5 rounded-lg border border-zinc-800 w-fit">
+                                <Globe className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                <span>{item.ipAddress || "106.210.142.88"}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-[10px] text-slate-400 pl-0.5">
+                                <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>{item.city || "Chennai"}, {item.country || "India"}</span>
+                              </div>
                             </div>
                           </td>
 

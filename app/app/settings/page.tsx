@@ -242,15 +242,19 @@ export default function SettingsHubPage() {
           iconColor: "text-cyan-800",
           keywords: "backup export excel csv import restore cloud data",
         },
-        {
-          onClick: () => setShowClearDemoModal(true),
-          label: "Clear Demo Data",
-          desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
-          icon: Sparkles,
-          iconBg: "bg-red-100/90 border border-red-200",
-          iconColor: "text-red-700",
-          keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு",
-        },
+        ...(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01"
+          ? [
+              {
+                onClick: () => setShowClearDemoModal(true),
+                label: "Clear Demo Data",
+                desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
+                icon: Sparkles,
+                iconBg: "bg-red-100/90 border border-red-200",
+                iconColor: "text-red-700",
+                keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு",
+              },
+            ]
+          : []),
       ],
     },
     {

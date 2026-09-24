@@ -13,6 +13,10 @@ export interface User {
   createdAt: string;
   registrationIp?: string;
   lastLoginIp?: string;
+  registrationCity?: string;
+  registrationCountry?: string;
+  lastLoginCity?: string;
+  lastLoginCountry?: string;
 }
 
 export interface Business {
@@ -308,6 +312,8 @@ export interface AuditLog {
   newValue?: any;
   reason?: string;
   ipAddress?: string;
+  city?: string;
+  country?: string;
   createdAt: string;
 }
 
@@ -337,4 +343,6 @@ export interface UserDirectoryMetric {
   joinedDate: string;
   isSuperAdmin: boolean;
   ipAddress?: string;
+  city?: string;
+  country?: string;
 }

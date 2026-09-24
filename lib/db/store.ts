@@ -447,6 +447,31 @@ export class VelviDatabaseStore {
     }
   }
 
+  public isDemoBusiness(businessId: string): boolean {
+    if (!businessId) return false;
+    if (businessId === "biz-venkateswara-01") return true;
+    const biz = this.businesses.find((b) => b.id === businessId);
+    if (biz && biz.ownerId === "u-ravi-iyer-01") return true;
+    return false;
+  }
+
+  public logAudit(entry: Omit<AuditLog, "id" | "createdAt">): AuditLog {
+    const log: AuditLog = {
+      id: `audit-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+      ...entry,
+    };
+    this.auditLogs.unshift(log);
+    if (this.auditLogs.length > 200) {
+      this.auditLogs = this.auditLogs.slice(0, 200);
+    }
+    if (typeof window !== "undefined") {
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+    return log;
+  }
+
   // -------------------------------------------------------------
   // TENANT ISOLATION: Strict business_id Filtering
   // -------------------------------------------------------------
@@ -1441,6 +1466,14 @@ export class VelviDatabaseStore {
     items?: BookingItem[];
     notes?: string;
   }): Booking {
+    const isDemo = this.isDemoBusiness(params.businessId);
+    const existingCount = this.bookings.filter((b) => b.businessId === params.businessId).length;
+    if (isDemo && existingCount >= 20) {
+      throw new Error(
+        "இலவச டெமோ வரம்பு முடிந்தது (அதிகபட்சம் 20 முன்பதிவுகள் மட்டுமே அனுமதிக்கப்படும்). வரம்பற்ற முன்பதிவுகளுக்கு Velvi Pro-விற்கு மேம்படுத்தவும். (Free Demo limit reached: Maximum 20 bookings allowed. Please upgrade to Velvi Pro for unlimited bookings.)"
+      );
+    }
+
     const bNum = (8248 + this.bookings.length + 1).toString();
     const newBooking: Booking = {
       id: `b-${Date.now()}`,
@@ -2180,6 +2213,24 @@ export class VelviDatabaseStore {
           ? "182.74.89.33"
           : "106.208.55.19");
 
+      const city =
+        user.lastLoginCity ||
+        user.registrationCity ||
+        (user.email.includes("ravi")
+          ? "Chennai"
+          : user.email.includes("mani")
+          ? "Namakkal"
+          : user.email.includes("suresh")
+          ? "Madurai"
+          : user.email.includes("kumar")
+          ? "Coimbatore"
+          : "Chennai");
+
+      const country =
+        user.lastLoginCountry ||
+        user.registrationCountry ||
+        "India";
+
       return {
         user,
         business: biz,
@@ -2190,6 +2241,8 @@ export class VelviDatabaseStore {
         joinedDate: user.createdAt,
         isSuperAdmin,
         ipAddress,
+        city,
+        country,
       };
     });
   }

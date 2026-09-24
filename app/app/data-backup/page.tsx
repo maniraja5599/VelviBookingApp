@@ -291,41 +291,43 @@ export default function DataBackupPage() {
         )}
       </div>
 
-      {/* Demo Data Management */}
-      <div className="bg-white rounded-3xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-velvi-gold" /> மாதிரி பதிவுகள் மேலாண்மை (Demo Data)
-          </h3>
-        </div>
-        <p className="text-xs text-velvi-brown/70">
-          சோதனைக்காக வைக்கப்பட்ட மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை ஒரே கிளிக்கில் நீக்கிவிட்டு புதிய பதிவுகளை தொடங்கலாம்.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-2 pt-1">
-          <button
-            onClick={() => {
-              if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
-                const res = db.clearDemoData();
-                setExportMessage(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) நீக்கப்பட்டனர்!`);
+      {/* Demo Data Management - Only visible for Demo Account */}
+      {(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01") && (
+        <div className="bg-white rounded-3xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-velvi-brownDark flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-velvi-gold" /> மாதிரி பதிவுகள் மேலாண்மை (Demo Data)
+            </h3>
+          </div>
+          <p className="text-xs text-velvi-brown/70">
+            சோதனைக்காக வைக்கப்பட்ட மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை ஒரே கிளிக்கில் நீக்கிவிட்டு புதிய பதிவுகளை தொடங்கலாம்.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            <button
+              onClick={() => {
+                if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
+                  const res = db.clearDemoData();
+                  setExportMessage(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) நீக்கப்பட்டனர்!`);
+                  setTimeout(() => setExportMessage(""), 4000);
+                }
+              }}
+              className="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-xl text-xs cursor-pointer transition flex items-center justify-center gap-1.5"
+            >
+              <span>மாதிரி பதிவுகளை நீக்கு (Clear Demo Data)</span>
+            </button>
+            <button
+              onClick={() => {
+                const res = db.loadSampleData(businessId);
+                setExportMessage(`மாதிரி பதிவுகள் ஏற்றப்பட்டன (${res.addedBookings} முன்பதிவுகள்)!`);
                 setTimeout(() => setExportMessage(""), 4000);
-              }
-            }}
-            className="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-xl text-xs cursor-pointer transition flex items-center justify-center gap-1.5"
-          >
-            <span>மாதிரி பதிவுகளை நீக்கு (Clear Demo Data)</span>
-          </button>
-          <button
-            onClick={() => {
-              const res = db.loadSampleData(businessId);
-              setExportMessage(`மாதிரி பதிவுகள் ஏற்றப்பட்டன (${res.addedBookings} முன்பதிவுகள்)!`);
-              setTimeout(() => setExportMessage(""), 4000);
-            }}
-            className="py-2.5 px-4 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown font-bold border border-velvi-gold/30 rounded-xl text-xs cursor-pointer transition"
-          >
-            மாதிரி ஏற்று (Reload Demo)
-          </button>
+              }}
+              className="py-2.5 px-4 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown font-bold border border-velvi-gold/30 rounded-xl text-xs cursor-pointer transition"
+            >
+              மாதிரி ஏற்று (Reload Demo)
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

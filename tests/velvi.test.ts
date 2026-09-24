@@ -1668,6 +1668,121 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(lastPayment.amount).toBe(0);
     expect(lastPayment.paymentMethod).toBe("Coupon 100% Free");
   });
+
+  // TEST CASE 54: Free Demo User 20-Booking Cap
+  it("Test 54: Free Demo user cannot create more than 20 bookings", () => {
+    const demoBizId = "biz-venkateswara-01";
+    expect(store.isDemoBusiness(demoBizId)).toBe(true);
+
+    // Initial demo bookings count is 13
+    const initialCount = store.getBookings(demoBizId).length;
+    expect(initialCount).toBeLessThan(20);
+
+    // Add bookings until reaching exactly 20
+    const toAdd = 20 - initialCount;
+    for (let i = 0; i < toAdd; i++) {
+      store.createBooking({
+        businessId: demoBizId,
+        customerId: "c-ramesh-01",
+        poojaId: "p-ganapathi-01",
+        date: "2026-12-01",
+        startTime: "09:00 AM",
+        location: "Namakkal",
+        totalAmount: 5000,
+        advanceAmount: 1000,
+        balanceAmount: 4000,
+        paymentStatus: "PARTIALLY_PAID",
+        status: "CONFIRMED",
+      });
+    }
+
+    expect(store.getBookings(demoBizId).length).toBe(20);
+
+    // Attempting to create booking #21 MUST throw limit error
+    expect(() => {
+      store.createBooking({
+        businessId: demoBizId,
+        customerId: "c-ramesh-01",
+        poojaId: "p-ganapathi-01",
+        date: "2026-12-02",
+        startTime: "10:00 AM",
+        location: "Namakkal",
+        totalAmount: 5000,
+        advanceAmount: 1000,
+        balanceAmount: 4000,
+        paymentStatus: "PARTIALLY_PAID",
+        status: "CONFIRMED",
+      });
+    }).toThrow(/இலவச டெமோ வரம்பு முடிந்தது|Free Demo limit reached/);
+
+    // Booking count must remain capped at 20
+    expect(store.getBookings(demoBizId).length).toBe(20);
+  });
+
+  // TEST CASE 55: Fresh New User Starts Completely Clean (0 Bookings, 0 Customers)
+  it("Test 55: Fresh newly created users start with 0 bookings and 0 customers", () => {
+    const newUserId = "u-fresh-priest-99";
+    const newBizId = "biz-fresh-priest-99";
+
+    store.users.push({
+      id: newUserId,
+      googleId: "google-fresh-99",
+      email: "freshpriest@velvi.app",
+      name: "Fresh Vadhyar",
+      mobile: "+919876543299",
+      mobileVerified: true,
+      role: "OWNER",
+      referralCode: "VELVI-FRESH99",
+      createdAt: new Date().toISOString(),
+    });
+
+    store.businesses.push({
+      id: newBizId,
+      ownerId: newUserId,
+      name: "Fresh Pooja Services",
+      iyerName: "Fresh Vadhyar",
+      phone: "+919876543299",
+      showWatermark: true,
+      createdAt: new Date().toISOString(),
+    });
+
+    // Fresh business must have ZERO dummy bookings and ZERO dummy customers
+    expect(store.getBookings(newBizId)).toHaveLength(0);
+    expect(store.getCustomers(newBizId)).toHaveLength(0);
+
+    // Non-demo businesses are not blocked by the demo 20 cap
+    expect(store.isDemoBusiness(newBizId)).toBe(false);
+  });
+
+  // TEST CASE 56: Geo Location (City, Country) and Audit Logging
+  it("Test 56: Directory metrics and audit logging support IP, City, and Country", () => {
+    const metrics = store.getAllUsersDirectoryMetrics();
+    expect(metrics.length).toBeGreaterThan(0);
+
+    const raviMetric = metrics.find((m) => m.user.id === "u-ravi-iyer-01");
+    expect(raviMetric).toBeDefined();
+    expect(raviMetric?.city).toBeDefined();
+    expect(raviMetric?.country).toBe("India");
+    expect(raviMetric?.ipAddress).toBeDefined();
+
+    // Verify audit log creation
+    const log = store.logAudit({
+      actorId: "u-ravi-iyer-01",
+      actorName: "Ravi Iyer",
+      action: "DEMO_LOGIN",
+      targetType: "AUTH_SESSION",
+      ipAddress: "106.210.142.88",
+      city: "Chennai",
+      country: "India",
+      reason: "Quick demo access",
+    });
+
+    expect(log.id).toBeDefined();
+    expect(log.ipAddress).toBe("106.210.142.88");
+    expect(log.city).toBe("Chennai");
+    expect(log.country).toBe("India");
+    expect(store.auditLogs[0].id).toBe(log.id);
+  });
 });
 
 

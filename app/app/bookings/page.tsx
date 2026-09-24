@@ -1102,8 +1102,8 @@ export default function BookingsListPage() {
         )}
       </div>
 
-      {/* Demo Bookings Alert Banner */}
-      {hasSampleBookings && (
+      {/* Demo Bookings Alert Banner - ONLY shown for Demo user */}
+      {(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01") && hasSampleBookings && (
         <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs shadow-2xs">
           <div className="flex items-center gap-2">
             <span className="text-base">✨</span>

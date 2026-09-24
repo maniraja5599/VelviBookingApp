@@ -272,10 +272,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const normalized = normalizeIndianMobile(cleanDigits);
 
       let clientIp = "106.210.142.88";
+      let clientCity = "Chennai";
+      let clientCountry = "India";
       try {
         const ipRes = await fetch("/api/auth/client-ip");
         const ipData = await ipRes.json();
         if (ipData?.ip) clientIp = ipData.ip;
+        if (ipData?.city) clientCity = ipData.city;
+        if (ipData?.country) clientCountry = ipData.country;
       } catch {}
 
       let user = db.users.find((u) => u.mobile && normalizeIndianMobile(u.mobile) === normalized);
@@ -294,6 +298,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
           registrationIp: clientIp,
           lastLoginIp: clientIp,
+          registrationCity: clientCity,
+          registrationCountry: clientCountry,
+          lastLoginCity: clientCity,
+          lastLoginCountry: clientCountry,
         };
         db.users.push(user);
 
@@ -352,10 +360,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginDemo = React.useCallback(async (): Promise<User> => {
     setIsLoading(true);
+    let clientIp = "106.210.142.88";
+    let clientCity = "Chennai";
+    let clientCountry = "India";
+    try {
+      const ipRes = await fetch("/api/auth/client-ip");
+      const ipData = await ipRes.json();
+      if (ipData?.ip) clientIp = ipData.ip;
+      if (ipData?.city) clientCity = ipData.city;
+      if (ipData?.country) clientCountry = ipData.country;
+    } catch {}
+
     const demoUser = db.users[0]; // Ravi Iyer
+    demoUser.lastLoginIp = clientIp;
+    demoUser.lastLoginCity = clientCity;
+    demoUser.lastLoginCountry = clientCountry;
+
+    // Record login in audit logs for Super Admin
+    db.logAudit({
+      actorId: demoUser.id,
+      actorName: demoUser.name,
+      action: "DEMO_LOGIN",
+      targetType: "AUTH_SESSION",
+      targetId: demoUser.id,
+      ipAddress: clientIp,
+      city: clientCity,
+      country: clientCountry,
+      reason: "User accessed Quick Demo mode (20-Booking Cap)",
+      newValue: { ip: clientIp, city: clientCity, country: clientCountry },
+    });
+
     if (typeof window !== "undefined") {
       localStorage.setItem("velvi_active_user_id", demoUser.id);
     }
+    db.saveToLocalStorage();
     syncState();
     setIsLoading(false);
     return demoUser;
@@ -376,10 +414,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           : "Vedic Priest");
 
       let clientIp = "106.210.142.88";
+      let clientCity = "Chennai";
+      let clientCountry = "India";
       try {
         const ipRes = await fetch("/api/auth/client-ip");
         const ipData = await ipRes.json();
         if (ipData?.ip) clientIp = ipData.ip;
+        if (ipData?.city) clientCity = ipData.city;
+        if (ipData?.country) clientCountry = ipData.country;
       } catch {}
 
       // Find existing or mock new Google user (case-insensitive email matching)
@@ -400,12 +442,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: new Date().toISOString(),
           registrationIp: clientIp,
           lastLoginIp: clientIp,
+          registrationCity: clientCity,
+          registrationCountry: clientCountry,
+          lastLoginCity: clientCity,
+          lastLoginCountry: clientCountry,
         };
         db.users.push(user);
       } else {
         user.lastLoginIp = clientIp;
+        user.lastLoginCity = clientCity;
+        user.lastLoginCountry = clientCountry;
         if (!user.registrationIp) {
           user.registrationIp = clientIp;
+          user.registrationCity = clientCity;
+          user.registrationCountry = clientCountry;
         }
         if (isSuperAdminEmail) {
           user.role = "SUPER_ADMIN";
@@ -417,6 +467,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           user.name = name.trim();
         }
       }
+
+      // Log login event in audit logs
+      db.logAudit({
+        actorId: user.id,
+        actorName: user.name,
+        action: "GOOGLE_LOGIN",
+        targetType: "AUTH_SESSION",
+        targetId: user.id,
+        ipAddress: clientIp,
+        city: clientCity,
+        country: clientCountry,
+        reason: isSuperAdminEmail ? "Super Admin logged in" : "Priest signed in with Google",
+        newValue: { ip: clientIp, city: clientCity, country: clientCountry, email: targetEmail },
+      });
 
       // Ensure business profile exists for this user
       let biz = db.businesses.find((b) => b.ownerId === user.id);

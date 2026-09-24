@@ -324,13 +324,13 @@ export default function LoginPage() {
 
       <div className="max-w-md w-full mx-auto my-auto relative z-10 space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="pt-1">
-            <VelviLogo size="md" variant="full" showTagline={false} />
+        <div className="text-center space-y-1.5">
+          <div className="pt-1 flex justify-center">
+            <VelviLogo size="sm" variant="full" showTagline={false} />
           </div>
 
           <p className="text-xs text-slate-600 font-semibold tracking-wide">
-            Vedic Astrology, Pooja & Homam Booking Platform
+            Vedic Astrology, Pooja &amp; Homam Booking Platform
           </p>
         </div>
 
@@ -346,8 +346,11 @@ export default function LoginPage() {
         {/* STEP 1: PURE ENGLISH GOOGLE SIGN-IN SCREEN */}
         {/* ======================================================================= */}
         {step === "login" && (
-          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-xl shadow-amber-950/5 space-y-6 animate-in fade-in zoom-in-95 duration-150">
-            <div className="text-center space-y-2 pt-1">
+          <div className="bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-8 border-2 border-amber-300/80 shadow-[0_12px_45px_rgba(217,119,6,0.12)] ring-1 ring-amber-400/30 space-y-6 animate-in fade-in zoom-in-95 duration-150 relative overflow-hidden">
+            {/* Sacred glowing corner ambient */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-amber-400/15 via-amber-200/5 to-transparent rounded-bl-full pointer-events-none" />
+
+            <div className="text-center space-y-2 pt-1 relative z-10">
               <h1 className="font-black text-2xl sm:text-3xl text-slate-900 tracking-tight">
                 Welcome to Velvi
               </h1>
@@ -357,7 +360,7 @@ export default function LoginPage() {
             </div>
 
             {/* Single Unified Prominent Google Sign-In Button */}
-            <div className="space-y-3.5">
+            <div className="space-y-3.5 relative z-10">
               <button
                 type="button"
                 id="google-continue-btn"
@@ -397,7 +400,7 @@ export default function LoginPage() {
             </div>
 
             {/* Subtle Divider */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 relative z-10">
               <div className="h-px bg-slate-200 flex-1" />
               <span className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider">
                 or
@@ -405,74 +408,82 @@ export default function LoginPage() {
               <div className="h-px bg-slate-200 flex-1" />
             </div>
 
-            {/* 1-Tap Quick Demo Access Button - Restyled & Distinguished */}
+            {/* 1-Tap Quick Demo Access Button - Polished with 20 Free Bookings Highlight */}
             <button
               type="button"
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
               disabled={isDemoLoading}
-              className="w-full p-3.5 bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 hover:from-black hover:to-emerald-950 text-white rounded-2xl border border-emerald-700/50 shadow-md hover:shadow-lg transition-all flex items-center justify-between group cursor-pointer active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
+              className="w-full p-4 bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950 hover:from-black hover:to-slate-950 text-white rounded-2xl border-2 border-amber-500/50 hover:border-amber-400 shadow-md hover:shadow-xl transition-all flex items-center justify-between group cursor-pointer active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
             >
               {/* Subtle sacred shimmer overlay */}
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-transparent pointer-events-none" />
 
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform shrink-0">
+              <div className="flex items-center gap-3 relative z-10 text-left">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform shrink-0">
                   <Sparkles className="w-5 h-5 text-slate-950" />
                 </div>
-                <div className="text-left">
-                  <div className="font-extrabold text-[13px] text-amber-200 flex items-center gap-2">
+                <div>
+                  <div className="font-extrabold text-[13.5px] text-amber-200 flex items-center gap-2 flex-wrap">
                     <span>Quick Demo Experience</span>
-                    <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                      Instant Access
+                    <span className="text-[9px] bg-amber-400/25 text-amber-300 border border-amber-400/50 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                      Instant Access • 20 Free Bookings
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 font-medium mt-0.5">
-                    Explore Ravi Iyer Profile with Sample Bookings & Data
+                  <p className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
+                    Instant access without phone or OTP • Explore Muhurtham calendar &amp; 8 Homams
                   </p>
                 </div>
               </div>
 
-              <div className="w-7 h-7 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all shrink-0 relative z-10">
+              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all shrink-0 relative z-10 ml-2">
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </button>
 
-            {/* Feature Highlights Grid */}
-            <div className="pt-2 grid grid-cols-3 gap-2.5 text-center border-t border-slate-100">
-              <div className="p-2.5 bg-gradient-to-b from-amber-50/60 to-white rounded-2xl border border-amber-100/80 hover:border-amber-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-amber-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+            {/* Feature Highlights Grid - 6 Key Highlights */}
+            <div className="pt-2 grid grid-cols-3 gap-2 text-center border-t border-slate-100 relative z-10">
+              <div className="p-2 bg-gradient-to-b from-amber-50/60 to-white rounded-2xl border border-amber-100/80 hover:border-amber-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-amber-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500/20" />
                 </div>
-                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
-                  Pooja Slips
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
+                  8 Homams
                 </span>
-                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
-                  Devotee PDF
+                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
+                  Samagri List
                 </span>
               </div>
-              <div className="p-2.5 bg-gradient-to-b from-emerald-50/60 to-white rounded-2xl border border-emerald-100/80 hover:border-emerald-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-emerald-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+
+              <div className="p-2 bg-gradient-to-b from-emerald-50/60 to-white rounded-2xl border border-emerald-100/80 hover:border-emerald-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-emerald-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <CalendarDays className="w-3.5 h-3.5 text-emerald-700" />
                 </div>
-                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
                   Panchangam
                 </span>
-                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
-                  Thithi Calendar
+                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
+                  Thithi &amp; Muhurtham
                 </span>
               </div>
-              <div className="p-2.5 bg-gradient-to-b from-blue-50/60 to-white rounded-2xl border border-blue-100/80 hover:border-blue-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1.5 rounded-xl bg-blue-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+
+              <div className="p-2 bg-gradient-to-b from-blue-50/60 to-white rounded-2xl border border-blue-100/80 hover:border-blue-300 transition-colors group">
+                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-blue-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Wallet className="w-3.5 h-3.5 text-blue-700" />
                 </div>
-                <span className="text-[10.5px] font-extrabold text-slate-800 block leading-tight">
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
                   Dakshina
                 </span>
-                <span className="text-[9px] text-slate-500 block font-medium mt-0.5">
-                  Smart Accounts
+                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
+                  Priest Split
                 </span>
               </div>
+            </div>
+
+            {/* Subtle Developer Attribution on Login Card */}
+            <div className="pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 font-medium select-none relative z-10">
+              <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>Crafted with devotion by <strong className="text-slate-800 font-bold">Maniraja</strong> • Velvi Tech</span>
             </div>
           </div>
         )}
@@ -483,7 +494,7 @@ export default function LoginPage() {
         {/* STEP 2: PROFILE & MOBILE NUMBER SETUP (100% PURE ENGLISH) */}
         {/* ======================================================================= */}
         {step === "mobile_setup" && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200/90 shadow-xl shadow-amber-950/5 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-amber-300/80 shadow-[0_12px_45px_rgba(217,119,6,0.12)] ring-1 ring-amber-400/30 space-y-5 animate-in fade-in zoom-in-95 duration-150">
             {/* Connected Google Profile Badge */}
             <div className="p-3 bg-gradient-to-br from-amber-50/80 to-emerald-50/50 rounded-2xl border border-amber-200/80 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0 flex-1">

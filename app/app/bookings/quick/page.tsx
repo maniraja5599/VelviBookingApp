@@ -829,41 +829,53 @@ function QuickBookingContent() {
         ? "PARTIALLY_PAID"
         : "PENDING";
 
-    const newBooking = db.createBooking({
-      businessId,
-      customerId: selectedCustomer.id,
-      customerName: selectedCustomer.name,
-      customerMobile: selectedCustomer.mobile,
-      customerAddress: selectedCustomer.address || location,
-      poojaId: currentPooja.id,
-      poojaEnglishName: currentPooja.englishName,
-      poojaTamilName: currentPooja.tamilName,
-      date,
-      startTime: formatTime12H(time),
-      endTime: formatTime12H(time),
-      durationMinutes: currentPooja.durationMinutes || 120,
-      totalAmount: amount,
-      advanceAmount: paymentChoice === "UNPAID" ? 0 : advanceAmount,
-      balanceAmount: Math.max(0, amount - (paymentChoice === "UNPAID" ? 0 : advanceAmount)),
-      paymentStatus,
-      paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
-      paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
-      paymentRecipient: paymentChoice !== "UNPAID" ? paymentRecipient : undefined,
-      priestShareAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || priestShareAmount > 0 ? priestShareAmount : 0) : undefined,
-      adminCommissionAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || adminCommissionAmount > 0 ? adminCommissionAmount : (paymentRecipient === "BUSINESS" ? currentPaidAmount : 0)) : undefined,
-      paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
-      status: "CONFIRMED",
-      assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
-      assignedIyerName: performingName,
-      location: location || selectedCustomer.city || "Namakkal",
-      expenseAmount: expenseAmount || 0,
-      expenseNotes: expenseNotes || "",
-      notes: notes.trim(),
-      items: samagriItems,
-    });
+    const isDemoUser =
+      currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01";
+    const existingBookingsCount = db.getBookings(businessId).length;
+    if (isDemoUser && existingBookingsCount >= 20) {
+      alert("இலவச மாதிரி வரம்பு நிறைவடைந்தது (அதிகபட்சம் 20 முன்பதிவுகள் மட்டுமே அனுமதிக்கப்படும்). புதிய முன்பதிவுகளை தொடர்ந்து உருவாக்க Velvi Pro திட்டத்திற்கு மேம்படுத்தவும். (Free Demo limit reached: Maximum 20 bookings allowed. Please upgrade to Velvi Pro for unlimited bookings.)");
+      return;
+    }
 
-    setShowPreviewModal(false);
-    setCreatedBooking(newBooking);
+    try {
+      const newBooking = db.createBooking({
+        businessId,
+        customerId: selectedCustomer.id,
+        customerName: selectedCustomer.name,
+        customerMobile: selectedCustomer.mobile,
+        customerAddress: selectedCustomer.address || location,
+        poojaId: currentPooja.id,
+        poojaEnglishName: currentPooja.englishName,
+        poojaTamilName: currentPooja.tamilName,
+        date,
+        startTime: formatTime12H(time),
+        endTime: formatTime12H(time),
+        durationMinutes: currentPooja.durationMinutes || 120,
+        totalAmount: amount,
+        advanceAmount: paymentChoice === "UNPAID" ? 0 : advanceAmount,
+        balanceAmount: Math.max(0, amount - (paymentChoice === "UNPAID" ? 0 : advanceAmount)),
+        paymentStatus,
+        paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
+        paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
+        paymentRecipient: paymentChoice !== "UNPAID" ? paymentRecipient : undefined,
+        priestShareAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || priestShareAmount > 0 ? priestShareAmount : 0) : undefined,
+        adminCommissionAmount: paymentChoice !== "UNPAID" ? (paymentRecipient === "PRIEST" || showSplitCard || adminCommissionAmount > 0 ? adminCommissionAmount : (paymentRecipient === "BUSINESS" ? currentPaidAmount : 0)) : undefined,
+        paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
+        status: "CONFIRMED",
+        assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
+        assignedIyerName: performingName,
+        location: location || selectedCustomer.city || "Namakkal",
+        expenseAmount: expenseAmount || 0,
+        expenseNotes: expenseNotes || "",
+        notes: notes.trim(),
+        items: samagriItems,
+      });
+
+      setShowPreviewModal(false);
+      setCreatedBooking(newBooking);
+    } catch (err: any) {
+      alert(err.message || "Failed to create booking");
+    }
   };
 
   const handleShareWhatsApp = () => {
@@ -906,6 +918,61 @@ function QuickBookingContent() {
           Cancel
         </Link>
       </div>
+
+      {/* Free Demo User Limit Counter (Cap at 20 Bookings) */}
+      {(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01") && (() => {
+        const count = db.getBookings(businessId).length;
+        const isLimitReached = count >= 20;
+        return (
+          <div
+            className={`p-3 sm:p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 shadow-2xs ${
+              isLimitReached
+                ? "bg-rose-50 border-rose-200 text-rose-950"
+                : "bg-amber-50/90 border-amber-200 text-amber-950"
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                  isLimitReached ? "bg-rose-200 text-rose-800" : "bg-amber-200 text-amber-800"
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="font-extrabold flex items-center gap-1.5 flex-wrap">
+                  <span>
+                    {isLimitReached
+                      ? "இலவச டெமோ வரம்பு நிறைவடைந்தது (20/20 முன்பதிவுகள்)"
+                      : `இலவச டெமோ முன்பதிவுகள்: ${count}/20 பயன்படுத்தப்பட்டது`}
+                  </span>
+                  <span
+                    className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-black uppercase tracking-wider ${
+                      isLimitReached
+                        ? "bg-rose-600 text-white"
+                        : "bg-amber-500 text-white"
+                    }`}
+                  >
+                    {isLimitReached ? "Limit Reached" : `${Math.max(0, 20 - count)} Remaining`}
+                  </span>
+                </div>
+                <p className="text-[11px] opacity-80 mt-0.5">
+                  {isLimitReached
+                    ? "புதிய முன்பதிவுகளை தொடர்ந்து பதிவு செய்ய Velvi Pro திட்டத்திற்கு மேம்படுத்தவும்."
+                    : "இலவச டெமோ பயனர் அதிகபட்சமாக 20 முன்பதிவுகள் வரை செய்து பார்க்கலாம்."}
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/app/subscription"
+              className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl font-bold text-xs shrink-0 shadow-2xs transition active:scale-95 whitespace-nowrap"
+            >
+              Upgrade Pro →
+            </Link>
+          </div>
+        );
+      })()}
 
       <form onSubmit={handleOpenPreview} className="space-y-3.5">
         {/* 2-Step Interactive Segmented Switcher */}
