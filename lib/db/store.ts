@@ -409,11 +409,37 @@ export class VelviDatabaseStore {
     }
   }
 
+  public isUnlimitedBookings(businessId: string): boolean {
+    if (!businessId) return false;
+    const sub = this.subscriptions.find((s) => s.businessId === businessId);
+    if (sub && sub.status === "ACTIVE") {
+      // If plan has no expiration or currentPeriodEnd is in the future, it is an active validity unlocked plan!
+      if (!sub.currentPeriodEnd) return true;
+      const end = new Date(sub.currentPeriodEnd).getTime();
+      if (!isNaN(end) && end > Date.now()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public isDemoBusiness(businessId: string): boolean {
     if (!businessId) return false;
-    if (businessId === "biz-venkateswara-01" || businessId === "biz-demo-01" || businessId.startsWith("biz-demo-")) return true;
+    // Users with active validity (paid, coupon, referral reward, or admin manual validity increase) have UNLIMITED bookings!
+    if (this.isUnlimitedBookings(businessId)) {
+      return false;
+    }
+    // Explicit demo businesses
+    if (businessId === "biz-demo-01" || businessId.startsWith("biz-demo-")) return true;
     const biz = this.businesses.find((b) => b.id === businessId);
-    if (biz && (biz.ownerId === "u-ravi-iyer-01" || biz.ownerId.startsWith("u-demo-"))) return true;
+    if (biz && biz.ownerId && (biz.ownerId === "u-demo-01" || biz.ownerId.startsWith("u-demo-"))) return true;
+    
+    // Check if subscription exists and is expired
+    const sub = this.subscriptions.find((s) => s.businessId === businessId);
+    if (sub && (sub.status === "EXPIRED" || (sub.currentPeriodEnd && new Date(sub.currentPeriodEnd).getTime() <= Date.now()))) {
+      return true;
+    }
+
     return false;
   }
 

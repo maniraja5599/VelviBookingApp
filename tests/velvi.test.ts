@@ -1721,18 +1721,34 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(lastPayment.paymentMethod).toBe("Coupon 100% Free");
   });
 
-  // TEST CASE 54: Free Demo User 20-Booking Cap
-  it("Test 54: Free Demo user cannot create more than 20 bookings", () => {
-    const demoBizId = "biz-venkateswara-01";
-    expect(store.isDemoBusiness(demoBizId)).toBe(true);
+  // TEST CASE 54: Free Demo User 20-Booking Cap & Pro User Unlimited Bookings
+  it("Test 54: Free Demo user cannot create more than 20 bookings; Pro users have unlimited bookings", () => {
+    // Pro business has active subscription and unlimited bookings
+    expect(store.isUnlimitedBookings("biz-venkateswara-01")).toBe(true);
+    expect(store.isDemoBusiness("biz-venkateswara-01")).toBe(false);
 
-    // Initial demo bookings count is 13
+    // Pure Demo business with no active subscription
+    const demoBizId = "biz-demo-01";
+    store.businesses.push({
+      id: demoBizId,
+      ownerId: "u-demo-01",
+      name: "Demo Temple",
+      serviceName: "Pooja Services",
+      iyerName: "Demo Priest",
+      phone: "+919000000000",
+      showWatermark: true,
+      createdAt: new Date().toISOString(),
+    });
+
+    expect(store.isDemoBusiness(demoBizId)).toBe(true);
+    expect(store.isUnlimitedBookings(demoBizId)).toBe(false);
+
+    // Initial demo bookings count is 0
     const initialCount = store.getBookings(demoBizId).length;
-    expect(initialCount).toBeLessThan(20);
+    expect(initialCount).toBe(0);
 
     // Add bookings until reaching exactly 20
-    const toAdd = 20 - initialCount;
-    for (let i = 0; i < toAdd; i++) {
+    for (let i = 0; i < 20; i++) {
       store.createBooking({
         businessId: demoBizId,
         customerId: "c-ramesh-01",

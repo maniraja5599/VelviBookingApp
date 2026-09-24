@@ -30,6 +30,16 @@ import {
   Bell,
   MessageCircle,
   AlertCircle,
+  Building2,
+  Download,
+  Shield,
+  Gift,
+  Globe,
+  BookOpen,
+  Info,
+  RotateCcw,
+  Palette,
+  Cloud,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -38,7 +48,7 @@ interface GlobalSearchModalProps {
   onClose: () => void;
 }
 
-type SearchCategory = "ALL" | "CUSTOMERS" | "BOOKINGS" | "POOJAS" | "ACTIONS";
+type SearchCategory = "ALL" | "SETTINGS" | "BOOKINGS" | "CUSTOMERS" | "POOJAS" | "ACTIONS";
 
 export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, onClose }) => {
   const router = useRouter();
@@ -235,6 +245,205 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     []
   );
 
+  // Deep Settings Search Dictionary (Everything inside settings, branding, backup, theme, language, etc.)
+  const deepSettingsList = useMemo(
+    () => [
+      {
+        id: "set-profile",
+        title: "வாத்யார் & கோயில் விவரங்கள்",
+        english: "Business Profile & Vadhyar Info",
+        section: "சுயவிவரம் • Profile",
+        desc: "வாத்யார் பெயர், கோயில் பெயர், முகவரி, வாட்ஸ்அப் & கோத்ரம் அமைப்புகள்",
+        icon: Building2,
+        bgColor: "bg-blue-500/10 text-blue-900 border-blue-300/80",
+        iconColor: "text-blue-700",
+        url: "/app/settings/branding",
+        keywords: "profile vadhyar name temple business gotram address phone mobile email வாத்யார் கோயில் சுயவிவரம் முகவரி கோத்ரம் போன்",
+      },
+      {
+        id: "set-logo",
+        title: "லோகோ & முத்திரை மாற்றம்",
+        english: "Custom Logo & Signature Upload",
+        section: "பிராண்டிங் • Branding",
+        desc: "ரசீது மற்றும் சுயவிவரத்தில் உங்கள் சொந்த லோகோவை பதிவேற்றம் செய்யுங்கள்",
+        icon: Sparkles,
+        bgColor: "bg-amber-500/10 text-amber-900 border-amber-300/80",
+        iconColor: "text-amber-700",
+        url: "/app/settings/branding",
+        keywords: "logo brand upload photo image avatar icon signature லோகோ படம் அடையாளம் முத்திரை",
+      },
+      {
+        id: "set-watermark",
+        title: "வாட்டர்மார்க் & ரசீது வடிவம்",
+        english: "Receipt Watermark & Branding",
+        section: "பிராண்டிங் • Branding",
+        desc: "வாட்ஸ்அப் ரசீதில் வேள்வி பிராண்டிங் காட்டுதல் அல்லது மறைத்தல் விருப்பம்",
+        icon: Tag,
+        bgColor: "bg-rose-500/10 text-rose-900 border-rose-300/80",
+        iconColor: "text-rose-700",
+        url: "/app/settings/branding",
+        keywords: "watermark receipt hide show branding pdf signature வாட்டர்மார்க் ரசீது மறைக்க காட்ட",
+      },
+      {
+        id: "set-subscription",
+        title: "ப்ரோ சந்தா & வேலிடிட்டி",
+        english: "Velvi Pro Plan & Validity",
+        section: "திட்டம் • Subscription",
+        desc: "கணக்கு செல்லுபடியாகும் நாட்கள், திட்டம் புதுப்பித்தல், கூப்பன் குறியீடு & வரம்பற்ற முன்பதிவுகள்",
+        icon: CreditCard,
+        bgColor: "bg-emerald-500/10 text-emerald-900 border-emerald-300/80",
+        iconColor: "text-emerald-700",
+        url: "/app/subscription",
+        keywords: "subscription plan pro validity renew upgrade coupon cashfree upi payment வரம்பற்ற முன்பதிவு சந்தா திட்டம் வேலிடிட்டி கூப்பன்",
+      },
+      {
+        id: "set-referrals",
+        title: "பரிந்துரை & +30 நாட்கள் போனஸ்",
+        english: "Referrals & Earn Free Days",
+        section: "சலுகைகள் • Referrals",
+        desc: "சக வாத்யார்களுக்கு பரிந்துரைத்து ஒவ்வொருவருக்கும் +30 நாட்கள் இலவச வேலிடிட்டி பெறுங்கள்",
+        icon: Gift,
+        bgColor: "bg-pink-500/10 text-pink-900 border-pink-300/80",
+        iconColor: "text-pink-700",
+        url: "/app/referrals",
+        keywords: "referral invite friend earn free days bonus code பரிந்துரை இலவச நாட்கள் போனஸ் நண்பர்",
+      },
+      {
+        id: "set-theme",
+        title: "தீம் & புனித வண்ணங்கள்",
+        english: "Sacred Themes & Color Palettes",
+        section: "விருப்பங்கள் • Appearance",
+        desc: "பாரம்பரிய தங்கம் (Gold), குங்குமம், வில்வப் பச்சை, மற்றும் இரவு முறை (Dark Mode)",
+        icon: Palette,
+        bgColor: "bg-fuchsia-500/10 text-fuchsia-900 border-fuchsia-300/80",
+        iconColor: "text-fuchsia-700",
+        url: "/app/settings/theme",
+        keywords: "theme color dark mode light mode traditional gold saffron kumkum bilva green தீம் வண்ணங்கள் நிறம் இருண்ட முறை பொன் நிறம்",
+      },
+      {
+        id: "set-backup",
+        title: "எக்செல் தரவு காப்பு & பதிவிறக்கம்",
+        english: "Data Backup & Excel Export",
+        section: "தரவு • Backup",
+        desc: "அனைத்து முன்பதிவுகள், பக்தர்கள் மற்றும் பூஜைகளை Excel (.xlsx) மற்றும் JSON ஆக பதிவிறக்கம் செய்யுங்கள்",
+        icon: Download,
+        bgColor: "bg-cyan-500/10 text-cyan-900 border-cyan-300/80",
+        iconColor: "text-cyan-700",
+        url: "/app/data-backup",
+        keywords: "backup export excel xlsx csv json download data restore காப்பு எக்செல் ஏற்றுமதி பதிவிறக்கம் தரவு",
+      },
+      {
+        id: "set-cloud",
+        title: "மேகக்கணி நேரலை ஒத்திசைவு (Cloud Sync)",
+        english: "Supabase Cloud Sync & Offline PWA",
+        section: "தரவு • Cloud Sync",
+        desc: "நேரலை மேகக்கணி ஒத்திசைவு நிலை, ஆஃப்லைன் சேமிப்பு மற்றும் உடனடி ஒத்திசைவு (Sync Now)",
+        icon: Cloud,
+        bgColor: "bg-teal-500/10 text-teal-900 border-teal-300/80",
+        iconColor: "text-teal-700",
+        url: "/app/data-backup",
+        keywords: "cloud sync supabase live backup offline pwa internet மேகக்கணி ஒத்திசைவு ஆஃப்லைன் இணையம்",
+      },
+      {
+        id: "set-trash",
+        title: "குப்பைத்தொட்டி & மீட்டெடுப்பு",
+        english: "Recycle Bin & Restore Log",
+        section: "பாதுகாப்பு • Recycle Bin",
+        desc: "தவறுதலாக நீக்கப்பட்ட முன்பதிவுகள் மற்றும் பக்தர்களின் விபரங்களை உடனடியாக மீட்டெடுங்கள் (Undo)",
+        icon: RotateCcw,
+        bgColor: "bg-red-500/10 text-red-900 border-red-300/80",
+        iconColor: "text-red-700",
+        url: "/app/settings",
+        keywords: "trash recycle bin restore undo deleted audit log recover குப்பைத்தொட்டி மீட்டெடுப்பு நீக்கப்பட்டவை தவறு",
+      },
+      {
+        id: "set-poojas",
+        title: "பூஜை அட்டவணை & தக்ஷிணை",
+        english: "Pooja Catalog & Dakshina Rates",
+        section: "சேவைகள் • Services",
+        desc: "ஹோமங்கள், பூஜைகள், தக்ஷிணை கட்டணம் மற்றும் கால அளவு மேலாண்மை",
+        icon: Flame,
+        bgColor: "bg-orange-500/10 text-orange-900 border-orange-300/80",
+        iconColor: "text-orange-700",
+        url: "/app/poojas",
+        keywords: "pooja catalog homam seva dakshina fee rate duration பூஜை கட்டணம் தக்ஷிணை ஹோமம் சடங்கு",
+      },
+      {
+        id: "set-samagri",
+        title: "பூஜை பொருட்கள் பிரிவுகள்",
+        english: "Samagri Categories & Items",
+        section: "சேவைகள் • Samagri",
+        desc: "பழங்கள், பூக்கள், நெய், வஸ்திரம் போன்ற சாமான் பிரிவுகள் மற்றும் சரிபார்ப்பு பட்டியல்",
+        icon: Tag,
+        bgColor: "bg-indigo-500/10 text-indigo-900 border-indigo-300/80",
+        iconColor: "text-indigo-700",
+        url: "/app/settings",
+        keywords: "samagri checklist items fruits flowers ghee vastram dravyam பொருட்கள் சாமான்கள் நெய் மலர்கள் பழங்கள் வஸ்திரம்",
+      },
+      {
+        id: "set-team",
+        title: "உதவி வாத்யார்கள் & பட்டுவாடா",
+        english: "Assistant Priests & Settlements",
+        section: "குழு • Team",
+        desc: "உதவி புரோகிதர்கள் நியமனம், பூஜை பகிர்வு மற்றும் தக்ஷிணை கணக்கு தீர்வு",
+        icon: Users,
+        bgColor: "bg-violet-500/10 text-violet-900 border-violet-300/80",
+        iconColor: "text-violet-700",
+        url: "/app/team",
+        keywords: "team purohit assistant iyer dakshina split settlement purohits வாத்யார் புரோகிதர் பட்டுவாடா குழு உதவி",
+      },
+      {
+        id: "set-language",
+        title: "செயலி மொழி (தமிழ் / English)",
+        english: "App Language Toggle",
+        section: "விருப்பங்கள் • Preferences",
+        desc: "செயலியின் இடைமுக மொழியை தமிழ் அல்லது ஆங்கிலத்திற்கு உடனடியாக மாற்றவும்",
+        icon: Globe,
+        bgColor: "bg-lime-500/10 text-lime-900 border-lime-300/80",
+        iconColor: "text-lime-700",
+        url: "/app/settings",
+        keywords: "language switch tamil english மொழி தமிழ் ஆங்கிலம் மாற்றம் எழுத்து",
+      },
+      {
+        id: "set-guide",
+        title: "வேள்வி கையேடு & வழிமுறை (A-Z Manual)",
+        english: "App Walkthrough & Documentation",
+        section: "உதவி • Guide",
+        desc: "முன்பதிவு முறை, வாட்ஸ்அப் ரசீதுகள், பஞ்சாங்கம் மற்றும் A முதல் Z வரை முழு உதவி ஆவணங்கள்",
+        icon: BookOpen,
+        bgColor: "bg-yellow-500/10 text-yellow-900 border-yellow-300/80",
+        iconColor: "text-yellow-700",
+        url: "/app/settings/guide",
+        keywords: "guide manual help documentation faq how to use walkthrough பஞ்சாங்கம் கையேடு உதவி வழிமுறை பயன்பாடு",
+      },
+      {
+        id: "set-version",
+        title: "பதிப்பு & மாற்றங்கள் (v2.5.3)",
+        english: "Version History & Release Notes",
+        section: "செயலி • Version",
+        desc: "Velvi v2.5.3 பதிப்பு, ஆஃப்லைன் வசதி மற்றும் சமீபத்திய புதுப்பிப்புகள்",
+        icon: Info,
+        bgColor: "bg-slate-500/10 text-slate-900 border-slate-300/80",
+        iconColor: "text-slate-700",
+        url: "/app/settings/version",
+        keywords: "version update changelog release notes v2.5.3 pwa புதுப்பிப்பு பதிப்பு மாற்றங்கள் வரலாறு",
+      },
+      {
+        id: "set-admin",
+        title: "சூப்பர் அட்மின் நிர்வாகம்",
+        english: "Super Admin Management Console",
+        section: "நிர்வாகம் • Super Admin",
+        desc: "அனைத்து வாத்யார்கள் டைரக்டரி, கூப்பன் மேலாண்மை மற்றும் நேரலை உள்நுழைவுகள்",
+        icon: Shield,
+        bgColor: "bg-amber-500/15 text-amber-950 border-amber-400/90",
+        iconColor: "text-amber-800",
+        url: "/admin",
+        keywords: "super admin master console telemetry coupon users directory validity increase சூப்பர் அட்மின் நிர்வாகம்",
+      },
+    ],
+    []
+  );
+
   const cleanQuery = query.trim().toLowerCase();
 
   // Filtered results when query is typed
@@ -276,6 +485,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     );
   }, [poojas, cleanQuery]);
 
+  const filteredSettings = useMemo(() => {
+    if (!cleanQuery) return activeCategory === "SETTINGS" ? deepSettingsList : [];
+    return deepSettingsList.filter(
+      (s) =>
+        s.title.toLowerCase().includes(cleanQuery) ||
+        s.english.toLowerCase().includes(cleanQuery) ||
+        s.section.toLowerCase().includes(cleanQuery) ||
+        s.desc.toLowerCase().includes(cleanQuery) ||
+        s.keywords.toLowerCase().includes(cleanQuery)
+    );
+  }, [deepSettingsList, cleanQuery, activeCategory]);
+
   const filteredActions = useMemo(() => {
     if (!cleanQuery) return [];
     return commonActions.filter(
@@ -286,6 +507,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
   }, [commonActions, cleanQuery]);
 
   const totalResultsCount =
+    (activeCategory === "ALL" || activeCategory === "SETTINGS" ? filteredSettings.length : 0) +
     (activeCategory === "ALL" || activeCategory === "CUSTOMERS" ? filteredCustomers.length : 0) +
     (activeCategory === "ALL" || activeCategory === "BOOKINGS" ? filteredBookings.length : 0) +
     (activeCategory === "ALL" || activeCategory === "POOJAS" ? filteredPoojas.length : 0) +
@@ -379,7 +601,18 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              அனைத்தும் ({filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredActions.length})
+              அனைத்தும் ({filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length + filteredActions.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveCategory("SETTINGS")}
+              className={`px-3 py-1 rounded-full font-bold whitespace-nowrap transition flex items-center gap-1 cursor-pointer ${
+                activeCategory === "SETTINGS"
+                  ? "bg-slate-800 text-white shadow-xs"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              <Settings className="w-3 h-3" /> அமைப்புகள் ({filteredSettings.length})
             </button>
             <button
               type="button"
@@ -903,6 +1136,61 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   </div>
                 )}
 
+              {/* DETAILED: Deep Settings Section */}
+              {(activeCategory === "ALL" || activeCategory === "SETTINGS") &&
+                filteredSettings.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                        <Settings className="w-3.5 h-3.5 text-slate-600" /> அமைப்புகள் & விருப்பங்கள் • Settings ({filteredSettings.length})
+                      </span>
+                      <Link
+                        href="/app/settings"
+                        onClick={onClose}
+                        className="text-[11px] font-bold text-slate-700 hover:underline"
+                      >
+                        அனைத்து அமைப்புகள் →
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {filteredSettings.map((set) => {
+                        const IconComponent = set.icon;
+                        return (
+                          <div
+                            key={set.id}
+                            onClick={() => handleNavigate(set.url)}
+                            className="p-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-emerald-400 shadow-2xs transition cursor-pointer flex items-start gap-3 group"
+                          >
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${set.bgColor}`}
+                            >
+                              <IconComponent className={`w-4 h-4 ${set.iconColor}`} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-xs text-slate-900 group-hover:text-emerald-950 truncate">
+                                  {set.title}
+                                </span>
+                                <span className="text-[9.5px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200 shrink-0">
+                                  {set.section}
+                                </span>
+                              </div>
+                              <div className="text-[10.5px] font-semibold text-slate-600 truncate mt-0.5">
+                                {set.english}
+                              </div>
+                              <p className="text-[10px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">
+                                {set.desc}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 shrink-0 mt-2" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
               {/* DETAILED: Quick Navigation Actions */}
               {(activeCategory === "ALL" || activeCategory === "ACTIONS") &&
                 filteredActions.length > 0 && (
@@ -953,7 +1241,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               <span className="font-bold text-slate-700">Velvi Search</span>
               <span>•</span>
               <span className="text-slate-500">
-                {filteredCustomers.length + filteredBookings.length + filteredPoojas.length} முடிவுகள்
+                {filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length} முடிவுகள்
               </span>
             </div>
             <button

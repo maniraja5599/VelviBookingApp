@@ -26,12 +26,15 @@ import {
   WifiOff,
   Shield,
   RefreshCw,
+  Bell,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
+import { NotificationModal } from "@/components/mobile/NotificationModal";
 import { db } from "@/lib/db/store";
 import { getTamilDate } from "@/lib/calendar/tamil";
 import { retryCloudSync } from "@/lib/supabase/sync";
+import { Booking } from "@/lib/types";
 
 export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl?: string }> = React.memo(({
   title,
@@ -41,6 +44,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
   const { currentUser, currentBusiness, subscription, logout } = useAuth();
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  const [isBellChiming, setIsBellChiming] = useState(false);
+  const [tomorrowBookings, setTomorrowBookings] = useState<Booking[]>([]);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [syncState, setSyncState] = useState<"idle" | "syncing" | "synced" | "error">("synced");
   const [lastSyncedTime, setLastSyncedTime] = useState<string>("Just now");
@@ -116,21 +122,59 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     }
   }, [tomorrowStr]);
 
-  // Listen for notification-dismissed event (e.g. from GlobalSearchModal)
+  // Listen for notification-dismissed event (e.g. from GlobalSearchModal or NotificationModal)
   useEffect(() => {
     const handleDismissedEvent = () => {
       setHasDismissedNotice(true);
+      setIsBellChiming(false);
     };
     window.addEventListener("velvi:notification-dismissed", handleDismissedEvent);
     return () => window.removeEventListener("velvi:notification-dismissed", handleDismissedEvent);
   }, []);
 
-  const handleOpenSearch = () => {
+  const hasPendingNotice =
+    (tomorrowBookingsCount > 0 && !hasDismissedNotice) ||
+    ((isExpiringSoon || isExpired) && !hasDismissedNotice);
+
+  // Periodic chime: plays bell chime animation once every 60 seconds (1 minute) when notification is pending
+  useEffect(() => {
+    if (!hasPendingNotice) {
+      setIsBellChiming(false);
+      return;
+    }
+
+    // Trigger initial chime
+    setIsBellChiming(true);
+    const initialTimer = setTimeout(() => {
+      setIsBellChiming(false);
+    }, 2200);
+
+    // Chime once every 60 seconds (1 minute) - never continuous
+    const interval = setInterval(() => {
+      setIsBellChiming(true);
+      setTimeout(() => {
+        setIsBellChiming(false);
+      }, 2200);
+    }, 60000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, [hasPendingNotice]);
+
+  const handleOpenNoticeOrSearch = () => {
     setIsProfileMenuOpen(false); // Guarantee Profile dropdown does NOT open
-    setIsSearchOpen(true);
-    setHasDismissedNotice(true); // Close the notification icon immediately
-    if (typeof window !== "undefined") {
-      localStorage.setItem("velvi_seen_upcoming_notice", tomorrowStr);
+    if (hasPendingNotice) {
+      setIsNotificationModalOpen(true);
+      setHasDismissedNotice(true);
+      setIsBellChiming(false);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("velvi_seen_upcoming_notice", tomorrowStr);
+      }
+      window.dispatchEvent(new CustomEvent("velvi:notification-dismissed"));
+    } else {
+      setIsSearchOpen(true);
     }
   };
 
@@ -142,6 +186,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
         (b) => b.date === tomorrowStr && b.status !== "CANCELLED"
       );
       setTomorrowBookingsCount(tomorrowList.length);
+      setTomorrowBookings(tomorrowList);
     };
     checkUpcoming();
     window.addEventListener("velvi:db-change", checkUpcoming);
@@ -371,43 +416,45 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
           {/* Right side: Global Search + Compact User Profile Dropdown Button */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Global Search Icon Button / Live Sync Spinning Animation (Only while syncing!) */}
+            {/* Global Search / Bell Notification Morph with 1-min chime / Live Sync Spinning Animation */}
             <button
               type="button"
-              onClick={handleOpenSearch}
+              onClick={handleOpenNoticeOrSearch}
               className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl flex items-center justify-center transition active:scale-95 group shrink-0 relative cursor-pointer ${
                 syncState === "syncing"
                   ? "bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs"
+                  : hasPendingNotice
+                  ? "bg-amber-100/90 hover:bg-amber-200/90 text-amber-900 border border-amber-300 shadow-xs"
                   : "bg-slate-100/90 hover:bg-slate-200/90 text-slate-700"
               }`}
               title={
                 syncState === "syncing"
                   ? "மேகக்கணி ஒத்திசைவு நடைபெறுகிறது... (Syncing with Cloud...)"
-                  : tomorrowBookingsCount > 0 && !hasDismissedNotice
-                  ? `நாளை ${tomorrowBookingsCount} பூஜைகள் உள்ளன (1 Day Before Reminders)`
+                  : hasPendingNotice
+                  ? `புதிய அறிவிப்புகள் உள்ளன (Notifications: ${tomorrowBookingsCount} பூஜைகள் நாளை)`
                   : "தேடுக / Search (Ctrl+K)"
               }
-              aria-label={syncState === "syncing" ? "Syncing with cloud" : "Search across app"}
+              aria-label={syncState === "syncing" ? "Syncing with cloud" : hasPendingNotice ? "Notifications" : "Search across app"}
             >
               {syncState === "syncing" ? (
                 <>
                   <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 animate-spin" />
                   <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                 </>
-              ) : (
+              ) : hasPendingNotice ? (
                 <>
-                  <Search
-                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform ${
-                      tomorrowBookingsCount > 0 && !hasDismissedNotice ? "text-amber-800" : ""
+                  <Bell
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-800 ${
+                      isBellChiming ? "animate-velvi-bell-chime" : ""
                     }`}
                   />
-                  {tomorrowBookingsCount > 0 && !hasDismissedNotice && (
-                    <>
-                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-600 border border-white" />
-                    </>
-                  )}
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-600 border border-white" />
                 </>
+              ) : (
+                <Search
+                  className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform"
+                />
               )}
             </button>
 
@@ -607,27 +654,98 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                           Renew
                         </Link>
                       </div>
-                    ) : (
+                    ) : db.isUnlimitedBookings(businessId) ? (
                       <div className="p-2.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-amber-50/50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
                             <Sparkles className="w-3 h-3 text-emerald-700" />
                           </div>
-                          <div>
-                            <span className="text-[11px] font-black text-slate-800 tracking-tight block leading-tight">
-                              Pro Plan Active
+                          <div className="min-w-0">
+                            <span className="text-[11px] font-black text-emerald-950 tracking-tight block leading-tight">
+                              👑 Velvi Pro Active
                             </span>
-                            <span className="text-[9.5px] font-semibold text-slate-500">
-                              Account Validity
+                            <span className="text-[9.5px] font-semibold text-emerald-700">
+                              வரம்பற்ற முன்பதிவுகள் (Unlimited)
                             </span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-1 rounded-xl border border-emerald-300/80 shadow-2xs">
+                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-1 rounded-xl border border-emerald-300/80 shadow-2xs shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           <span className="text-[10.5px] font-black text-emerald-950 tracking-tight">
                             {daysToExpiry} {daysToExpiry === 1 ? "Day" : "Days"} Left
                           </span>
                         </div>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3 h-3 text-amber-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[11px] font-black text-amber-950 tracking-tight block leading-tight">
+                              🚀 Demo Mode (20 Cap)
+                            </span>
+                            <span className="text-[9.5px] font-semibold text-amber-800">
+                              {db.getBookings(businessId).length}/20 முன்பதிவுகள்
+                            </span>
+                          </div>
+                        </div>
+                        <Link
+                          href="/app/subscription"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
+                        >
+                          Upgrade Pro
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {daysToExpiry === null && (
+                  <div>
+                    {db.isUnlimitedBookings(businessId) ? (
+                      <div className="p-2.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-amber-50/50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3 h-3 text-emerald-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[11px] font-black text-emerald-950 tracking-tight block leading-tight">
+                              👑 Velvi Pro Active
+                            </span>
+                            <span className="text-[9.5px] font-semibold text-emerald-700">
+                              வரம்பற்ற முன்பதிவுகள் (Unlimited)
+                            </span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded-lg border border-emerald-300 text-emerald-900 shrink-0">
+                          Active
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3 h-3 text-amber-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[11px] font-black text-amber-950 tracking-tight block leading-tight">
+                              🚀 Demo Mode (20 Cap)
+                            </span>
+                            <span className="text-[9.5px] font-semibold text-amber-800">
+                              {db.getBookings(businessId).length}/20 முன்பதிவுகள்
+                            </span>
+                          </div>
+                        </div>
+                        <Link
+                          href="/app/subscription"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
+                        >
+                          Upgrade Pro
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -782,6 +900,55 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
       {/* Global Search Modal */}
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+
+      {/* Rich Notification Modal */}
+      <NotificationModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        onOpenSearch={() => {
+          setIsNotificationModalOpen(false);
+          setIsSearchOpen(true);
+        }}
+        businessName={currentBusiness?.name}
+        tomorrowBookings={tomorrowBookings}
+        isPro={db.isUnlimitedBookings(businessId)}
+        daysToExpiry={daysToExpiry}
+        isExpiringSoon={isExpiringSoon}
+        isExpired={isExpired}
+        syncedCount={db.getBookings(businessId).length}
+        lastSyncedTime={lastSyncedTime}
+      />
+
+      {/* Bell Chime Animation Keyframes */}
+      <style jsx global>{`
+        @keyframes velviBellChime {
+          0%, 100% {
+            transform: rotate(0deg);
+          }
+          15% {
+            transform: rotate(15deg);
+          }
+          30% {
+            transform: rotate(-15deg);
+          }
+          45% {
+            transform: rotate(10deg);
+          }
+          60% {
+            transform: rotate(-10deg);
+          }
+          75% {
+            transform: rotate(4deg);
+          }
+          90% {
+            transform: rotate(-4deg);
+          }
+        }
+        .animate-velvi-bell-chime {
+          animation: velviBellChime 1.8s ease-in-out;
+          transform-origin: top center;
+        }
+      `}</style>
     </>
   );
 });

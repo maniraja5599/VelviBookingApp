@@ -829,8 +829,7 @@ function QuickBookingContent() {
         ? "PARTIALLY_PAID"
         : "PENDING";
 
-    const isDemoUser =
-      currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01";
+    const isDemoUser = db.isDemoBusiness(businessId);
     const existingBookingsCount = db.getBookings(businessId).length;
     if (isDemoUser && existingBookingsCount >= 20) {
       alert("இலவச மாதிரி வரம்பு நிறைவடைந்தது (அதிகபட்சம் 20 முன்பதிவுகள் மட்டுமே அனுமதிக்கப்படும்). புதிய முன்பதிவுகளை தொடர்ந்து உருவாக்க Velvi Pro திட்டத்திற்கு மேம்படுத்தவும். (Free Demo limit reached: Maximum 20 bookings allowed. Please upgrade to Velvi Pro for unlimited bookings.)");
@@ -919,60 +918,87 @@ function QuickBookingContent() {
         </Link>
       </div>
 
-      {/* Free Demo User Limit Counter (Cap at 20 Bookings) */}
-      {(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01") && (() => {
-        const count = db.getBookings(businessId).length;
-        const isLimitReached = count >= 20;
-        return (
-          <div
-            className={`p-3 sm:p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 shadow-2xs ${
-              isLimitReached
-                ? "bg-rose-50 border-rose-200 text-rose-950"
-                : "bg-amber-50/90 border-amber-200 text-amber-950"
-            }`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                  isLimitReached ? "bg-rose-200 text-rose-800" : "bg-amber-200 text-amber-800"
-                }`}
-              >
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="font-extrabold flex items-center gap-1.5 flex-wrap">
-                  <span>
-                    {isLimitReached
-                      ? "இலவச டெமோ வரம்பு நிறைவடைந்தது (20/20 முன்பதிவுகள்)"
-                      : `இலவச டெமோ முன்பதிவுகள்: ${count}/20 பயன்படுத்தப்பட்டது`}
-                  </span>
-                  <span
-                    className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-black uppercase tracking-wider ${
-                      isLimitReached
-                        ? "bg-rose-600 text-white"
-                        : "bg-amber-500 text-white"
-                    }`}
-                  >
-                    {isLimitReached ? "Limit Reached" : `${Math.max(0, 20 - count)} Remaining`}
-                  </span>
-                </div>
-                <p className="text-[11px] opacity-80 mt-0.5">
-                  {isLimitReached
-                    ? "புதிய முன்பதிவுகளை தொடர்ந்து பதிவு செய்ய Velvi Pro திட்டத்திற்கு மேம்படுத்தவும்."
-                    : "இலவச டெமோ பயனர் அதிகபட்சமாக 20 முன்பதிவுகள் வரை செய்து பார்க்கலாம்."}
-                </p>
-              </div>
-            </div>
-
-            <Link
-              href="/app/subscription"
-              className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl font-bold text-xs shrink-0 shadow-2xs transition active:scale-95 whitespace-nowrap"
+      {/* Demo User Limit Counter (Cap at 20 Bookings) OR Pro User Unlimited Badge */}
+      {db.isDemoBusiness(businessId) ? (
+        (() => {
+          const count = db.getBookings(businessId).length;
+          const isLimitReached = count >= 20;
+          return (
+            <div
+              className={`p-3 sm:p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 shadow-2xs ${
+                isLimitReached
+                  ? "bg-rose-50 border-rose-200 text-rose-950"
+                  : "bg-amber-50/90 border-amber-200 text-amber-950"
+              }`}
             >
-              Upgrade Pro →
-            </Link>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
+                    isLimitReached ? "bg-rose-200 text-rose-800" : "bg-amber-200 text-amber-800"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-extrabold flex items-center gap-1.5 flex-wrap">
+                    <span>
+                      {isLimitReached
+                        ? "இலவச டெமோ வரம்பு நிறைவடைந்தது (20/20 முன்பதிவுகள்)"
+                        : `இலவச டெமோ முன்பதிவுகள்: ${count}/20 பயன்படுத்தப்பட்டது`}
+                    </span>
+                    <span
+                      className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-black uppercase tracking-wider ${
+                        isLimitReached
+                          ? "bg-rose-600 text-white"
+                          : "bg-amber-500 text-white"
+                      }`}
+                    >
+                      {isLimitReached ? "Limit Reached" : `${Math.max(0, 20 - count)} Remaining`}
+                    </span>
+                  </div>
+                  <p className="text-[11px] opacity-80 mt-0.5">
+                    {isLimitReached
+                      ? "புதிய முன்பதிவுகளை தொடர்ந்து பதிவு செய்ய Velvi Pro திட்டத்திற்கு மேம்படுத்தவும்."
+                      : "இலவச டெமோ பயனர் அதிகபட்சமாக 20 முன்பதிவுகள் வரை செய்து பார்க்கலாம்."}
+                  </p>
+                </div>
+              </div>
+
+              <Link
+                href="/app/subscription"
+                className="px-3 py-1.5 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-xl font-bold text-xs shrink-0 shadow-2xs transition active:scale-95 whitespace-nowrap"
+              >
+                Upgrade Pro →
+              </Link>
+            </div>
+          );
+        })()
+      ) : (
+        <div className="p-2.5 sm:p-3 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/40 to-amber-50/40 border border-emerald-200/90 text-xs flex items-center justify-between gap-2 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-xl bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4 text-emerald-700" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-extrabold text-[11px] text-emerald-950 flex items-center gap-1.5 flex-wrap">
+                <span>வேள்வி ப்ரோ (Velvi Pro)</span>
+                <span className="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  வரம்பற்ற பதிவுகள் • Unlimited Bookings
+                </span>
+              </div>
+              <p className="text-[10.5px] text-emerald-800 font-medium">
+                பூஜை முன்பதிவுகள் எந்த கட்டுப்பாடும் இன்றி தடையின்றி இயங்கும்
+              </p>
+            </div>
           </div>
-        );
-      })()}
+          <Link
+            href="/app/subscription"
+            className="text-[10px] font-extrabold text-emerald-800 hover:text-emerald-950 px-2.5 py-1 rounded-lg bg-white/90 border border-emerald-300 shrink-0 transition shadow-2xs"
+          >
+            சந்தா விவரம்
+          </Link>
+        </div>
+      )}
 
       <form onSubmit={handleOpenPreview} className="space-y-3.5">
         {/* 2-Step Interactive Segmented Switcher */}
