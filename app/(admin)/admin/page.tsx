@@ -50,6 +50,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
+import { retryCloudSync } from "@/lib/supabase/sync";
 
 export default function SuperAdminDashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -118,6 +119,7 @@ export default function SuperAdminDashboardPage() {
     bizId: string;
     userName: string;
     currentExpiry: string;
+    rawExpiryDate?: string;
   } | null>(null);
   const [modalAdjustmentType, setModalAdjustmentType] = useState<
     "EXTEND" | "REDUCE" | "PAUSE" | "ACTIVATE" | "EXPIRE" | "RESTORE"
@@ -126,6 +128,81 @@ export default function SuperAdminDashboardPage() {
   const [modalReason, setModalReason] = useState<string>(
     "Developer promotional extension"
   );
+  const [isConfirmingValidity, setIsConfirmingValidity] = useState<boolean>(false);
+
+  // Live session detail modal state
+  const [selectedSessionLog, setSelectedSessionLog] = useState<any | null>(null);
+
+  // Coupon deletion confirmation modal state
+  const [couponToDelete, setCouponToDelete] = useState<{ id: string; code: string } | null>(null);
+
+  // Ledger / Subscription detail modal state
+  const [selectedLedgerEntry, setSelectedLedgerEntry] = useState<{
+    payment?: any;
+    user?: any;
+    biz?: any;
+    subscription?: any;
+  } | null>(null);
+
+  // Helper: Live calculation of new expiry date
+  const computeNewExpiryDate = (baseDateStr: string | undefined, days: number, type: string) => {
+    let base = new Date();
+    if (baseDateStr) {
+      const parsed = new Date(baseDateStr);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > base.getTime()) {
+        base = parsed;
+      }
+    }
+    const target = new Date(base);
+    if (type === "EXTEND") {
+      target.setDate(target.getDate() + days);
+    } else if (type === "REDUCE") {
+      target.setDate(target.getDate() - days);
+    }
+    return target.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const computeNewExpiryDateISO = (baseDateStr: string | undefined, days: number, type: string) => {
+    let base = new Date();
+    if (baseDateStr) {
+      const parsed = new Date(baseDateStr);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > base.getTime()) {
+        base = parsed;
+      }
+    }
+    const target = new Date(base);
+    if (type === "EXTEND") {
+      target.setDate(target.getDate() + days);
+    } else if (type === "REDUCE") {
+      target.setDate(target.getDate() - days);
+    }
+    return target.toISOString().slice(0, 10);
+  };
+
+  const [customTargetDate, setCustomTargetDate] = useState<string>("");
+
+  const handleTargetDateChange = (dateVal: string) => {
+    setCustomTargetDate(dateVal);
+    if (!dateVal || !selectedBizForModal) return;
+    let base = new Date();
+    if (selectedBizForModal.rawExpiryDate) {
+      const parsed = new Date(selectedBizForModal.rawExpiryDate);
+      if (!isNaN(parsed.getTime()) && parsed.getTime() > base.getTime()) {
+        base = parsed;
+      }
+    }
+    const picked = new Date(dateVal);
+    if (!isNaN(picked.getTime())) {
+      const diffMs = picked.getTime() - base.getTime();
+      const diffDays = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)));
+      setModalDays(diffDays);
+      setModalAdjustmentType("EXTEND");
+    }
+  };
 
   // Live Directory Metrics with IP Addresses & Geo Locations
   const directoryMetrics: UserDirectoryMetric[] = useMemo(() => {
@@ -136,6 +213,7 @@ export default function SuperAdminDashboardPage() {
     return directoryMetrics.filter((item) => {
       const q = directorySearch.toLowerCase();
       const isDemo =
+        item.isDemo ||
         item.user.id === "u-ravi-iyer-01" ||
         item.business?.id === "biz-venkateswara-01";
 
@@ -160,27 +238,36 @@ export default function SuperAdminDashboardPage() {
     });
   }, [directoryMetrics, directorySearch, directoryFilter]);
 
-  // Quick 1-click Validity Extension
-  const handleQuickExtend = (bizId: string, days: number, userName: string) => {
-    const res = db.adjustSubscriptionValidity({
-      businessId: bizId,
-      adminUserId: "u-super-admin-01",
-      adminName: "Maniraja (Super Admin)",
-      adjustmentType: "EXTEND",
-      days,
-      reason: `Quick +${days}d extension for ${userName}`,
+  // Quick Validity Extension (Opens Modal for Verification & Confirmation)
+  const handleOpenValidityModal = (
+    bizId: string,
+    userName: string,
+    currentExpiry: string,
+    rawExpiryDate?: string,
+    defaultDays = 30
+  ) => {
+    setSelectedBizForModal({
+      bizId,
+      userName,
+      currentExpiry,
+      rawExpiryDate,
     });
-
-    if (res.success) {
-      showToast(`+${days} days added to ${userName}'s subscription!`);
-    } else {
-      showToast(res.error || "Failed to extend validity", true);
-    }
+    setModalAdjustmentType("EXTEND");
+    setModalDays(defaultDays);
+    setCustomTargetDate(computeNewExpiryDateISO(rawExpiryDate, defaultDays, "EXTEND"));
+    setModalReason(`Promotional validity extension for ${userName}`);
+    setIsConfirmingValidity(false);
   };
 
-  // Custom Modal Form Submission
+  // Step 1: Validate & prompt confirmation
   const handleModalAdjustSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedBizForModal) return;
+    setIsConfirmingValidity(true);
+  };
+
+  // Step 2: Confirmation execution with Cloud Sync
+  const handleModalAdjustConfirm = async () => {
     if (!selectedBizForModal) return;
 
     const res = db.adjustSubscriptionValidity({
@@ -194,9 +281,14 @@ export default function SuperAdminDashboardPage() {
 
     if (res.success) {
       showToast(
-        `Validity adjusted (${modalAdjustmentType} ${modalDays}d) for ${selectedBizForModal.userName}!`
+        `Validity updated (${modalAdjustmentType} +${modalDays}d) for ${selectedBizForModal.userName}!`
       );
+      // Cloud sync
+      try {
+        await retryCloudSync(selectedBizForModal.bizId);
+      } catch {}
       setSelectedBizForModal(null);
+      setIsConfirmingValidity(false);
     } else {
       showToast(res.error || "Adjustment failed", true);
     }
@@ -220,7 +312,7 @@ export default function SuperAdminDashboardPage() {
     setCoupons([...db.coupons]);
   };
 
-  const handleCreateCoupon = (e: React.FormEvent) => {
+  const handleCreateCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = db.createCoupon({
       code: newCouponCode,
@@ -236,31 +328,45 @@ export default function SuperAdminDashboardPage() {
     });
 
     if (res.success && res.coupon) {
-      showToast(`Coupon '${res.coupon.code}' created successfully!`);
+      showToast(`Coupon '${res.coupon.code}' created & saved!`);
       setNewCouponCode("");
       setNewCouponDesc("");
       refreshCoupons();
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
     } else {
       showToast(res.error || "Failed to create coupon", true);
     }
   };
 
-  const handleToggleCoupon = (couponId: string) => {
+  const handleToggleCoupon = async (couponId: string) => {
     const success = db.toggleCouponStatus(couponId);
     if (success) {
       refreshCoupons();
       showToast("Coupon status updated!");
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
     }
   };
 
-  const handleDeleteCoupon = (couponId: string, code: string) => {
-    if (confirm(`Are you sure you want to delete coupon ${code}?`)) {
-      const success = db.deleteCoupon(couponId);
-      if (success) {
-        refreshCoupons();
-        showToast(`Coupon ${code} deleted.`);
-      }
+  const requestDeleteCoupon = (couponId: string, code: string) => {
+    setCouponToDelete({ id: couponId, code });
+  };
+
+  const confirmDeleteCoupon = async () => {
+    if (!couponToDelete) return;
+    const { id, code } = couponToDelete;
+    const success = db.deleteCoupon(id);
+    if (success) {
+      refreshCoupons();
+      showToast(`Coupon ${code} deleted.`);
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
     }
+    setCouponToDelete(null);
   };
 
   const handleCopyCode = (code: string) => {
@@ -292,7 +398,7 @@ export default function SuperAdminDashboardPage() {
     initialSettings.developerInstagram
   );
 
-  const handleSavePlatformSettings = (e: React.FormEvent) => {
+  const handleSavePlatformSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalAppName = appName.trim() || appTamilName.trim() || "Velvi";
     const finalAppTamilName = appTamilName.trim() || appName.trim() || "வேள்வி";
@@ -310,6 +416,10 @@ export default function SuperAdminDashboardPage() {
       developerMobile,
       developerInstagram,
     });
+
+    try {
+      await retryCloudSync("biz-super-admin-01");
+    } catch {}
 
     showToast("Platform branding & system updates saved successfully!");
   };
@@ -331,16 +441,35 @@ export default function SuperAdminDashboardPage() {
     );
   };
 
-  // Platform KPIs
+  // Platform KPIs - Real vs Demo Separation
+  const realDirectoryMetrics = useMemo(
+    () => directoryMetrics.filter((m) => !m.isDemo),
+    [directoryMetrics]
+  );
+  const demoDirectoryMetrics = useMemo(
+    () => directoryMetrics.filter((m) => m.isDemo),
+    [directoryMetrics]
+  );
+
   const totalUsersCount = directoryMetrics.length;
-  const activePaidCount = directoryMetrics.filter(
+  const realUsersCount = realDirectoryMetrics.length;
+  const realPaidCount = realDirectoryMetrics.filter(
     (m) => m.subscription?.status === "ACTIVE"
   ).length;
-  const totalPlatformEarnings = directoryMetrics.reduce(
+  const realPlatformEarnings = realDirectoryMetrics.reduce(
     (acc, cur) => acc + cur.totalEarnings,
     0
   );
-  const totalBookingsCount = directoryMetrics.reduce(
+  const realBookingsCount = realDirectoryMetrics.reduce(
+    (acc, cur) => acc + cur.bookingCount,
+    0
+  );
+
+  const demoPlatformEarnings = demoDirectoryMetrics.reduce(
+    (acc, cur) => acc + cur.totalEarnings,
+    0
+  );
+  const demoBookingsCount = demoDirectoryMetrics.reduce(
     (acc, cur) => acc + cur.bookingCount,
     0
   );
@@ -576,15 +705,17 @@ export default function SuperAdminDashboardPage() {
       {/* ===================================================================== */}
       {activeTab === "overview" && (
         <div className="space-y-4 sm:space-y-6">
-          {/* Top KPI Cards (Responsive grid) */}
+          {/* Top KPI Cards (Responsive grid - Isolating Real Users) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
               <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
                 <span>Total Vadhyars</span>
                 <Users className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white">{totalUsersCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-amber-400/90 font-medium">Priests &amp; admins</div>
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white">{realUsersCount}</div>
+              <div className="text-[10px] sm:text-[11px] text-amber-400/90 font-medium truncate">
+                Real Priests ({demoDirectoryMetrics.length} Demo)
+              </div>
             </div>
 
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
@@ -592,67 +723,46 @@ export default function SuperAdminDashboardPage() {
                 <span>Active Paid</span>
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">{activePaidCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium">
-                {totalUsersCount > 0
-                  ? `${Math.round((activePaidCount / totalUsersCount) * 100)}% conversion`
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">{realPaidCount}</div>
+              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium truncate">
+                {realUsersCount > 0
+                  ? `${Math.round((realPaidCount / realUsersCount) * 100)}% conversion`
                   : "0%"}
               </div>
             </div>
 
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
               <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
-                <span>Total Bookings</span>
+                <span>Real Bookings</span>
                 <Activity className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-300">{totalBookingsCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium">All tenants</div>
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-300">{realBookingsCount}</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">Real Priests data</div>
             </div>
 
             <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
               <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
-                <span>Total Dakshina</span>
+                <span>Real Dakshina</span>
                 <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
               </div>
               <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">
-                ₹{totalPlatformEarnings.toLocaleString("en-IN")}
+                ₹{realPlatformEarnings.toLocaleString("en-IN")}
               </div>
-              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium">Platform GMV</div>
+              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium truncate">Verified Real Accounts</div>
             </div>
           </div>
 
-          {/* Developer Quick Overview Banner */}
-          <div className="bg-gradient-to-r from-[#131d33] via-[#0d1525] to-[#131d33] border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md">
-            <div className="flex items-center gap-3.5">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center font-black text-xl shrink-0 shadow-xs">
-                M
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-black text-sm text-white">Developed by Maniraja</h3>
-                  <span className="text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.2 rounded-md">
-                    Velvi Tech
-                  </span>
-                  <span className="text-[9px] font-bold text-slate-400 font-mono">
-                    +91 83000 30123
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 font-medium">
-                  Next.js 14 • Supabase Cloud PostgreSQL (Mumbai) • Google OAuth 2.0 • Cashfree • 8 Vedic Homams
-                </p>
-              </div>
+          {/* Demo User Data Isolation Banner */}
+          <div className="p-3 sm:p-3.5 bg-[#0a0f1d] border border-zinc-800/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
+              <span className="text-slate-300 font-medium text-xs break-words">
+                <strong className="text-indigo-300">Demo Account (Ravi Iyer):</strong> {demoBookingsCount} Sample Bookings • ₹{demoPlatformEarnings.toLocaleString("en-IN")} Dakshina
+              </span>
             </div>
-
-            <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
-              <button
-                type="button"
-                onClick={() => setActiveTab("dev-info")}
-                className="px-3.5 py-2 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs"
-              >
-                <Terminal className="w-3.5 h-3.5" />
-                <span>View Full Architecture Specs</span>
-              </button>
-            </div>
+            <span className="text-[10px] font-bold text-slate-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full shrink-0 self-start sm:self-auto">
+              Isolated from Real Overview
+            </span>
           </div>
 
           {/* Revenue Chart & Upcoming Expiries */}
@@ -665,7 +775,7 @@ export default function SuperAdminDashboardPage() {
                     Platform Revenue Trend
                   </span>
                   <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white mt-0.5">
-                    ₹{totalPlatformEarnings.toLocaleString("en-IN")}
+                    ₹{realPlatformEarnings.toLocaleString("en-IN")}
                   </div>
                 </div>
                 <span className="text-[10px] sm:text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 sm:px-2.5 py-1 rounded-full font-bold">
@@ -703,8 +813,13 @@ export default function SuperAdminDashboardPage() {
             <div className="bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-3 shadow-md flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                  <h3 className="font-bold text-xs sm:text-sm text-white">Upcoming Expiries</h3>
-                  <span className="text-[10px] text-amber-400 font-semibold">Priority</span>
+                  <div>
+                    <h3 className="font-bold text-xs sm:text-sm text-white">Upcoming Expiries</h3>
+                    <p className="text-[10px] text-slate-400">Accounts nearing validity renewal</p>
+                  </div>
+                  <span className="text-[10px] text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
+                    Priority Review
+                  </span>
                 </div>
 
                 <div className="space-y-2 mt-2.5">
@@ -715,35 +830,50 @@ export default function SuperAdminDashboardPage() {
                   ) : (
                     upcomingExpiries.map((metric) => {
                       const sub = metric.subscription;
-                      const expiryDate = sub?.currentPeriodEnd
+                      const expiryFormatted = sub?.currentPeriodEnd
                         ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
                             day: "numeric",
                             month: "short",
+                            year: "numeric",
                           })
-                        : "Trial";
+                        : "Trial Period";
                       return (
                         <div
                           key={metric.user.id}
-                          className="p-2.5 bg-[#090d16] rounded-xl border border-zinc-800/80 flex items-center justify-between text-xs"
+                          className="p-3 bg-[#090d16] rounded-xl border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:border-zinc-700 transition"
                         >
-                          <div className="min-w-0 pr-2">
-                            <h4 className="font-bold text-white truncate text-xs">{metric.user.name}</h4>
-                            <p className="text-[10px] text-slate-400 truncate">
-                              {metric.business?.name || "Independent"}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className="font-bold text-white truncate text-xs">{metric.user.name}</h4>
+                              {metric.isDemo && (
+                                <span className="text-[8.5px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                  Demo
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10.5px] text-slate-400 truncate mt-0.5">
+                              {metric.business?.name || "Independent"} • {sub?.planName || "Pro"}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[10px] text-amber-400 font-bold">{expiryDate}</span>
+                          <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
+                            <span className="text-[10.5px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/25 px-2 py-1 rounded-lg">
+                              {expiryFormatted}
+                            </span>
                             {metric.business && (
                               <button
                                 type="button"
                                 onClick={() =>
-                                  handleQuickExtend(metric.business!.id, 30, metric.user.name)
+                                  handleOpenValidityModal(
+                                    metric.business!.id,
+                                    metric.user.name,
+                                    expiryFormatted,
+                                    sub?.currentPeriodEnd,
+                                    30
+                                  )
                                 }
-                                className="px-2 py-0.5 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded text-[10px] font-bold transition cursor-pointer"
-                                title="Extend 30 Days"
+                                className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
                               >
-                                +30d
+                                Edit Validity
                               </button>
                             )}
                           </div>
@@ -757,73 +887,101 @@ export default function SuperAdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("directory")}
-                className="w-full mt-2 py-2 bg-zinc-800/80 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700/80 text-center transition cursor-pointer"
+                className="w-full mt-3 py-2 bg-zinc-800/80 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700/80 text-center transition cursor-pointer"
               >
                 View Full Vadhyar Directory →
               </button>
             </div>
           </div>
 
-          {/* Recent Logins & Geo Audit Stream */}
+          {/* Recent Logins & Geo Audit Stream (Recent 10, Scrollable, Detailed Click Modal) */}
           <div className="bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-3 shadow-md">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-amber-400" />
-                <h3 className="font-bold text-xs sm:text-sm text-white">Live Session Logins &amp; Locations</h3>
+            <div className="flex items-center justify-between pb-2 border-b border-zinc-800 gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Globe className="w-4 h-4 text-amber-400 shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="font-bold text-xs sm:text-sm text-white truncate">Live Session Logins &amp; Locations</h3>
+                  <p className="text-[10px] text-slate-400 truncate">Click any session to view complete visit source &amp; telemetry</p>
+                </div>
               </div>
-              <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold">
-                Real-Time
+              <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold shrink-0">
+                Recent 10 Logins
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-              {(db.auditLogs || []).slice(0, 6).map((log) => {
-                const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
-                const displayIp = log.ipAddress || "Local / Direct";
-                const displayLocation = log.city
-                  ? `${log.city}${log.country ? `, ${log.country}` : ""}`
-                  : "Location pending";
-                return (
-                  <div
-                    key={log.id}
-                    className="p-3 bg-[#090d16] rounded-xl border border-zinc-800/80 space-y-1.5 text-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-white truncate text-xs">{log.actorName}</span>
-                      <span
-                        className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
-                          isDemo
-                            ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
-                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                        }`}
-                      >
-                        {isDemo ? "🚀 Quick Demo" : log.action.replace("_", " ")}
-                      </span>
-                    </div>
+            {/* Scrollable container for recent 10 logins */}
+            <div className="max-h-80 overflow-y-auto pr-1 space-y-2">
+              {((db.auditLogs || []).filter(
+                (a) => a.action.includes("LOGIN") || a.targetType === "AUTH_SESSION" || a.action.includes("GOOGLE") || a.action.includes("DEMO")
+              ).length > 0
+                ? (db.auditLogs || []).filter(
+                    (a) => a.action.includes("LOGIN") || a.targetType === "AUTH_SESSION" || a.action.includes("GOOGLE") || a.action.includes("DEMO")
+                  )
+                : db.auditLogs || []
+              )
+                .slice(0, 10)
+                .map((log) => {
+                  const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
+                  const displayIp = log.ipAddress || "Local / Direct";
+                  const displayLocation = log.city
+                    ? `${log.city}${log.country ? `, ${log.country}` : ""}`
+                    : "Location pending";
+                  const visitSource =
+                    log.newValue?.source ||
+                    (log.action.includes("GOOGLE")
+                      ? "Google OAuth 2.0 Direct Redirect"
+                      : isDemo
+                      ? "Instant Demo Session Access"
+                      : "Direct Web Session (PWA)");
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-                      <span className="flex items-center gap-1 font-mono text-amber-300/90 truncate max-w-[130px]">
-                        <Globe className="w-3 h-3 text-amber-400 shrink-0" />
-                        {displayIp}
-                      </span>
-                      <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
-                        <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                        {displayLocation}
-                      </span>
-                    </div>
+                  return (
+                    <div
+                      key={log.id}
+                      onClick={() => setSelectedSessionLog({ ...log, visitSource })}
+                      className="p-3 bg-[#090d16] hover:bg-[#11192b] hover:border-amber-500/40 rounded-xl border border-zinc-800/80 space-y-1.5 text-xs cursor-pointer transition shadow-xs"
+                      title="Click for full session details"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <span className="font-bold text-white truncate text-xs">{log.actorName}</span>
+                        </div>
+                        <span
+                          className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase shrink-0 ${
+                            isDemo
+                              ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                          }`}
+                        >
+                          {isDemo ? "🚀 Demo Login" : log.action.replace("_", " ")}
+                        </span>
+                      </div>
 
-                    <div className="text-[9.5px] text-slate-500 font-mono flex items-center justify-between border-t border-zinc-800/60 pt-1">
-                      <span className="truncate max-w-[170px]">{log.reason || "Authenticated Session"}</span>
-                      <span className="shrink-0">
-                        {new Date(log.createdAt).toLocaleTimeString("en-IN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 gap-2">
+                        <span className="flex items-center gap-1 font-mono text-amber-300/90 truncate max-w-[130px]">
+                          <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+                          {displayIp}
+                        </span>
+                        <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
+                          <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                          {displayLocation}
+                        </span>
+                      </div>
+
+                      <div className="text-[9.5px] text-slate-400 font-mono flex items-center justify-between border-t border-zinc-800/60 pt-1 gap-2">
+                        <span className="truncate text-amber-400/90 font-sans">
+                          Source: {visitSource}
+                        </span>
+                        <span className="shrink-0 text-slate-500">
+                          {new Date(log.createdAt).toLocaleTimeString("en-IN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -983,35 +1141,21 @@ export default function SuperAdminDashboardPage() {
                       </div>
 
                       {biz && (
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => handleQuickExtend(biz.id, 30, item.user.name)}
-                            className="px-2 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black border border-zinc-700 text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                          >
-                            +30d
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleQuickExtend(biz.id, 90, item.user.name)}
-                            className="px-2 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black border border-zinc-700 text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                          >
-                            +90d
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSelectedBizForModal({
-                                bizId: biz.id,
-                                userName: item.user.name,
-                                currentExpiry: expiryFormatted,
-                              })
-                            }
-                            className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleOpenValidityModal(
+                              biz.id,
+                              item.user.name,
+                              expiryFormatted,
+                              sub?.currentPeriodEnd,
+                              30
+                            )
+                          }
+                          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                        >
+                          Edit Validity
+                        </button>
                       )}
                     </div>
                   </div>
@@ -1150,37 +1294,21 @@ export default function SuperAdminDashboardPage() {
 
                           <td className="p-4 text-right">
                             {biz ? (
-                              <div className="inline-flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => handleQuickExtend(biz.id, 30, item.user.name)}
-                                  className="px-2 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black border border-zinc-700 text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                                  title="Add 30 Days"
-                                >
-                                  +30d
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleQuickExtend(biz.id, 90, item.user.name)}
-                                  className="px-2 py-1 bg-zinc-800 hover:bg-amber-500 hover:text-black border border-zinc-700 text-slate-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                                  title="Add 90 Days"
-                                >
-                                  +90d
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setSelectedBizForModal({
-                                      bizId: biz.id,
-                                      userName: item.user.name,
-                                      currentExpiry: expiryFormatted,
-                                    })
-                                  }
-                                  className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-extrabold transition cursor-pointer"
-                                >
-                                  Edit Validity
-                                </button>
-                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleOpenValidityModal(
+                                    biz.id,
+                                    item.user.name,
+                                    expiryFormatted,
+                                    sub?.currentPeriodEnd,
+                                    30
+                                  )
+                                }
+                                className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer whitespace-nowrap"
+                              >
+                                Edit Validity
+                              </button>
                             ) : (
                               <span className="text-[10px] text-slate-500">No Business</span>
                             )}
@@ -1369,8 +1497,9 @@ export default function SuperAdminDashboardPage() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteCoupon(c.id, c.code)}
+                          onClick={() => requestDeleteCoupon(c.id, c.code)}
                           className="p-1 text-slate-400 hover:text-rose-400"
+                          title="Delete Coupon"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1484,7 +1613,7 @@ export default function SuperAdminDashboardPage() {
                         <td className="p-4 text-right">
                           <button
                             type="button"
-                            onClick={() => handleDeleteCoupon(c.id, c.code)}
+                            onClick={() => requestDeleteCoupon(c.id, c.code)}
                             className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
                             title="Delete Coupon"
                           >
@@ -1505,13 +1634,183 @@ export default function SuperAdminDashboardPage() {
       {/* SUB-TAB 4: SUBSCRIPTIONS & CASHFREE LEDGER                             */}
       {/* ===================================================================== */}
       {activeTab === "subscriptions" && (
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* Active Subscriptions Overview */}
+          <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
+            <div className="p-3.5 sm:p-4 border-b border-zinc-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-xs sm:text-sm text-white">Active Vadhyar Subscriptions</h3>
+                <p className="text-[10px] sm:text-xs text-slate-400">
+                  Plan tiers, validity periods, and membership status ({db.subscriptions.length})
+                </p>
+              </div>
+              <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-full text-[9px] sm:text-[10px] font-bold">
+                Tier Engine
+              </span>
+            </div>
+
+            {/* Mobile Cards for Subscriptions */}
+            <div className="sm:hidden p-3 space-y-2.5">
+              {db.subscriptions.map((sub) => {
+                const biz = db.businesses.find((b) => b.id === sub.businessId) || db.businesses[0];
+                const user = db.users.find((u) => u.id === biz?.ownerId);
+                const payment = db.payments.find((p) => p.businessId === sub.businessId);
+                const expiryFormatted = sub.currentPeriodEnd
+                  ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "N/A";
+
+                return (
+                  <div
+                    key={sub.id}
+                    className="p-3 bg-[#080c14] rounded-xl border border-zinc-800/80 space-y-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-bold text-white text-xs">{biz?.name || "Independent"}</div>
+                        <div className="text-[10.5px] text-slate-400">{user?.name || "Priest"}</div>
+                      </div>
+                      <span
+                        className={`text-[9px] px-2 py-0.5 rounded-full font-bold border ${
+                          sub.status === "ACTIVE"
+                            ? "bg-emerald-950 text-emerald-400 border-emerald-800"
+                            : "bg-amber-950 text-amber-400 border-amber-800"
+                        }`}
+                      >
+                        {sub.status}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10.5px] text-slate-400 pt-1 border-t border-zinc-800/60">
+                      <span>Plan: <strong className="text-amber-400">{sub.planName} ({sub.billingCycle})</strong></span>
+                      <span>Valid until: <strong className="text-white">{expiryFormatted}</strong></span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedLedgerEntry({ payment, user, biz, subscription: sub })}
+                        className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-lg text-[10px] font-bold transition text-center cursor-pointer"
+                      >
+                        View User Details
+                      </button>
+                      {biz && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleOpenValidityModal(
+                              biz.id,
+                              user?.name || biz.name,
+                              expiryFormatted,
+                              sub.currentPeriodEnd,
+                              30
+                            )
+                          }
+                          className="flex-1 py-1.5 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold transition text-center cursor-pointer"
+                        >
+                          Edit Validity
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table for Subscriptions */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
+                <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
+                  <tr>
+                    <th className="p-4">Business &amp; Priest</th>
+                    <th className="p-4">Plan Name</th>
+                    <th className="p-4">Cycle</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Period Start</th>
+                    <th className="p-4">Period End</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {db.subscriptions.map((sub) => {
+                    const biz = db.businesses.find((b) => b.id === sub.businessId) || db.businesses[0];
+                    const user = db.users.find((u) => u.id === biz?.ownerId);
+                    const payment = db.payments.find((p) => p.businessId === sub.businessId);
+                    const expiryFormatted = sub.currentPeriodEnd
+                      ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "N/A";
+
+                    return (
+                      <tr key={sub.id} className="hover:bg-zinc-800/25 transition">
+                        <td className="p-4">
+                          <div className="font-bold text-white">{biz?.name || "Independent"}</div>
+                          <div className="text-[10px] text-slate-400">{user?.name}</div>
+                        </td>
+                        <td className="p-4 text-amber-400 font-semibold">{sub.planName}</td>
+                        <td className="p-4 font-bold uppercase text-[10.5px] text-slate-300">{sub.billingCycle}</td>
+                        <td className="p-4">
+                          <span
+                            className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+                              sub.status === "ACTIVE"
+                                ? "bg-emerald-950 text-emerald-400 border border-emerald-800"
+                                : "bg-amber-950 text-amber-400 border border-amber-800"
+                            }`}
+                          >
+                            {sub.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-slate-400">
+                          {new Date(sub.currentPeriodStart).toLocaleDateString("en-IN")}
+                        </td>
+                        <td className="p-4 font-semibold text-white">{expiryFormatted}</td>
+                        <td className="p-4 text-right space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedLedgerEntry({ payment, user, biz, subscription: sub })}
+                            className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
+                          >
+                            Details
+                          </button>
+                          {biz && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleOpenValidityModal(
+                                  biz.id,
+                                  user?.name || biz.name,
+                                  expiryFormatted,
+                                  sub.currentPeriodEnd,
+                                  30
+                                )
+                              }
+                              className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
+                            >
+                              Edit Validity
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Cashfree Ledger & Transactions */}
           <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
             <div className="p-3.5 sm:p-4 border-b border-zinc-800 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-xs sm:text-sm text-white">Cashfree Ledger &amp; Audit Log</h3>
                 <p className="text-[10px] sm:text-xs text-slate-400">
-                  Transactions &amp; automated validity additions ({db.payments.length})
+                  Transactions &amp; automated validity additions ({db.payments.length}) • Click any entry for full dossier
                 </p>
               </div>
               <span className="px-2 py-0.5 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded-full text-[9px] sm:text-[10px] font-bold">
@@ -1519,7 +1818,43 @@ export default function SuperAdminDashboardPage() {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Mobile Cards for Payments */}
+            <div className="sm:hidden p-3 space-y-2.5">
+              {db.payments.length === 0 ? (
+                <div className="p-4 text-center text-slate-400 text-xs">No transactions recorded yet.</div>
+              ) : (
+                db.payments.map((p) => {
+                  const biz = db.businesses.find((b) => b.id === p.businessId);
+                  const user = db.users.find((u) => u.id === p.userId);
+                  const sub = db.subscriptions.find((s) => s.businessId === p.businessId);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => setSelectedLedgerEntry({ payment: p, user, biz, subscription: sub })}
+                      className="p-3 bg-[#080c14] hover:bg-[#11192b] border border-zinc-800/80 hover:border-amber-500/40 rounded-xl space-y-2 text-xs cursor-pointer transition"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-white text-xs">{biz?.name || "Independent"}</div>
+                        <span className="font-mono font-black text-emerald-400 text-sm">₹{p.amount}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400">
+                        <span>Order: <strong className="text-slate-300 font-mono">{p.orderId}</strong></span>
+                        <span className="px-2 py-0.2 rounded-full font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px]">
+                          {p.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-zinc-800/60">
+                        <span>{user?.name || "Priest"} • {p.billingCycle}</span>
+                        <span className="text-amber-400 font-semibold">Tap for user details →</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table for Payments */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
@@ -1543,8 +1878,14 @@ export default function SuperAdminDashboardPage() {
                     db.payments.map((p) => {
                       const biz = db.businesses.find((b) => b.id === p.businessId);
                       const user = db.users.find((u) => u.id === p.userId);
+                      const sub = db.subscriptions.find((s) => s.businessId === p.businessId);
                       return (
-                        <tr key={p.id} className="hover:bg-zinc-800/25 transition">
+                        <tr
+                          key={p.id}
+                          onClick={() => setSelectedLedgerEntry({ payment: p, user, biz, subscription: sub })}
+                          className="hover:bg-zinc-800/40 hover:border-amber-500/30 cursor-pointer transition"
+                          title="Click to view full user & payment dossier"
+                        >
                           <td className="p-4 font-mono">
                             <div className="font-bold text-white">{p.orderId}</div>
                             <div className="text-[10px] text-slate-400">{p.gatewayPaymentId}</div>
@@ -2145,101 +2486,538 @@ export default function SuperAdminDashboardPage() {
       )}
 
       {/* ===================================================================== */}
-      {/* CUSTOM VALIDITY ADJUSTMENT MODAL                                      */}
+      {/* 1. CUSTOM VALIDITY ADJUSTMENT & CONFIRMATION MODAL                    */}
       {/* ===================================================================== */}
       {selectedBizForModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-[#0f172a] rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 border border-amber-500/30 shadow-2xl text-white">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="bg-[#0f172a] rounded-2xl sm:rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 border border-amber-500/30 shadow-2xl text-white my-auto">
+            {!isConfirmingValidity ? (
+              // Step 1: Configuration Form
+              <>
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="font-bold text-sm sm:text-base text-white">Edit Plan Validity</h3>
+                    <p className="text-[11px] text-amber-400 font-medium">
+                      {selectedBizForModal.userName} • Expiry: {selectedBizForModal.currentExpiry}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBizForModal(null)}
+                    className="text-slate-400 hover:text-white text-base p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <form onSubmit={handleModalAdjustSubmit} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="text-slate-300 block mb-1 font-bold">Adjustment Action</label>
+                    <select
+                      value={modalAdjustmentType}
+                      onChange={(e) => setModalAdjustmentType(e.target.value as any)}
+                      className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="EXTEND">EXTEND (Add Days to Expiry)</option>
+                      <option value="REDUCE">REDUCE (Subtract Days)</option>
+                      <option value="PAUSE">PAUSE (Pause Membership)</option>
+                      <option value="ACTIVATE">ACTIVATE (Force Active Status)</option>
+                      <option value="EXPIRE">EXPIRE (Mark Immediately Expired)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-slate-300 font-bold">Quick Presets</label>
+                      <span className="text-[10px] text-slate-400">Click to choose days</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 mb-2">
+                      {[7, 30, 90, 365].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => {
+                            setModalDays(d);
+                            setCustomTargetDate(
+                              computeNewExpiryDateISO(selectedBizForModal.rawExpiryDate, d, modalAdjustmentType)
+                            );
+                          }}
+                          className={`py-1.5 rounded-xl font-bold transition cursor-pointer text-xs ${
+                            modalDays === d
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                              : "bg-[#080c14] border border-zinc-800 text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          +{d}d
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10.5px] text-slate-400 block mb-0.5">Days Count</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={modalDays}
+                          onChange={(e) => {
+                            const val = Number(e.target.value) || 0;
+                            setModalDays(val);
+                            setCustomTargetDate(
+                              computeNewExpiryDateISO(selectedBizForModal.rawExpiryDate, val, modalAdjustmentType)
+                            );
+                          }}
+                          placeholder="e.g. 30"
+                          className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10.5px] text-slate-400 block mb-0.5">Or Choose Target Date</label>
+                        <input
+                          type="date"
+                          value={customTargetDate}
+                          onChange={(e) => handleTargetDateChange(e.target.value)}
+                          className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Calculation Preview Banner */}
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
+                    <div>
+                      <div className="text-[10px] uppercase font-bold text-amber-400">Calculated New Expiry</div>
+                      <div className="text-white font-extrabold text-sm font-mono">
+                        {computeNewExpiryDate(selectedBizForModal.rawExpiryDate, modalDays, modalAdjustmentType)}
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2 py-1 rounded-lg">
+                      {modalAdjustmentType === "REDUCE" ? `-${modalDays}d` : `+${modalDays} Days`}
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="text-slate-300 block mb-1 font-bold">
+                      Mandatory Audit Log Reason *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Support resolution, festival extension"
+                      value={modalReason}
+                      onChange={(e) => setModalReason(e.target.value)}
+                      className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBizForModal(null)}
+                      className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-bold transition cursor-pointer active:scale-95 text-center"
+                    >
+                      Review &amp; Confirm →
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              // Step 2: Confirmation Screen
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                      <Shield className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base text-white">Confirm Validity Extension</h3>
+                      <p className="text-[10.5px] text-slate-400">Please review changes before writing to database</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingValidity(false)}
+                    className="text-slate-400 hover:text-white text-base p-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="bg-[#080c14] rounded-2xl p-4 border border-amber-500/30 space-y-2.5 text-xs">
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                    <span className="text-slate-400 font-medium">Vadhyar / Account:</span>
+                    <span className="font-bold text-white text-right">{selectedBizForModal.userName}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                    <span className="text-slate-400 font-medium">Adjustment Action:</span>
+                    <span className="font-bold text-amber-400 font-mono">{modalAdjustmentType}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                    <span className="text-slate-400 font-medium">Days to Add:</span>
+                    <span className="font-mono font-extrabold text-emerald-400 text-sm">
+                      +{modalDays} Days
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                    <span className="text-slate-400 font-medium">Previous Expiry:</span>
+                    <span className="text-slate-300 font-mono">{selectedBizForModal.currentExpiry}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                    <span className="text-slate-400 font-medium">New Expiry Date:</span>
+                    <span className="font-mono font-black text-amber-300 text-sm bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                      {computeNewExpiryDate(selectedBizForModal.rawExpiryDate, modalDays, modalAdjustmentType)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-0.5">
+                    <span className="text-slate-400 font-medium">Audit Reason:</span>
+                    <span className="text-slate-200 text-right truncate max-w-[200px]">{modalReason}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsConfirmingValidity(false)}
+                    className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center"
+                  >
+                    ← Back &amp; Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleModalAdjustConfirm}
+                    className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl transition shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95 text-center"
+                  >
+                    Confirm &amp; Apply Now
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* 2. COUPON DELETION CONFIRMATION MODAL                                 */}
+      {/* ===================================================================== */}
+      {couponToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-[#0f172a] rounded-2xl sm:rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 border border-rose-500/40 shadow-2xl text-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-rose-400" />
+              </div>
               <div>
-                <h3 className="font-bold text-base">Edit Validity</h3>
-                <p className="text-[11px] text-amber-400 font-medium">
-                  {selectedBizForModal.userName} (Expiry: {selectedBizForModal.currentExpiry})
-                </p>
+                <h3 className="font-bold text-sm sm:text-base text-white">Delete Coupon Code?</h3>
+                <p className="text-[11px] text-rose-300 font-mono font-bold">{couponToDelete.code}</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to permanently delete coupon code{" "}
+              <strong className="text-white font-mono">{couponToDelete.code}</strong>? Devotees and Vadhyars will no longer be able to redeem this discount code in checkout.
+            </p>
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCouponToDelete(null)}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteCoupon}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30 cursor-pointer active:scale-95 text-center text-xs"
+              >
+                Yes, Delete Coupon
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* 3. LIVE SESSION LOGIN & TELEMETRY DETAIL MODAL                        */}
+      {/* ===================================================================== */}
+      {selectedSessionLog && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="bg-[#0f172a] rounded-2xl sm:rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 border border-zinc-800 shadow-2xl text-white my-auto">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                  <Globe className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-white">Live Session Details</h3>
+                  <p className="text-[10.5px] text-slate-400">Complete login telemetry &amp; visit source</p>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedBizForModal(null)}
-                className="text-slate-400 hover:text-white text-sm p-1 cursor-pointer"
+                onClick={() => setSelectedSessionLog(null)}
+                className="text-slate-400 hover:text-white text-base p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleModalAdjustSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="text-slate-300 block mb-1 font-bold">Adjustment Action</label>
-                <select
-                  value={modalAdjustmentType}
-                  onChange={(e) => setModalAdjustmentType(e.target.value as any)}
-                  className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
-                >
-                  <option value="EXTEND">EXTEND (Add Days to Expiry)</option>
-                  <option value="REDUCE">REDUCE (Subtract Days)</option>
-                  <option value="PAUSE">PAUSE (Pause Membership)</option>
-                  <option value="ACTIVATE">ACTIVATE (Force Active Status)</option>
-                  <option value="EXPIRE">EXPIRE (Mark Immediately Expired)</option>
-                </select>
+            <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">User / Vadhyar:</span>
+                <span className="font-bold text-white text-right">{selectedSessionLog.actorName}</span>
               </div>
 
-              <div>
-                <label className="text-slate-300 block mb-1 font-bold">Days to Adjust</label>
-                <div className="grid grid-cols-4 gap-1.5 mb-2">
-                  {[7, 30, 90, 365].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setModalDays(d)}
-                      className={`py-1.5 rounded-xl font-bold transition cursor-pointer ${
-                        modalDays === d
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                          : "bg-[#080c14] border border-zinc-800 text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      +{d}d
-                    </button>
-                  ))}
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">Action Type:</span>
+                <span className="font-mono text-emerald-400 font-bold">{selectedSessionLog.action}</span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">Visit Source:</span>
+                <span className="font-bold text-amber-300 text-right">
+                  {selectedSessionLog.visitSource || "Direct Web / PWA Session"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">Client IP Address:</span>
+                <span className="font-mono text-white">{selectedSessionLog.ipAddress || "Direct / Localhost"}</span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">Location:</span>
+                <span className="text-slate-300">
+                  {selectedSessionLog.city
+                    ? `${selectedSessionLog.city}${selectedSessionLog.country ? `, ${selectedSessionLog.country}` : ""}`
+                    : "Location pending"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                <span className="text-slate-400 font-medium">Device / User Agent:</span>
+                <span className="text-slate-300 font-mono text-[11px] truncate max-w-[200px]" title={selectedSessionLog.userAgent}>
+                  {selectedSessionLog.userAgent || "Velvi Mobile PWA / Chrome Client"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between pt-0.5">
+                <span className="text-slate-400 font-medium">Login Timestamp:</span>
+                <span className="text-slate-300 font-mono">
+                  {new Date(selectedSessionLog.createdAt).toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedSessionLog(null)}
+              className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold transition cursor-pointer text-center text-xs"
+            >
+              Close Details
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* 4. SUBSCRIPTION & PAYMENT DOSSIER DETAIL MODAL                        */}
+      {/* ===================================================================== */}
+      {selectedLedgerEntry && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in overflow-y-auto">
+          <div className="bg-[#0f172a] rounded-2xl sm:rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 border border-zinc-800 shadow-2xl text-white my-auto">
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                  <CreditCard className="w-4 h-4 text-emerald-400" />
                 </div>
-                <input
-                  type="number"
-                  min={1}
-                  value={modalDays}
-                  onChange={(e) => setModalDays(Number(e.target.value))}
-                  placeholder="Custom days"
-                  className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
-                />
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-white">Vadhyar Subscription &amp; Payment Dossier</h3>
+                  <p className="text-[10.5px] text-slate-400">Complete user contact, business info &amp; gateway details</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLedgerEntry(null)}
+                className="text-slate-400 hover:text-white text-base p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs max-h-[70vh] overflow-y-auto pr-1">
+              {/* User & Contact Information */}
+              <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
+                  1. Vadhyar Profile &amp; Contact
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Priest Name:</span>
+                    <strong className="text-white font-semibold">
+                      {selectedLedgerEntry.user?.name || selectedLedgerEntry.biz?.name || "Independent"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Email Address:</span>
+                    <strong className="text-amber-300 font-mono text-[11px] truncate block">
+                      {selectedLedgerEntry.user?.email || "Not registered"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Mobile / WhatsApp:</span>
+                    <strong className="text-white font-mono">
+                      {selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone || "Not recorded"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Business / Temple:</span>
+                    <strong className="text-white font-semibold">
+                      {selectedLedgerEntry.biz?.name || "Independent Priest Service"}
+                    </strong>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-400 text-[10.5px] block">Address / Location:</span>
+                    <strong className="text-slate-200">
+                      {selectedLedgerEntry.biz?.address
+                        ? `${selectedLedgerEntry.biz.address}, ${selectedLedgerEntry.biz.city || ""}`
+                        : "Chennai, Tamil Nadu, India"}
+                    </strong>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="text-slate-300 block mb-1 font-bold">
-                  Mandatory Audit Log Reason *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Developer grant, support resolution"
-                  value={modalReason}
-                  onChange={(e) => setModalReason(e.target.value)}
-                  className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
-                />
+              {/* Subscription & Validity Information */}
+              <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
+                <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
+                  2. Plan &amp; Validity Breakdown
+                </span>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Plan Tier:</span>
+                    <strong className="text-amber-300 font-bold">
+                      {selectedLedgerEntry.subscription?.planName || "Pro Enterprise"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Billing Cycle:</span>
+                    <strong className="text-white uppercase font-bold">
+                      {selectedLedgerEntry.payment?.billingCycle || selectedLedgerEntry.subscription?.billingCycle || "MONTHLY"}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Membership Status:</span>
+                    <span className="inline-block px-2 py-0.2 rounded-full font-bold text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800">
+                      {selectedLedgerEntry.subscription?.status || "ACTIVE"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-400 text-[10.5px] block">Period End (Expiry):</span>
+                    <strong className="text-white font-mono">
+                      {selectedLedgerEntry.subscription?.currentPeriodEnd
+                        ? new Date(selectedLedgerEntry.subscription.currentPeriodEnd).toLocaleDateString("en-IN")
+                        : "Ongoing"}
+                    </strong>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedBizForModal(null)}
-                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer"
+              {/* Payment Transaction Details */}
+              {selectedLedgerEntry.payment && (
+                <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
+                  <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">
+                    3. Cashfree Gateway Transaction
+                  </span>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-slate-400 text-[10.5px] block">Amount Paid:</span>
+                      <strong className="text-emerald-400 font-mono font-black text-sm">
+                        ₹{selectedLedgerEntry.payment.amount}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10.5px] block">Payment Gateway:</span>
+                      <strong className="text-white">
+                        {selectedLedgerEntry.payment.paymentMethod || "Cashfree PG"}
+                      </strong>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span className="text-slate-400 text-[10.5px] block">Order ID:</span>
+                      <strong className="text-white font-mono text-[11px] block truncate">
+                        {selectedLedgerEntry.payment.orderId}
+                      </strong>
+                    </div>
+
+                    <div className="col-span-2">
+                      <span className="text-slate-400 text-[10.5px] block">Gateway Payment ID:</span>
+                      <strong className="text-slate-300 font-mono text-[11px] block truncate">
+                        {selectedLedgerEntry.payment.gatewayPaymentId || "Auto-settled via Webhook"}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10.5px] block">Status:</span>
+                      <span className="inline-block px-2 py-0.2 rounded-full font-bold text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800">
+                        {selectedLedgerEntry.payment.status}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="text-slate-400 text-[10.5px] block">Transaction Time:</span>
+                      <span className="text-slate-300 font-mono text-[11px]">
+                        {new Date(selectedLedgerEntry.payment.createdAt).toLocaleDateString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedLedgerEntry(null)}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold transition cursor-pointer text-center text-xs"
+              >
+                Close Dossier
+              </button>
+
+              {(selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone) && (
+                <a
+                  href={`https://wa.me/91${(selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone || "").replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5 text-xs"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-bold transition cursor-pointer active:scale-95"
-                >
-                  Save &amp; Apply
-                </button>
-              </div>
-            </form>
+                  <PhoneCall className="w-3.5 h-3.5" />
+                  <span>WhatsApp Contact</span>
+                </a>
+              )}
+            </div>
           </div>
         </div>
       )}

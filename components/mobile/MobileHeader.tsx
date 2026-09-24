@@ -68,7 +68,15 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return `${today.getDate()} ${months[today.getMonth()]} • ${tamilInfo.tamilMonth} ${tamilInfo.tamilDay}`;
   }, []);
 
-  const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
+  const businessId =
+    currentBusiness?.id ||
+    (currentUser?.id === "u-ravi-iyer-01"
+      ? "biz-venkateswara-01"
+      : currentUser?.email?.trim().toLowerCase() === "manirajankg@gmail.com" || currentUser?.id === "u-super-admin-01"
+      ? "biz-super-admin-01"
+      : currentUser?.id
+      ? `biz-${currentUser.id}`
+      : "");
 
   const isSuperAdmin =
     currentUser?.role === "SUPER_ADMIN" ||

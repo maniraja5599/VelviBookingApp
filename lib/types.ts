@@ -342,7 +342,9 @@ export interface UserDirectoryMetric {
   totalEarnings: number;
   joinedDate: string;
   isSuperAdmin: boolean;
+  isDemo?: boolean;
   ipAddress?: string;
   city?: string;
   country?: string;
 }
+

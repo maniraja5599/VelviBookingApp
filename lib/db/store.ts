@@ -27,7 +27,9 @@ import {
   SEED_USER,
   SEED_SUPER_ADMIN,
   SEED_BUSINESS,
+  SEED_SUPER_ADMIN_BUSINESS,
   SEED_SUBSCRIPTION,
+  SEED_SUPER_ADMIN_SUBSCRIPTION,
   SEED_MEMBERS,
   SEED_CUSTOMERS,
   SEED_POOJAS,
@@ -285,9 +287,9 @@ export class VelviDatabaseStore {
     SEED_USER,
     SEED_SUPER_ADMIN,
   ];
-  public businesses: Business[] = structuredClone([SEED_BUSINESS]);
+  public businesses: Business[] = structuredClone([SEED_BUSINESS, SEED_SUPER_ADMIN_BUSINESS]);
   public members: BusinessMember[] = structuredClone(SEED_MEMBERS);
-  public subscriptions: Subscription[] = structuredClone([SEED_SUBSCRIPTION]);
+  public subscriptions: Subscription[] = structuredClone([SEED_SUBSCRIPTION, SEED_SUPER_ADMIN_SUBSCRIPTION]);
   public customers: Customer[] = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
   public poojas: Pooja[] = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
   public bookings: Booking[] = structuredClone(SEED_BOOKINGS).map((b) => ({ ...b, isSample: true }));
@@ -2159,8 +2161,8 @@ export class VelviDatabaseStore {
     this.customers = structuredClone(SEED_CUSTOMERS).map((c) => ({ ...c, isSample: true }));
     this.poojas = structuredClone(SEED_POOJAS).map((p) => ({ ...p, isSample: true }));
     this.members = structuredClone(SEED_MEMBERS);
-    this.businesses = structuredClone([SEED_BUSINESS]);
-    this.subscriptions = structuredClone([SEED_SUBSCRIPTION]);
+    this.businesses = structuredClone([SEED_BUSINESS, SEED_SUPER_ADMIN_BUSINESS]);
+    this.subscriptions = structuredClone([SEED_SUBSCRIPTION, SEED_SUPER_ADMIN_SUBSCRIPTION]);
     this.settlements = [
       {
         id: "set-01",
@@ -2234,17 +2236,30 @@ export class VelviDatabaseStore {
     }
 
     return uniqueUsers.map((user) => {
-      const biz =
-        this.businesses.find((b) => b.ownerId === user.id) ||
-        (user.id === "u-ravi-iyer-01" ? this.businesses[0] : undefined);
+      const isDemo =
+        user.id === "u-ravi-iyer-01" ||
+        user.email.trim().toLowerCase() === "ravi.iyer@gmail.com";
+
+      const isSuperAdmin =
+        user.role === "SUPER_ADMIN" ||
+        user.email.trim().toLowerCase() === "manirajankg@gmail.com";
+
+      // Real users NEVER borrow demo business biz-venkateswara-01
+      const biz = isDemo
+        ? this.businesses.find((b) => b.id === "biz-venkateswara-01") ||
+          this.businesses.find((b) => b.ownerId === user.id)
+        : this.businesses.find((b) => b.ownerId === user.id && b.id !== "biz-venkateswara-01") ||
+          (isSuperAdmin ? this.businesses.find((b) => b.id === "biz-super-admin-01" || b.ownerId === user.id) : undefined);
 
       const sub = biz
         ? this.subscriptions.find((s) => s.businessId === biz.id) ||
-          (user.id === "u-ravi-iyer-01" ? this.subscriptions[0] : undefined)
+          (isDemo ? this.subscriptions.find((s) => s.businessId === "biz-venkateswara-01") : undefined)
         : undefined;
 
       const userBookings = this.bookings.filter((b) => {
         if (biz && b.businessId === biz.id) return true;
+        // Never attribute demo bookings (biz-venkateswara-01) to real users (like manirajankg@gmail.com)
+        if (!isDemo && b.businessId === "biz-venkateswara-01") return false;
         if (b.assignedIyerId === user.id) return true;
         return false;
       });
@@ -2255,10 +2270,6 @@ export class VelviDatabaseStore {
         (sum, b) => sum + (Number(b.totalAmount) || 0),
         0
       );
-
-      const isSuperAdmin =
-        user.role === "SUPER_ADMIN" ||
-        user.email.trim().toLowerCase() === "manirajankg@gmail.com";
 
       // Comprehensive IP resolution with audit fallback
       let ipAddress = user.lastLoginIp || user.registrationIp;
@@ -2291,6 +2302,7 @@ export class VelviDatabaseStore {
         totalEarnings,
         joinedDate: user.createdAt,
         isSuperAdmin,
+        isDemo,
         ipAddress: ipAddress || undefined,
         city: city || undefined,
         country: country || undefined,

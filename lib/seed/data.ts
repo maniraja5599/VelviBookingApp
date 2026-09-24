@@ -68,6 +68,36 @@ export const SEED_SUBSCRIPTION: Subscription = {
   updatedAt: "2026-08-31T08:30:00Z",
 };
 
+export const SEED_SUPER_ADMIN_BUSINESS: Business = {
+  id: "biz-super-admin-01",
+  ownerId: "u-super-admin-01",
+  name: "Velvi Admin Services",
+  serviceName: "Pooja • Homam • Seva",
+  iyerName: "Maniraja",
+  logoUrl: "",
+  phone: "+918300030123",
+  whatsapp: "+918300030123",
+  address: "Tamil Nadu, India",
+  showWatermark: false,
+  createdAt: "2026-01-01T00:00:00Z",
+};
+
+export const SEED_SUPER_ADMIN_SUBSCRIPTION: Subscription = {
+  id: "sub-super-admin-01",
+  businessId: "biz-super-admin-01",
+  planName: "Velvi Lifetime Pro",
+  planCode: "VELVI_PRO",
+  status: "ACTIVE",
+  trialStart: "2026-01-01T00:00:00Z",
+  trialEnd: "2030-12-31T23:59:59Z",
+  currentPeriodStart: "2026-01-01T00:00:00Z",
+  currentPeriodEnd: "2030-12-31T23:59:59Z",
+  billingCycle: "YEARLY",
+  autoRenew: true,
+  createdAt: "2026-01-01T00:00:00Z",
+  updatedAt: "2026-01-01T00:00:00Z",
+};
+
 export const SEED_MEMBERS: BusinessMember[] = [
   {
     id: "m-ravi-01",

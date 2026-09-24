@@ -620,14 +620,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         newValue: { ip: clientIp, city: clientCity, country: clientCountry, email: targetEmail },
       });
 
-      // Ensure business profile exists for this user
+      // Ensure business profile exists for this user (Super Admin gets isolated real business, never demo business)
       let biz = isSuperAdminEmail
-        ? db.businesses.find((b) => b.id === "biz-venkateswara-01") || db.businesses[0]
+        ? db.businesses.find((b) => b.id === "biz-super-admin-01") ||
+          db.businesses.find((b) => b.ownerId === user.id && b.id !== "biz-venkateswara-01")
         : (cloudBizId ? db.businesses.find((b) => b.id === cloudBizId) : null) ||
           db.businesses.find((b) => b.ownerId === user.id);
 
       const targetBizId = isSuperAdminEmail
-        ? "biz-venkateswara-01"
+        ? "biz-super-admin-01"
         : cloudBizId || (biz ? biz.id : `biz-${user.id}`);
 
       if (!biz) {
