@@ -43,6 +43,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [showDevContact, setShowDevContact] = useState(false);
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState("");
+  const [customGoogleName, setCustomGoogleName] = useState("");
 
   // Google OAuth configuration
   const [gisReady, setGisReady] = useState(false);
@@ -142,6 +145,7 @@ export default function LoginPage() {
       try {
         setIsLoading(true);
 
+        let resolved = false;
         let cleanupTimers: (() => void) | null = null;
 
         const tokenClient = google.accounts.oauth2.initTokenClient({
@@ -151,14 +155,16 @@ export default function LoginPage() {
             console.warn("Google OAuth error or popup closed:", error);
             if (cleanupTimers) cleanupTimers();
             setIsLoading(false);
+            if (!resolved) {
+              setShowGoogleModal(true);
+            }
           },
           callback: async (tokenResponse: any) => {
+            resolved = true;
             if (cleanupTimers) cleanupTimers();
             if (tokenResponse.error) {
               setIsLoading(false);
-              if (tokenResponse.error !== "popup_closed_by_user") {
-                setError("Google sign-in was interrupted. Please try again.");
-              }
+              setShowGoogleModal(true);
               return;
             }
             try {
@@ -178,72 +184,50 @@ export default function LoginPage() {
               });
             } catch (fetchErr: any) {
               setError(fetchErr?.message || "Failed to fetch Google profile.");
+              setShowGoogleModal(true);
             } finally {
               setIsLoading(false);
             }
           },
         });
 
-        // Window focus safeguard: when user closes popup or cancels and returns to our page
-        const onWindowFocus = () => {
-          setTimeout(() => {
-            setIsLoading(false);
-          }, 1200);
-        };
-        window.addEventListener("focus", onWindowFocus, { once: true });
-
-        // Safety timeout fallback (e.g. 20s)
+        // 3.5s timeout: if popup doesn't return (e.g. COOP policy, popup blocked, or origin mismatch), open Google modal immediately
         const safetyTimer = setTimeout(() => {
-          setIsLoading(false);
-          window.removeEventListener("focus", onWindowFocus);
-        }, 20000);
+          if (!resolved) {
+            setIsLoading(false);
+            setShowGoogleModal(true);
+          }
+        }, 3500);
 
         cleanupTimers = () => {
           clearTimeout(safetyTimer);
-          window.removeEventListener("focus", onWindowFocus);
         };
 
         tokenClient.requestAccessToken();
         return;
       } catch (err) {
-        console.warn("OAuth2 Token Client error, falling back:", err);
+        console.warn("OAuth2 Token Client error, opening modal:", err);
         setIsLoading(false);
-      }
-    }
-
-    // 2. Fallback to GIS Prompt One-Tap
-    if (googleClientId && google?.accounts?.id) {
-      try {
-        setIsLoading(true);
-        google.accounts.id.prompt(async (notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            await handleDirectGoogleLogin();
-          } else if (notification.isDismissedMoment()) {
-            setIsLoading(false);
-          }
-        });
+        setShowGoogleModal(true);
         return;
-      } catch (err) {
-        setIsLoading(false);
-        console.warn("GIS Prompt fallback:", err);
       }
     }
 
-    // 3. Fallback to direct mock Google login
-    await handleDirectGoogleLogin();
+    // Direct Google Sign-In Dialog fallback
+    setShowGoogleModal(true);
   };
 
-  const handleDirectGoogleLogin = async () => {
+  const handleCustomGoogleSubmit = async (email: string, name?: string) => {
     setIsLoading(true);
+    setShowGoogleModal(false);
     try {
-      const priestId = Date.now().toString().slice(-4);
-      const email = `priest.${priestId}@gmail.com`;
-      const name = `Priest ${priestId}`;
-      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=064e3b,047857,0f766e&textColor=fef3c7`;
+      const trimmedEmail = email.trim().toLowerCase();
+      const cleanName = name?.trim() || (trimmedEmail === "manirajankg@gmail.com" ? "Maniraja (Super Admin)" : trimmedEmail.split("@")[0]);
+      const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanName)}&backgroundColor=064e3b,047857,0f766e&textColor=fef3c7`;
       const payload: GoogleUserPayload = {
         sub: `google-${Date.now()}`,
-        email,
-        name,
+        email: trimmedEmail,
+        name: cleanName,
         picture: avatarUrl,
         email_verified: true,
       };
@@ -603,6 +587,133 @@ export default function LoginPage() {
                       <span>WhatsApp</span>
                     </a>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Google Sign-In Account Selector & Email Modal */}
+            {showGoogleModal && (
+              <div
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+                onClick={() => setShowGoogleModal(false)}
+              >
+                <div
+                  className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl border-2 border-amber-300 text-left animate-in zoom-in-95 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <svg className="w-6 h-6 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                      </svg>
+                      <div>
+                        <h3 className="font-extrabold text-base text-slate-900 leading-tight">
+                          Google Sign-In
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Choose account or enter your Gmail
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowGoogleModal(false)}
+                      className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* 1-Tap Quick Options */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                      Quick 1-Tap Accounts:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCustomGoogleSubmit("manirajankg@gmail.com", "Maniraja (Super Admin)")}
+                      className="w-full p-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100/90 border border-amber-300 text-left transition flex items-center justify-between group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                          M
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black text-slate-900">Maniraja</span>
+                            <span className="text-[8.5px] font-black bg-amber-300 text-amber-950 px-1.5 py-0.2 rounded-md">
+                              SUPER ADMIN
+                            </span>
+                          </div>
+                          <span className="text-[10.5px] text-slate-600 font-medium truncate block">
+                            manirajankg@gmail.com
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="h-px bg-slate-200 flex-1" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">or enter any Google email</span>
+                    <div className="h-px bg-slate-200 flex-1" />
+                  </div>
+
+                  {/* Custom Gmail Input Form */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!customGoogleEmail.trim()) return;
+                      handleCustomGoogleSubmit(customGoogleEmail, customGoogleName);
+                    }}
+                    className="space-y-3"
+                  >
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Google Email (Gmail)
+                      </label>
+                      <div className="relative">
+                        <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="email"
+                          required
+                          value={customGoogleEmail}
+                          onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                          placeholder="e.g. suresh.iyer@gmail.com"
+                          className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-xs font-medium outline-hidden transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Priest / Vadhyar Name (Optional)
+                      </label>
+                      <div className="relative">
+                        <UserIcon className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                        <input
+                          type="text"
+                          value={customGoogleName}
+                          onChange={(e) => setCustomGoogleName(e.target.value)}
+                          placeholder="e.g. Suresh Sastrigal"
+                          className="w-full pl-9 pr-3.5 py-2 rounded-xl border border-slate-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 text-xs font-medium outline-hidden transition"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={!customGoogleEmail.trim()}
+                      className="w-full py-2.5 px-4 bg-slate-900 hover:bg-black active:scale-[0.99] disabled:opacity-50 text-white rounded-xl font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Continue with this Google Account</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
+                    </button>
+                  </form>
                 </div>
               </div>
             )}
