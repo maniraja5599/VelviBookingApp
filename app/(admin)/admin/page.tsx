@@ -47,13 +47,25 @@ import {
   Flame,
   Workflow,
   GitBranch,
+  Crown,
+  UserCheck,
+  UserX,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { retryCloudSync } from "@/lib/supabase/sync";
+import { useAuth } from "@/components/providers/AuthContext";
 
 export default function SuperAdminDashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
+  const { currentUser } = useAuth();
+
+  const isSuperAdmin = Boolean(
+    currentUser?.role === "SUPER_ADMIN" ||
+      currentUser?.email?.trim().toLowerCase() === "manirajankg@gmail.com"
+  );
+  const isEditorAdmin = Boolean(currentUser?.role === "ADMIN" && !isSuperAdmin);
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -143,6 +155,69 @@ export default function SuperAdminDashboardPage() {
     biz?: any;
     subscription?: any;
   } | null>(null);
+
+  // Admin Access & Role Management States (Super Admin Only)
+  const [inviteAdminEmail, setInviteAdminEmail] = useState("");
+  const [inviteAdminReason, setInviteAdminReason] = useState("");
+  const [adminToDemote, setAdminToDemote] = useState<{ id: string; name: string } | null>(null);
+  const [userToPromote, setUserToPromote] = useState<{ id: string; name: string } | null>(null);
+
+  const handleInviteAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteAdminEmail.trim()) return;
+    const res = db.promoteUserToAdmin({
+      email: inviteAdminEmail.trim(),
+      promotedBy: currentUser?.id || "u-super-admin-01",
+      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      reason: inviteAdminReason.trim() || "Promoted to Editor Admin by Super Admin",
+    });
+    if (res.success && res.user) {
+      showToast(`Editor Admin role granted to ${res.user.email}!`);
+      setInviteAdminEmail("");
+      setInviteAdminReason("");
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
+    } else {
+      showToast(res.error || "Failed to grant admin access", true);
+    }
+  };
+
+  const handlePromoteUser = async (userId: string, userName: string) => {
+    const res = db.promoteUserToAdmin({
+      userId,
+      promotedBy: currentUser?.id || "u-super-admin-01",
+      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      reason: `Promoted ${userName} to Editor Admin`,
+    });
+    if (res.success) {
+      showToast(`${userName} promoted to Editor Admin (Edit Only)!`);
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
+    } else {
+      showToast(res.error || "Promotion failed", true);
+    }
+    setUserToPromote(null);
+  };
+
+  const handleRemoveAdmin = async (userId: string, userName: string) => {
+    const res = db.removeUserAdminAccess({
+      userId,
+      removedBy: currentUser?.id || "u-super-admin-01",
+      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      reason: `Revoked admin privileges from ${userName}`,
+    });
+    if (res.success) {
+      showToast(`Admin access revoked for ${userName}.`);
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
+    } else {
+      showToast(res.error || "Failed to revoke admin", true);
+    }
+    setAdminToDemote(null);
+  };
 
   // Helper: Live calculation of new expiry date
   const computeNewExpiryDate = (baseDateStr: string | undefined, days: number, type: string) => {
@@ -1023,6 +1098,114 @@ export default function SuperAdminDashboardPage() {
             </div>
           </div>
 
+          {/* Super Admin Team & Role Access Control Section */}
+          {isSuperAdmin && (
+            <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-amber-500/30 p-4 sm:p-5 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
+                    <Crown className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                      Administrator Team &amp; Access Controls
+                      <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-black uppercase">
+                        Super Admin Exclusive
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Super Admin has full access. Promoted team members have Edit-Only access to assist priests and manage validity.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invite / Promote by Gmail Form */}
+              <form onSubmit={handleInviteAdmin} className="bg-[#080c14] p-3.5 rounded-2xl border border-zinc-800/80 space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <UserCheck className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-bold text-slate-200">Promote or Invite Team Member via Gmail</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <div className="sm:col-span-1">
+                    <input
+                      type="email"
+                      placeholder="team_member@gmail.com"
+                      value={inviteAdminEmail}
+                      onChange={(e) => setInviteAdminEmail(e.target.value)}
+                      className="w-full bg-[#0c1220] border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-1">
+                    <input
+                      type="text"
+                      placeholder="Reason / Department (e.g. Operations)"
+                      value={inviteAdminReason}
+                      onChange={(e) => setInviteAdminReason(e.target.value)}
+                      className="w-full bg-[#0c1220] border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div className="sm:col-span-1 flex items-center">
+                    <button
+                      type="submit"
+                      className="w-full py-2 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Grant Editor Admin</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Active Admins Quick List */}
+              <div className="space-y-2 pt-1">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Active Administrators ({directoryMetrics.filter(m => m.isAdmin || m.isSuperAdmin).length})
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {directoryMetrics
+                    .filter((m) => m.isAdmin || m.isSuperAdmin)
+                    .map((admin) => {
+                      const isRoot = admin.isSuperAdmin;
+                      return (
+                        <div
+                          key={admin.user.id}
+                          className="flex items-center justify-between p-2.5 bg-[#080c14] border border-zinc-800 rounded-xl text-xs gap-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-white truncate text-xs">{admin.user.name}</span>
+                              <span
+                                className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase ${
+                                  isRoot
+                                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                                    : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
+                                }`}
+                              >
+                                {isRoot ? "👑 Super Admin" : "✏️ Editor Admin"}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono truncate">{admin.user.email}</div>
+                          </div>
+
+                          {!isRoot && (
+                            <button
+                              type="button"
+                              onClick={() => setAdminToDemote({ id: admin.user.id, name: admin.user.name })}
+                              className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer shrink-0"
+                            >
+                              Revoke
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ----------------------------------------------------------------- */}
           {/* MOBILE VIEW (< 640px): Clean Cards Layout (No Horizontal Scroll)  */}
           {/* ----------------------------------------------------------------- */}
@@ -1057,14 +1240,22 @@ export default function SuperAdminDashboardPage() {
                     key={item.user.id}
                     className="bg-[#0f172a]/90 rounded-2xl border border-zinc-800 p-3.5 space-y-3 shadow-md"
                   >
-                    {/* Top: Name + Super Admin Badge + Status Pill */}
+                    {/* Top: Name + Super Admin / Editor Admin / Priest Badge + Status Pill */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-extrabold text-sm text-white">{item.user.name}</span>
-                          {item.isSuperAdmin && (
+                          {item.isSuperAdmin ? (
                             <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase">
-                              Super Admin
+                              👑 Super Admin
+                            </span>
+                          ) : item.isAdmin ? (
+                            <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase">
+                              ✏️ Editor Admin
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
+                              🪔 Priest
                             </span>
                           )}
                           {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
@@ -1140,23 +1331,45 @@ export default function SuperAdminDashboardPage() {
                         Valid Until: <strong className="text-slate-200">{expiryFormatted}</strong>
                       </div>
 
-                      {biz && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleOpenValidityModal(
-                              biz.id,
-                              item.user.name,
-                              expiryFormatted,
-                              sub?.currentPeriodEnd,
-                              30
-                            )
-                          }
-                          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                        >
-                          Edit Validity
-                        </button>
-                      )}
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isSuperAdmin && !item.isSuperAdmin && (
+                          item.isAdmin ? (
+                            <button
+                              type="button"
+                              onClick={() => setAdminToDemote({ id: item.user.id, name: item.user.name })}
+                              className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            >
+                              Revoke Admin
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setUserToPromote({ id: item.user.id, name: item.user.name })}
+                              className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                            >
+                              + Make Admin
+                            </button>
+                          )
+                        )}
+
+                        {biz && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleOpenValidityModal(
+                                biz.id,
+                                item.user.name,
+                                expiryFormatted,
+                                sub?.currentPeriodEnd,
+                                30
+                              )
+                            }
+                            className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
+                          >
+                            Edit Validity
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1217,9 +1430,17 @@ export default function SuperAdminDashboardPage() {
                               <span className="font-bold text-white text-sm">
                                 {item.user.name}
                               </span>
-                              {item.isSuperAdmin && (
+                              {item.isSuperAdmin ? (
                                 <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase">
-                                  Super Admin
+                                  👑 Super Admin
+                                </span>
+                              ) : item.isAdmin ? (
+                                <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase">
+                                  ✏️ Editor Admin
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
+                                  🪔 Priest
                                 </span>
                               )}
                               {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
@@ -1293,25 +1514,49 @@ export default function SuperAdminDashboardPage() {
                           </td>
 
                           <td className="p-4 text-right">
-                            {biz ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleOpenValidityModal(
-                                    biz.id,
-                                    item.user.name,
-                                    expiryFormatted,
-                                    sub?.currentPeriodEnd,
-                                    30
-                                  )
-                                }
-                                className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer whitespace-nowrap"
-                              >
-                                Edit Validity
-                              </button>
-                            ) : (
-                              <span className="text-[10px] text-slate-500">No Business</span>
-                            )}
+                            <div className="flex items-center justify-end gap-1.5">
+                              {isSuperAdmin && !item.isSuperAdmin && (
+                                item.isAdmin ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAdminToDemote({ id: item.user.id, name: item.user.name })}
+                                    className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap"
+                                    title="Revoke Admin Access"
+                                  >
+                                    Revoke Admin
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setUserToPromote({ id: item.user.id, name: item.user.name })}
+                                    className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap"
+                                    title="Promote to Editor Admin"
+                                  >
+                                    + Make Admin
+                                  </button>
+                                )
+                              )}
+
+                              {biz ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleOpenValidityModal(
+                                      biz.id,
+                                      item.user.name,
+                                      expiryFormatted,
+                                      sub?.currentPeriodEnd,
+                                      30
+                                    )
+                                  }
+                                  className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer whitespace-nowrap"
+                                >
+                                  Edit Validity
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">No Business</span>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1329,19 +1574,35 @@ export default function SuperAdminDashboardPage() {
       {/* ===================================================================== */}
       {activeTab === "coupons" && (
         <div className="space-y-4 sm:space-y-6">
-          {/* Coupon Creation Card */}
-          <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-amber-500/30 p-4 sm:p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-zinc-800">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-                <Tag className="w-4 h-4" />
+          {/* Coupon Creation Card (Super Admin Exclusive) */}
+          {!isSuperAdmin ? (
+            <div className="bg-[#0c1220] rounded-2xl border border-cyan-500/30 p-4 sm:p-5 shadow-xl flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <Crown className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white">Editor Admin Mode (Read-Only Promo Pass Controls)</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Promo code creation and deletion are restricted to Super Admin. You can view all live coupons and copy codes.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">Create New Promo Pass</h3>
-                <p className="text-[11px] text-slate-400">
-                  Configure 100% free passes, percentage discounts, or festive bonuses
-                </p>
-              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase">
+                ✏️ Edit Only
+              </span>
             </div>
+          ) : (
+            <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-amber-500/30 p-4 sm:p-6 shadow-xl space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-zinc-800">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
+                  <Tag className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-white">Create New Promo Pass</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Configure 100% free passes, percentage discounts, or festive bonuses
+                  </p>
+                </div>
+              </div>
 
             <form onSubmit={handleCreateCoupon} className="space-y-3 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1448,6 +1709,7 @@ export default function SuperAdminDashboardPage() {
               </div>
             </form>
           </div>
+          )}
 
           {/* Coupons List - Responsive Cards on Mobile & Table on Desktop */}
           <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
@@ -1495,14 +1757,16 @@ export default function SuperAdminDashboardPage() {
                         >
                           {c.isActive ? "ACTIVE" : "INACTIVE"}
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => requestDeleteCoupon(c.id, c.code)}
-                          className="p-1 text-slate-400 hover:text-rose-400"
-                          title="Delete Coupon"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => requestDeleteCoupon(c.id, c.code)}
+                            className="p-1 text-slate-400 hover:text-rose-400"
+                            title="Delete Coupon"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -1611,14 +1875,18 @@ export default function SuperAdminDashboardPage() {
                         </td>
 
                         <td className="p-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => requestDeleteCoupon(c.id, c.code)}
-                            className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
-                            title="Delete Coupon"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isSuperAdmin ? (
+                            <button
+                              type="button"
+                              onClick={() => requestDeleteCoupon(c.id, c.code)}
+                              className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
+                              title="Delete Coupon"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-slate-500">—</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1931,6 +2199,22 @@ export default function SuperAdminDashboardPage() {
       {/* ===================================================================== */}
       {activeTab === "branding" && (
         <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 p-4 sm:p-6 space-y-6 shadow-xl">
+          {!isSuperAdmin && (
+            <div className="bg-[#080c14] rounded-2xl border border-cyan-500/30 p-4 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2.5">
+                <Crown className="w-5 h-5 text-amber-400 shrink-0" />
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white">Super Admin Exclusive Settings</h3>
+                  <p className="text-[11px] text-slate-400">
+                    Editor Admins have read-only visibility for platform branding, logo presets, and system broadcast banners.
+                  </p>
+                </div>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase">
+                Read Only
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3 border-b border-zinc-800 pb-4">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
               <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -2144,16 +2428,18 @@ export default function SuperAdminDashboardPage() {
               </div>
             </div>
 
-            {/* Save Button */}
-            <div className="pt-3 border-t border-zinc-800 flex justify-end">
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-6 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Settings &amp; Broadcasts</span>
-              </button>
-            </div>
+            {/* Save Button (Super Admin Only) */}
+            {isSuperAdmin && (
+              <div className="pt-3 border-t border-zinc-800 flex justify-end">
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save Settings &amp; Broadcasts</span>
+                </button>
+              </div>
+            )}
           </form>
         </div>
       )}
@@ -3017,6 +3303,87 @@ export default function SuperAdminDashboardPage() {
                   <span>WhatsApp Contact</span>
                 </a>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ===================================================================== */}
+      {/* MODAL: REVOKE ADMIN ACCESS CONFIRMATION                                */}
+      {/* ===================================================================== */}
+      {adminToDemote && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0f172a] border border-rose-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-white">Revoke Admin Privileges?</h3>
+                <p className="text-[11px] text-slate-400">Demote account back to regular Priest role</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to remove Editor Admin privileges from <strong className="text-rose-400 font-bold">{adminToDemote.name}</strong>?
+              They will immediately lose access to the administrative console.
+            </p>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setAdminToDemote(null)}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRemoveAdmin(adminToDemote.id, adminToDemote.name)}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-rose-600/30 transition cursor-pointer"
+              >
+                Revoke Privileges
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL: PROMOTE TO EDITOR ADMIN CONFIRMATION                           */}
+      {/* ===================================================================== */}
+      {userToPromote && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0f172a] border border-amber-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+                <Crown className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-white">Promote to Editor Admin?</h3>
+                <p className="text-[11px] text-slate-400">Grant Edit-Only Admin Console Access</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Grant Editor Admin access to <strong className="text-amber-300 font-bold">{userToPromote.name}</strong>?
+              They will be able to log in to the Admin Console using their Google/Gmail account, inspect priest directories, and assist with bookings &amp; validity adjustments.
+            </p>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setUserToPromote(null)}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePromoteUser(userToPromote.id, userToPromote.name)}
+                className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs shadow-lg shadow-amber-500/30 transition cursor-pointer"
+              >
+                Grant Admin Access
+              </button>
             </div>
           </div>
         </div>

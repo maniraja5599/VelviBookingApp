@@ -1,4 +1,4 @@
-export type UserRole = "OWNER" | "IYER" | "SUPER_ADMIN";
+export type UserRole = "OWNER" | "IYER" | "SUPER_ADMIN" | "ADMIN";
 
 export interface User {
   id: string;
@@ -342,6 +342,8 @@ export interface UserDirectoryMetric {
   totalEarnings: number;
   joinedDate: string;
   isSuperAdmin: boolean;
+  isAdmin?: boolean;
+  adminRole?: "SUPER_ADMIN" | "ADMIN" | "NONE";
   isDemo?: boolean;
   ipAddress?: string;
   city?: string;

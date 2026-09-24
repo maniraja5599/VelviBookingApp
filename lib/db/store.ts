@@ -2243,6 +2243,12 @@ export class VelviDatabaseStore {
       const isSuperAdmin =
         user.role === "SUPER_ADMIN" ||
         user.email.trim().toLowerCase() === "manirajankg@gmail.com";
+      const isAdmin = user.role === "ADMIN" || isSuperAdmin;
+      const adminRole: "SUPER_ADMIN" | "ADMIN" | "NONE" = isSuperAdmin
+        ? "SUPER_ADMIN"
+        : user.role === "ADMIN"
+        ? "ADMIN"
+        : "NONE";
 
       // Real users NEVER borrow demo business biz-venkateswara-01
       const biz = isDemo
@@ -2302,6 +2308,8 @@ export class VelviDatabaseStore {
         totalEarnings,
         joinedDate: user.createdAt,
         isSuperAdmin,
+        isAdmin,
+        adminRole,
         isDemo,
         ipAddress: ipAddress || undefined,
         city: city || undefined,
@@ -2572,6 +2580,107 @@ export class VelviDatabaseStore {
       finalAmount: validation.finalAmount,
       coupon: coup,
     };
+  }
+
+  // -------------------------------------------------------------
+  // ADMIN ACCESS & ROLE MANAGEMENT (Super Admin Only)
+  // -------------------------------------------------------------
+  public promoteUserToAdmin(params: {
+    userId?: string;
+    email?: string;
+    promotedBy: string;
+    adminName: string;
+    reason?: string;
+  }): { success: boolean; user?: User; error?: string } {
+    let target = this.users.find(
+      (u) =>
+        (params.userId && u.id === params.userId) ||
+        (params.email && u.email?.trim().toLowerCase() === params.email.trim().toLowerCase())
+    );
+
+    if (!target && params.email) {
+      target = {
+        id: `u-admin-${Date.now()}`,
+        googleId: `google-invited-${Date.now()}`,
+        email: params.email.trim().toLowerCase(),
+        name: params.email.split("@")[0],
+        mobile: "",
+        mobileVerified: false,
+        role: "ADMIN",
+        referralCode: `ADM${Math.floor(1000 + Math.random() * 9000)}`,
+        createdAt: new Date().toISOString(),
+      };
+      this.users.push(target);
+    }
+
+    if (!target) {
+      return { success: false, error: "User not found" };
+    }
+
+    if (target.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+      target.role = "SUPER_ADMIN";
+      this.saveToLocalStorage();
+      this.notifyListeners();
+      return { success: true, user: target };
+    }
+
+    const previousRole = target.role;
+    target.role = "ADMIN";
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      actorName: params.adminName,
+      action: "ADMIN_PROMOTED",
+      targetType: "USER_ROLE",
+      targetId: target.id,
+      oldValue: { role: previousRole },
+      newValue: { role: "ADMIN", access: "EDITOR_ADMIN" },
+      reason: params.reason || `Promoted to Editor Admin by ${params.adminName}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return { success: true, user: target };
+  }
+
+  public removeUserAdminAccess(params: {
+    userId: string;
+    removedBy: string;
+    adminName: string;
+    reason?: string;
+  }): { success: boolean; user?: User; error?: string } {
+    const target = this.users.find((u) => u.id === params.userId);
+    if (!target) return { success: false, error: "User not found" };
+
+    if (
+      target.email?.trim().toLowerCase() === "manirajankg@gmail.com" ||
+      target.role === "SUPER_ADMIN"
+    ) {
+      return {
+        success: false,
+        error: "Cannot revoke permissions from the primary Super Admin account.",
+      };
+    }
+
+    const previousRole = target.role;
+    target.role = "IYER";
+
+    this.auditLogs.push({
+      id: `audit-${Date.now()}`,
+      actorName: params.adminName,
+      action: "ADMIN_REMOVED",
+      targetType: "USER_ROLE",
+      targetId: target.id,
+      oldValue: { role: previousRole },
+      newValue: { role: "IYER" },
+      reason: params.reason || `Admin access revoked by ${params.adminName}`,
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return { success: true, user: target };
   }
 }
 
