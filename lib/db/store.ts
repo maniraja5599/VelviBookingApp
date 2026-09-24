@@ -2021,6 +2021,61 @@ export class VelviDatabaseStore {
     return { removedBookings, removedCustomers, removedPoojas };
   }
 
+  public factoryResetBusiness(businessId: string): {
+    deletedBookings: number;
+    deletedCustomers: number;
+    deletedPayments: number;
+    restoredPoojas: number;
+  } {
+    const prevBCount = this.bookings.filter((b) => b.businessId === businessId).length;
+    const prevCCount = this.customers.filter((c) => c.businessId === businessId).length;
+    const prevPayCount = this.payments.filter((p) => p.businessId === businessId).length;
+
+    // 1. Remove all bookings for this business
+    this.bookings = this.bookings.filter((b) => b.businessId !== businessId);
+
+    // 2. Remove all customers for this business
+    this.customers = this.customers.filter((c) => c.businessId !== businessId);
+
+    // 3. Remove all payments for this business
+    this.payments = this.payments.filter((p) => p.businessId !== businessId);
+
+    // 4. Remove all custom/altered poojas and re-seed default authentic 8 Vedic Poojas
+    this.poojas = this.poojas.filter((p) => p.businessId !== businessId);
+    this.seedDefaultPoojasForBusiness(businessId);
+    const restoredPoojas = this.poojas.filter((p) => p.businessId === businessId).length;
+
+    // 5. Mark cleared and persist
+    if (typeof window !== "undefined") {
+      localStorage.setItem("velvi_demo_data_cleared", "true");
+      this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+
+    // 6. Record in audit logs for Super Admin review
+    this.logAudit({
+      actorId: businessId,
+      actorName: "Business Owner",
+      action: "FACTORY_RESET",
+      targetType: "DATABASE",
+      targetId: businessId,
+      reason: "User triggered Factory Reset from Data Backup settings",
+      newValue: {
+        deletedBookings: prevBCount,
+        deletedCustomers: prevCCount,
+        deletedPayments: prevPayCount,
+        restoredPoojas,
+      },
+    });
+
+    return {
+      deletedBookings: prevBCount,
+      deletedCustomers: prevCCount,
+      deletedPayments: prevPayCount,
+      restoredPoojas,
+    };
+  }
+
   public loadSampleData(businessId?: string): { addedBookings: number; addedCustomers: number; addedPoojas: number } {
     const targetBizId = businessId || "biz-venkateswara-01";
     const sampleBookings = structuredClone(SEED_BOOKINGS).map((b) => ({

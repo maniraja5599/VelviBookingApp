@@ -35,6 +35,18 @@ import {
   AlertTriangle,
   RotateCcw,
   SlidersHorizontal,
+  Terminal,
+  Cpu,
+  Database,
+  Server,
+  Layers,
+  ExternalLink,
+  Lock,
+  Laptop,
+  PhoneCall,
+  Flame,
+  Workflow,
+  GitBranch,
 } from "lucide-react";
 import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
@@ -76,7 +88,7 @@ export default function SuperAdminDashboardPage() {
 
   // Navigation Sub-Tabs
   const [activeTab, setActiveTab] = useState<
-    "overview" | "directory" | "coupons" | "subscriptions" | "branding"
+    "overview" | "directory" | "coupons" | "subscriptions" | "branding" | "dev-info"
   >("overview");
 
   // Notifications
@@ -526,6 +538,7 @@ export default function SuperAdminDashboardPage() {
           },
           { id: "subscriptions", label: "Subscriptions & Ledger", icon: CreditCard },
           { id: "branding", label: "Platform Branding", icon: Palette },
+          { id: "dev-info", label: "App Development Specs", icon: Terminal, badge: "v2.5.3" },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -605,6 +618,40 @@ export default function SuperAdminDashboardPage() {
                 ₹{totalPlatformEarnings.toLocaleString("en-IN")}
               </div>
               <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium">Platform GMV</div>
+            </div>
+          </div>
+
+          {/* Developer Quick Overview Banner */}
+          <div className="bg-gradient-to-r from-[#131d33] via-[#0d1525] to-[#131d33] border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center font-black text-xl shrink-0 shadow-xs">
+                M
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-black text-sm text-white">Developed by Maniraja</h3>
+                  <span className="text-[9px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.2 rounded-md">
+                    Velvi Tech
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400 font-mono">
+                    +91 83000 30123
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 font-medium">
+                  Next.js 14 • Supabase Cloud PostgreSQL (Mumbai) • Google OAuth 2.0 • Cashfree • 8 Vedic Homams
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+              <button
+                type="button"
+                onClick={() => setActiveTab("dev-info")}
+                className="px-3.5 py-2 bg-amber-500/15 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/40 text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-xs"
+              >
+                <Terminal className="w-3.5 h-3.5" />
+                <span>View Full Architecture Specs</span>
+              </button>
             </div>
           </div>
 
@@ -1767,6 +1814,333 @@ export default function SuperAdminDashboardPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* SUB-TAB 6: APP ARCHITECTURE & DEVELOPER DETAILS                     */}
+      {/* ===================================================================== */}
+      {activeTab === "dev-info" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Hero Developer Card */}
+          <div className="bg-gradient-to-br from-[#131c31] via-[#0d1525] to-[#080d18] border-2 border-amber-500/40 rounded-3xl p-5 sm:p-7 text-white shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black text-2xl sm:text-3xl shadow-lg ring-4 ring-amber-400/20 shrink-0">
+                  M
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                      Maniraja
+                    </h2>
+                    <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Lead Architect &amp; Creator
+                    </span>
+                    <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Root Super Admin
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-200/90 font-semibold">
+                    Velvi Tech (வேள்வி டெக்னாலஜிஸ்) • Tamil Nadu, India
+                  </p>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Account: <strong className="text-white font-mono">manirajankg@gmail.com</strong> • ID: <strong className="text-white font-mono">u-super-admin-01</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <a
+                  href="tel:+918300030123"
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black flex items-center gap-2 shadow-md transition active:scale-95 cursor-pointer"
+                >
+                  <PhoneCall className="w-4 h-4" />
+                  <span>Call +91 83000 30123</span>
+                </a>
+                <a
+                  href="https://wa.me/918300030123?text=Vanakkam%20Mani%20Raja,%20Velvi%20Super%20Admin%20Inquiry"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-black flex items-center gap-2 transition active:scale-95 cursor-pointer"
+                >
+                  <span>WhatsApp Message</span>
+                </a>
+                <a
+                  href="mailto:manirajankg@gmail.com"
+                  className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 border border-zinc-700 rounded-xl text-xs font-bold flex items-center gap-2 transition active:scale-95 cursor-pointer"
+                >
+                  <Mail className="w-4 h-4 text-amber-400" />
+                  <span>Send Email</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid of Technical Specifications */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Box 1: Core Framework & Stack */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                    <Laptop className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Full-Stack Framework</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">Next.js 14.2</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Core Runtime:</span>
+                  <span className="font-bold text-white">Next.js 14.2.35 (React 18.3.1)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Type System:</span>
+                  <span className="font-bold text-white">TypeScript 5.9.3 (Strict Mode)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">CSS &amp; Styling:</span>
+                  <span className="font-bold text-white">Tailwind CSS 3.4.19 + Sacred Tokens</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Iconography:</span>
+                  <span className="font-bold text-white">Lucide React v0.453.0</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Excel / Reporting:</span>
+                  <span className="font-bold text-white">SheetJS (xlsx v0.18.5)</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Box 2: Cloud Database & Supabase PostgreSQL */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-emerald-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Supabase PostgreSQL</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">AWS ap-south-1</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Cloud Provider:</span>
+                  <span className="font-bold text-emerald-300">Supabase Cloud (PostgreSQL 15)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Project Reference:</span>
+                  <span className="font-mono text-white text-[11px]">yyvcmfjqbeixlxcjnohn</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Core Tables:</span>
+                  <span className="font-bold text-white">9 Tables (users, bookings, etc.)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Client Store:</span>
+                  <span className="font-bold text-white">Reactive Store (velvi_db_state_v2)</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Sync Architecture:</span>
+                  <span className="font-bold text-white">Hybrid Local-First + Cloud Pooler</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Box 3: Authentication & Security */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-blue-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Auth &amp; Security</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-md">Google OAuth 2.0</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Auth Flow:</span>
+                  <span className="font-bold text-white">Direct OAuth 2.0 Redirect</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">OAuth Client ID:</span>
+                  <span className="font-mono text-slate-300 text-[10px] truncate max-w-[140px]" title="239924321651-f69j4bdmp648o08hg4n31jf46i7re4rj.apps.googleusercontent.com">239924321651...</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Role Engine:</span>
+                  <span className="font-bold text-white">SUPER_ADMIN, OWNER, IYER</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Audit Logging:</span>
+                  <span className="font-bold text-white">Client IP &amp; Geolocation Auditing</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Root Account:</span>
+                  <span className="font-bold text-amber-300">manirajankg@gmail.com</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Box 4: Hosting & Infrastructure */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-purple-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                    <Server className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Deployment &amp; Hosting</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md">Vercel Edge</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Production URL:</span>
+                  <a href="https://velvi-booking-app.vercel.app" target="_blank" rel="noopener noreferrer" className="font-mono text-amber-300 hover:underline flex items-center gap-1 text-[11px]">
+                    velvi-booking-app.vercel.app
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">GitHub Repository:</span>
+                  <a href="https://github.com/maniraja5599/VelviBookingApp" target="_blank" rel="noopener noreferrer" className="font-mono text-slate-200 hover:text-white flex items-center gap-1 text-[11px]">
+                    maniraja5599/VelviBookingApp
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Continuous Deploy:</span>
+                  <span className="font-bold text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Automated on git push
+                  </span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Vercel CLI:</span>
+                  <span className="font-bold text-white">CLI 59.23.2</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Application Version:</span>
+                  <span className="font-bold text-amber-400 font-mono">v2.5.3 Enterprise Pro</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Box 5: Payment Gateway & Monetization */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-amber-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Payment &amp; Billing</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md">Cashfree SDK</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Gateway Provider:</span>
+                  <span className="font-bold text-white">Cashfree Payments (v2023-08-01)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Supported Methods:</span>
+                  <span className="font-bold text-white">UPI, GPay, PhonePe, Cards, NetBanking</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Pricing Plans:</span>
+                  <span className="font-bold text-white">Monthly (₹499) / Annual (₹4,999)</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Developer Promo:</span>
+                  <span className="font-mono text-emerald-400 font-bold">VELVIPRO100 (100% Free Pass)</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Trial Quota:</span>
+                  <span className="font-bold text-white">20 Free Devotee Bookings</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Box 6: Vedic Ritual & Astrology Engines */}
+            <div className="bg-[#0f172a]/80 p-5 rounded-3xl border border-zinc-800 space-y-3 shadow-md hover:border-rose-500/40 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                    <Flame className="w-4 h-4 text-rose-400" />
+                  </div>
+                  <h3 className="font-black text-sm text-white">Vedic Domain Engines</h3>
+                </div>
+                <span className="text-[10px] font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md">8 Homams</span>
+              </div>
+              <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Panchangam Engine:</span>
+                  <span className="font-bold text-white">Thithi, Nakshatram, Rahu Kalam, Yamagandam</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Homam Templates:</span>
+                  <span className="font-bold text-white">Ganapathi, Navagraha, Sudarshana, etc.</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Samagri Checklists:</span>
+                  <span className="font-bold text-white">30+ items per homam with Tamil names</span>
+                </li>
+                <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
+                  <span className="text-slate-400">Devotee Slips:</span>
+                  <span className="font-bold text-white">1-Tap WhatsApp Receipts &amp; Dakshina Slips</span>
+                </li>
+                <li className="flex items-center justify-between">
+                  <span className="text-slate-400">Factory Reset:</span>
+                  <span className="font-bold text-emerald-400">Clean Slate Reset with Safety Confirmation</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Database Tables Schema Breakdown Card */}
+          <div className="bg-[#0f172a]/80 p-5 sm:p-6 rounded-3xl border border-zinc-800 space-y-4 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-black text-sm sm:text-base text-white">
+                  Supabase PostgreSQL 9 Core Tables Schema
+                </h3>
+              </div>
+              <span className="text-xs text-slate-400 font-mono">Managed AWS ap-south-1</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                { name: "users", desc: "Vadhyars, priests, super admin accounts, IP address & location telemetry" },
+                { name: "businesses", desc: "Vadhyar booking enterprise profiles, phone, whatsapp, logo branding" },
+                { name: "subscriptions", desc: "Plan codes, trial periods, renewal cycles, validity dates" },
+                { name: "poojas", desc: "8 Authentic Vedic Homams + custom user poojas + samagri item checklists" },
+                { name: "bookings", desc: "Devotee appointments, date/time, muhurtham slots, priest assignments" },
+                { name: "customers", desc: "Devotee directory with gothram, rasi, nakshatram & family records" },
+                { name: "payments", desc: "Dakshina accounts, advance settlements, Cashfree transaction IDs" },
+                { name: "members", desc: "Assistant priests & vadhyar team members with role access" },
+                { name: "audit_logs", desc: "Tamper-evident Super Admin security audit trail with client IPs" },
+              ].map((tbl, i) => (
+                <div key={tbl.name} className="p-3 bg-[#080d18] rounded-2xl border border-zinc-800/80 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-black text-amber-300">
+                      {i + 1}. {tbl.name}
+                    </span>
+                    <span className="text-[9px] font-bold bg-zinc-800 text-slate-400 px-1.5 py-0.5 rounded">
+                      Table
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 leading-snug">
+                    {tbl.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

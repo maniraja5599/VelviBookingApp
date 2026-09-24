@@ -15,6 +15,7 @@ import {
   FileText,
   Sparkles,
   ArrowLeft,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,6 +29,36 @@ export default function DataBackupPage() {
 
   const [exportMessage, setExportMessage] = useState("");
   const [importPreview, setImportPreview] = useState<any | null>(null);
+
+  // Factory Reset state for ALL users
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetConfirmationText, setResetConfirmationText] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Dynamic business data counts for reset preview
+  const [dataVersion, setDataVersion] = useState(0);
+  const bookingCount = db.getBookings(businessId).length;
+  const customerCount = db.getCustomers(businessId).length;
+  const paymentCount = db.payments.filter((p) => p.businessId === businessId).length;
+
+  const handlePerformFactoryReset = () => {
+    if (resetConfirmationText.trim().toUpperCase() !== "RESET") return;
+    setIsResetting(true);
+    try {
+      const res = db.factoryResetBusiness(businessId);
+      setShowResetModal(false);
+      setResetConfirmationText("");
+      setDataVersion((v) => v + 1);
+      setExportMessage(
+        `தொழிற்சாலை மீட்டமைப்பு முடிந்தது! நீக்கப்பட்டவை: ${res.deletedBookings} முன்பதிவுகள், ${res.deletedCustomers} பக்தர்கள், ${res.deletedPayments} கட்டணங்கள். ஆரம்பநிலை 8 வேத பூஜைகள் மீட்டமைக்கப்பட்டன.`
+      );
+      setTimeout(() => setExportMessage(""), 6000);
+    } catch (e: any) {
+      setExportMessage("மீட்டமைப்பு தோல்வியுற்றது: " + (e?.message || "Error"));
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleExport = (format: "xlsx" | "csv" | "json") => {
     if (!isPaidUser) return;
@@ -95,7 +126,7 @@ export default function DataBackupPage() {
   };
 
   return (
-    <div className="space-y-4 pb-8 animate-in fade-in duration-200">
+    <div className="space-y-4 pb-32 sm:pb-20 animate-in fade-in duration-200">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -291,6 +322,54 @@ export default function DataBackupPage() {
         )}
       </div>
 
+      {/* Factory Reset / தொழிற்சாலை மீட்டமைப்பு for ALL Users */}
+      <div className="bg-white rounded-3xl p-4 sm:p-5 border-2 border-rose-200/80 shadow-sm space-y-3.5 relative overflow-hidden">
+        <div className="flex items-center justify-between">
+          <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <RotateCcw className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>தொழிற்சாலை மீட்டமைப்பு (Factory Reset)</span>
+          </h3>
+          <span className="text-[10px] bg-rose-100 text-rose-800 font-extrabold px-2.5 py-0.5 rounded-full border border-rose-200 flex items-center gap-1 shrink-0">
+            <AlertTriangle className="w-3 h-3 text-rose-600 shrink-0" />
+            <span>Danger Zone</span>
+          </span>
+        </div>
+
+        <p className="text-xs text-slate-600 leading-relaxed font-medium">
+          உங்கள் கணக்கின் அனைத்து முன்பதிவுகள், பக்தர்கள் பதிவுகள் மற்றும் கட்டண கணக்குகளை முழுமையாக அழித்து புத்தம் புதிய ஆரம்ப நிலைக்கு (Clean Slate) கொண்டுவரலாம்.
+        </p>
+
+        {/* Current Data Metrics to be wiped */}
+        <div className="grid grid-cols-3 gap-2 text-center py-0.5">
+          <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
+            <div className="text-base font-black text-rose-900">{bookingCount}</div>
+            <div className="text-[10px] font-bold text-rose-700/80">முன்பதிவுகள்</div>
+          </div>
+          <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
+            <div className="text-base font-black text-rose-900">{customerCount}</div>
+            <div className="text-[10px] font-bold text-rose-700/80">பக்தர்கள்</div>
+          </div>
+          <div className="bg-rose-50/70 p-2.5 rounded-2xl border border-rose-100">
+            <div className="text-base font-black text-rose-900">{paymentCount}</div>
+            <div className="text-[10px] font-bold text-rose-700/80">கட்டணங்கள்</div>
+          </div>
+        </div>
+
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              setResetConfirmationText("");
+              setShowResetModal(true);
+            }}
+            className="w-full py-3 px-4 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition active:scale-[0.99] cursor-pointer"
+          >
+            <RotateCcw className="w-4 h-4 text-white shrink-0" />
+            <span>தொழிற்சாலை மீட்டமைப்பைத் தொடங்கு (Reset All Data)</span>
+          </button>
+        </div>
+      </div>
+
       {/* Demo Data Management - Only visible for Demo Account */}
       {(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01") && (
         <div className="bg-white rounded-3xl p-4 border border-velvi-gold/20 shadow-sm space-y-3">
@@ -300,34 +379,107 @@ export default function DataBackupPage() {
             </h3>
           </div>
           <p className="text-xs text-velvi-brown/70">
-            சோதனைக்காக வைக்கப்பட்ட மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை ஒரே கிளிக்கில் நீக்கிவிட்டு புதிய பதிவுகளை தொடங்கலாம்.
+            மாதிரி முன்பதிவுகளை மீண்டும் ஏற்ற வேண்டுமானால் கீழே உள்ள பட்டனை பயன்படுத்தலாம்.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2 pt-1">
-            <button
-              onClick={() => {
-                if (window.confirm("மாதிரி முன்பதிவுகள் மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா?\n(Clear sample demo bookings & devotees?)")) {
-                  const res = db.clearDemoData();
-                  setExportMessage(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) நீக்கப்பட்டனர்!`);
-                  setTimeout(() => setExportMessage(""), 4000);
-                }
-              }}
-              className="flex-1 py-2.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-xl text-xs cursor-pointer transition flex items-center justify-center gap-1.5"
-            >
-              <span>மாதிரி பதிவுகளை நீக்கு (Clear Demo Data)</span>
-            </button>
+          <div className="pt-1">
             <button
               onClick={() => {
                 const res = db.loadSampleData(businessId);
+                setDataVersion((v) => v + 1);
                 setExportMessage(`மாதிரி பதிவுகள் ஏற்றப்பட்டன (${res.addedBookings} முன்பதிவுகள்)!`);
                 setTimeout(() => setExportMessage(""), 4000);
               }}
-              className="py-2.5 px-4 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown font-bold border border-velvi-gold/30 rounded-xl text-xs cursor-pointer transition"
+              className="w-full py-2.5 px-4 bg-velvi-cream hover:bg-velvi-gold/20 text-velvi-brown font-bold border border-velvi-gold/30 rounded-xl text-xs cursor-pointer transition"
             >
               மாதிரி ஏற்று (Reload Demo)
             </button>
           </div>
         </div>
       )}
+
+      {/* Factory Reset Safety Confirmation Modal */}
+      {showResetModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setShowResetModal(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl border-2 border-rose-400 text-left animate-in zoom-in-95 duration-150 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 border border-rose-200">
+                <AlertTriangle className="w-6 h-6 text-rose-600 animate-pulse" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-black text-base text-slate-900 leading-tight">
+                  தொழிற்சாலை மீட்டமைப்பு எச்சரிக்கை
+                </h3>
+                <p className="text-[11px] font-bold text-rose-600 mt-0.5">
+                  Factory Reset Warning • Cannot be undone
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-rose-50 rounded-2xl p-3.5 border border-rose-200 space-y-2 text-xs text-rose-900 font-medium">
+              <p className="font-bold">
+                ⚠️ எச்சரிக்கை: இந்த செயல்முறை உங்கள் கணக்கின் அனைத்து தரவுகளையும் நிரந்தரமாக நீக்கும்:
+              </p>
+              <ul className="list-disc pl-4 space-y-1 text-[11.5px] text-rose-800">
+                <li>அனைத்து <strong>முன்பதிவுகள் ({bookingCount})</strong> முழுமையாக அழிக்கப்படும்.</li>
+                <li>அனைத்து <strong>பக்தர்கள் தொடர்பு எண்கள் ({customerCount})</strong> அழிக்கப்படும்.</li>
+                <li>அனைத்து <strong>வரவு-செலவு மற்றும் தக்ஷிணை பதிவுகள் ({paymentCount})</strong> நீக்கப்படும்.</li>
+                <li>பூஜைகள் பட்டியல் ஆரம்பநிலை <strong>8 வேத பூஜைகளாக</strong> மீட்டமைக்கப்படும்.</li>
+              </ul>
+              <div className="p-2 bg-emerald-50 border border-emerald-200 rounded-xl text-[10.5px] font-bold text-emerald-800 flex items-center gap-1.5">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>உங்கள் Google லாகின் &amp; Velvi Pro சந்தா பத்திரமாக இருக்கும்!</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-700">
+                உறுதிப்படுத்த கீழே உள்ள பெட்டியில் <span className="font-mono text-rose-600 font-black">RESET</span> என தட்டச்சு செய்யவும்:
+              </label>
+              <input
+                type="text"
+                value={resetConfirmationText}
+                onChange={(e) => setResetConfirmationText(e.target.value)}
+                placeholder="RESET என டைப் செய்யவும்"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 focus:border-rose-500 focus:bg-white rounded-xl text-xs font-mono font-bold tracking-widest outline-none transition"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                ரத்து செய் (Cancel)
+              </button>
+              <button
+                type="button"
+                onClick={handlePerformFactoryReset}
+                disabled={resetConfirmationText.trim().toUpperCase() !== "RESET" || isResetting}
+                className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-black rounded-xl text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isResetting ? (
+                  <span>மீட்டமைக்கப்படுகிறது...</span>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>ஆம், மீட்டமை (Reset)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ample bottom spacer for mobile bottom navigation */}
+      <div className="h-24 pointer-events-none" />
     </div>
   );
 }
