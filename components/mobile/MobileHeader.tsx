@@ -445,158 +445,110 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
               {/* Profile Dropdown Menu */}
               {isProfileMenuOpen && (
                 <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
-                  {/* Dedicated Cloud Sync Dashboard Banner */}
-                  <div
-                    className={`p-3 rounded-2xl border text-xs shadow-2xs space-y-2 ${
-                      !isOnline || syncState === "error"
-                        ? "bg-rose-50/90 border-rose-300 text-rose-950"
-                        : syncState === "syncing"
-                        ? "bg-amber-50 border-amber-300 text-amber-950"
-                        : "bg-emerald-50/90 border-emerald-300 text-emerald-950"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-1.5">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span
-                          className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                            !isOnline || syncState === "error"
-                              ? "bg-rose-600 ring-2 ring-rose-300 animate-ping"
-                              : syncState === "syncing"
-                              ? "bg-amber-500 animate-spin"
-                              : "bg-emerald-600 ring-2 ring-emerald-300"
-                          }`}
+                  {/* 1. User Info Header - ALWAYS AT THE VERY TOP */}
+                  <div className="p-3 bg-gradient-to-br from-amber-50/90 to-amber-100/40 rounded-2xl border border-amber-200/70">
+                    <div className="flex items-center gap-2.5">
+                      {currentUser?.avatarUrl ? (
+                        <img
+                          src={currentUser.avatarUrl}
+                          alt={displayName}
+                          className="w-11 h-11 rounded-2xl object-cover shrink-0 shadow-xs ring-2 ring-amber-300"
                         />
-                        <div>
-                          <span className="font-black text-[12px] block leading-none">
-                            {!isOnline
-                              ? "Offline Mode"
-                              : syncState === "error"
-                              ? "Cloud Sync Error"
-                              : syncState === "syncing"
-                              ? "Syncing with Cloud..."
-                              : "Cloud Sync Active & Connected"}
-                          </span>
-                          <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
-                            Supabase Cloud PostgreSQL
-                          </span>
+                      ) : (
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-900 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs ring-2 ring-amber-300">
+                          {initial}
                         </div>
-                      </div>
-
-                      {/* Always-Available Sync Now Button */}
-                      <button
-                        type="button"
-                        disabled={isRetryingSync}
-                        onClick={async () => {
-                          setIsRetryingSync(true);
-                          setSyncState("syncing");
-                          setManualSyncMsg(null);
-                          if (currentBusiness?.id) {
-                            const res = await retryCloudSync(currentBusiness.id);
-                            if (res.ok) {
-                              setSyncState("synced");
-                              setSyncErrorMsg(null);
-                              setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-                              setManualSyncMsg(`Cloud sync successful! ${res.count ?? db.getBookings(businessId).length} bookings active.`);
-                              setTimeout(() => setManualSyncMsg(null), 3500);
-                            } else {
-                              setSyncState("error");
-                              setSyncErrorMsg(res.message || "Sync failed");
-                            }
-                          }
-                          setIsRetryingSync(false);
-                        }}
-                        className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-[10px] font-black transition active:scale-95 shadow-xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
-                      >
-                        <RotateCcw className={`w-3 h-3 ${isRetryingSync ? "animate-spin" : ""}`} />
-                        <span>{isRetryingSync ? "Syncing..." : "Sync Now"}</span>
-                      </button>
-                    </div>
-
-                    {/* Live Cloud Database Stats Grid */}
-                    <div className="grid grid-cols-3 gap-1 pt-1 border-t border-emerald-200/60 text-center">
-                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
-                        <span className="block text-[12px] font-black text-emerald-950">
-                          {db.getBookings(businessId).length}
-                        </span>
-                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
-                          Bookings
-                        </span>
-                      </div>
-                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
-                        <span className="block text-[12px] font-black text-emerald-950">
-                          {db.getCustomers(businessId).length}
-                        </span>
-                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
-                          Devotees
-                        </span>
-                      </div>
-                      <div className="bg-white/70 p-1.5 rounded-lg border border-emerald-200/50">
-                        <span className="block text-[10.5px] font-black text-emerald-950 truncate">
-                          {lastSyncedTime}
-                        </span>
-                        <span className="block text-[8.5px] font-bold text-slate-500 uppercase">
-                          Last Sync
-                        </span>
-                      </div>
-                    </div>
-
-                    {manualSyncMsg && (
-                      <div className="bg-emerald-100 p-2 rounded-xl border border-emerald-300 text-[10.5px] font-bold text-emerald-900 flex items-center gap-1.5 animate-in fade-in">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                        <span>{manualSyncMsg}</span>
-                      </div>
-                    )}
-
-                    {(!isOnline || syncState === "error") && syncErrorMsg && (
-                      <div className="bg-white/95 p-2 rounded-xl border border-rose-200 text-[10.5px] font-bold text-rose-800 flex items-start gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
-                        <span className="break-words leading-tight">{syncErrorMsg}</span>
-                      </div>
-                    )}
-                  </div>
-                {/* User Info Header */}
-                <div className="p-3 bg-gradient-to-br from-amber-50/90 to-amber-100/40 rounded-2xl border border-amber-200/70">
-                  <div className="flex items-center gap-2.5">
-                    {currentUser?.avatarUrl ? (
-                      <img
-                        src={currentUser.avatarUrl}
-                        alt={displayName}
-                        className="w-11 h-11 rounded-2xl object-cover shrink-0 shadow-xs ring-2 ring-amber-300"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-2xl bg-emerald-900 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs ring-2 ring-amber-300">
-                        {initial}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-extrabold text-sm text-slate-900 truncate max-w-[140px]">
-                          {displayName}
-                        </h4>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="font-extrabold text-sm text-slate-900 truncate max-w-[140px]">
+                            {displayName}
+                          </h4>
+                          {currentUser?.email && (
+                            <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 rounded-full shrink-0">
+                              Google
+                            </span>
+                          )}
+                        </div>
                         {currentUser?.email && (
-                          <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.2 rounded-full shrink-0">
-                            Google
-                          </span>
+                          <p className="text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
+                            <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                            {currentUser.email}
+                          </p>
+                        )}
+                        {currentUser?.mobile && (
+                          <p className="text-[11px] text-slate-700 font-bold flex items-center gap-1 mt-0.5">
+                            <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
+                            {currentUser.mobile}
+                          </p>
+                        )}
+                        <p className="text-[10px] font-medium text-emerald-900 truncate mt-0.5">
+                          {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Compact Cloud Sync Info - Just Time & Count under Profile Details */}
+                  <div className="px-3 py-2 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2 transition">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11.5px] font-extrabold text-slate-800">
+                          {db.getBookings(businessId).length} Bookings Synced
+                        </span>
+                        {syncState === "syncing" && (
+                          <RefreshCw className="w-3 h-3 text-emerald-600 animate-spin shrink-0" />
                         )}
                       </div>
-                      {currentUser?.email && (
-                        <p className="text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1 mt-0.5">
-                          <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-                          {currentUser.email}
-                        </p>
-                      )}
-                      {currentUser?.mobile && (
-                        <p className="text-[11px] text-slate-700 font-bold flex items-center gap-1 mt-0.5">
-                          <Phone className="w-3 h-3 text-emerald-600 shrink-0" />
-                          {currentUser.mobile}
-                        </p>
-                      )}
-                      <p className="text-[10px] font-medium text-emerald-900 truncate mt-0.5">
-                        {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
-                      </p>
+                      <div className="text-[10px] text-slate-500 font-medium truncate">
+                        Last Sync: {lastSyncedTime}
+                      </div>
                     </div>
+
+                    {/* Compact Sync Now button */}
+                    <button
+                      type="button"
+                      disabled={isRetryingSync}
+                      onClick={async () => {
+                        setIsRetryingSync(true);
+                        setSyncState("syncing");
+                        setManualSyncMsg(null);
+                        if (currentBusiness?.id) {
+                          const res = await retryCloudSync(currentBusiness.id);
+                          if (res.ok) {
+                            setSyncState("synced");
+                            setSyncErrorMsg(null);
+                            setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                            setManualSyncMsg(`Synced (${res.count ?? db.getBookings(businessId).length})`);
+                            setTimeout(() => setManualSyncMsg(null), 3000);
+                          } else {
+                            setSyncState("error");
+                            setSyncErrorMsg(res.message || "Sync failed");
+                          }
+                        }
+                        setIsRetryingSync(false);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-xl text-[10px] font-extrabold transition active:scale-95 shadow-2xs flex items-center gap-1 cursor-pointer shrink-0 disabled:opacity-50"
+                      title="Sync Now"
+                    >
+                      <RotateCcw className={`w-3 h-3 ${isRetryingSync ? "animate-spin text-emerald-600" : ""}`} />
+                      <span>{isRetryingSync ? "Syncing..." : "Sync Now"}</span>
+                    </button>
                   </div>
-                </div>
+
+                  {manualSyncMsg && (
+                    <div className="bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-300 text-[10px] font-bold text-emerald-900 flex items-center gap-1.5 animate-in fade-in">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                      <span>{manualSyncMsg}</span>
+                    </div>
+                  )}
+
+                  {(!isOnline || syncState === "error") && syncErrorMsg && (
+                    <div className="bg-rose-50 px-2.5 py-1.5 rounded-xl border border-rose-200 text-[10px] font-bold text-rose-800 flex items-center gap-1.5">
+                      <AlertCircle className="w-3 h-3 text-rose-600 shrink-0" />
+                      <span className="truncate">{syncErrorMsg}</span>
+                    </div>
+                  )}
 
                 {/* Compact Days to Expiry & Proactive Notice */}
                 {daysToExpiry !== null && (
