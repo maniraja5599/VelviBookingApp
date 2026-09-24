@@ -19,6 +19,11 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const navItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -153,7 +158,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content Area (Clean padding on mobile and desktop) */}
       <main className="flex-1 p-3 sm:p-5 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {children}
+        {!isMounted ? (
+          <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl shadow-md animate-pulse">
+              🪔
+            </div>
+            <p className="text-xs text-slate-400 font-medium">Loading Super Admin Console...</p>
+          </div>
+        ) : (
+          children
+        )}
       </main>
     </div>
   );

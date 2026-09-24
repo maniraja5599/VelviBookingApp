@@ -38,6 +38,12 @@ import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 
 export default function SuperAdminDashboardPage() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Navigation Sub-Tabs
   const [activeTab, setActiveTab] = useState<
     "overview" | "directory" | "coupons" | "subscriptions" | "branding"
@@ -273,6 +279,17 @@ export default function SuperAdminDashboardPage() {
     0
   );
 
+  if (!isMounted) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+        <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center text-xl shadow-md animate-pulse">
+          🪔
+        </div>
+        <p className="text-xs text-slate-400 font-medium">Loading Super Admin Console...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Refined Luxury Top Header Banner */}
@@ -400,7 +417,7 @@ export default function SuperAdminDashboardPage() {
                 <span>Total Vadhyars</span>
                 <Users className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-white">{totalUsersCount}</div>
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white">{totalUsersCount}</div>
               <div className="text-[10px] sm:text-[11px] text-amber-400/90 font-medium">Priests &amp; admins</div>
             </div>
 
@@ -409,7 +426,7 @@ export default function SuperAdminDashboardPage() {
                 <span>Active Paid</span>
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400">{activePaidCount}</div>
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">{activePaidCount}</div>
               <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium">
                 {totalUsersCount > 0
                   ? `${Math.round((activePaidCount / totalUsersCount) * 100)}% conversion`
@@ -422,7 +439,7 @@ export default function SuperAdminDashboardPage() {
                 <span>Total Bookings</span>
                 <Activity className="w-3.5 h-3.5 text-amber-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-amber-300">{totalBookingsCount}</div>
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-300">{totalBookingsCount}</div>
               <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium">All tenants</div>
             </div>
 
@@ -431,7 +448,7 @@ export default function SuperAdminDashboardPage() {
                 <span>Total Dakshina</span>
                 <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400">
+              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">
                 ₹{totalPlatformEarnings.toLocaleString("en-IN")}
               </div>
               <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium">Platform GMV</div>
