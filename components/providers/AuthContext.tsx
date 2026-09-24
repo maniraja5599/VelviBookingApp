@@ -168,74 +168,88 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setCurrentUser({ ...user });
 
-    if (user.role === "SUPER_ADMIN") {
-      const saBiz = db.businesses.find((b) => b.id === "biz-venkateswara-01") || db.businesses[0];
-      setCurrentBusiness(saBiz ? { ...saBiz } : null);
-      setSubscription(db.subscriptions[0]);
-    } else {
-      let biz = db.businesses.find((b) => b.ownerId === user.id);
-      if (!biz && user.id === "u-ravi-iyer-01") {
-        biz = db.businesses[0];
-      } else if (!biz) {
-        const bizId = `biz-${user.id}`;
-        biz = {
-          id: bizId,
-          ownerId: user.id,
-          name: user.name || "Pooja Services",
-          serviceName: "Pooja • Homam • Seva",
-          iyerName: user.name || "Vadhyar",
-          phone: user.mobile || "",
-          whatsapp: user.mobile || "",
-          address: "தமிழ்நாடு, இந்தியா",
-          showWatermark: true,
-          createdAt: new Date().toISOString(),
-        };
-        db.businesses.push(biz);
-        db.seedDefaultPoojasForBusiness(bizId);
-        db.saveToLocalStorage();
-      }
-
-      // If business logoUrl was auto-populated with user's personal Google avatar, clear it so default Velvi logo displays
-      if (
-        biz &&
-        biz.logoUrl &&
-        (biz.logoUrl === user.avatarUrl ||
-          biz.logoUrl.includes("googleusercontent.com") ||
-          biz.logoUrl.includes("dicebear.com"))
-      ) {
-        biz.logoUrl = undefined;
-        db.saveToLocalStorage();
-      }
-      setCurrentBusiness(biz ? { ...biz } : null);
-
-      let sub = db.subscriptions.find((s) => s.businessId === biz?.id);
-      if (!sub && biz) {
-        if (user.id === "u-ravi-iyer-01") {
-          sub = db.subscriptions[0];
-        } else {
-          const now = new Date();
-          const end = new Date(Date.now() + 30 * 86400000);
-          sub = {
-            id: `sub-${biz.id}`,
-            businessId: biz.id,
-            planName: "Velvi Pro Monthly",
-            planCode: "VELVI_PRO",
-            status: "ACTIVE",
-            trialStart: now.toISOString(),
-            trialEnd: end.toISOString(),
-            currentPeriodStart: now.toISOString(),
-            currentPeriodEnd: end.toISOString(),
-            billingCycle: "MONTHLY",
-            autoRenew: true,
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-          };
-          db.subscriptions.push(sub);
-          db.saveToLocalStorage();
-        }
-      }
-      setSubscription(sub || null);
+    let biz = db.businesses.find((b) => b.ownerId === user.id);
+    if (!biz && (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com")) {
+      biz = db.businesses.find((b) => b.id === "biz-super-admin-01");
+    } else if (!biz && user.id === "u-ravi-iyer-01") {
+      biz = db.businesses.find((b) => b.id === "biz-venkateswara-01") || db.businesses[0];
+    } else if (!biz) {
+      const bizId = user.role === "SUPER_ADMIN" ? "biz-super-admin-01" : `biz-${user.id}`;
+      biz = {
+        id: bizId,
+        ownerId: user.id,
+        name: user.name || (user.role === "SUPER_ADMIN" ? "Velvi Admin Services" : "Pooja Services"),
+        serviceName: "Pooja • Homam • Seva",
+        iyerName: user.name || "Vadhyar",
+        phone: user.mobile || "",
+        whatsapp: user.mobile || "",
+        address: "தமிழ்நாடு, இந்தியா",
+        showWatermark: user.role !== "SUPER_ADMIN",
+        createdAt: new Date().toISOString(),
+      };
+      db.businesses.push(biz);
+      db.seedDefaultPoojasForBusiness(bizId);
+      db.saveToLocalStorage();
     }
+
+    // If business logoUrl was auto-populated with user's personal Google avatar, clear it so default Velvi logo displays
+    if (
+      biz &&
+      biz.logoUrl &&
+      (biz.logoUrl === user.avatarUrl ||
+        biz.logoUrl.includes("googleusercontent.com") ||
+        biz.logoUrl.includes("dicebear.com"))
+    ) {
+      biz.logoUrl = undefined;
+      db.saveToLocalStorage();
+    }
+    setCurrentBusiness(biz ? { ...biz } : null);
+
+    let sub = biz ? db.subscriptions.find((s) => s.businessId === biz.id) : null;
+    if (!sub && biz) {
+      if (user.id === "u-ravi-iyer-01") {
+        sub = db.subscriptions[0];
+      } else if (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01") || {
+          id: `sub-${biz.id}`,
+          businessId: biz.id,
+          planName: "Velvi Lifetime Pro",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: new Date().toISOString(),
+          trialEnd: new Date(Date.now() + 365 * 10 * 86400000).toISOString(),
+          currentPeriodStart: new Date().toISOString(),
+          currentPeriodEnd: new Date(Date.now() + 365 * 10 * 86400000).toISOString(),
+          billingCycle: "YEARLY",
+          autoRenew: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        db.subscriptions.push(sub);
+        db.saveToLocalStorage();
+      } else {
+        const now = new Date();
+        const end = new Date(Date.now() + 30 * 86400000);
+        sub = {
+          id: `sub-${biz.id}`,
+          businessId: biz.id,
+          planName: "Velvi Pro Monthly",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: now.toISOString(),
+          trialEnd: end.toISOString(),
+          currentPeriodStart: now.toISOString(),
+          currentPeriodEnd: end.toISOString(),
+          billingCycle: "MONTHLY",
+          autoRenew: true,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        };
+        db.subscriptions.push(sub);
+        db.saveToLocalStorage();
+      }
+    }
+    setSubscription(sub ? { ...sub } : null);
   }, []);
 
   useEffect(() => {
@@ -248,8 +262,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const handleDbChange = () => {
-      if (currentBusiness) {
-        const sub = db.getSubscription(currentBusiness.id);
+      const activeUserId =
+        currentUser?.id ||
+        (typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null);
+      const biz =
+        currentBusiness ||
+        (activeUserId ? db.businesses.find((b) => b.ownerId === activeUserId) : null) ||
+        (currentUser?.role === "SUPER_ADMIN" ? db.businesses.find((b) => b.id === "biz-super-admin-01") : null);
+      if (biz) {
+        const sub = db.subscriptions.find((s) => s.businessId === biz.id) || db.getSubscription(biz.id);
         if (sub) {
           setSubscription({ ...sub });
         }
@@ -259,13 +280,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.addEventListener("velvi:db-change", handleDbChange);
       return () => window.removeEventListener("velvi:db-change", handleDbChange);
     }
-  }, [currentBusiness]);
+  }, [currentBusiness, currentUser]);
 
   useEffect(() => {
     if (currentBusiness?.id) {
       initCloudSync(currentBusiness.id).catch(() => {});
     }
-  }, [currentBusiness?.id]);
+    if (currentUser) {
+      pushUserToCloud(currentUser).catch(() => {});
+      if (currentBusiness) {
+        pushBusinessToCloud(currentBusiness).catch(() => {});
+      }
+    }
+  }, [currentBusiness?.id, currentUser?.id]);
 
   const loginWithCredentials = React.useCallback(
     async (name: string, mobile: string): Promise<User> => {
@@ -780,11 +807,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSubscription({ ...updatedSub });
       return;
     }
-    if (currentBusiness) {
-      const sub = db.getSubscription(currentBusiness.id);
+    const activeUserId =
+      currentUser?.id ||
+      (typeof window !== "undefined" ? localStorage.getItem("velvi_active_user_id") : null);
+    const biz =
+      currentBusiness ||
+      (activeUserId ? db.businesses.find((b) => b.ownerId === activeUserId) : null) ||
+      (currentUser?.role === "SUPER_ADMIN" ? db.businesses.find((b) => b.id === "biz-super-admin-01") : null);
+    if (biz) {
+      const sub = db.subscriptions.find((s) => s.businessId === biz.id) || db.getSubscription(biz.id);
       if (sub) setSubscription({ ...sub });
     }
-  }, [currentBusiness]);
+  }, [currentBusiness, currentUser]);
 
   const completeOnboarding = React.useCallback(async (data: {
     mobile: string;

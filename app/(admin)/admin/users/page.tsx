@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { db } from "@/lib/db/store";
 import { User, Subscription } from "@/lib/types";
-import { Search, Shield, Plus, Clock, CheckCircle, AlertTriangle, X } from "lucide-react";
+import { Search, Shield, Plus, Clock, CheckCircle, AlertTriangle, X, RotateCcw, Trash2 } from "lucide-react";
+import {
+  syncSuperAdminDirectoryFromCloud,
+  initSuperAdminRealtimeSync,
+} from "@/lib/supabase/sync";
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
@@ -15,11 +19,97 @@ export default function AdminUsersPage() {
   const [days, setDays] = useState<number>(30);
   const [reason, setReason] = useState<string>("Admin compensation adjustment");
   const [successMsg, setSuccessMsg] = useState("");
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [, setForceTick] = useState(0);
+
+  const handleCloudSync = useCallback(async () => {
+    setIsCloudSyncing(true);
+    try {
+      db.purgeLegacyDummyData();
+      const res = await syncSuperAdminDirectoryFromCloud();
+      if (res.success) {
+        setSuccessMsg(`Synced ${res.usersCount} real users from Supabase Cloud!`);
+        setTimeout(() => setSuccessMsg(""), 4000);
+      }
+    } catch (_) {
+    } finally {
+      setIsCloudSyncing(false);
+      setForceTick((t) => t + 1);
+    }
+  }, []);
+
+  const handleResetCollections = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete all non-super-admin users and reset all collections in Supabase Cloud and LocalStorage?"
+      )
+    ) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset-collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminEmail: "manirajankg@gmail.com" }),
+      });
+      const data = await res.json();
+      db.purgeLegacyDummyData();
+      await syncSuperAdminDirectoryFromCloud();
+      setSuccessMsg(data.success ? "All collections and non-super-admin users deleted!" : data.error || "Reset failed");
+      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (e: any) {
+      setSuccessMsg(e?.message || "Reset failed");
+    } finally {
+      setIsResetting(false);
+      setForceTick((t) => t + 1);
+    }
+  };
+
+  useEffect(() => {
+    db.purgeLegacyDummyData();
+    handleCloudSync();
+
+    const cleanup = initSuperAdminRealtimeSync(() => {
+      setForceTick((t) => t + 1);
+    });
+
+    const handleDbChange = () => {
+      setForceTick((t) => t + 1);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("velvi:db-change", handleDbChange);
+    }
+
+    const pollTimer = setInterval(() => {
+      syncSuperAdminDirectoryFromCloud()
+        .then(() => {
+          setForceTick((t) => t + 1);
+        })
+        .catch(() => {});
+    }, 15000);
+
+    return () => {
+      cleanup();
+      clearInterval(pollTimer);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("velvi:db-change", handleDbChange);
+      }
+    };
+  }, [handleCloudSync]);
 
   const businesses = db.businesses;
   const subscriptions = db.subscriptions;
 
   const users = db.users.filter((u) => {
+    const isMock =
+      u.id === "u-ravi-iyer-01" ||
+      u.email?.trim().toLowerCase() === "ravi.iyer@gmail.com" ||
+      u.id.startsWith("u-demo-");
+    if (isMock) return false;
+
     const matchesSearch =
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -39,7 +129,13 @@ export default function AdminUsersPage() {
     e.preventDefault();
     if (!selectedUser) return;
 
-    const biz = businesses.find((b) => b.ownerId === selectedUser.id) || businesses[0];
+    const isSuper =
+      selectedUser.role === "SUPER_ADMIN" ||
+      selectedUser.email?.trim().toLowerCase() === "manirajankg@gmail.com";
+    const biz =
+      businesses.find((b) => b.ownerId === selectedUser.id) ||
+      (isSuper ? businesses.find((b) => b.id === "biz-super-admin-01") : undefined) ||
+      businesses[0];
 
     const res = db.adjustSubscriptionValidity({
       businessId: biz.id,
@@ -54,17 +150,42 @@ export default function AdminUsersPage() {
       setSuccessMsg(`Validity adjusted successfully for ${selectedUser.name}!`);
       setSelectedUser(null);
       setTimeout(() => setSuccessMsg(""), 4000);
+      setForceTick((t) => t + 1);
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Users & Validity Control</h1>
-        <p className="text-xs text-gray-400">
-          Super Admin manual validity extensions, plan adjustments & tenant inspection
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Users & Validity Control</h1>
+          <p className="text-xs text-gray-400">
+            Real users only • Synchronized directly with Supabase Cloud
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCloudSync}
+            disabled={isCloudSyncing}
+            className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
+            <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetCollections}
+            disabled={isResetting}
+            className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <span>{isResetting ? "Resetting..." : "Reset Collections"}</span>
+          </button>
+        </div>
       </div>
 
       {successMsg && (

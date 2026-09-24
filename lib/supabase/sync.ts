@@ -1,6 +1,6 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./client";
 import { db, isLegacyObsoletePooja } from "@/lib/db/store";
-import { Booking, Customer, Pooja, Business, User } from "@/lib/types";
+import { Booking, Customer, Pooja, Business, User, Subscription } from "@/lib/types";
 
 let isSyncing = false;
 let realtimeSubscription: any = null;
@@ -9,8 +9,21 @@ let realtimeSubscription: any = null;
  * Pushes a user profile up to Supabase.
  */
 export async function pushUserToCloud(user: User): Promise<boolean> {
+  if (!user) return false;
+
+  // 1. Post to same-origin server API (Immune to client-side RLS, VPN, or adblockers)
+  if (typeof window !== "undefined") {
+    try {
+      fetch("/api/auth/sync-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user }),
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
   const supabase = getSupabaseClient();
-  if (!supabase || !user) return false;
+  if (!supabase) return true;
 
   try {
     const validRole = ["SUPER_ADMIN", "OWNER", "IYER", "STAFF"].includes(user.role as any)
@@ -46,8 +59,21 @@ export async function pushUserToCloud(user: User): Promise<boolean> {
  * Pushes a business profile up to Supabase.
  */
 export async function pushBusinessToCloud(business: Business): Promise<boolean> {
+  if (!business) return false;
+
+  // 1. Post to same-origin server API
+  if (typeof window !== "undefined") {
+    try {
+      fetch("/api/auth/sync-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ business }),
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
   const supabase = getSupabaseClient();
-  if (!supabase || !business) return false;
+  if (!supabase) return true;
 
   try {
     // If ownerId exists in local store, ensure user is pushed first
@@ -208,6 +234,101 @@ export async function deletePoojaFromCloud(poojaId: string): Promise<boolean> {
     return true;
   } catch (err) {
     console.warn("[CloudSync] Delete pooja exception:", err);
+    return false;
+  }
+}
+
+/**
+ * Pushes a subscription record up to Supabase.
+ */
+export async function pushSubscriptionToCloud(subscription: Subscription): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase || !subscription) return false;
+
+  try {
+    if (subscription.businessId) {
+      const biz = db.businesses.find((b) => b.id === subscription.businessId);
+      if (biz) {
+        await pushBusinessToCloud(biz);
+      }
+    }
+
+    const payload = {
+      id: subscription.id,
+      business_id: subscription.businessId,
+      plan_name: subscription.planName || "Velvi Pro",
+      plan_code: subscription.planCode || "VELVI_PRO",
+      status: subscription.status || "ACTIVE",
+      trial_start: subscription.trialStart || new Date().toISOString(),
+      trial_end: subscription.trialEnd || new Date(Date.now() + 30 * 86400000).toISOString(),
+      current_period_start: subscription.currentPeriodStart || new Date().toISOString(),
+      current_period_end: subscription.currentPeriodEnd || new Date(Date.now() + 30 * 86400000).toISOString(),
+      billing_cycle: subscription.billingCycle || "MONTHLY",
+      auto_renew: subscription.autoRenew ?? true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("subscriptions").upsert(payload, { onConflict: "business_id" });
+    if (error) {
+      console.warn("[CloudSync] Upsert subscription warning:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] Push subscription exception:", err);
+    return false;
+  }
+}
+
+/**
+ * Pulls subscription from Supabase for a business.
+ */
+export async function pullSubscriptionFromCloud(businessId: string): Promise<boolean> {
+  const supabase = getSupabaseClient();
+  if (!supabase || !businessId) return false;
+
+  try {
+    const { data: cloudSubs, error } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("business_id", businessId)
+      .limit(1);
+
+    if (error) {
+      console.warn("[CloudSync] Subscription pull warning:", error.message);
+      return false;
+    }
+
+    if (Array.isArray(cloudSubs) && cloudSubs.length > 0) {
+      const cs = cloudSubs[0];
+      const mapped: Subscription = {
+        id: cs.id,
+        businessId: cs.business_id,
+        planName: cs.plan_name || "Velvi Pro",
+        planCode: cs.plan_code || "VELVI_PRO",
+        status: cs.status || "ACTIVE",
+        trialStart: cs.trial_start,
+        trialEnd: cs.trial_end,
+        currentPeriodStart: cs.current_period_start,
+        currentPeriodEnd: cs.current_period_end,
+        billingCycle: cs.billing_cycle || "MONTHLY",
+        autoRenew: Boolean(cs.auto_renew),
+        createdAt: cs.created_at || cs.current_period_start,
+        updatedAt: cs.updated_at || new Date().toISOString(),
+      };
+      const idx = db.subscriptions.findIndex((s) => s.businessId === businessId);
+      if (idx >= 0) {
+        db.subscriptions[idx] = { ...db.subscriptions[idx], ...mapped };
+      } else {
+        db.subscriptions.push(mapped);
+      }
+      db.saveToLocalStorage();
+      db.notifyListeners();
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn("[CloudSync] Pull subscription exception:", err);
     return false;
   }
 }
@@ -457,6 +578,12 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
       await supabase.from("bookings").upsert(bookingPayload);
     }
 
+    // 5. Ensure subscription is pushed
+    const sub = db.subscriptions.find((s) => s.businessId === businessId);
+    if (sub) {
+      await pushSubscriptionToCloud(sub);
+    }
+
     return true;
   } catch (err) {
     console.warn("[CloudSync] pushAllToCloud exception:", err);
@@ -604,6 +731,9 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
         }
       });
     }
+
+    // 4. Fetch Subscriptions
+    await pullSubscriptionFromCloud(businessId);
 
     db.saveToLocalStorage();
     db.notifyListeners();
@@ -763,6 +893,18 @@ export async function initCloudSync(businessId: string) {
         },
         (payload: any) => {
           handleCloudPoojaChange(payload);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "subscriptions",
+          filter: `business_id=eq.${businessId}`,
+        },
+        (payload: any) => {
+          handleCloudSubscriptionChange(payload);
         }
       )
       .subscribe((status: string) => {
@@ -941,3 +1083,521 @@ function handleCloudPoojaChange(payload: any) {
     }
   }
 }
+
+function handleCloudSubscriptionChange(payload: any) {
+  if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+    const s = payload.new;
+    if (!s) return;
+    const mapped: Subscription = {
+      id: s.id,
+      businessId: s.business_id,
+      planName: s.plan_name || "Velvi Pro",
+      planCode: s.plan_code || "VELVI_PRO",
+      status: s.status || "ACTIVE",
+      trialStart: s.trial_start,
+      trialEnd: s.trial_end,
+      currentPeriodStart: s.current_period_start,
+      currentPeriodEnd: s.current_period_end,
+      billingCycle: s.billing_cycle || "MONTHLY",
+      autoRenew: Boolean(s.auto_renew),
+      createdAt: s.created_at || s.current_period_start,
+      updatedAt: s.updated_at || new Date().toISOString(),
+    };
+
+    const existingIndex = db.subscriptions.findIndex((sub) => sub.businessId === mapped.businessId);
+    if (existingIndex >= 0) {
+      db.subscriptions[existingIndex] = mapped;
+    } else {
+      db.subscriptions.push(mapped);
+    }
+    db.saveToLocalStorage();
+    db.notifyListeners();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
+  }
+}
+
+/**
+ * SUPER ADMIN: Pulls all live real records (Users, Businesses, Subscriptions, Bookings) from Supabase Cloud.
+ */
+export async function syncSuperAdminDirectoryFromCloud(): Promise<{
+  success: boolean;
+  usersCount: number;
+  businessesCount: number;
+  subscriptionsCount: number;
+  bookingsCount: number;
+  error?: string;
+}> {
+  // Strategy 1: Server-Side Direct DB Query (Bypasses client-side RLS, adblockers, mobile network firewalls)
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/admin/directory", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.users)) {
+          // 1. Process Users
+          data.users.forEach((cu: any) => {
+            const isMock =
+              cu.id === "u-ravi-iyer-01" ||
+              cu.email?.trim().toLowerCase() === "ravi.iyer@gmail.com" ||
+              cu.id.startsWith("u-demo-");
+            if (isMock) return;
+
+            const mappedUser: User = {
+              id: cu.id,
+              googleId: cu.google_id || undefined,
+              email: cu.email,
+              name: cu.name,
+              avatarUrl: cu.avatar_url || undefined,
+              mobile: cu.mobile || "",
+              mobileVerified: Boolean(cu.mobile_verified),
+              role: cu.role,
+              referralCode: cu.referral_code || undefined,
+              createdAt: cu.created_at,
+              registrationIp: cu.registration_ip || undefined,
+              lastLoginIp: cu.last_login_ip || undefined,
+              registrationCity: cu.registration_city || undefined,
+              registrationCountry: cu.registration_country || undefined,
+              lastLoginCity: cu.last_login_city || undefined,
+              lastLoginCountry: cu.last_login_country || undefined,
+            };
+            const uIdx = db.users.findIndex(
+              (u) =>
+                u.id === mappedUser.id ||
+                (u.email && mappedUser.email && u.email.trim().toLowerCase() === mappedUser.email.trim().toLowerCase())
+            );
+            if (uIdx >= 0) {
+              db.users[uIdx] = { ...db.users[uIdx], ...mappedUser };
+            } else {
+              db.users.push(mappedUser);
+            }
+          });
+
+          // 2. Process Businesses
+          if (Array.isArray(data.businesses)) {
+            data.businesses.forEach((cb: any) => {
+              const mappedBiz: Business = {
+                id: cb.id,
+                ownerId: cb.owner_id,
+                name: cb.name,
+                serviceName: cb.service_name || undefined,
+                iyerName: cb.iyer_name || undefined,
+                logoUrl: cb.logo_url || undefined,
+                phone: cb.phone || "",
+                whatsapp: cb.whatsapp || undefined,
+                address: cb.address || undefined,
+                showWatermark: cb.show_watermark ?? true,
+                createdAt: cb.created_at,
+              };
+              const bIdx = db.businesses.findIndex((b) => b.id === mappedBiz.id);
+              if (bIdx >= 0) {
+                db.businesses[bIdx] = { ...db.businesses[bIdx], ...mappedBiz };
+              } else {
+                db.businesses.push(mappedBiz);
+              }
+            });
+          }
+
+          // 3. Process Subscriptions
+          if (Array.isArray(data.subscriptions)) {
+            data.subscriptions.forEach((cs: any) => {
+              const mappedSub: Subscription = {
+                id: cs.id,
+                businessId: cs.business_id,
+                planName: cs.plan_name || "Velvi Pro",
+                planCode: cs.plan_code || "VELVI_PRO",
+                status: cs.status || "ACTIVE",
+                trialStart: cs.trial_start,
+                trialEnd: cs.trial_end,
+                currentPeriodStart: cs.current_period_start,
+                currentPeriodEnd: cs.current_period_end,
+                billingCycle: cs.billing_cycle || "MONTHLY",
+                autoRenew: Boolean(cs.auto_renew),
+                createdAt: cs.created_at || cs.current_period_start,
+                updatedAt: cs.updated_at || new Date().toISOString(),
+              };
+              const subIdx = db.subscriptions.findIndex((s) => s.businessId === mappedSub.businessId);
+              if (subIdx >= 0) {
+                db.subscriptions[subIdx] = { ...db.subscriptions[subIdx], ...mappedSub };
+              } else {
+                db.subscriptions.push(mappedSub);
+              }
+            });
+          }
+
+          // 4. Process Bookings
+          if (Array.isArray(data.bookings)) {
+            data.bookings.forEach((b: any) => {
+              const mappedBooking: Booking = {
+                id: b.id,
+                bookingNumber: b.booking_number,
+                businessId: b.business_id,
+                customerId: b.customer_id,
+                customerName: b.customer_name || "Devotee",
+                customerMobile: b.customer_mobile || "",
+                customerAddress: b.customer_address || "",
+                poojaId: b.pooja_id,
+                poojaEnglishName: b.pooja_english_name || "",
+                poojaTamilName: b.pooja_tamil_name || "",
+                assignedIyerId: b.assigned_iyer_id,
+                assignedIyerName: b.assigned_iyer_name || "",
+                date: b.date,
+                startTime: b.start_time,
+                endTime: b.end_time,
+                durationMinutes: b.duration_minutes,
+                location: b.location,
+                totalAmount: Number(b.total_amount || 0),
+                advanceAmount: Number(b.advance_amount || 0),
+                balanceAmount: Number(b.balance_amount || 0),
+                paymentStatus: b.payment_status,
+                status: b.status,
+                items: b.items || [],
+                notes: b.notes,
+                cancellationReason: b.cancellation_reason,
+                cancelledAt: b.cancelled_at,
+                createdBy: b.created_by || b.assigned_iyer_name || "Priest",
+                createdAt: b.created_at,
+                updatedAt: b.updated_at,
+              };
+              const bkIdx = db.bookings.findIndex((bk) => bk.id === mappedBooking.id);
+              if (bkIdx >= 0) {
+                db.bookings[bkIdx] = { ...db.bookings[bkIdx], ...mappedBooking };
+              } else {
+                db.bookings.push(mappedBooking);
+              }
+            });
+          }
+
+          db.purgeLegacyDummyData();
+          db.saveToLocalStorage();
+          db.notifyListeners();
+          window.dispatchEvent(new CustomEvent("velvi:db-change"));
+
+          return {
+            success: true,
+            usersCount: data.users.length,
+            businessesCount: data.businesses?.length || 0,
+            subscriptionsCount: data.subscriptions?.length || 0,
+            bookingsCount: data.bookings?.length || 0,
+          };
+        }
+      }
+    } catch (apiErr) {
+      console.warn("[SuperAdminCloudSync] Server API directory fetch fallback:", apiErr);
+    }
+  }
+
+  // Strategy 2: Fallback to Supabase JS Client
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    return {
+      success: false,
+      usersCount: 0,
+      businessesCount: 0,
+      subscriptionsCount: 0,
+      bookingsCount: 0,
+      error: "Supabase not configured",
+    };
+  }
+
+  try {
+    // 1. Fetch Users
+    const { data: cloudUsers, error: uErr } = await supabase
+      .from("users")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (uErr) console.warn("[SuperAdminCloudSync] Users fetch warning:", uErr.message);
+
+    if (Array.isArray(cloudUsers)) {
+      cloudUsers.forEach((cu) => {
+        const mappedUser: User = {
+          id: cu.id,
+          googleId: cu.google_id || undefined,
+          email: cu.email,
+          name: cu.name,
+          avatarUrl: cu.avatar_url || undefined,
+          mobile: cu.mobile || "",
+          mobileVerified: Boolean(cu.mobile_verified),
+          role: cu.role,
+          referralCode: cu.referral_code || undefined,
+          createdAt: cu.created_at,
+          registrationIp: cu.registration_ip || undefined,
+          lastLoginIp: cu.last_login_ip || undefined,
+          registrationCity: cu.registration_city || undefined,
+          registrationCountry: cu.registration_country || undefined,
+          lastLoginCity: cu.last_login_city || undefined,
+          lastLoginCountry: cu.last_login_country || undefined,
+        };
+        const uIdx = db.users.findIndex(
+          (u) =>
+            u.id === mappedUser.id ||
+            (u.email && mappedUser.email && u.email.trim().toLowerCase() === mappedUser.email.trim().toLowerCase())
+        );
+        if (uIdx >= 0) {
+          db.users[uIdx] = { ...db.users[uIdx], ...mappedUser };
+        } else {
+          db.users.push(mappedUser);
+        }
+      });
+    }
+
+    // 2. Fetch Businesses
+    const { data: cloudBiz, error: bErr } = await supabase
+      .from("businesses")
+      .select("*");
+
+    if (bErr) console.warn("[SuperAdminCloudSync] Businesses fetch warning:", bErr.message);
+
+    if (Array.isArray(cloudBiz)) {
+      cloudBiz.forEach((cb) => {
+        const mappedBiz: Business = {
+          id: cb.id,
+          ownerId: cb.owner_id,
+          name: cb.name,
+          serviceName: cb.service_name || undefined,
+          iyerName: cb.iyer_name || undefined,
+          logoUrl: cb.logo_url || undefined,
+          phone: cb.phone || "",
+          whatsapp: cb.whatsapp || undefined,
+          address: cb.address || undefined,
+          showWatermark: cb.show_watermark ?? true,
+          createdAt: cb.created_at,
+        };
+        const bIdx = db.businesses.findIndex((b) => b.id === mappedBiz.id);
+        if (bIdx >= 0) {
+          db.businesses[bIdx] = { ...db.businesses[bIdx], ...mappedBiz };
+        } else {
+          db.businesses.push(mappedBiz);
+        }
+      });
+    }
+
+    // 3. Fetch Subscriptions
+    const { data: cloudSubs, error: sErr } = await supabase
+      .from("subscriptions")
+      .select("*");
+
+    if (sErr) console.warn("[SuperAdminCloudSync] Subscriptions fetch warning:", sErr.message);
+
+    if (Array.isArray(cloudSubs)) {
+      cloudSubs.forEach((cs) => {
+        const mappedSub: Subscription = {
+          id: cs.id,
+          businessId: cs.business_id,
+          planName: cs.plan_name || "Velvi Pro",
+          planCode: cs.plan_code || "VELVI_PRO",
+          status: cs.status || "ACTIVE",
+          trialStart: cs.trial_start,
+          trialEnd: cs.trial_end,
+          currentPeriodStart: cs.current_period_start,
+          currentPeriodEnd: cs.current_period_end,
+          billingCycle: cs.billing_cycle || "MONTHLY",
+          autoRenew: Boolean(cs.auto_renew),
+          createdAt: cs.created_at || cs.current_period_start,
+          updatedAt: cs.updated_at || new Date().toISOString(),
+        };
+        const subIdx = db.subscriptions.findIndex((s) => s.businessId === mappedSub.businessId);
+        if (subIdx >= 0) {
+          db.subscriptions[subIdx] = { ...db.subscriptions[subIdx], ...mappedSub };
+        } else {
+          db.subscriptions.push(mappedSub);
+        }
+      });
+    }
+
+    // 4. Fetch Bookings
+    const { data: cloudBookings, error: bkErr } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (bkErr) console.warn("[SuperAdminCloudSync] Bookings fetch warning:", bkErr.message);
+
+    if (Array.isArray(cloudBookings)) {
+      cloudBookings.forEach((b) => {
+        const mappedBooking: Booking = {
+          id: b.id,
+          bookingNumber: b.booking_number,
+          businessId: b.business_id,
+          customerId: b.customer_id,
+          customerName: b.customer_name,
+          customerMobile: b.customer_mobile,
+          customerAddress: b.customer_address,
+          poojaId: b.pooja_id,
+          poojaEnglishName: b.pooja_english_name,
+          poojaTamilName: b.pooja_tamil_name,
+          assignedIyerId: b.assigned_iyer_id,
+          assignedIyerName: b.assigned_iyer_name,
+          date: b.date,
+          startTime: b.start_time,
+          endTime: b.end_time,
+          durationMinutes: b.duration_minutes,
+          location: b.location,
+          totalAmount: Number(b.total_amount || 0),
+          advanceAmount: Number(b.advance_amount || 0),
+          balanceAmount: Number(b.balance_amount || 0),
+          paymentStatus: b.payment_status,
+          status: b.status,
+          items: b.items || [],
+          notes: b.notes,
+          cancellationReason: b.cancellation_reason,
+          cancelledAt: b.cancelled_at,
+          createdBy: b.created_by || b.assigned_iyer_name || "Priest",
+          createdAt: b.created_at,
+          updatedAt: b.updated_at,
+        };
+        const bkIdx = db.bookings.findIndex((bk) => bk.id === mappedBooking.id);
+        if (bkIdx >= 0) {
+          db.bookings[bkIdx] = { ...db.bookings[bkIdx], ...mappedBooking };
+        } else {
+          db.bookings.push(mappedBooking);
+        }
+      });
+    }
+
+    db.saveToLocalStorage();
+    db.notifyListeners();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
+
+    return {
+      success: true,
+      usersCount: cloudUsers?.length || 0,
+      businessesCount: cloudBiz?.length || 0,
+      subscriptionsCount: cloudSubs?.length || 0,
+      bookingsCount: cloudBookings?.length || 0,
+    };
+  } catch (err: any) {
+    console.error("[SuperAdminCloudSync] Full sync error:", err);
+    return {
+      success: false,
+      usersCount: 0,
+      businessesCount: 0,
+      subscriptionsCount: 0,
+      bookingsCount: 0,
+      error: err?.message,
+    };
+  }
+}
+
+let superAdminChannel: any = null;
+
+export function initSuperAdminRealtimeSync(onUpdate?: () => void) {
+  const supabase = getSupabaseClient();
+  if (!supabase) return () => {};
+
+  if (superAdminChannel) {
+    try {
+      supabase.removeChannel(superAdminChannel);
+    } catch (_) {}
+    superAdminChannel = null;
+  }
+
+  try {
+    superAdminChannel = supabase
+      .channel("super-admin-global-feed")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "users" },
+        (payload: any) => {
+          if (payload.new) {
+            const cu = payload.new;
+            const mappedUser: User = {
+              id: cu.id,
+              googleId: cu.google_id || undefined,
+              email: cu.email,
+              name: cu.name,
+              avatarUrl: cu.avatar_url || undefined,
+              mobile: cu.mobile || "",
+              mobileVerified: Boolean(cu.mobile_verified),
+              role: cu.role,
+              referralCode: cu.referral_code || undefined,
+              createdAt: cu.created_at,
+            };
+            const idx = db.users.findIndex(
+              (u) =>
+                u.id === mappedUser.id ||
+                (u.email && mappedUser.email && u.email.trim().toLowerCase() === mappedUser.email.trim().toLowerCase())
+            );
+            if (idx >= 0) {
+              db.users[idx] = { ...db.users[idx], ...mappedUser };
+            } else {
+              db.users.unshift(mappedUser);
+            }
+            db.saveToLocalStorage();
+            db.notifyListeners();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("velvi:db-change"));
+            }
+            if (onUpdate) onUpdate();
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "businesses" },
+        (payload: any) => {
+          if (payload.new) {
+            const cb = payload.new;
+            const mappedBiz: Business = {
+              id: cb.id,
+              ownerId: cb.owner_id,
+              name: cb.name,
+              serviceName: cb.service_name || undefined,
+              iyerName: cb.iyer_name || undefined,
+              logoUrl: cb.logo_url || undefined,
+              phone: cb.phone || "",
+              whatsapp: cb.whatsapp || undefined,
+              address: cb.address || undefined,
+              showWatermark: cb.show_watermark ?? true,
+              createdAt: cb.created_at,
+            };
+            const idx = db.businesses.findIndex((b) => b.id === mappedBiz.id);
+            if (idx >= 0) {
+              db.businesses[idx] = { ...db.businesses[idx], ...mappedBiz };
+            } else {
+              db.businesses.unshift(mappedBiz);
+            }
+            db.saveToLocalStorage();
+            db.notifyListeners();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("velvi:db-change"));
+            }
+            if (onUpdate) onUpdate();
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "subscriptions" },
+        (payload: any) => {
+          handleCloudSubscriptionChange(payload);
+          if (onUpdate) onUpdate();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        (payload: any) => {
+          handleCloudBookingChange(payload);
+          if (onUpdate) onUpdate();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (superAdminChannel) {
+        supabase.removeChannel(superAdminChannel);
+        superAdminChannel = null;
+      }
+    };
+  } catch (e) {
+    console.warn("[SuperAdminRealtime] Channel subscription warning:", e);
+    return () => {};
+  }
+}
+
+

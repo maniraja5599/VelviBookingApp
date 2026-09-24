@@ -43,6 +43,7 @@ import {
   pushPoojaToCloud,
   deletePoojaFromCloud,
   clearCloudBusinessData,
+  pushSubscriptionToCloud,
 } from "@/lib/supabase/sync";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
 
@@ -1109,10 +1110,28 @@ export class VelviDatabaseStore {
     days: number;
     reason: string;
   }): { success: boolean; subscription?: Subscription; error?: string } {
-    const sub = this.subscriptions.find((s) => s.businessId === params.businessId);
-    if (!sub) return { success: false, error: "Subscription not found" };
+    let sub = this.subscriptions.find((s) => s.businessId === params.businessId);
+    if (!sub) {
+      const now = new Date();
+      sub = {
+        id: `sub-${params.businessId}`,
+        businessId: params.businessId,
+        planName: "Velvi Pro Monthly",
+        planCode: "VELVI_PRO",
+        status: "ACTIVE",
+        trialStart: now.toISOString(),
+        trialEnd: now.toISOString(),
+        currentPeriodStart: now.toISOString(),
+        currentPeriodEnd: now.toISOString(),
+        billingCycle: "MONTHLY",
+        autoRenew: true,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      };
+      this.subscriptions.push(sub);
+    }
 
-    const previousEndDate = sub.currentPeriodEnd;
+    const previousEndDate = sub.currentPeriodEnd || new Date().toISOString();
     let newEndDate: Date;
 
     if (params.adjustmentType === "EXTEND") {
@@ -1163,6 +1182,7 @@ export class VelviDatabaseStore {
     });
 
     this.saveToLocalStorage();
+    pushSubscriptionToCloud(sub).catch(() => {});
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("velvi:db-change"));
     }
@@ -1752,17 +1772,20 @@ export class VelviDatabaseStore {
       if (state) {
         if (Array.isArray(state.users) && state.users.length > 0) {
           const dummyUserIds = new Set([
+            "u-ravi-iyer-01",
             "u-suresh-iyer-02",
             "u-kumar-iyer-03",
             "u-mani-04",
             "u-ravi-temple-05",
           ]);
-          this.users = state.users.filter((u: User) => !dummyUserIds.has(u.id));
+          this.users = state.users.filter(
+            (u: User) =>
+              !dummyUserIds.has(u.id) &&
+              u.email?.trim().toLowerCase() !== "ravi.iyer@gmail.com" &&
+              !u.id.startsWith("u-demo-")
+          );
           if (!this.users.some((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase())) {
             this.users.push(SEED_SUPER_ADMIN);
-          }
-          if (!this.users.some((u) => u.email.toLowerCase() === SEED_USER.email.toLowerCase())) {
-            this.users.push(SEED_USER);
           }
         }
         if (Array.isArray(state.businesses) && state.businesses.length > 0) {
@@ -2264,7 +2287,8 @@ export class VelviDatabaseStore {
     return uniqueUsers.map((user) => {
       const isDemo =
         user.id === "u-ravi-iyer-01" ||
-        user.email.trim().toLowerCase() === "ravi.iyer@gmail.com";
+        user.email.trim().toLowerCase() === "ravi.iyer@gmail.com" ||
+        user.id.startsWith("u-demo-");
 
       const isSuperAdmin =
         user.role === "SUPER_ADMIN" ||

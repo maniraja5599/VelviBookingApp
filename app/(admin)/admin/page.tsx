@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { db } from "@/lib/db/store";
 import {
   Coupon,
@@ -54,7 +54,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
-import { retryCloudSync } from "@/lib/supabase/sync";
+import {
+  retryCloudSync,
+  syncSuperAdminDirectoryFromCloud,
+  initSuperAdminRealtimeSync,
+} from "@/lib/supabase/sync";
 import { useAuth } from "@/components/providers/AuthContext";
 
 export default function SuperAdminDashboardPage() {
@@ -67,8 +71,57 @@ export default function SuperAdminDashboardPage() {
   );
   const isEditorAdmin = Boolean(currentUser?.role === "ADMIN" && !isSuperAdmin);
 
+  const [isCloudSyncing, setIsCloudSyncing] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [directoryMetrics, setDirectoryMetrics] = useState<UserDirectoryMetric[]>(() => {
+    return db.getAllUsersDirectoryMetrics();
+  });
+
+  const handleCloudSync = React.useCallback(async () => {
+    setIsCloudSyncing(true);
+    try {
+      db.purgeLegacyDummyData();
+      const res = await syncSuperAdminDirectoryFromCloud();
+      setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+      if (res.success) {
+        showToast(`Synced ${res.usersCount} real users directly from Supabase Cloud!`);
+      } else {
+        showToast(res.error || "Cloud sync notice", true);
+      }
+    } catch (e: any) {
+      showToast(e?.message || "Cloud sync notice", true);
+    } finally {
+      setIsCloudSyncing(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     setIsMounted(true);
+    db.purgeLegacyDummyData();
+    setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+    handleCloudSync();
+
+    const cleanupRealtime = initSuperAdminRealtimeSync(() => {
+      setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+      showToast("Live update received from Cloud!");
+    });
+
+    const handleDbChange = () => {
+      setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("velvi:db-change", handleDbChange);
+    }
+
+    // Auto-poll cloud directory every 15s to guarantee fresh cross-device updates
+    const pollTimer = setInterval(() => {
+      syncSuperAdminDirectoryFromCloud()
+        .then(() => {
+          setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+        })
+        .catch(() => {});
+    }, 15000);
+
     // Auto-enrich client IP and location for Super Admin and tenants
     fetch("/api/auth/client-ip")
       .then((r) => r.json())
@@ -93,11 +146,20 @@ export default function SuperAdminDashboardPage() {
           }
           if (updated) {
             db.saveToLocalStorage();
+            setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
           }
         }
       })
       .catch(() => {});
-  }, []);
+
+    return () => {
+      cleanupRealtime();
+      clearInterval(pollTimer);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("velvi:db-change", handleDbChange);
+      }
+    };
+  }, [handleCloudSync]);
 
   // Navigation Sub-Tabs
   const [activeTab, setActiveTab] = useState<
@@ -280,8 +342,8 @@ export default function SuperAdminDashboardPage() {
   };
 
   // Live Directory Metrics with IP Addresses & Geo Locations
-  const directoryMetrics: UserDirectoryMetric[] = useMemo(() => {
-    return db.getAllUsersDirectoryMetrics();
+  useEffect(() => {
+    setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
   }, [actionSuccess, activeTab]);
 
   const filteredMetrics = useMemo(() => {
@@ -499,21 +561,43 @@ export default function SuperAdminDashboardPage() {
     showToast("Platform branding & system updates saved successfully!");
   };
 
-  // Reset to 100% Real Data
-  const handleResetToRealData = () => {
-    const res = db.purgeLegacyDummyData();
-    db.logAudit({
-      actorId: "u-super-admin-01",
-      actorName: "Maniraja (Super Admin)",
-      action: "RESET_REAL_DATA",
-      targetType: "DATABASE_STORE",
-      reason: "Purged mock users & synchronized to verified real data",
-    });
-    showToast(
-      res.removedUsers > 0
-        ? `Cleaned ${res.removedUsers} mock accounts! Real tenant data synchronized.`
-        : "Store already contains 100% verified real data only."
-    );
+  // Reset to 100% Real Data & Purge all collections
+  const handleResetToRealData = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to reset all collections and delete all users except Super Admin (manirajankg@gmail.com)?\n\nThis will purge all mock/test data from Supabase Cloud and Local Storage."
+      )
+    ) {
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      // 1. Call server API to reset in PostgreSQL / Supabase
+      const res = await fetch("/api/admin/reset-collections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminEmail: currentUser?.email || "manirajankg@gmail.com" }),
+      });
+      const data = await res.json();
+
+      // 2. Clear local dummy data
+      db.purgeLegacyDummyData();
+
+      // 3. Re-sync from Supabase
+      await syncSuperAdminDirectoryFromCloud();
+
+      showToast(
+        data.success
+          ? "All collections and non-super-admin users deleted from Cloud & Local!"
+          : data.error || "Reset failed",
+        !data.success
+      );
+    } catch (e: any) {
+      showToast(e?.message || "Reset request failed", true);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Platform KPIs - Real vs Demo Separation
@@ -674,13 +758,26 @@ export default function SuperAdminDashboardPage() {
         <div className="flex items-center gap-2 self-start sm:self-auto relative z-10 flex-wrap">
           <button
             type="button"
-            onClick={handleResetToRealData}
-            className="px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer"
-            title="Purge legacy dummy data and synchronize store with verified real records"
+            onClick={handleCloudSync}
+            disabled={isCloudSyncing}
+            className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Fetch live real users and bookings directly from Supabase Cloud"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-            <span>Sync Real Data</span>
+            <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
+            <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
           </button>
+
+          <button
+            type="button"
+            onClick={handleResetToRealData}
+            disabled={isResetting}
+            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Delete all non-super-admin users and reset collections in Supabase Cloud & Local"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+            <span>{isResetting ? "Resetting..." : "Reset All Collections"}</span>
+          </button>
+
           <Link
             href="/app"
             className="px-3.5 py-2 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
