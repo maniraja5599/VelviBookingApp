@@ -25,8 +25,7 @@ import {
   Clock,
   WifiOff,
   Shield,
-  Cloud,
-  CloudOff,
+  RefreshCw,
 } from "lucide-react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { GlobalSearchModal } from "@/components/search/GlobalSearchModal";
@@ -364,53 +363,58 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
           {/* Right side: Global Search + Compact User Profile Dropdown Button */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Global Search Icon Button with 1-Day Before & Notification Pulse */}
+            {/* Global Search Icon Button / Live Sync Spinning Animation (Only while syncing!) */}
             <button
               type="button"
               onClick={handleOpenSearch}
-              className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl bg-slate-100/90 hover:bg-slate-200/90 text-slate-700 flex items-center justify-center transition active:scale-95 group shrink-0 relative cursor-pointer"
+              className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-xl flex items-center justify-center transition active:scale-95 group shrink-0 relative cursor-pointer ${
+                syncState === "syncing"
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs"
+                  : "bg-slate-100/90 hover:bg-slate-200/90 text-slate-700"
+              }`}
               title={
-                tomorrowBookingsCount > 0 && !hasDismissedNotice
+                syncState === "syncing"
+                  ? "மேகக்கணி ஒத்திசைவு நடைபெறுகிறது... (Syncing with Cloud...)"
+                  : tomorrowBookingsCount > 0 && !hasDismissedNotice
                   ? `நாளை ${tomorrowBookingsCount} பூஜைகள் உள்ளன (1 Day Before Reminders)`
                   : "தேடுக / Search (Ctrl+K)"
               }
-              aria-label="Search across app"
+              aria-label={syncState === "syncing" ? "Syncing with cloud" : "Search across app"}
             >
-              <Search
-                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform ${
-                  tomorrowBookingsCount > 0 && !hasDismissedNotice ? "text-amber-800" : ""
-                }`}
-              />
-              {tomorrowBookingsCount > 0 && !hasDismissedNotice && (
+              {syncState === "syncing" ? (
                 <>
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-600 border border-white" />
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 animate-spin" />
+                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                </>
+              ) : (
+                <>
+                  <Search
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600 group-hover:scale-110 transition-transform ${
+                      tomorrowBookingsCount > 0 && !hasDismissedNotice ? "text-amber-800" : ""
+                    }`}
+                  />
+                  {tomorrowBookingsCount > 0 && !hasDismissedNotice && (
+                    <>
+                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-600 border border-white" />
+                    </>
+                  )}
                 </>
               )}
             </button>
 
             {/* Profile Dropdown Container (Isolated ref so search never triggers profile) */}
             <div className="relative" ref={menuRef}>
-              {/* Profile Button with User Name & Real-time Cloud Sync Status Pill */}
+              {/* Profile Button - Clean, Elegant (No cloud icon, no persistent dot) */}
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                 className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border shrink-0 ${
                   isProfileMenuOpen
                     ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
-                    : !isOnline || syncState === "error"
-                    ? "bg-rose-50 border-rose-300 text-rose-950 ring-1 ring-rose-300 shadow-2xs"
-                    : syncState === "syncing"
-                    ? "bg-amber-50 border-amber-300 text-amber-950 shadow-2xs"
-                    : "bg-emerald-50/80 hover:bg-emerald-100/60 border-emerald-300 text-emerald-950 shadow-2xs"
+                    : "bg-slate-50 hover:bg-slate-100/90 border-slate-200 text-slate-900 shadow-2xs"
                 }`}
-                title={
-                  !isOnline
-                    ? "Offline Mode"
-                    : syncState === "error"
-                    ? `Cloud Sync Error: ${syncErrorMsg || "Failed"}`
-                    : "Cloud Synced with Supabase"
-                }
+                title="Profile & Settings"
                 aria-expanded={isProfileMenuOpen}
               >
                 {/* Priest Avatar with Google Profile Picture or Sacred Icon Badge */}
@@ -427,36 +431,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 )}
 
                 {/* Display Name */}
-                <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[85px] sm:max-w-[120px] text-left">
+                <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[95px] sm:max-w-[130px] text-left">
                   {displayName}
                 </span>
-
-                {/* Compact Cloud Icon & Live Status Dot (Kutty Cloud / Dot without text) */}
-                {syncState === "syncing" ? (
-                  <span
-                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-amber-100/90 text-amber-700 shrink-0"
-                    title="Cloud Syncing..."
-                  >
-                    <Cloud className="w-3.5 h-3.5 animate-pulse" />
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
-                  </span>
-                ) : !isOnline || syncState === "error" ? (
-                  <span
-                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-rose-100 text-rose-700 shrink-0"
-                    title={!isOnline ? "Offline" : "Cloud Sync Error"}
-                  >
-                    <CloudOff className="w-3.5 h-3.5" />
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
-                  </span>
-                ) : (
-                  <span
-                    className="relative flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100/90 text-emerald-700 shrink-0"
-                    title="Cloud Synced (Supabase)"
-                  >
-                    <Cloud className="w-3.5 h-3.5 stroke-[2.2]" />
-                    <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-1 ring-white" />
-                  </span>
-                )}
 
                 <ChevronRight
                   className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${

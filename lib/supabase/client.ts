@@ -1,21 +1,7 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const DEFAULT_SUPABASE_URL = "https://yyvcmfjqbeixlxcjnohn.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5dmNtZmpxYmVpeGx4Y2pub2huIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5Njc0ODksImV4cCI6MjEwNTU0MzQ4OX0.v4rbJ9QfB5i6fSTmUaEMb6V9orJPBbJhcZpD8hdzzKA";
-
-const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-const supabaseUrl =
-  envUrl && envUrl.startsWith("https://") && !envUrl.includes("placeholder")
-    ? envUrl
-    : DEFAULT_SUPABASE_URL;
-
-const supabaseAnonKey =
-  envKey && !envKey.startsWith("sb_publishable") && envKey.length > 50
-    ? envKey
-    : DEFAULT_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 /**
  * Checks whether Supabase environment variables are configured.
