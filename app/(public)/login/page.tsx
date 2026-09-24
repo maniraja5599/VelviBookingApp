@@ -136,85 +136,62 @@ export default function LoginPage() {
   }, []);
 
   // Direct Google Sign-In button
-  const handleGoogleButtonClick = async () => {
+  const handleGoogleButtonClick = () => {
     setError("");
+    setShowGoogleModal(true);
+  };
+
+  const launchGoogleOAuthPopup = () => {
     const google = typeof window !== "undefined" ? (window as any).google : null;
-
-    // 1. If real Google Client ID is configured, try Google OAuth2 Token Client popup
-    if (googleClientId && google?.accounts?.oauth2) {
-      try {
-        setIsLoading(true);
-
-        let resolved = false;
-        let cleanupTimers: (() => void) | null = null;
-
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: googleClientId,
-          scope: "email profile openid",
-          error_callback: (error: any) => {
-            console.warn("Google OAuth error or popup closed:", error);
-            if (cleanupTimers) cleanupTimers();
-            setIsLoading(false);
-            if (!resolved) {
-              setShowGoogleModal(true);
-            }
-          },
-          callback: async (tokenResponse: any) => {
-            resolved = true;
-            if (cleanupTimers) cleanupTimers();
-            if (tokenResponse.error) {
-              setIsLoading(false);
-              setShowGoogleModal(true);
-              return;
-            }
-            try {
-              const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-              });
-              const info = await res.json();
-              if (!info || !info.email) {
-                throw new Error("Unable to retrieve Google profile.");
-              }
-              await processGoogleUser({
-                sub: info.sub || `google-${Date.now()}`,
-                email: info.email,
-                name: info.name || info.email.split("@")[0],
-                picture: info.picture,
-                email_verified: info.email_verified,
-              });
-            } catch (fetchErr: any) {
-              setError(fetchErr?.message || "Failed to fetch Google profile.");
-              setShowGoogleModal(true);
-            } finally {
-              setIsLoading(false);
-            }
-          },
-        });
-
-        // 3.5s timeout: if popup doesn't return (e.g. COOP policy, popup blocked, or origin mismatch), open Google modal immediately
-        const safetyTimer = setTimeout(() => {
-          if (!resolved) {
-            setIsLoading(false);
-            setShowGoogleModal(true);
-          }
-        }, 3500);
-
-        cleanupTimers = () => {
-          clearTimeout(safetyTimer);
-        };
-
-        tokenClient.requestAccessToken();
-        return;
-      } catch (err) {
-        console.warn("OAuth2 Token Client error, opening modal:", err);
-        setIsLoading(false);
-        setShowGoogleModal(true);
-        return;
-      }
+    if (!googleClientId || !google?.accounts?.oauth2) {
+      setError("Google OAuth Client ID is not configured in environment.");
+      return;
     }
 
-    // Direct Google Sign-In Dialog fallback
-    setShowGoogleModal(true);
+    try {
+      setIsLoading(true);
+      const tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: "email profile openid",
+        error_callback: (err: any) => {
+          console.warn("Google OAuth error:", err);
+          setIsLoading(false);
+          setError("Google sign-in popup was blocked or closed.");
+        },
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            setIsLoading(false);
+            setError("Google sign-in was interrupted. Please try again.");
+            return;
+          }
+          try {
+            const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+            });
+            const info = await res.json();
+            if (!info || !info.email) {
+              throw new Error("Unable to retrieve Google profile.");
+            }
+            await processGoogleUser({
+              sub: info.sub || `google-${Date.now()}`,
+              email: info.email,
+              name: info.name || info.email.split("@")[0],
+              picture: info.picture,
+              email_verified: info.email_verified,
+            });
+          } catch (fetchErr: any) {
+            setError(fetchErr?.message || "Failed to fetch Google profile.");
+          } finally {
+            setIsLoading(false);
+          }
+        },
+      });
+
+      tokenClient.requestAccessToken();
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(err?.message || "Unable to launch Google popup.");
+    }
   };
 
   const handleCustomGoogleSubmit = async (email: string, name?: string) => {
