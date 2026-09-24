@@ -522,9 +522,41 @@ export default function HomeDashboardPage() {
 
   // Sub-Tab 4: Analytics Computations & Mini Collection Graph Data
   const totalBilled = useMemo(() => bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0), [bookings]);
-  const totalCollected = useMemo(() => bookings.reduce((sum, b) => sum + (b.advanceAmount || 0), 0), [bookings]);
-  const totalDue = useMemo(() => bookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0), [bookings]);
+  const totalCollected = useMemo(
+    () =>
+      bookings.reduce((sum, b) => {
+        if (b.paymentStatus === "PAID" || (b.balanceAmount === 0 && (b.totalAmount || 0) > 0)) {
+          return sum + (b.totalAmount || 0);
+        }
+        return sum + (b.advanceAmount || 0);
+      }, 0),
+    [bookings]
+  );
+  const totalDue = useMemo(
+    () =>
+      bookings.reduce((sum, b) => {
+        if (b.paymentStatus === "PAID") return sum;
+        return sum + (b.balanceAmount || 0);
+      }, 0),
+    [bookings]
+  );
   const collectionRate = totalBilled > 0 ? Math.round((totalCollected / totalBilled) * 100) : 100;
+
+  const currentMonthPrefix = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
+
+  const currentMonthCollected = useMemo(() => {
+    return bookings
+      .filter((b) => b.date && b.date.startsWith(currentMonthPrefix) && b.status !== "CANCELLED")
+      .reduce((sum, b) => {
+        if (b.paymentStatus === "PAID" || (b.balanceAmount === 0 && (b.totalAmount || 0) > 0)) {
+          return sum + (b.totalAmount || 0);
+        }
+        return sum + (b.advanceAmount || 0);
+      }, 0);
+  }, [bookings, currentMonthPrefix]);
 
   // Selected Year & Month for Analytics drilldown
   interface MonthlyAnalyticsItem {
@@ -546,152 +578,81 @@ export default function HomeDashboardPage() {
   const [selectedAnalyticsMonth, setSelectedAnalyticsMonth] = useState<string>("Sep");
   const [analyticsHoverIndex, setAnalyticsHoverIndex] = useState<number | null>(null);
 
-  // 2026 Monthly Data (Dynamic live bookings for current month Sep & advance Oct)
-  const data2026: MonthlyAnalyticsItem[] = useMemo(() => {
-    if (bookings.length === 0) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
-      return months.map((m, idx) => ({
-        id: `2026-${String(idx + 1).padStart(2, "0")}`,
-        month: m,
-        fullYear: `${m} 2026${m === "Sep" ? " (Current)" : ""}`,
-        year: "2026",
-        billed: 0,
-        collected: 0,
-        due: 0,
-        bookingsCount: 0,
-        rate: 100,
-        status: "0% Realized",
-        cumulative: 0,
-        isCurrent: m === "Sep",
-      }));
-    }
+  const monthsMeta = useMemo(
+    () => [
+      { key: "01", name: "Jan" },
+      { key: "02", name: "Feb" },
+      { key: "03", name: "Mar" },
+      { key: "04", name: "Apr" },
+      { key: "05", name: "May" },
+      { key: "06", name: "Jun" },
+      { key: "07", name: "Jul" },
+      { key: "08", name: "Aug" },
+      { key: "09", name: "Sep" },
+      { key: "10", name: "Oct" },
+      { key: "11", name: "Nov" },
+      { key: "12", name: "Dec" },
+    ],
+    []
+  );
 
-    const currentBilled = totalBilled > 0 ? totalBilled : 75000;
-    const currentCollected = totalCollected > 0 ? totalCollected : 66000;
-    const currentDue = totalDue;
+  const buildYearMonthlyData = React.useCallback(
+    (year: string): MonthlyAnalyticsItem[] => {
+      let running = 0;
+      const now = new Date();
+      const curYear = String(now.getFullYear());
+      const curMo = String(now.getMonth() + 1).padStart(2, "0");
 
-    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
-      { id: "2026-01", month: "Jan", fullYear: "Jan 2026", year: "2026", billed: 46000, collected: 46000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
-      { id: "2026-02", month: "Feb", fullYear: "Feb 2026", year: "2026", billed: 52000, collected: 52000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
-      { id: "2026-03", month: "Mar", fullYear: "Mar 2026", year: "2026", billed: 49000, collected: 48000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
-      { id: "2026-04", month: "Apr", fullYear: "Apr 2026", year: "2026", billed: 58000, collected: 56000, due: 2000, bookingsCount: 9, rate: 96, status: "96% Realized" },
-      { id: "2026-05", month: "May", fullYear: "May 2026", year: "2026", billed: 42000, collected: 42000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
-      { id: "2026-06", month: "Jun", fullYear: "Jun 2026", year: "2026", billed: 54000, collected: 54000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
-      { id: "2026-07", month: "Jul", fullYear: "Jul 2026", year: "2026", billed: 48000, collected: 46500, due: 1500, bookingsCount: 7, rate: 97, status: "97% Realized" },
-      { id: "2026-08", month: "Aug", fullYear: "Aug 2026", year: "2026", billed: 68000, collected: 65000, due: 3000, bookingsCount: 10, rate: 96, status: "96% Realized" },
-      {
-        id: "2026-09",
-        month: "Sep",
-        fullYear: "Sep 2026 (Current)",
-        year: "2026",
-        billed: currentBilled,
-        collected: currentCollected,
-        due: currentDue,
-        bookingsCount: bookings.length > 0 ? bookings.length : 12,
-        rate: collectionRate,
-        status: `${collectionRate}% Realized`,
-        isCurrent: true,
-      },
-      {
-        id: "2026-10",
-        month: "Oct",
-        fullYear: "Oct 2026 (Advance)",
-        year: "2026",
-        billed: 38000,
-        collected: 28000,
-        due: 10000,
-        bookingsCount: 5,
-        rate: 74,
-        status: "74% Advance",
-      },
-    ];
+      // For current year, show up to current month + 1 future month (or min up to Oct)
+      const list =
+        year === curYear
+          ? monthsMeta.filter((m) => parseInt(m.key, 10) <= Math.max(10, parseInt(curMo, 10) + 1))
+          : monthsMeta;
 
-    let running = 0;
-    return raw.map((item) => {
-      running += item.collected;
-      return { ...item, cumulative: running };
-    });
-  }, [totalBilled, totalCollected, totalDue, bookings.length, collectionRate]);
+      return list.map((m) => {
+        const prefix = `${year}-${m.key}`;
+        const mBookings = bookings.filter(
+          (b) => b.date && b.date.startsWith(prefix) && b.status !== "CANCELLED"
+        );
+        const billed = mBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+        const collected = mBookings.reduce((sum, b) => {
+          if (b.paymentStatus === "PAID" || (b.balanceAmount === 0 && (b.totalAmount || 0) > 0)) {
+            return sum + (b.totalAmount || 0);
+          }
+          return sum + (b.advanceAmount || 0);
+        }, 0);
+        const due = mBookings.reduce((sum, b) => {
+          if (b.paymentStatus === "PAID") return sum;
+          return sum + (b.balanceAmount || 0);
+        }, 0);
+        const bookingsCount = mBookings.length;
+        const rate = billed > 0 ? Math.round((collected / billed) * 100) : 100;
+        const isCurrent = year === curYear && m.key === curMo;
+        running += collected;
 
-  // 2025 Historical Full Year Data (12 Months)
-  const data2025: MonthlyAnalyticsItem[] = useMemo(() => {
-    if (bookings.length === 0) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return months.map((m, idx) => ({
-        id: `2025-${String(idx + 1).padStart(2, "0")}`,
-        month: m,
-        fullYear: `${m} 2025`,
-        year: "2025",
-        billed: 0,
-        collected: 0,
-        due: 0,
-        bookingsCount: 0,
-        rate: 100,
-        status: "0% Realized",
-        cumulative: 0,
-      }));
-    }
+        return {
+          id: `${year}-${m.key}`,
+          month: m.name,
+          fullYear: `${m.name} ${year}${isCurrent ? " (Current)" : ""}`,
+          year,
+          billed,
+          collected,
+          due,
+          bookingsCount,
+          rate,
+          status: billed > 0 ? `${rate}% Realized` : "0% Realized",
+          isCurrent,
+          cumulative: running,
+        };
+      });
+    },
+    [bookings, monthsMeta]
+  );
 
-    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
-      { id: "2025-01", month: "Jan", fullYear: "Jan 2025", year: "2025", billed: 45000, collected: 45000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
-      { id: "2025-02", month: "Feb", fullYear: "Feb 2025", year: "2025", billed: 48000, collected: 48000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
-      { id: "2025-03", month: "Mar", fullYear: "Mar 2025", year: "2025", billed: 52000, collected: 51000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
-      { id: "2025-04", month: "Apr", fullYear: "Apr 2025", year: "2025", billed: 64000, collected: 62000, due: 2000, bookingsCount: 10, rate: 97, status: "97% Realized" },
-      { id: "2025-05", month: "May", fullYear: "May 2025", year: "2025", billed: 40000, collected: 40000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
-      { id: "2025-06", month: "Jun", fullYear: "Jun 2025", year: "2025", billed: 50000, collected: 50000, due: 0, bookingsCount: 8, rate: 100, status: "100% Realized" },
-      { id: "2025-07", month: "Jul", fullYear: "Jul 2025", year: "2025", billed: 46000, collected: 45000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
-      { id: "2025-08", month: "Aug", fullYear: "Aug 2025", year: "2025", billed: 62000, collected: 60000, due: 2000, bookingsCount: 9, rate: 97, status: "97% Realized" },
-      { id: "2025-09", month: "Sep", fullYear: "Sep 2025", year: "2025", billed: 58000, collected: 58000, due: 0, bookingsCount: 9, rate: 100, status: "100% Realized" },
-      { id: "2025-10", month: "Oct", fullYear: "Oct 2025", year: "2025", billed: 66000, collected: 64000, due: 2000, bookingsCount: 11, rate: 97, status: "97% Realized" },
-      { id: "2025-11", month: "Nov", fullYear: "Nov 2025", year: "2025", billed: 42000, collected: 42000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
-      { id: "2025-12", month: "Dec", fullYear: "Dec 2025", year: "2025", billed: 55000, collected: 54000, due: 1000, bookingsCount: 9, rate: 98, status: "98% Realized" },
-    ];
-    let running = 0;
-    return raw.map((item) => {
-      running += item.collected;
-      return { ...item, cumulative: running };
-    });
-  }, [bookings.length]);
-
-  // 2024 Historical Full Year Data (12 Months)
-  const data2024: MonthlyAnalyticsItem[] = useMemo(() => {
-    if (bookings.length === 0) {
-      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      return months.map((m, idx) => ({
-        id: `2024-${String(idx + 1).padStart(2, "0")}`,
-        month: m,
-        fullYear: `${m} 2024`,
-        year: "2024",
-        billed: 0,
-        collected: 0,
-        due: 0,
-        bookingsCount: 0,
-        rate: 100,
-        status: "0% Realized",
-        cumulative: 0,
-      }));
-    }
-
-    const raw: Omit<MonthlyAnalyticsItem, "cumulative">[] = [
-      { id: "2024-01", month: "Jan", fullYear: "Jan 2024", year: "2024", billed: 38000, collected: 38000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
-      { id: "2024-02", month: "Feb", fullYear: "Feb 2024", year: "2024", billed: 42000, collected: 42000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
-      { id: "2024-03", month: "Mar", fullYear: "Mar 2024", year: "2024", billed: 45000, collected: 44000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
-      { id: "2024-04", month: "Apr", fullYear: "Apr 2024", year: "2024", billed: 54000, collected: 53000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
-      { id: "2024-05", month: "May", fullYear: "May 2024", year: "2024", billed: 36000, collected: 36000, due: 0, bookingsCount: 5, rate: 100, status: "100% Realized" },
-      { id: "2024-06", month: "Jun", fullYear: "Jun 2024", year: "2024", billed: 44000, collected: 44000, due: 0, bookingsCount: 7, rate: 100, status: "100% Realized" },
-      { id: "2024-07", month: "Jul", fullYear: "Jul 2024", year: "2024", billed: 41000, collected: 40000, due: 1000, bookingsCount: 6, rate: 98, status: "98% Realized" },
-      { id: "2024-08", month: "Aug", fullYear: "Aug 2024", year: "2024", billed: 52000, collected: 51000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
-      { id: "2024-09", month: "Sep", fullYear: "Sep 2024", year: "2024", billed: 48000, collected: 47000, due: 1000, bookingsCount: 7, rate: 98, status: "98% Realized" },
-      { id: "2024-10", month: "Oct", fullYear: "Oct 2024", year: "2024", billed: 56000, collected: 54000, due: 2000, bookingsCount: 9, rate: 96, status: "96% Realized" },
-      { id: "2024-11", month: "Nov", fullYear: "Nov 2024", year: "2024", billed: 38000, collected: 38000, due: 0, bookingsCount: 6, rate: 100, status: "100% Realized" },
-      { id: "2024-12", month: "Dec", fullYear: "Dec 2024", year: "2024", billed: 48000, collected: 47000, due: 1000, bookingsCount: 8, rate: 98, status: "98% Realized" },
-    ];
-    let running = 0;
-    return raw.map((item) => {
-      running += item.collected;
-      return { ...item, cumulative: running };
-    });
-  }, [bookings.length]);
+  // Dynamic Monthly Data derived 100% from actual bookings
+  const data2026: MonthlyAnalyticsItem[] = useMemo(() => buildYearMonthlyData("2026"), [buildYearMonthlyData]);
+  const data2025: MonthlyAnalyticsItem[] = useMemo(() => buildYearMonthlyData("2025"), [buildYearMonthlyData]);
+  const data2024: MonthlyAnalyticsItem[] = useMemo(() => buildYearMonthlyData("2024"), [buildYearMonthlyData]);
 
   // Multi-Year Summary Comparison
   const allYearsSummary = useMemo(() => {
@@ -758,20 +719,6 @@ export default function HomeDashboardPage() {
     return { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels };
   }, [activeYearMonthlyData]);
 
-  // Overall 2026 Stats for Top Pinned Hero
-  const monthlyAnalyticsData = data2026;
-  const multiMonthTotalCollected = useMemo(
-    () => monthlyAnalyticsData.reduce((sum, m) => sum + m.collected, 0),
-    [monthlyAnalyticsData]
-  );
-  const multiMonthTotalBilled = useMemo(
-    () => monthlyAnalyticsData.reduce((sum, m) => sum + m.billed, 0),
-    [monthlyAnalyticsData]
-  );
-  const multiMonthTotalBookings = useMemo(
-    () => monthlyAnalyticsData.reduce((sum, m) => sum + m.bookingsCount, 0),
-    [monthlyAnalyticsData]
-  );
 
   // Selected Month Object in current active year
   const activeMonthDetail = useMemo(() => {
@@ -807,6 +754,12 @@ export default function HomeDashboardPage() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count);
   }, [bookings]);
 
+  // Overall Stats for Top Pinned Hero
+  const monthlyAnalyticsData = data2026;
+  const multiMonthTotalCollected = totalCollected;
+  const multiMonthTotalBilled = totalBilled;
+  const multiMonthTotalBookings = bookings.length;
+
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200">
       {/* 1. Total Collections Box (Pinned at Top of Home Page) */}
@@ -821,31 +774,31 @@ export default function HomeDashboardPage() {
                 Total Collections
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-white leading-tight">
-                ₹{multiMonthTotalCollected.toLocaleString("en-IN")}
+                ₹{totalCollected.toLocaleString("en-IN")}
               </h3>
             </div>
           </div>
           <div className="text-right">
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 border border-emerald-400/40">
-              {multiMonthTotalBilled > 0 ? `${Math.round((multiMonthTotalCollected / multiMonthTotalBilled) * 100)}% Realized` : "0% Realized"}
+              {totalBilled > 0 ? `${Math.round((totalCollected / totalBilled) * 100)}% Realized` : "0% Realized"}
             </span>
             <span className="text-[9.5px] text-emerald-300/80 block mt-1">
-              {multiMonthTotalBookings} Poojas
+              {bookings.length} {bookings.length === 1 ? "Pooja" : "Poojas"}
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 pt-2 border-t border-emerald-800/60 text-center">
           <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-xs">
-            <span className="text-[9px] text-emerald-200/80 font-bold block">Current Month (Sep)</span>
+            <span className="text-[9px] text-emerald-200/80 font-bold block">Current Month ({todayInfo.tamilMonth || "Sep"})</span>
             <span className="text-xs sm:text-sm font-black text-white block mt-0.5">
-              ₹{totalCollected.toLocaleString("en-IN")}
+              ₹{currentMonthCollected.toLocaleString("en-IN")}
             </span>
           </div>
           <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-xs">
             <span className="text-[9px] text-emerald-200/80 font-bold block">Total Billed</span>
             <span className="text-xs sm:text-sm font-black text-white block mt-0.5">
-              ₹{multiMonthTotalBilled.toLocaleString("en-IN")}
+              ₹{totalBilled.toLocaleString("en-IN")}
             </span>
           </div>
           <div className="bg-white/10 p-2 rounded-2xl backdrop-blur-xs">
@@ -1381,8 +1334,9 @@ export default function HomeDashboardPage() {
               {/* Monthly Trend Mini Graph */}
               <div className="pt-2 border-t border-slate-100 flex items-end justify-between gap-2 h-14 px-2.5 bg-slate-50/70 rounded-xl">
                 {monthlyAnalyticsData.slice(-3).map((m) => {
+                  const maxMiniVal = Math.max(...monthlyAnalyticsData.slice(-3).map((item) => Math.max(item.billed, item.collected)), 1000);
                   const colPct = Math.round((m.collected / (m.billed || 1)) * 100);
-                  const hPct = Math.min(100, Math.round((m.billed / 75000) * 100));
+                  const hPct = Math.min(100, Math.round((m.billed / maxMiniVal) * 100));
                   return (
                     <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
                       <div className="w-full flex items-end justify-center gap-1 h-8">
@@ -2086,7 +2040,7 @@ export default function HomeDashboardPage() {
                   }`}>
                     {activeYearMonthlyData.map((m, idx) => {
                       const isSelected = selectedAnalyticsMonth === m.month;
-                      const maxBarVal = 75000;
+                      const maxBarVal = Math.max(...activeYearMonthlyData.map((item) => Math.max(item.billed, item.collected)), 1000);
                       const billedHeightPct = Math.min(100, Math.round((m.billed / maxBarVal) * 100));
                       const collectedHeightPct = Math.min(100, Math.round((m.collected / maxBarVal) * 100));
 
