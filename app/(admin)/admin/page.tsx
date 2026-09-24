@@ -44,6 +44,34 @@ export default function SuperAdminDashboardPage() {
 
   React.useEffect(() => {
     setIsMounted(true);
+    // Auto-enrich client IP and location for Super Admin and tenants
+    fetch("/api/auth/client-ip")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.ip) {
+          let updated = false;
+          const superAdmin = db.users.find(
+            (u) => u.email.toLowerCase() === "manirajankg@gmail.com" || u.role === "SUPER_ADMIN"
+          );
+          if (superAdmin) {
+            superAdmin.lastLoginIp = data.ip;
+            superAdmin.registrationIp = superAdmin.registrationIp || data.ip;
+            if (data.city) {
+              superAdmin.lastLoginCity = data.city;
+              superAdmin.registrationCity = superAdmin.registrationCity || data.city;
+            }
+            if (data.country) {
+              superAdmin.lastLoginCountry = data.country;
+              superAdmin.registrationCountry = superAdmin.registrationCountry || data.country;
+            }
+            updated = true;
+          }
+          if (updated) {
+            db.saveToLocalStorage();
+          }
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Navigation Sub-Tabs

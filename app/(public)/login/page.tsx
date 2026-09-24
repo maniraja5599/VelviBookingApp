@@ -21,6 +21,8 @@ import {
   Flame,
   CalendarDays,
   Wallet,
+  MessageCircle,
+  X,
 } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
@@ -40,6 +42,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [showDevContact, setShowDevContact] = useState(false);
 
   // Google OAuth configuration
   const [gisReady, setGisReady] = useState(false);
@@ -408,83 +411,201 @@ export default function LoginPage() {
               <div className="h-px bg-slate-200 flex-1" />
             </div>
 
-            {/* 1-Tap Quick Demo Access Button - Polished with 20 Free Bookings Highlight */}
+            {/* 1-Tap Quick Demo Access Button - Compact, Smart & Sleek */}
             <button
               type="button"
               id="instant-demo-login-btn"
               onClick={handleInstantDemo}
               disabled={isDemoLoading}
-              className="w-full p-4 bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950 hover:from-black hover:to-slate-950 text-white rounded-2xl border-2 border-amber-500/50 hover:border-amber-400 shadow-md hover:shadow-xl transition-all flex items-center justify-between group cursor-pointer active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed relative overflow-hidden"
+              className="w-full py-3 px-3.5 sm:px-4 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 hover:from-black hover:to-slate-950 text-white rounded-2xl border border-amber-400/60 hover:border-amber-400 shadow-md hover:shadow-lg transition-all flex items-center justify-between group cursor-pointer active:scale-[0.99] disabled:opacity-60 relative overflow-hidden"
             >
-              {/* Subtle sacred shimmer overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-transparent pointer-events-none" />
-
-              <div className="flex items-center gap-3 relative z-10 text-left">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-transform shrink-0">
-                  <Sparkles className="w-5 h-5 text-slate-950" />
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 text-left relative z-10">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform shrink-0">
+                  <Sparkles className="w-4 h-4 text-slate-950" />
                 </div>
-                <div>
-                  <div className="font-extrabold text-[13.5px] text-amber-200 flex items-center gap-2 flex-wrap">
-                    <span>Quick Demo Experience</span>
-                    <span className="text-[9px] bg-amber-400/25 text-amber-300 border border-amber-400/50 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-                      Instant Access • 20 Free Bookings
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-extrabold text-xs sm:text-[13px] text-amber-200 tracking-tight">
+                      Quick Demo Access
+                    </span>
+                    <span className="text-[9px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.2 rounded-md uppercase tracking-wider shrink-0">
+                      20 Free Bookings
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 font-medium mt-0.5 leading-snug">
-                    Instant access without phone or OTP • Explore Muhurtham calendar &amp; 8 Homams
+                  <p className="text-[10.5px] text-slate-300/90 font-medium truncate mt-0.5">
+                    1-Tap trial • 8 Homams, Muhurtham &amp; Samagri lists
                   </p>
                 </div>
               </div>
 
-              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all shrink-0 relative z-10 ml-2">
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-amber-300 group-hover:bg-amber-400 group-hover:text-slate-950 transition-all shrink-0 ml-2 relative z-10">
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </button>
 
             {/* Feature Highlights Grid - 6 Key Highlights */}
             <div className="pt-2 grid grid-cols-3 gap-2 text-center border-t border-slate-100 relative z-10">
               <div className="p-2 bg-gradient-to-b from-amber-50/60 to-white rounded-2xl border border-amber-100/80 hover:border-amber-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-amber-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-amber-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Flame className="w-3.5 h-3.5 text-amber-700 fill-amber-500/20" />
                 </div>
                 <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
                   8 Homams
                 </span>
-                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
-                  Samagri List
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
+                  Samagri &amp; List
                 </span>
               </div>
 
               <div className="p-2 bg-gradient-to-b from-emerald-50/60 to-white rounded-2xl border border-emerald-100/80 hover:border-emerald-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-emerald-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-emerald-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <CalendarDays className="w-3.5 h-3.5 text-emerald-700" />
                 </div>
                 <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
                   Panchangam
                 </span>
-                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
                   Thithi &amp; Muhurtham
                 </span>
               </div>
 
               <div className="p-2 bg-gradient-to-b from-blue-50/60 to-white rounded-2xl border border-blue-100/80 hover:border-blue-300 transition-colors group">
-                <div className="w-7 h-7 mx-auto mb-1 rounded-xl bg-blue-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Wallet className="w-3.5 h-3.5 text-blue-700" />
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-blue-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Receipt className="w-3.5 h-3.5 text-blue-700" />
+                </div>
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
+                  WhatsApp Slips
+                </span>
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
+                  Devotee Receipts
+                </span>
+              </div>
+
+              <div className="p-2 bg-gradient-to-b from-purple-50/60 to-white rounded-2xl border border-purple-100/80 hover:border-purple-300 transition-colors group">
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-purple-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Wallet className="w-3.5 h-3.5 text-purple-700" />
                 </div>
                 <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
                   Dakshina
                 </span>
-                <span className="text-[8.5px] text-slate-500 block font-medium mt-0.5">
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
                   Priest Split
+                </span>
+              </div>
+
+              <div className="p-2 bg-gradient-to-b from-teal-50/60 to-white rounded-2xl border border-teal-100/80 hover:border-teal-300 transition-colors group">
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-teal-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Zap className="w-3.5 h-3.5 text-teal-700" />
+                </div>
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
+                  Offline Sync
+                </span>
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
+                  Cloud Secured
+                </span>
+              </div>
+
+              <div className="p-2 bg-gradient-to-b from-rose-50/60 to-white rounded-2xl border border-rose-100/80 hover:border-rose-300 transition-colors group">
+                <div className="w-6 h-6 mx-auto mb-1 rounded-lg bg-rose-100/80 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Sparkles className="w-3.5 h-3.5 text-rose-700" />
+                </div>
+                <span className="text-[10px] font-extrabold text-slate-800 block leading-tight">
+                  20 Free Trial
+                </span>
+                <span className="text-[8px] text-slate-500 block font-medium mt-0.5">
+                  Full Access
                 </span>
               </div>
             </div>
 
-            {/* Subtle Developer Attribution on Login Card */}
+            {/* Interactive Developer Attribution on Login Card */}
             <div className="pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 font-medium select-none relative z-10">
               <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
-              <span>Crafted with devotion by <strong className="text-slate-800 font-bold">Maniraja</strong> • Velvi Tech</span>
+              <span>
+                Crafted with devotion by{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowDevContact(true)}
+                  className="font-extrabold text-slate-900 hover:text-emerald-700 underline decoration-amber-400 decoration-2 underline-offset-2 hover:scale-105 transition-all cursor-pointer inline-flex items-center gap-0.5"
+                  title="Click to view Maniraja's mobile number"
+                >
+                  <span>Maniraja</span>
+                  <Phone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                </button>{" "}
+                • Velvi Tech
+              </span>
             </div>
+
+            {/* Developer Contact Modal */}
+            {showDevContact && (
+              <div
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+                onClick={() => setShowDevContact(false)}
+              >
+                <div
+                  className="bg-white rounded-3xl p-5 sm:p-6 max-w-xs w-full space-y-4 shadow-2xl border-2 border-amber-300 text-left animate-in zoom-in-95 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                        <Flame className="w-5 h-5 text-amber-700 fill-amber-500/20" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900 leading-tight">
+                          Maniraja
+                        </h4>
+                        <p className="text-[10.5px] text-emerald-700 font-bold mt-0.5">
+                          App Developer &amp; Creator
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDevContact(false)}
+                      className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 text-center space-y-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Direct Mobile Number
+                    </span>
+                    <a
+                      href="tel:+918300030123"
+                      className="text-base font-black text-slate-900 hover:text-emerald-700 tracking-wider block"
+                    >
+                      +91 83000 30123
+                    </a>
+                    <span className="text-[10px] text-emerald-800 font-semibold block">
+                      Tap to call or message directly
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <a
+                      href="tel:+918300030123"
+                      className="py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Call Now</span>
+                    </a>
+
+                    <a
+                      href="https://wa.me/918300030123?text=Vanakkam%20Mani%20Raja,%20inquiring%20about%20Velvi%20App"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -408,9 +408,9 @@ export class VelviDatabaseStore {
 
   public isDemoBusiness(businessId: string): boolean {
     if (!businessId) return false;
-    if (businessId === "biz-venkateswara-01") return true;
+    if (businessId === "biz-venkateswara-01" || businessId === "biz-demo-01" || businessId.startsWith("biz-demo-")) return true;
     const biz = this.businesses.find((b) => b.id === businessId);
-    if (biz && biz.ownerId === "u-ravi-iyer-01") return true;
+    if (biz && (biz.ownerId === "u-ravi-iyer-01" || biz.ownerId.startsWith("u-demo-"))) return true;
     return false;
   }
 
@@ -2144,7 +2144,18 @@ export class VelviDatabaseStore {
   // SUPER ADMIN: DIRECTORY & EARNINGS METRICS
   // -------------------------------------------------------------
   public getAllUsersDirectoryMetrics(): UserDirectoryMetric[] {
-    return this.users.map((user) => {
+    const seenEmails = new Set<string>();
+    const uniqueUsers: User[] = [];
+
+    for (const u of this.users) {
+      const emailKey = (u.email || u.id).trim().toLowerCase();
+      if (!seenEmails.has(emailKey)) {
+        seenEmails.add(emailKey);
+        uniqueUsers.push(u);
+      }
+    }
+
+    return uniqueUsers.map((user) => {
       const biz =
         this.businesses.find((b) => b.ownerId === user.id) ||
         (user.id === "u-ravi-iyer-01" ? this.businesses[0] : undefined);
@@ -2171,9 +2182,27 @@ export class VelviDatabaseStore {
         user.role === "SUPER_ADMIN" ||
         user.email.trim().toLowerCase() === "manirajankg@gmail.com";
 
-      const ipAddress = user.lastLoginIp || user.registrationIp || undefined;
-      const city = user.lastLoginCity || user.registrationCity || undefined;
-      const country = user.lastLoginCountry || user.registrationCountry || undefined;
+      // Comprehensive IP resolution with audit fallback
+      let ipAddress = user.lastLoginIp || user.registrationIp;
+      let city = user.lastLoginCity || user.registrationCity;
+      let country = user.lastLoginCountry || user.registrationCountry;
+
+      if (!ipAddress) {
+        const auditMatch = this.auditLogs.find(
+          (a) => (a.actorId === user.id || a.targetId === user.id) && !!a.ipAddress
+        );
+        if (auditMatch) {
+          ipAddress = auditMatch.ipAddress;
+          city = city || auditMatch.city;
+          country = country || auditMatch.country;
+        }
+      }
+
+      if (isSuperAdmin) {
+        ipAddress = ipAddress || "61.0.51.92";
+        city = city || "Namakkal";
+        country = country || "India";
+      }
 
       return {
         user,
@@ -2184,28 +2213,54 @@ export class VelviDatabaseStore {
         totalEarnings,
         joinedDate: user.createdAt,
         isSuperAdmin,
-        ipAddress,
-        city,
-        country,
+        ipAddress: ipAddress || undefined,
+        city: city || undefined,
+        country: country || undefined,
       };
     });
   }
 
   public purgeLegacyDummyData(): { removedUsers: number } {
     const dummyUserIds = new Set([
+      "u-ravi-iyer-01",
       "u-suresh-iyer-02",
       "u-kumar-iyer-03",
       "u-mani-04",
       "u-ravi-temple-05",
     ]);
     const initialCount = this.users.length;
-    this.users = this.users.filter((u) => !dummyUserIds.has(u.id));
-    if (!this.users.some((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase())) {
-      this.users.push(SEED_SUPER_ADMIN);
+    this.users = this.users.filter(
+      (u) => !dummyUserIds.has(u.id) && !u.id.startsWith("u-demo-") && u.email !== "demo@velvi.app"
+    );
+
+    // Remove dummy businesses
+    const dummyBizIds = new Set(["biz-venkateswara-01", "biz-kumar-99", "biz-mani-99", "biz-demo-01"]);
+    this.businesses = this.businesses.filter(
+      (b) => !dummyBizIds.has(b.id) && !b.id.startsWith("biz-demo-") && !dummyUserIds.has(b.ownerId)
+    );
+
+    // Remove dummy bookings
+    this.bookings = this.bookings.filter(
+      (b) => !dummyBizIds.has(b.businessId) && !b.businessId.startsWith("biz-demo-") && b.assignedIyerId !== "u-ravi-iyer-01"
+    );
+
+    // Remove dummy subscriptions
+    this.subscriptions = this.subscriptions.filter(
+      (s) => !dummyBizIds.has(s.businessId) && !s.businessId.startsWith("biz-demo-")
+    );
+
+    let superAdmin = this.users.find((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase());
+    if (!superAdmin) {
+      this.users.unshift(SEED_SUPER_ADMIN);
+    } else {
+      superAdmin.registrationIp = "61.0.51.92";
+      superAdmin.lastLoginIp = "61.0.51.92";
+      superAdmin.registrationCity = "Namakkal";
+      superAdmin.lastLoginCity = "Namakkal";
+      superAdmin.registrationCountry = "India";
+      superAdmin.lastLoginCountry = "India";
     }
-    if (!this.users.some((u) => u.email.toLowerCase() === SEED_USER.email.toLowerCase())) {
-      this.users.push(SEED_USER);
-    }
+
     this.saveToLocalStorage();
     this.notifyListeners();
     return { removedUsers: Math.max(0, initialCount - this.users.length) };

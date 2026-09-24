@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   CheckSquare,
   Check,
+  Receipt,
   Share2,
   Image as ImageIcon,
   Edit,
@@ -91,6 +92,7 @@ export default function BookingDetailPage() {
   const [whatsAppType, setWhatsAppType] = useState<"REMINDER" | "CONFIRMATION">("REMINDER");
   const [copiedWhatsApp, setCopiedWhatsApp] = useState(false);
   const [editableWhatsAppMsg, setEditableWhatsAppMsg] = useState("");
+  const [showPendingPaymentPrompt, setShowPendingPaymentPrompt] = useState(false);
 
   const quickCancelReasons = [
     "Client request",
@@ -195,8 +197,32 @@ export default function BookingDetailPage() {
   };
 
   const handleMarkCompleted = () => {
+    if (booking.balanceAmount > 0 || booking.paymentStatus !== "PAID") {
+      setShowPendingPaymentPrompt(true);
+      return;
+    }
+    executeBookingCompletion(false);
+  };
+
+  const executeBookingCompletion = (collectBalance: boolean) => {
+    if (collectBalance) {
+      const res = db.updateBookingPayment({
+        bookingId: booking.id,
+        totalAmount: booking.totalAmount,
+        advanceAmount: booking.totalAmount,
+        updatedBy: currentUser?.name || "Self",
+        reason: "Full balance collected upon completion",
+      });
+      if (res.booking) {
+        booking.advanceAmount = res.booking.advanceAmount;
+        booking.balanceAmount = res.booking.balanceAmount;
+        booking.paymentStatus = res.booking.paymentStatus;
+      }
+    }
+    db.updateBookingStatus(booking.id, "COMPLETED", currentUser?.name || "Self");
     booking.status = "COMPLETED";
     booking.updatedAt = new Date().toISOString();
+    setShowPendingPaymentPrompt(false);
     router.refresh();
   };
 
@@ -720,6 +746,93 @@ export default function BookingDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Pending Balance Check on Completion Modal */}
+      {showPendingPaymentPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full space-y-4 shadow-2xl border border-amber-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <Receipt className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
+                  பூஜை நிறைவு &amp; கட்டண வரவு
+                </h3>
+                <p className="text-[11px] text-slate-500 font-semibold mt-0.5">
+                  Payment Verification on Completion
+                </p>
+              </div>
+            </div>
+
+            {/* Details Box */}
+            <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-700 font-bold">
+                <span>பக்தர் / Client:</span>
+                <span className="text-slate-900 font-extrabold truncate max-w-[180px]">
+                  {booking.customerName}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-700 font-bold">
+                <span>பூஜை / Pooja:</span>
+                <span className="text-slate-900 font-extrabold truncate max-w-[180px]">
+                  {booking.poojaEnglishName || booking.poojaTamilName}
+                </span>
+              </div>
+              <div className="h-px bg-amber-200/70 my-1" />
+              <div className="flex justify-between items-center text-slate-600">
+                <span>மொத்த கட்டணம் (Total):</span>
+                <span className="font-bold">₹{booking.totalAmount.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between items-center text-emerald-700">
+                <span>முன்பணம் பெற்றது (Paid):</span>
+                <span className="font-bold">₹{booking.advanceAmount.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between items-center text-rose-700 font-extrabold text-sm pt-1 border-t border-amber-200/60">
+                <span>மீதமுள்ள பாக்கி (Pending):</span>
+                <span className="text-base text-rose-600 font-black">
+                  ₹{booking.balanceAmount.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+              இந்த பூஜையை நிறைவு செய்யும்போது, மீதமுள்ள தொகையை (
+              <strong className="text-rose-600 font-extrabold">
+                ₹{booking.balanceAmount.toLocaleString("en-IN")}
+              </strong>
+              ) வசூலித்ததாக வரவு வைக்கவா?
+            </p>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => executeBookingCompletion(true)}
+                className="w-full py-3 px-4 bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white rounded-2xl font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>ஆம், முழுத்தொகை வரவு வைத்து நிறைவு செய்</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => executeBookingCompletion(false)}
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 active:scale-[0.99] text-slate-700 rounded-2xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>பாக்கி அப்படியே இருக்கட்டும் (மட்டும் நிறைவு செய்)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPendingPaymentPrompt(false)}
+                className="w-full py-2 text-center text-xs font-bold text-slate-400 hover:text-slate-600 transition cursor-pointer"
+              >
+                ரத்து செய் (Cancel)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 1. Quick Payment Recording Modal */}
       {showPaymentModal && (

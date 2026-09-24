@@ -1518,11 +1518,11 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(devCreditCode).not.toContain("animate-ping");
     expect(devCreditCode).toContain("+91-8300030123");
 
-    // 2. Login page has restyled distinct Demo button
+    // 2. Login page has restyled distinct Demo button with 20 Free Bookings
     const loginPath = path.join(__dirname, "..", "app", "(public)", "login", "page.tsx");
     const loginCode = fs.readFileSync(loginPath, "utf-8");
-    expect(loginCode).toContain("Quick Demo Experience");
-    expect(loginCode).toContain("Instant Access");
+    expect(loginCode).toContain("Quick Demo Access");
+    expect(loginCode).toContain("20 Free Bookings");
 
     // 3. New booking step 2 top-to-bottom scroll reset
     const quickBookingPath = path.join(__dirname, "..", "app", "app", "bookings", "quick", "page.tsx");

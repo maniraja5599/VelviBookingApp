@@ -1994,8 +1994,19 @@ function PoojasCatalogueContent() {
                   <div
                     key={p.id}
                     onClick={() => setSelectedPooja(p)}
-                    className="bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-2xs hover:border-emerald-300 hover:shadow-xs transition cursor-pointer flex items-center justify-between gap-2.5 group"
+                    className={`bg-white rounded-2xl p-2.5 sm:p-3 border shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center justify-between gap-2.5 group relative ${
+                      isTop
+                        ? "border-amber-400/90 ring-1 ring-amber-300/40 shadow-amber-500/5 hover:border-amber-500"
+                        : "border-slate-200/90 hover:border-emerald-300"
+                    }`}
                   >
+                    {/* Cute Smart Top Performer Badge on Top Right Corner */}
+                    {isTop && (
+                      <span className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-black text-[9px] shadow-sm border border-white tracking-wide z-10 animate-in fade-in">
+                        <Sparkles className="w-2.5 h-2.5 text-yellow-200 shrink-0" />
+                        <span>Top Performer ⭐</span>
+                      </span>
+                    )}
                     {/* Left: Flame Avatar + Names + Kutty Smart Metrics */}
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/80 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/70 shadow-2xs group-hover:scale-105 transition-transform">

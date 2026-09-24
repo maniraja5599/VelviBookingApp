@@ -371,10 +371,94 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (ipData?.country) clientCountry = ipData.country;
     } catch {}
 
-    const demoUser = db.users[0]; // Ravi Iyer
-    demoUser.lastLoginIp = clientIp;
-    demoUser.lastLoginCity = clientCity;
-    demoUser.lastLoginCountry = clientCountry;
+    const resolvedIp = clientIp || "61.0.51.92";
+    const resolvedCity = clientCity || "Namakkal";
+    const resolvedCountry = clientCountry || "India";
+
+    // Find or create fresh demo user
+    let demoUser = db.users.find((u) => u.email === "demo@velvi.app" || u.id.startsWith("u-demo-"));
+    const demoBizId = "biz-demo-01";
+    if (!demoUser) {
+      demoUser = {
+        id: `u-demo-${Date.now().toString().slice(-4)}`,
+        googleId: `google-demo-${Date.now()}`,
+        email: "demo@velvi.app",
+        name: "Demo Priest",
+        avatarUrl: "",
+        mobile: "+919876500000",
+        mobileVerified: true,
+        role: "OWNER",
+        referralCode: "VELVI-DEMO",
+        createdAt: new Date().toISOString(),
+        registrationIp: resolvedIp,
+        lastLoginIp: resolvedIp,
+        registrationCity: resolvedCity,
+        registrationCountry: resolvedCountry,
+        lastLoginCity: resolvedCity,
+        lastLoginCountry: resolvedCountry,
+      };
+      db.users.push(demoUser);
+    } else {
+      demoUser.lastLoginIp = resolvedIp;
+      demoUser.lastLoginCity = resolvedCity;
+      demoUser.lastLoginCountry = resolvedCountry;
+    }
+
+    // Ensure dedicated isolated demo business with empty bookings
+    let demoBiz = db.businesses.find((b) => b.id === demoBizId || b.ownerId === demoUser!.id);
+    if (!demoBiz) {
+      demoBiz = {
+        id: demoBizId,
+        ownerId: demoUser.id,
+        name: "Demo Temple Services",
+        serviceName: "Pooja & Homam",
+        iyerName: demoUser.name,
+        logoUrl: "",
+        phone: demoUser.mobile,
+        whatsapp: demoUser.mobile,
+        address: "Tamil Nadu, India",
+        showWatermark: true,
+        createdAt: new Date().toISOString(),
+      };
+      db.businesses.push(demoBiz);
+    }
+
+    // Ensure active subscription for demo with 20-booking cap
+    const nowIso = new Date().toISOString();
+    const expiryIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    let demoSub = db.subscriptions.find((s) => s.businessId === demoBiz!.id);
+    if (!demoSub) {
+      demoSub = {
+        id: `sub-demo-${Date.now()}`,
+        businessId: demoBiz.id,
+        planName: "Velvi Free Demo",
+        planCode: "VELVI_PRO",
+        status: "ACTIVE",
+        billingCycle: "MONTHLY",
+        trialStart: nowIso,
+        trialEnd: expiryIso,
+        currentPeriodStart: nowIso,
+        currentPeriodEnd: expiryIso,
+        autoRenew: false,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+      db.subscriptions.push(demoSub);
+    }
+
+    // Ensure member record
+    if (!db.members.some((m) => m.userId === demoUser!.id)) {
+      db.members.push({
+        id: `bm-${Date.now()}`,
+        businessId: demoBiz.id,
+        userId: demoUser.id,
+        name: demoUser.name,
+        role: "OWNER",
+        mobile: demoUser.mobile,
+        active: true,
+        createdAt: nowIso,
+      });
+    }
 
     // Record login in audit logs for Super Admin
     db.logAudit({
@@ -383,11 +467,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       action: "DEMO_LOGIN",
       targetType: "AUTH_SESSION",
       targetId: demoUser.id,
-      ipAddress: clientIp,
-      city: clientCity,
-      country: clientCountry,
+      ipAddress: resolvedIp,
+      city: resolvedCity,
+      country: resolvedCountry,
       reason: "User accessed Quick Demo mode (20-Booking Cap)",
-      newValue: { ip: clientIp, city: clientCity, country: clientCountry },
+      newValue: { ip: resolvedIp, city: resolvedCity, country: resolvedCountry },
     });
 
     if (typeof window !== "undefined") {
