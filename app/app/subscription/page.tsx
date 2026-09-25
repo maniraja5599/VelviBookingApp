@@ -194,12 +194,12 @@ export default function SubscriptionPage() {
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponCodeInput).trim().toUpperCase();
     if (!code) {
-      setCouponError("கூப்பன் குறியீட்டை உள்ளிடவும் (Please enter coupon code)");
+      setCouponError("Please enter a coupon code");
       return;
     }
     const val = db.validateCoupon(code, selectedCycle);
     if (!val.valid || !val.coupon) {
-      setCouponError(val.error || "செல்லுபடியாகாத கூப்பன் குறியீடு (Invalid coupon code)");
+      setCouponError(val.error || "Invalid coupon code");
       setAppliedCoupon(null);
       setCouponDiscountInfo(null);
       return;
@@ -779,32 +779,35 @@ export default function SubscriptionPage() {
               </p>
             )}
 
-            {/* Quick Available Promo Suggestions */}
-            <div className="pt-2">
-              <span className="text-[10px] font-bold text-velvi-brown/60 uppercase tracking-wide block mb-1.5">
-                Special Offers &amp; Promo Codes:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { code: "VELVIPRO100", label: "100% Free Pass", badge: "FREE" },
-                  { code: "MANIDEV", label: "+365d Dev Bonus", badge: "1 YEAR" },
-                  { code: "FESTIVAL50", label: "50% Discount", badge: "50% OFF" },
-                  { code: "DIWALI30", label: "+30d Festive", badge: "+30 DAYS" },
-                ].map((promo) => (
-                  <button
-                    key={promo.code}
-                    type="button"
-                    onClick={() => handleApplyCoupon(promo.code)}
-                    className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-velvi-brownDark rounded-lg text-[10px] font-semibold flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <span className="font-mono font-bold text-amber-900">{promo.code}</span>
-                    <span className="text-[9px] bg-amber-200/80 px-1 py-0.2 rounded text-amber-950 font-bold">
-                      {promo.badge}
-                    </span>
-                  </button>
-                ))}
+            {/* Dynamic Available Promo Suggestions from Active Super Admin Coupons */}
+            {db.coupons.filter((c) => c.isActive && c.showInSuggestions !== false && c.usedCount < c.maxUses && (!c.validUntil || new Date(c.validUntil).getTime() > Date.now())).length > 0 && (
+              <div className="pt-2">
+                <span className="text-[10px] font-bold text-velvi-brown/60 uppercase tracking-wide block mb-1.5">
+                  Available Offers &amp; Promo Codes:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {db.coupons
+                    .filter((c) => c.isActive && c.showInSuggestions !== false && c.usedCount < c.maxUses && (!c.validUntil || new Date(c.validUntil).getTime() > Date.now()))
+                    .map((promo) => (
+                      <button
+                        key={promo.code}
+                        type="button"
+                        onClick={() => handleApplyCoupon(promo.code)}
+                        className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-velvi-brownDark rounded-lg text-[10px] font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                      >
+                        <span className="font-mono font-bold text-amber-900">{promo.code}</span>
+                        <span className="text-[9px] bg-amber-200/80 px-1 py-0.2 rounded text-amber-950 font-bold">
+                          {promo.discountType === "FREE_VALIDITY"
+                            ? "FREE"
+                            : promo.discountType === "PERCENTAGE"
+                            ? `${promo.discountValue}% OFF`
+                            : `₹${promo.discountValue} OFF`}
+                        </span>
+                      </button>
+                    ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
@@ -1163,10 +1166,10 @@ export default function SubscriptionPage() {
 
             <div className="space-y-1">
               <h3 className="text-base font-bold text-velvi-brownDark">
-                கட்டணம் ரத்து செய்யப்பட்டது
-              </h3>
-              <p className="text-xs font-semibold text-amber-700">
                 Payment Cancelled / Incomplete
+              </h3>
+              <p className="text-xs text-velvi-brown/70">
+                Transaction was not completed
               </p>
             </div>
 
@@ -1174,19 +1177,19 @@ export default function SubscriptionPage() {
               <div className="flex items-start gap-2">
                 <span className="text-emerald-600 font-bold">✓</span>
                 <span className="text-xs text-velvi-brownDark">
-                  <strong>பணம் கழிக்கப்படவில்லை:</strong> உங்கள் வங்கி அல்லது UPI கணக்கிலிருந்து பணம் எதுவும் பிடிக்கப்படவில்லை.
+                  <strong>No Money Deducted:</strong> No money was deducted from your bank or UPI account.
                 </span>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-emerald-600 font-bold">✓</span>
                 <span className="text-xs text-velvi-brownDark">
-                  <strong>சந்தா காலம் மாறவில்லை:</strong> உங்கள் தற்போதைய Velvi Pro சந்தா காலம் மாற்றமின்றி பாதுகாப்பாக உள்ளது.
+                  <strong>Subscription Unchanged:</strong> Your current plan and validity days remain intact.
                 </span>
               </div>
             </div>
 
             <p className="text-[11px] text-velvi-brown/60 leading-normal">
-              நீங்கள் எப்போது வேண்டுமானாலும் மீண்டும் Velvi Pro திட்டத்தை தேர்வு செய்து பாதுகாப்பாக பணம் செலுத்தலாம்.
+              You can retry or select a Velvi Pro plan whenever you are ready.
             </p>
 
             <button
@@ -1194,7 +1197,7 @@ export default function SubscriptionPage() {
               onClick={() => setShowCancelledModal(false)}
               className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-98 cursor-pointer"
             >
-              சரி, புரிந்தது (Got it)
+              Got it
             </button>
           </div>
         </div>

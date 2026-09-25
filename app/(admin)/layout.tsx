@@ -149,7 +149,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             setAdminEmailInput(email);
             setGoogleVerifiedProfile(info);
             setLoginSuccessNotice(
-              `Google profile verified (${info.email}). Please enter your Security PIN (5599) to unlock.`
+              `Google profile verified (${info.email}). Please enter your Security PIN to unlock.`
             );
             setLoginError("");
           })
@@ -163,6 +163,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       }
     }
   }, []);
+
+  // Pre-fill email if already signed in with primary Super Admin account
+  React.useEffect(() => {
+    if (currentUser?.email?.trim().toLowerCase() === "manirajankg@gmail.com" && !adminEmailInput) {
+      setAdminEmailInput("manirajankg@gmail.com");
+    }
+  }, [currentUser, adminEmailInput]);
 
   const isSuperAdmin = Boolean(
     currentUser?.role === "SUPER_ADMIN" ||
@@ -186,15 +193,53 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsSigningIn(true);
     setLoginError("");
     setLoginSuccessNotice("");
-    const redirectUri = `${window.location.origin}/admin`;
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
-      googleClientId
-    )}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&response_type=token&scope=${encodeURIComponent(
-      "email profile openid"
-    )}&prompt=select_account`;
-    window.location.href = authUrl;
+
+    // Try Google Identity Services (GIS) token client popup mode (authorized Javascript origins, no redirect_uri_mismatch)
+    if (typeof window !== "undefined" && (window as any).google?.accounts?.oauth2) {
+      try {
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "email profile openid",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              setLoginError(`Google sign-in error: ${tokenResponse.error}`);
+              setIsSigningIn(false);
+              return;
+            }
+            try {
+              const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+              });
+              const info = await res.json();
+              if (info?.email) {
+                const email = info.email.trim().toLowerCase();
+                if (email !== "manirajankg@gmail.com") {
+                  setLoginError(
+                    `Access Denied: (${info.email}) is not authorized. Only manirajankg@gmail.com is authorized as Super Admin.`
+                  );
+                  setIsSigningIn(false);
+                  return;
+                }
+                setAdminEmailInput(email);
+                setGoogleVerifiedProfile(info);
+                setLoginSuccessNotice(`Google profile verified (${info.email}). Please enter your Security PIN to unlock.`);
+              }
+            } catch (err: any) {
+              setLoginError(err?.message || "Failed to verify Google profile");
+            } finally {
+              setIsSigningIn(false);
+            }
+          },
+        });
+        client.requestAccessToken();
+        return;
+      } catch (err) {
+        console.warn("GIS token client error:", err);
+      }
+    }
+
+    // Fallback: Redirect to /login which is an authorized OAuth callback URI
+    window.location.href = `/login?admin=1&next=${encodeURIComponent("/admin")}`;
   };
 
   const handlePinSubmit = async (e: React.FormEvent) => {
@@ -218,7 +263,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
 
     if (targetPin !== "5599") {
-      setLoginError("Incorrect Security PIN. Access Denied. (தவறான PIN எண்)");
+      setLoginError("Incorrect Security PIN. Access Denied.");
       return;
     }
 
@@ -309,7 +354,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div>
               <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
-                <span>Admin Email / மின்னஞ்சல்</span>
+                <span>Admin Email</span>
               </label>
               <div className="relative">
                 <input
@@ -330,7 +375,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Security PIN / பாதுகாப்பு PIN</span>
+                  <span>Security PIN</span>
                 </label>
                 <span className="text-[10px] text-amber-400/90 font-mono font-bold">4-Digits</span>
               </div>

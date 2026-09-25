@@ -330,6 +330,7 @@ export interface Coupon {
   usedCount: number;
   validUntil: string;
   isActive: boolean;
+  showInSuggestions?: boolean;
   createdAt: string;
 }
 

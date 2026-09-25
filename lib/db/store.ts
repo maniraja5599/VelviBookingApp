@@ -208,6 +208,7 @@ export const DEFAULT_COUPONS: Coupon[] = [
     usedCount: 0,
     validUntil: "2030-12-31T23:59:59Z",
     isActive: true,
+    showInSuggestions: true,
     createdAt: "2026-08-01T00:00:00Z",
   },
   {
@@ -221,6 +222,7 @@ export const DEFAULT_COUPONS: Coupon[] = [
     usedCount: 0,
     validUntil: "2027-12-31T23:59:59Z",
     isActive: true,
+    showInSuggestions: true,
     createdAt: "2026-08-15T00:00:00Z",
   },
   {
@@ -234,6 +236,7 @@ export const DEFAULT_COUPONS: Coupon[] = [
     usedCount: 0,
     validUntil: "2027-12-31T23:59:59Z",
     isActive: true,
+    showInSuggestions: true,
     createdAt: "2026-08-20T00:00:00Z",
   },
   {
@@ -247,6 +250,7 @@ export const DEFAULT_COUPONS: Coupon[] = [
     usedCount: 0,
     validUntil: "2030-12-31T23:59:59Z",
     isActive: true,
+    showInSuggestions: true,
     createdAt: "2026-09-01T00:00:00Z",
   },
 ];
@@ -2307,10 +2311,64 @@ export class VelviDatabaseStore {
         : this.businesses.find((b) => b.ownerId === user.id && b.id !== "biz-venkateswara-01") ||
           (isSuperAdmin ? this.businesses.find((b) => b.id === "biz-super-admin-01" || b.ownerId === user.id) : undefined);
 
-      const sub = biz
+      // Sub resolution with multi-fallback and payment linkage
+      let sub = biz
         ? this.subscriptions.find((s) => s.businessId === biz.id) ||
           (isDemo ? this.subscriptions.find((s) => s.businessId === "biz-venkateswara-01") : undefined)
         : undefined;
+
+      if (!sub) {
+        sub = this.subscriptions.find(
+          (s) => s.businessId === user.id || s.businessId === `biz-${user.id}`
+        );
+      }
+
+      // Check payments ledger for any verified successful payments for this user or business
+      const userPayments = this.payments.filter(
+        (p) =>
+          (p.userId === user.id || (biz && p.businessId === biz.id)) &&
+          p.status === "SUCCESS"
+      );
+
+      if (userPayments.length > 0) {
+        const latestPayment = userPayments[userPayments.length - 1];
+        const calculatedEnd = new Date(
+          new Date(latestPayment.createdAt).getTime() +
+            (latestPayment.billingCycle === "YEARLY" ? 365 : 30) * 86400000
+        ).toISOString();
+
+        if (!sub) {
+          sub = {
+            id: `sub-active-${user.id}`,
+            businessId: biz ? biz.id : `biz-${user.id}`,
+            planName: "Velvi Pro",
+            planCode: "VELVI_PRO",
+            status: "ACTIVE",
+            trialStart: user.createdAt,
+            trialEnd: user.createdAt,
+            currentPeriodStart: latestPayment.createdAt,
+            currentPeriodEnd: calculatedEnd,
+            billingCycle: latestPayment.billingCycle || "MONTHLY",
+            autoRenew: true,
+            createdAt: latestPayment.createdAt,
+            updatedAt: new Date().toISOString(),
+          };
+          this.subscriptions.push(sub);
+        } else if (sub.status !== "ACTIVE") {
+          sub.status = "ACTIVE";
+          sub.planName = "Velvi Pro";
+          if (!sub.currentPeriodEnd || new Date(sub.currentPeriodEnd).getTime() < new Date(calculatedEnd).getTime()) {
+            sub.currentPeriodEnd = calculatedEnd;
+          }
+        }
+      }
+
+      // If subscription exists and period end is active in future, reflect ACTIVE status
+      if (sub && sub.currentPeriodEnd && new Date(sub.currentPeriodEnd).getTime() > Date.now()) {
+        if (sub.status !== "ACTIVE") {
+          sub.status = "ACTIVE";
+        }
+      }
 
       const userBookings = this.bookings.filter((b) => {
         if (biz && b.businessId === biz.id) return true;
@@ -2426,6 +2484,7 @@ export class VelviDatabaseStore {
     maxUses: number;
     validUntil: string;
     isActive?: boolean;
+    showInSuggestions?: boolean;
   }): { success: boolean; coupon?: Coupon; error?: string } {
     const cleanCode = params.code.trim().toUpperCase();
     if (!cleanCode) return { success: false, error: "Coupon code is required" };
@@ -2444,6 +2503,7 @@ export class VelviDatabaseStore {
       usedCount: 0,
       validUntil: params.validUntil,
       isActive: params.isActive !== false,
+      showInSuggestions: params.showInSuggestions !== false,
       createdAt: new Date().toISOString(),
     };
 
@@ -2458,6 +2518,15 @@ export class VelviDatabaseStore {
     const coup = this.coupons.find((c) => c.id === couponId);
     if (!coup) return false;
     coup.isActive = !coup.isActive;
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return true;
+  }
+
+  public toggleCouponSuggestionVisibility(couponId: string): boolean {
+    const coup = this.coupons.find((c) => c.id === couponId);
+    if (!coup) return false;
+    coup.showInSuggestions = coup.showInSuggestions === false ? true : false;
     this.saveToLocalStorage();
     this.notifyListeners();
     return true;
@@ -2731,6 +2800,69 @@ export class VelviDatabaseStore {
     this.saveToLocalStorage();
     this.notifyListeners();
     return { success: true, user: target };
+  }
+
+  public deleteUser(userId: string): { success: boolean; error?: string } {
+    const targetIndex = this.users.findIndex((u) => u.id === userId);
+    if (targetIndex === -1) {
+      return { success: false, error: "User not found" };
+    }
+
+    const user = this.users[targetIndex];
+    if (
+      user.email?.trim().toLowerCase() === "manirajankg@gmail.com" ||
+      user.role === "SUPER_ADMIN"
+    ) {
+      return { success: false, error: "Primary Super Admin account cannot be deleted." };
+    }
+
+    // 1. Remove user
+    this.users.splice(targetIndex, 1);
+
+    // 2. Identify businesses owned by this user
+    const userBusinesses = this.businesses.filter((b) => b.ownerId === userId);
+    const bizIds = new Set(userBusinesses.map((b) => b.id));
+    bizIds.add(`biz-${userId}`);
+
+    // Remove user businesses
+    this.businesses = this.businesses.filter(
+      (b) => b.ownerId !== userId && !bizIds.has(b.id)
+    );
+
+    // 3. Remove bookings associated with user or their businesses
+    this.bookings = this.bookings.filter(
+      (b) => !bizIds.has(b.businessId) && b.assignedIyerId !== userId
+    );
+
+    // 4. Remove subscriptions associated with user or their businesses
+    this.subscriptions = this.subscriptions.filter(
+      (s) => !bizIds.has(s.businessId) && s.businessId !== userId
+    );
+
+    // 5. Remove customers associated with their businesses
+    this.customers = this.customers.filter((c) => !bizIds.has(c.businessId));
+
+    // 6. Remove payments associated with this user
+    this.payments = this.payments.filter(
+      (p) => p.userId !== userId && !bizIds.has(p.businessId)
+    );
+
+    this.auditLogs.unshift({
+      id: `log-del-${Date.now()}`,
+      actorId: "u-super-admin-01",
+      actorName: "Maniraja (Super Admin)",
+      action: "DELETE_USER",
+      targetType: "USER",
+      targetId: userId,
+      oldValue: { email: user.email, name: user.name, mobile: user.mobile },
+      reason: "User account and all related business records permanently purged by Super Admin",
+      createdAt: new Date().toISOString(),
+    });
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return { success: true };
   }
 }
 

@@ -51,6 +51,7 @@ import {
   UserCheck,
   UserX,
   ShieldAlert,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 import { VelviLogo } from "@/components/ui/VelviLogo";
@@ -185,8 +186,41 @@ export default function SuperAdminDashboardPage() {
   // ---------------------------------------------------------------------------
   const [directorySearch, setDirectorySearch] = useState("");
   const [directoryFilter, setDirectoryFilter] = useState<
-    "ALL" | "ACTIVE" | "TRIAL" | "EXPIRED" | "DEMO"
+    "ALL" | "PAID" | "ADMINS" | "ACTIVE" | "TRIAL" | "EXPIRED" | "DEMO"
   >("ALL");
+
+  // User deletion state & confirmation modal
+  const [userToDelete, setUserToDelete] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeletingUser(true);
+    try {
+      const localRes = db.deleteUser(userToDelete.id);
+      if (!localRes.success) {
+        showToast(localRes.error || "Failed to delete user", true);
+        return;
+      }
+
+      await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userToDelete.id,
+          adminEmail: currentUser?.email || "manirajankg@gmail.com",
+        }),
+      }).catch(() => {});
+
+      setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+      showToast(`User ${userToDelete.name} (${userToDelete.email}) permanently deleted.`);
+      setUserToDelete(null);
+    } catch (err: any) {
+      showToast(err?.message || "Failed to delete user from cloud", true);
+    } finally {
+      setIsDeletingUser(false);
+    }
+  };
 
   // Selected Business for custom validity adjustment modal
   const [selectedBizForModal, setSelectedBizForModal] = useState<{
@@ -364,11 +398,22 @@ export default function SuperAdminDashboardPage() {
         (item.business?.name && item.business.name.toLowerCase().includes(q));
 
       const subStatus = item.subscription?.status || "TRIAL";
+      const isPaid =
+        (subStatus === "ACTIVE" ||
+          db.payments.some(
+            (p) =>
+              (p.userId === item.user.id || (item.business && p.businessId === item.business.id)) &&
+              p.status === "SUCCESS"
+          )) &&
+        !isDemo;
+
       const matchesFilter =
         directoryFilter === "ALL" ||
+        (directoryFilter === "PAID" && isPaid) ||
+        (directoryFilter === "ADMINS" && (item.isAdmin || item.isSuperAdmin)) ||
         (directoryFilter === "ACTIVE" && subStatus === "ACTIVE" && !isDemo) ||
-        (directoryFilter === "TRIAL" && subStatus === "TRIAL" && !isDemo) ||
-        (directoryFilter === "EXPIRED" && subStatus === "EXPIRED") ||
+        (directoryFilter === "TRIAL" && subStatus === "TRIAL" && !isPaid && !isDemo) ||
+        (directoryFilter === "EXPIRED" && (subStatus === "EXPIRED" || (item.subscription?.currentPeriodEnd && new Date(item.subscription.currentPeriodEnd).getTime() < Date.now())) && !isDemo) ||
         (directoryFilter === "DEMO" && isDemo);
 
       return matchesSearch && matchesFilter;
@@ -443,6 +488,7 @@ export default function SuperAdminDashboardPage() {
   const [newCouponBonusDays, setNewCouponBonusDays] = useState<number>(30);
   const [newCouponMaxUses, setNewCouponMaxUses] = useState<number>(500);
   const [newCouponValidUntil, setNewCouponValidUntil] = useState<string>("2028-12-31");
+  const [newCouponShowInSuggestions, setNewCouponShowInSuggestions] = useState<boolean>(true);
   const [copiedCoupon, setCopiedCoupon] = useState<string>("");
 
   const refreshCoupons = () => {
@@ -462,6 +508,7 @@ export default function SuperAdminDashboardPage() {
         ? `${newCouponValidUntil}T23:59:59Z`
         : "2030-12-31T23:59:59Z",
       isActive: true,
+      showInSuggestions: newCouponShowInSuggestions,
     });
 
     if (res.success && res.coupon) {
@@ -482,6 +529,17 @@ export default function SuperAdminDashboardPage() {
     if (success) {
       refreshCoupons();
       showToast("Coupon status updated!");
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
+    }
+  };
+
+  const handleToggleCouponVisibility = async (couponId: string) => {
+    const success = db.toggleCouponSuggestionVisibility(couponId);
+    if (success) {
+      refreshCoupons();
+      showToast("Coupon suggestion visibility updated!");
       try {
         await retryCloudSync("biz-super-admin-01");
       } catch {}
@@ -1177,19 +1235,71 @@ export default function SuperAdminDashboardPage() {
               />
             </div>
 
-            <div className="flex gap-1 text-xs font-semibold overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-              {["ALL", "ACTIVE", "TRIAL", "EXPIRED", "DEMO"].map((f) => (
+            <div className="flex gap-1.5 text-xs font-semibold overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
+              {[
+                { key: "ALL", label: `All Users (${directoryMetrics.length})` },
+                {
+                  key: "PAID",
+                  label: `👑 Paid / Pro (${
+                    directoryMetrics.filter(
+                      (m) =>
+                        (m.subscription?.status === "ACTIVE" ||
+                          db.payments.some(
+                            (p) =>
+                              (p.userId === m.user.id || (m.business && p.businessId === m.business.id)) &&
+                              p.status === "SUCCESS"
+                          )) &&
+                        !m.isDemo
+                    ).length
+                  })`,
+                },
+                {
+                  key: "ADMINS",
+                  label: `🛡️ Admins (${directoryMetrics.filter((m) => m.isAdmin || m.isSuperAdmin).length})`,
+                },
+                {
+                  key: "TRIAL",
+                  label: `⏳ Trial (${
+                    directoryMetrics.filter(
+                      (m) =>
+                        m.subscription?.status === "TRIAL" &&
+                        !db.payments.some(
+                          (p) =>
+                            (p.userId === m.user.id || (m.business && p.businessId === m.business.id)) &&
+                            p.status === "SUCCESS"
+                        ) &&
+                        !m.isDemo
+                    ).length
+                  })`,
+                },
+                {
+                  key: "EXPIRED",
+                  label: `⚠️ Expired (${
+                    directoryMetrics.filter(
+                      (m) =>
+                        (m.subscription?.status === "EXPIRED" ||
+                          (m.subscription?.currentPeriodEnd &&
+                            new Date(m.subscription.currentPeriodEnd).getTime() < Date.now())) &&
+                        !m.isDemo
+                    ).length
+                  })`,
+                },
+                {
+                  key: "DEMO",
+                  label: `🚀 Demo (${directoryMetrics.filter((m) => m.isDemo || m.user.id === "u-ravi-iyer-01").length})`,
+                },
+              ].map(({ key, label }) => (
                 <button
-                  key={f}
+                  key={key}
                   type="button"
-                  onClick={() => setDirectoryFilter(f as any)}
+                  onClick={() => setDirectoryFilter(key as any)}
                   className={`px-3 py-1.5 rounded-xl transition cursor-pointer shrink-0 text-xs ${
-                    directoryFilter === f
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"
+                    directoryFilter === key
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-xs"
                       : "bg-[#0c1220] text-slate-400 border border-zinc-800 hover:text-white"
                   }`}
                 >
-                  {f === "DEMO" ? "🚀 DEMO" : f}
+                  {label}
                 </button>
               ))}
             </div>
@@ -1466,6 +1576,18 @@ export default function SuperAdminDashboardPage() {
                             Edit Validity
                           </button>
                         )}
+
+                        {isSuperAdmin && !item.isSuperAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => setUserToDelete({ id: item.user.id, name: item.user.name, email: item.user.email })}
+                            className="px-2 py-1 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
+                            title="Delete User & Data"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1653,6 +1775,18 @@ export default function SuperAdminDashboardPage() {
                               ) : (
                                 <span className="text-[10px] text-slate-500">No Business</span>
                               )}
+
+                              {isSuperAdmin && !item.isSuperAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={() => setUserToDelete({ id: item.user.id, name: item.user.name, email: item.user.email })}
+                                  className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1"
+                                  title="Permanently Delete User"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                  <span>Delete</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1794,7 +1928,20 @@ export default function SuperAdminDashboardPage() {
                   />
                 </div>
 
-                <div className="flex items-end">
+                <div className="sm:col-span-2 flex items-center gap-2.5 py-1">
+                  <input
+                    type="checkbox"
+                    id="newCouponShowInSuggestions"
+                    checked={newCouponShowInSuggestions}
+                    onChange={(e) => setNewCouponShowInSuggestions(e.target.checked)}
+                    className="w-4 h-4 rounded border-zinc-700 text-amber-500 focus:ring-amber-400 bg-zinc-900 cursor-pointer"
+                  />
+                  <label htmlFor="newCouponShowInSuggestions" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
+                    Show in User Checkout Suggestions <span className="text-slate-500 font-normal">(Uncheck to make it a secret/private promo code)</span>
+                  </label>
+                </div>
+
+                <div className="flex items-end sm:col-span-2">
                   <button
                     type="submit"
                     className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
@@ -1842,7 +1989,19 @@ export default function SuperAdminDashboardPage() {
                         {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-amber-400" />}
                       </button>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCouponVisibility(c.id)}
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold border transition ${
+                            c.showInSuggestions !== false
+                              ? "bg-sky-950 text-sky-400 border-sky-800"
+                              : "bg-zinc-900 text-slate-500 border-zinc-800"
+                          }`}
+                          title="Toggle checkout suggestion visibility"
+                        >
+                          {c.showInSuggestions !== false ? "👁️ SUGGESTED" : "🔒 PRIVATE"}
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleToggleCoupon(c.id)}
@@ -1889,6 +2048,7 @@ export default function SuperAdminDashboardPage() {
                     <th className="p-4">Discount</th>
                     <th className="p-4">Validity Bonus</th>
                     <th className="p-4">Usage Tracker</th>
+                    <th className="p-4">Suggestions</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
@@ -1955,6 +2115,21 @@ export default function SuperAdminDashboardPage() {
                               />
                             </div>
                           </div>
+                        </td>
+
+                        <td className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCouponVisibility(c.id)}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition cursor-pointer ${
+                              c.showInSuggestions !== false
+                                ? "bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-800"
+                                : "bg-zinc-900 hover:bg-zinc-800 text-slate-400 border-zinc-700"
+                            }`}
+                            title="Click to toggle visibility in user checkout suggestions"
+                          >
+                            {c.showInSuggestions !== false ? "👁️ Visible to Users" : "🔒 Hidden (Direct Only)"}
+                          </button>
                         </td>
 
                         <td className="p-4">
@@ -3480,6 +3655,59 @@ export default function SuperAdminDashboardPage() {
                 className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs shadow-lg shadow-amber-500/30 transition cursor-pointer"
               >
                 Grant Admin Access
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL: PURGE / DELETE USER CONFIRMATION                               */}
+      {/* ===================================================================== */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0f172a] border border-rose-500/40 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-bold text-white">Permanently Delete User?</h3>
+                <p className="text-[11px] text-rose-400 font-semibold">Destructive Action — Irreversible</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to permanently delete user <strong className="text-rose-300 font-bold">{userToDelete.name}</strong> ({userToDelete.email})?
+              All business profiles, devotees, bookings, subscriptions, and payments associated with this user will be purged from the platform.
+            </p>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                disabled={isDeletingUser}
+                onClick={() => setUserToDelete(null)}
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingUser}
+                onClick={confirmDeleteUser}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-black text-xs shadow-lg shadow-rose-600/30 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isDeletingUser ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Delete</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

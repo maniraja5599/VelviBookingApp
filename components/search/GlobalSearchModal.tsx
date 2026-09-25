@@ -189,8 +189,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     () => [
       {
         id: "new-booking",
-        title: "புதிய பூஜை பதிவு",
-        english: "New Booking",
+        title: "New Booking",
+        english: "Create Booking",
         icon: Sparkles,
         url: "/app/bookings/new",
         bgColor: "bg-amber-500/10 text-amber-900 border-amber-300/80",
@@ -198,8 +198,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       },
       {
         id: "calendar",
-        title: "நாட்காட்டி & முகூர்த்தம்",
-        english: "Calendar & Timings",
+        title: "Calendar & Timings",
+        english: "Panchangam & Muhurtham",
         icon: Calendar,
         url: "/app/calendar",
         bgColor: "bg-emerald-500/10 text-emerald-950 border-emerald-300/80",
@@ -207,8 +207,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       },
       {
         id: "customers",
-        title: "பக்தர்கள் பட்டியல்",
-        english: "Devotees List",
+        title: "Devotees & Clients",
+        english: "Client Directory",
         icon: Users,
         url: "/app/customers",
         bgColor: "bg-blue-500/10 text-blue-950 border-blue-300/80",
@@ -216,7 +216,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       },
       {
         id: "poojas",
-        title: "பூஜைகள் & கட்டணம்",
+        title: "Ceremonies & Poojas",
         english: "Pooja Catalog",
         icon: Flame,
         url: "/app/poojas",
@@ -225,8 +225,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       },
       {
         id: "payments",
-        title: "வரவு செலவு & கணக்கு",
-        english: "Payments & Reports",
+        title: "Payments & Reports",
+        english: "Dakshina & Accounts",
         icon: CreditCard,
         url: "/app/payments",
         bgColor: "bg-purple-500/10 text-purple-950 border-purple-300/80",
@@ -234,8 +234,8 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
       },
       {
         id: "settings",
-        title: "கோயில் / ஐயர் அமைப்புகள்",
-        english: "Settings",
+        title: "Settings & Profile",
+        english: "App Configuration",
         icon: Settings,
         url: "/app/settings",
         bgColor: "bg-slate-500/10 text-slate-900 border-slate-300/80",
@@ -250,195 +250,195 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
     () => [
       {
         id: "set-profile",
-        title: "வாத்யார் & கோயில் விவரங்கள்",
-        english: "Business Profile & Vadhyar Info",
-        section: "சுயவிவரம் • Profile",
-        desc: "வாத்யார் பெயர், கோயில் பெயர், முகவரி, வாட்ஸ்அப் & கோத்ரம் அமைப்புகள்",
+        title: "Priest & Business Profile",
+        english: "Business Profile & Contact Info",
+        section: "Profile",
+        desc: "Manage priest name, temple or business title, address, WhatsApp and contact details",
         icon: Building2,
         bgColor: "bg-blue-500/10 text-blue-900 border-blue-300/80",
         iconColor: "text-blue-700",
         url: "/app/settings/branding",
-        keywords: "profile vadhyar name temple business gotram address phone mobile email வாத்யார் கோயில் சுயவிவரம் முகவரி கோத்ரம் போன்",
+        keywords: "profile priest name temple business gotram address phone mobile email vadhyar",
       },
       {
         id: "set-logo",
-        title: "லோகோ & முத்திரை மாற்றம்",
+        title: "Custom Logo & Signature",
         english: "Custom Logo & Signature Upload",
-        section: "பிராண்டிங் • Branding",
-        desc: "ரசீது மற்றும் சுயவிவரத்தில் உங்கள் சொந்த லோகோவை பதிவேற்றம் செய்யுங்கள்",
+        section: "Branding",
+        desc: "Upload custom logo and digital signature to display on devotee receipts",
         icon: Sparkles,
         bgColor: "bg-amber-500/10 text-amber-900 border-amber-300/80",
         iconColor: "text-amber-700",
         url: "/app/settings/branding",
-        keywords: "logo brand upload photo image avatar icon signature லோகோ படம் அடையாளம் முத்திரை",
+        keywords: "logo brand upload photo image avatar icon signature",
       },
       {
         id: "set-watermark",
-        title: "வாட்டர்மார்க் & ரசீது வடிவம்",
+        title: "Receipt Watermark & Branding",
         english: "Receipt Watermark & Branding",
-        section: "பிராண்டிங் • Branding",
-        desc: "வாட்ஸ்அப் ரசீதில் வேள்வி பிராண்டிங் காட்டுதல் அல்லது மறைத்தல் விருப்பம்",
+        section: "Branding",
+        desc: "Toggle Velvi branding watermark visibility on generated PDF receipts",
         icon: Tag,
         bgColor: "bg-rose-500/10 text-rose-900 border-rose-300/80",
         iconColor: "text-rose-700",
         url: "/app/settings/branding",
-        keywords: "watermark receipt hide show branding pdf signature வாட்டர்மார்க் ரசீது மறைக்க காட்ட",
+        keywords: "watermark receipt hide show branding pdf signature",
       },
       {
         id: "set-subscription",
-        title: "ப்ரோ சந்தா & வேலிடிட்டி",
+        title: "Velvi Pro Plan & Validity",
         english: "Velvi Pro Plan & Validity",
-        section: "திட்டம் • Subscription",
-        desc: "கணக்கு செல்லுபடியாகும் நாட்கள், திட்டம் புதுப்பித்தல், கூப்பன் குறியீடு & வரம்பற்ற முன்பதிவுகள்",
+        section: "Subscription",
+        desc: "View remaining validity days, renew membership, apply promo codes, and unlock features",
         icon: CreditCard,
         bgColor: "bg-emerald-500/10 text-emerald-900 border-emerald-300/80",
         iconColor: "text-emerald-700",
         url: "/app/subscription",
-        keywords: "subscription plan pro validity renew upgrade coupon cashfree upi payment வரம்பற்ற முன்பதிவு சந்தா திட்டம் வேலிடிட்டி கூப்பன்",
+        keywords: "subscription plan pro validity renew upgrade coupon cashfree upi payment",
       },
       {
         id: "set-referrals",
-        title: "பரிந்துரை & +30 நாட்கள் போனஸ்",
+        title: "Referrals & +30 Days Bonus",
         english: "Referrals & Earn Free Days",
-        section: "சலுகைகள் • Referrals",
-        desc: "சக வாத்யார்களுக்கு பரிந்துரைத்து ஒவ்வொருவருக்கும் +30 நாட்கள் இலவச வேலிடிட்டி பெறுங்கள்",
+        section: "Referrals",
+        desc: "Invite fellow priests and receive +30 days bonus free validity for every referral",
         icon: Gift,
         bgColor: "bg-pink-500/10 text-pink-900 border-pink-300/80",
         iconColor: "text-pink-700",
         url: "/app/referrals",
-        keywords: "referral invite friend earn free days bonus code பரிந்துரை இலவச நாட்கள் போனஸ் நண்பர்",
+        keywords: "referral invite friend earn free days bonus code",
       },
       {
         id: "set-theme",
-        title: "தீம் & புனித வண்ணங்கள்",
+        title: "Appearance & Sacred Themes",
         english: "Sacred Themes & Color Palettes",
-        section: "விருப்பங்கள் • Appearance",
-        desc: "பாரம்பரிய தங்கம் (Gold), குங்குமம், வில்வப் பச்சை, மற்றும் இரவு முறை (Dark Mode)",
+        section: "Appearance",
+        desc: "Traditional Gold, Kumkum, Bilva Green, and Dark Mode color themes",
         icon: Palette,
         bgColor: "bg-fuchsia-500/10 text-fuchsia-900 border-fuchsia-300/80",
         iconColor: "text-fuchsia-700",
         url: "/app/settings/theme",
-        keywords: "theme color dark mode light mode traditional gold saffron kumkum bilva green தீம் வண்ணங்கள் நிறம் இருண்ட முறை பொன் நிறம்",
+        keywords: "theme color dark mode light mode traditional gold saffron kumkum bilva green",
       },
       {
         id: "set-backup",
-        title: "எக்செல் தரவு காப்பு & பதிவிறக்கம்",
+        title: "Data Backup & Excel Export",
         english: "Data Backup & Excel Export",
-        section: "தரவு • Backup",
-        desc: "அனைத்து முன்பதிவுகள், பக்தர்கள் மற்றும் பூஜைகளை Excel (.xlsx) மற்றும் JSON ஆக பதிவிறக்கம் செய்யுங்கள்",
+        section: "Backup",
+        desc: "Download all bookings, devotees, and poojas as Excel (.xlsx) and JSON files",
         icon: Download,
         bgColor: "bg-cyan-500/10 text-cyan-900 border-cyan-300/80",
         iconColor: "text-cyan-700",
         url: "/app/data-backup",
-        keywords: "backup export excel xlsx csv json download data restore காப்பு எக்செல் ஏற்றுமதி பதிவிறக்கம் தரவு",
+        keywords: "backup export excel xlsx csv json download data restore",
       },
       {
         id: "set-cloud",
-        title: "மேகக்கணி நேரலை ஒத்திசைவு (Cloud Sync)",
+        title: "Cloud Sync & Offline Mode",
         english: "Supabase Cloud Sync & Offline PWA",
-        section: "தரவு • Cloud Sync",
-        desc: "நேரலை மேகக்கணி ஒத்திசைவு நிலை, ஆஃப்லைன் சேமிப்பு மற்றும் உடனடி ஒத்திசைவு (Sync Now)",
+        section: "Cloud Sync",
+        desc: "Live Supabase cloud sync status, offline local storage, and instant manual sync",
         icon: Cloud,
         bgColor: "bg-teal-500/10 text-teal-900 border-teal-300/80",
         iconColor: "text-teal-700",
         url: "/app/data-backup",
-        keywords: "cloud sync supabase live backup offline pwa internet மேகக்கணி ஒத்திசைவு ஆஃப்லைன் இணையம்",
+        keywords: "cloud sync supabase live backup offline pwa internet",
       },
       {
         id: "set-trash",
-        title: "குப்பைத்தொட்டி & மீட்டெடுப்பு",
+        title: "Recycle Bin & Restore",
         english: "Recycle Bin & Restore Log",
-        section: "பாதுகாப்பு • Recycle Bin",
-        desc: "தவறுதலாக நீக்கப்பட்ட முன்பதிவுகள் மற்றும் பக்தர்களின் விபரங்களை உடனடியாக மீட்டெடுங்கள் (Undo)",
+        section: "Recycle Bin",
+        desc: "Recover accidentally deleted bookings, customers, or pooja records",
         icon: RotateCcw,
         bgColor: "bg-red-500/10 text-red-900 border-red-300/80",
         iconColor: "text-red-700",
         url: "/app/settings",
-        keywords: "trash recycle bin restore undo deleted audit log recover குப்பைத்தொட்டி மீட்டெடுப்பு நீக்கப்பட்டவை தவறு",
+        keywords: "trash recycle bin restore undo deleted audit log recover",
       },
       {
         id: "set-poojas",
-        title: "பூஜை அட்டவணை & தக்ஷிணை",
+        title: "Pooja Catalog & Dakshina Rates",
         english: "Pooja Catalog & Dakshina Rates",
-        section: "சேவைகள் • Services",
-        desc: "ஹோமங்கள், பூஜைகள், தக்ஷிணை கட்டணம் மற்றும் கால அளவு மேலாண்மை",
+        section: "Services",
+        desc: "Homams, poojas, suggested dakshina pricing, and duration management",
         icon: Flame,
         bgColor: "bg-orange-500/10 text-orange-900 border-orange-300/80",
         iconColor: "text-orange-700",
         url: "/app/poojas",
-        keywords: "pooja catalog homam seva dakshina fee rate duration பூஜை கட்டணம் தக்ஷிணை ஹோமம் சடங்கு",
+        keywords: "pooja catalog homam seva dakshina fee rate duration",
       },
       {
         id: "set-samagri",
-        title: "பூஜை பொருட்கள் பிரிவுகள்",
+        title: "Samagri Categories & Items",
         english: "Samagri Categories & Items",
-        section: "சேவைகள் • Samagri",
-        desc: "பழங்கள், பூக்கள், நெய், வஸ்திரம் போன்ற சாமான் பிரிவுகள் மற்றும் சரிபார்ப்பு பட்டியல்",
+        section: "Samagri",
+        desc: "Fruits, flowers, ghee, vastram and ritual store checklist management",
         icon: Tag,
         bgColor: "bg-indigo-500/10 text-indigo-900 border-indigo-300/80",
         iconColor: "text-indigo-700",
         url: "/app/settings",
-        keywords: "samagri checklist items fruits flowers ghee vastram dravyam பொருட்கள் சாமான்கள் நெய் மலர்கள் பழங்கள் வஸ்திரம்",
+        keywords: "samagri checklist items fruits flowers ghee vastram dravyam",
       },
       {
         id: "set-team",
-        title: "உதவி வாத்யார்கள் & பட்டுவாடா",
+        title: "Assistant Priests & Settlements",
         english: "Assistant Priests & Settlements",
-        section: "குழு • Team",
-        desc: "உதவி புரோகிதர்கள் நியமனம், பூஜை பகிர்வு மற்றும் தக்ஷிணை கணக்கு தீர்வு",
+        section: "Team",
+        desc: "Appoint assistant priests, manage ritual shares, and track dakshina settlements",
         icon: Users,
         bgColor: "bg-violet-500/10 text-violet-900 border-violet-300/80",
         iconColor: "text-violet-700",
         url: "/app/team",
-        keywords: "team purohit assistant iyer dakshina split settlement purohits வாத்யார் புரோகிதர் பட்டுவாடா குழு உதவி",
+        keywords: "team purohit assistant iyer dakshina split settlement purohits",
       },
       {
         id: "set-language",
-        title: "செயலி மொழி (தமிழ் / English)",
+        title: "App Language Toggle",
         english: "App Language Toggle",
-        section: "விருப்பங்கள் • Preferences",
-        desc: "செயலியின் இடைமுக மொழியை தமிழ் அல்லது ஆங்கிலத்திற்கு உடனடியாக மாற்றவும்",
+        section: "Preferences",
+        desc: "Switch the application user interface between English and Tamil",
         icon: Globe,
         bgColor: "bg-lime-500/10 text-lime-900 border-lime-300/80",
         iconColor: "text-lime-700",
         url: "/app/settings",
-        keywords: "language switch tamil english மொழி தமிழ் ஆங்கிலம் மாற்றம் எழுத்து",
+        keywords: "language switch tamil english",
       },
       {
         id: "set-guide",
-        title: "வேள்வி கையேடு & வழிமுறை (A-Z Manual)",
+        title: "App Walkthrough & Documentation",
         english: "App Walkthrough & Documentation",
-        section: "உதவி • Guide",
-        desc: "முன்பதிவு முறை, வாட்ஸ்அப் ரசீதுகள், பஞ்சாங்கம் மற்றும் A முதல் Z வரை முழு உதவி ஆவணங்கள்",
+        section: "Guide",
+        desc: "Complete step-by-step documentation for bookings, WhatsApp receipts, and calendars",
         icon: BookOpen,
         bgColor: "bg-yellow-500/10 text-yellow-900 border-yellow-300/80",
         iconColor: "text-yellow-700",
         url: "/app/settings/guide",
-        keywords: "guide manual help documentation faq how to use walkthrough பஞ்சாங்கம் கையேடு உதவி வழிமுறை பயன்பாடு",
+        keywords: "guide manual help documentation faq how to use walkthrough",
       },
       {
         id: "set-version",
-        title: "பதிப்பு & மாற்றங்கள் (v2.5.3)",
+        title: "Version History & Updates (v2.5.3)",
         english: "Version History & Release Notes",
-        section: "செயலி • Version",
-        desc: "Velvi v2.5.3 பதிப்பு, ஆஃப்லைன் வசதி மற்றும் சமீபத்திய புதுப்பிப்புகள்",
+        section: "Version",
+        desc: "Velvi v2.5.3 release notes, offline PWA features, and latest system upgrades",
         icon: Info,
         bgColor: "bg-slate-500/10 text-slate-900 border-slate-300/80",
         iconColor: "text-slate-700",
         url: "/app/settings/version",
-        keywords: "version update changelog release notes v2.5.3 pwa புதுப்பிப்பு பதிப்பு மாற்றங்கள் வரலாறு",
+        keywords: "version update changelog release notes v2.5.3 pwa",
       },
       {
         id: "set-admin",
-        title: "சூப்பர் அட்மின் நிர்வாகம்",
+        title: "Super Admin Management Console",
         english: "Super Admin Management Console",
-        section: "நிர்வாகம் • Super Admin",
-        desc: "அனைத்து வாத்யார்கள் டைரக்டரி, கூப்பன் மேலாண்மை மற்றும் நேரலை உள்நுழைவுகள்",
+        section: "Super Admin",
+        desc: "User directory, coupon management engine, validity control, and telemetry",
         icon: Shield,
         bgColor: "bg-amber-500/15 text-amber-950 border-amber-400/90",
         iconColor: "text-amber-800",
         url: "/admin",
-        keywords: "super admin master console telemetry coupon users directory validity increase சூப்பர் அட்மின் நிர்வாகம்",
+        keywords: "super admin master console telemetry coupon users directory validity increase",
       },
     ],
     []
@@ -561,7 +561,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="தேடுக: பக்தர் பெயர், மொபைல், பூஜை, பதிவு எண்..."
+                placeholder="Search devotees, phone, poojas, bookings, settings..."
                 className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none"
               />
               {query && (
@@ -582,7 +582,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               onClick={onClose}
               className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white hover:bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 transition shrink-0 flex items-center justify-center cursor-pointer active:scale-95 shadow-2xs"
               aria-label="Close search"
-              title="மூடு / Close (Esc)"
+              title="Close (Esc)"
             >
               <X className="w-5 h-5 text-slate-600 stroke-[2.2]" />
             </button>
@@ -601,7 +601,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              அனைத்தும் ({filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length + filteredActions.length})
+              All ({filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length + filteredActions.length})
             </button>
             <button
               type="button"
@@ -612,7 +612,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              <Settings className="w-3 h-3" /> அமைப்புகள் ({filteredSettings.length})
+              <Settings className="w-3 h-3" /> Settings ({filteredSettings.length})
             </button>
             <button
               type="button"
@@ -623,7 +623,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              <User className="w-3 h-3" /> பக்தர்கள் ({filteredCustomers.length})
+              <User className="w-3 h-3" /> Devotees ({filteredCustomers.length})
             </button>
             <button
               type="button"
@@ -634,7 +634,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              <Calendar className="w-3 h-3" /> பதிவுகள் ({filteredBookings.length})
+              <Calendar className="w-3 h-3" /> Bookings ({filteredBookings.length})
             </button>
             <button
               type="button"
@@ -645,7 +645,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              <Flame className="w-3 h-3" /> பூஜைகள் ({filteredPoojas.length})
+              <Flame className="w-3 h-3" /> Poojas ({filteredPoojas.length})
             </button>
             <button
               type="button"
@@ -656,7 +656,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
               }`}
             >
-              <Sparkles className="w-3 h-3" /> விரைவு வழிகள் ({filteredActions.length})
+              <Sparkles className="w-3 h-3" /> Actions ({filteredActions.length})
             </button>
           </div>
         )}
@@ -732,10 +732,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
                       <Flame className="w-4 h-4 text-emerald-700" />
-                      <span>இன்றைய பூஜைகள் (Today&apos;s Events)</span>
+                      <span>Today&apos;s Bookings &amp; Events</span>
                     </div>
                     <span className="inline-flex items-center justify-center min-w-[76px] h-[22px] px-2 rounded-full bg-emerald-200/90 text-emerald-950 font-black text-[10px] tracking-tight shrink-0 select-none shadow-2xs pointer-events-none text-center leading-none">
-                      {todayBookings.length} {todayBookings.length === 1 ? "நிகழ்வு" : "நிகழ்வுகள்"}
+                      {todayBookings.length} {todayBookings.length === 1 ? "Event" : "Events"}
                     </span>
                   </div>
 
@@ -748,10 +748,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       >
                         <div className="min-w-0 flex-1">
                           <h4 className="font-extrabold text-xs text-slate-900 group-hover:text-emerald-950 truncate">
-                            {b.poojaTamilName || b.poojaEnglishName}
+                            {b.poojaEnglishName || b.poojaTamilName}
                           </h4>
                           <p className="text-[11px] text-slate-600 mt-0.5">
-                            👤 {b.customerName} • ⏰ {b.startTime || "இன்று"} • ₹{b.totalAmount?.toLocaleString()}
+                            👤 {b.customerName} • ⏰ {b.startTime || "Today"} • ₹{b.totalAmount?.toLocaleString()}
                           </p>
                         </div>
                         <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-emerald-700 shrink-0" />
@@ -766,14 +766,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                 <div className="px-3 py-2 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between text-xs text-slate-600">
                   <span className="flex items-center gap-1.5 font-semibold text-[11px]">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>நாளை &amp; இன்று எந்த பூஜைகளும் திட்டமிடப்படவில்லை</span>
+                    <span>No ceremonies scheduled for today or tomorrow</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => handleNavigate("/app/bookings/new")}
                     className="text-[10.5px] font-bold text-emerald-800 hover:underline flex items-center gap-0.5"
                   >
-                    + புதிய பதிவு
+                    + New Booking
                   </button>
                 </div>
               )}
@@ -781,13 +781,13 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               {/* 3. Search Tips & Examples */}
               <div className="p-3 bg-slate-50/80 rounded-2xl border border-slate-100 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-slate-600 font-semibold">
-                  <span className="text-emerald-700 font-bold">💡 விரைவு தேடல்:</span>
-                  <span>பக்தர் பெயர், தொலைபேசி, பூஜை அல்லது பதிவு எண் தட்டச்சு செய்க.</span>
+                  <span className="text-emerald-700 font-bold">💡 Quick Search:</span>
+                  <span>Type devotee name, phone number, ceremony, or booking ID.</span>
                 </div>
 
                 <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mr-1">
-                    எடுத்துக்காட்டு:
+                    Examples:
                   </span>
                   {customers.slice(0, 2).map((c) => (
                     <button
@@ -808,7 +808,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       className="px-2.5 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-950 border border-slate-200 hover:border-emerald-300 rounded-xl text-[11px] font-bold transition shadow-2xs flex items-center gap-1 cursor-pointer active:scale-95"
                     >
                       <Flame className="w-3 h-3 text-amber-700" />
-                      <span>{p.tamilName || p.englishName}</span>
+                      <span>{p.englishName || p.tamilName}</span>
                     </button>
                   ))}
                 </div>
@@ -817,7 +817,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               {/* 4. Common Quick Actions */}
               <div className="space-y-1.5 pt-1">
                 <span className="text-[10.5px] font-extrabold text-slate-500 uppercase tracking-wider px-1">
-                  விரைவு வழிகள் (Quick Shortcuts)
+                  Quick Shortcuts
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   {commonActions.slice(0, 4).map((act) => {
@@ -834,9 +834,9 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                         </div>
                         <div className="min-w-0 flex-1">
                           <h5 className="font-extrabold text-[11.5px] text-slate-800 group-hover:text-slate-950 truncate">
-                            {act.english}
+                            {act.title}
                           </h5>
-                          <p className="text-[10px] text-slate-500 truncate">{act.title}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{act.english}</p>
                         </div>
                       </button>
                     );
@@ -855,10 +855,10 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                     <Search className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold text-slate-800 text-sm">
-                    முடிவுகள் எதுவும் கிடைக்கவில்லை (No results found)
+                    No results found
                   </h3>
                   <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
-                    &quot;{query}&quot; க்கு எந்த வாடிக்கையாளர் அல்லது பூஜையும் பொருந்தவில்லை.
+                    No devotee, ceremony, or setting matches &quot;{query}&quot;.
                   </p>
                   <div className="mt-4 flex items-center justify-center gap-2">
                     <button
@@ -866,7 +866,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                       onClick={() => handleNavigate("/app/bookings/new")}
                       className="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                     >
-                      <Plus className="w-3.5 h-3.5" /> புதிய பூஜை பதிவு செய்க
+                      <Plus className="w-3.5 h-3.5" /> + New Booking
                     </button>
                   </div>
                 </div>
@@ -878,14 +878,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="space-y-2">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-blue-600" /> பக்தர்கள் / வாடிக்கையாளர்கள் ({filteredCustomers.length})
+                        <User className="w-3.5 h-3.5 text-blue-600" /> Devotees &amp; Clients ({filteredCustomers.length})
                       </span>
                       <Link
                         href="/app/customers"
                         onClick={onClose}
                         className="text-[11px] font-bold text-blue-700 hover:underline"
                       >
-                        அனைத்தும் →
+                        View All →
                       </Link>
                     </div>
 
@@ -969,7 +969,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                                   className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs active:scale-95"
                                 >
                                   <Sparkles className="w-3 h-3 text-amber-300" />
-                                  <span>பதிவு செய்</span>
+                                  <span>Book</span>
                                 </button>
                               </div>
                             </div>
@@ -986,14 +986,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="space-y-2 pt-2">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-amber-700" /> பூஜை முன்பதிவுகள் ({filteredBookings.length})
+                        <Calendar className="w-3.5 h-3.5 text-amber-700" /> Bookings ({filteredBookings.length})
                       </span>
                       <Link
                         href="/app/bookings"
                         onClick={onClose}
                         className="text-[11px] font-bold text-amber-800 hover:underline"
                       >
-                        அனைத்தும் →
+                        View All →
                       </Link>
                     </div>
 
@@ -1073,14 +1073,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="space-y-2 pt-2">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-orange-950 flex items-center gap-1.5">
-                        <Flame className="w-3.5 h-3.5 text-orange-600" /> பூஜைகள் & ஹோமங்கள் ({filteredPoojas.length})
+                        <Flame className="w-3.5 h-3.5 text-orange-600" /> Ceremonies &amp; Poojas ({filteredPoojas.length})
                       </span>
                       <Link
                         href="/app/poojas"
                         onClick={onClose}
                         className="text-[11px] font-bold text-orange-700 hover:underline"
                       >
-                        அனைத்தும் →
+                        View All →
                       </Link>
                     </div>
 
@@ -1115,7 +1115,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                                 </span>
                                 {p.items && p.items.length > 0 && (
                                   <span className="text-[11px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                                    📦 {p.items.length} பொருட்கள்
+                                    📦 {p.items.length} items
                                   </span>
                                 )}
                               </div>
@@ -1126,7 +1126,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                               onClick={() => handleNavigate(`/app/bookings/new?poojaId=${p.id}`)}
                               className="px-3 py-1.5 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-xs font-bold transition shrink-0 flex items-center gap-1 shadow-2xs active:scale-95"
                             >
-                              <span>முன்பதிவு</span>
+                              <span>Book</span>
                               <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -1142,14 +1142,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="space-y-2 pt-2">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                        <Settings className="w-3.5 h-3.5 text-slate-600" /> அமைப்புகள் & விருப்பங்கள் • Settings ({filteredSettings.length})
+                        <Settings className="w-3.5 h-3.5 text-slate-600" /> Settings &amp; Preferences ({filteredSettings.length})
                       </span>
                       <Link
                         href="/app/settings"
                         onClick={onClose}
                         className="text-[11px] font-bold text-slate-700 hover:underline"
                       >
-                        அனைத்து அமைப்புகள் →
+                        All Settings →
                       </Link>
                     </div>
 
@@ -1197,7 +1197,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
                   <div className="space-y-2 pt-2">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-950 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600" /> விரைவு வழிகள் ({filteredActions.length})
+                        <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Quick Actions ({filteredActions.length})
                       </span>
                     </div>
 
@@ -1241,7 +1241,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
               <span className="font-bold text-slate-700">Velvi Search</span>
               <span>•</span>
               <span className="text-slate-500">
-                {filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length} முடிவுகள்
+                {filteredCustomers.length + filteredBookings.length + filteredPoojas.length + filteredSettings.length} results
               </span>
             </div>
             <button
