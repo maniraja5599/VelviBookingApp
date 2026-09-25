@@ -181,9 +181,9 @@ export class CashfreeService {
       try {
         const rawAppUrl =
           process.env.NEXT_PUBLIC_APP_URL ||
-          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://velvi-booking-app.vercel.app");
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://velvi.date");
         const appUrl = rawAppUrl.startsWith("http://localhost")
-          ? "https://velvi-booking-app.vercel.app"
+          ? "https://velvi.date"
           : rawAppUrl.startsWith("http")
           ? rawAppUrl
           : `https://${rawAppUrl}`;

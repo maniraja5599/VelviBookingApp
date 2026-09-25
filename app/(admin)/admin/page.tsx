@@ -2899,8 +2899,8 @@ export default function SuperAdminDashboardPage() {
               <ul className="space-y-2 text-xs text-slate-300 font-medium pt-1">
                 <li className="flex items-center justify-between border-b border-zinc-800/80 pb-1.5">
                   <span className="text-slate-400">Production URL:</span>
-                  <a href="https://velvi-booking-app.vercel.app" target="_blank" rel="noopener noreferrer" className="font-mono text-amber-300 hover:underline flex items-center gap-1 text-[11px]">
-                    velvi-booking-app.vercel.app
+                  <a href="https://velvi.date" target="_blank" rel="noopener noreferrer" className="font-mono text-amber-300 hover:underline flex items-center gap-1 text-[11px]">
+                    velvi.date
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>

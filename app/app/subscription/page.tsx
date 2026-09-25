@@ -1424,7 +1424,7 @@ export default function SubscriptionPage() {
                     Valid without physical signature under Information Technology Act, 2000.
                   </p>
                   <p className="text-[9.5px] text-slate-400">
-                    https://velvi-booking-app.vercel.app • support@velvi.app
+                    https://velvi.date • support@velvi.app
                   </p>
                 </div>
 

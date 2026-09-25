@@ -146,7 +146,7 @@ export default function ContactUsPage() {
               <p className="text-xs text-slate-700 font-medium leading-relaxed">
                 Velvi Software &amp; Astrology Solutions<br />
                 Namakkal &amp; Chennai, Tamil Nadu, 600001, India.<br />
-                Website: <span className="font-mono text-amber-800 font-semibold">https://velvi-booking-app.vercel.app</span>
+                Website: <span className="font-mono text-amber-800 font-semibold">https://velvi.date</span>
               </p>
             </div>
           </div>

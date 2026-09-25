@@ -6,6 +6,7 @@ import { AuthProvider } from "@/components/providers/AuthContext";
 import { FirstTimeInstallPopup } from "@/components/mobile/FirstTimeInstallPopup";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://velvi.date"),
   title: "Velvi — Pooja • Homam • Seva Management",
   description: "Modern, sacred, mobile-first platform for Iyers, Purohits and Vedic service providers.",
   manifest: "/manifest.json",
