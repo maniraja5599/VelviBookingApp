@@ -316,45 +316,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // ---------------------------------------------------------------------------
   if (!isUnlocked) {
     return (
-      <div className="min-h-screen bg-[#070b14] flex flex-col items-center justify-center p-4 selection:bg-amber-500 selection:text-black">
-        <div className="w-full max-w-md bg-[#0c1220] border border-amber-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl text-center relative overflow-hidden">
-          {/* Subtle background glow */}
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="min-h-screen bg-[#050811] flex flex-col items-center justify-center p-4 selection:bg-amber-500 selection:text-black relative overflow-hidden">
+        {/* Ambient luxury radial glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-amber-600/10 via-amber-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -left-32 w-80 h-80 bg-blue-600/5 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="flex flex-col items-center space-y-2 relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-2xl shadow-lg shadow-amber-500/20">
-              🪔
+        <div className="w-full max-w-md bg-[#0b1120]/95 backdrop-blur-2xl border border-amber-500/30 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl shadow-black/80 text-center relative z-10">
+          <div className="flex flex-col items-center space-y-2.5">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-3xl shadow-xl shadow-amber-500/25 ring-4 ring-amber-500/20">
+                🪔
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#0b1120] flex items-center justify-center">
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              </span>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white">Velvi Platform Console</h1>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
+
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Velvi Platform Console</h1>
+            
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-xs">
               <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Administrator Authorization Gate</span>
+              <span>Executive Security Gate</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             </div>
+
             <p className="text-xs text-slate-400 max-w-xs pt-1 leading-relaxed">
-              Super Admin access is strictly protected. Enter your authorized administrator email and 4-digit security PIN.
+              Super Admin access is strictly protected. Enter authorized administrator credentials and 4-digit security PIN.
             </p>
           </div>
 
           {loginSuccessNotice && (
-            <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-800 text-emerald-300 text-xs text-left flex items-start gap-2">
+            <div className="p-3.5 rounded-2xl bg-emerald-950/90 border border-emerald-700/80 text-emerald-200 text-xs text-left flex items-start gap-2.5 shadow-lg animate-in fade-in">
               <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <span>{loginSuccessNotice}</span>
+              <span className="font-medium leading-relaxed">{loginSuccessNotice}</span>
             </div>
           )}
 
           {loginError && (
-            <div className="p-3 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-300 text-xs text-left flex items-start gap-2">
+            <div className="p-3.5 rounded-2xl bg-rose-950/90 border border-rose-700/80 text-rose-200 text-xs text-left flex items-start gap-2.5 shadow-lg animate-in fade-in">
               <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-              <span>{loginError}</span>
+              <span className="font-medium leading-relaxed">{loginError}</span>
             </div>
           )}
 
           {/* Secure Email + PIN Form */}
-          <form onSubmit={handlePinSubmit} className="space-y-4 relative z-10 text-left">
+          <form onSubmit={handlePinSubmit} className="space-y-4 text-left">
             <div>
-              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Mail className="w-3.5 h-3.5 text-amber-400" />
-                <span>Admin Email</span>
+              <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Email</span>
+                </span>
+                <span className="text-[10px] text-amber-400/80 font-mono lowercase">manirajankg@gmail.com</span>
               </label>
               <div className="relative">
                 <input
@@ -365,19 +378,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setAdminEmailInput(e.target.value);
                     setLoginError("");
                   }}
-                  placeholder="Enter administrator email"
-                  className="w-full px-3.5 py-2.5 bg-[#080c14] border border-zinc-700 focus:border-amber-400 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  placeholder="manirajankg@gmail.com"
+                  className="w-full px-3.5 py-2.5 bg-[#060a14] border border-slate-700/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl text-white text-xs font-mono focus:outline-none transition shadow-inner"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
+                <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                   <span>Security PIN</span>
                 </label>
-                <span className="text-[10px] text-amber-400/90 font-mono font-bold">4-Digits</span>
+                <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                  Default: 5599
+                </span>
               </div>
               <div className="relative">
                 <input
@@ -393,12 +408,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setLoginError("");
                   }}
                   placeholder="••••"
-                  className="w-full pl-3.5 pr-10 py-2.5 bg-[#080c14] border border-zinc-700 focus:border-amber-400 rounded-xl text-white font-mono text-center text-base tracking-widest focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  className="w-full pl-3.5 pr-10 py-2.5 bg-[#060a14] border border-slate-700/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl text-white font-mono text-center text-lg tracking-[0.3em] font-bold focus:outline-none transition shadow-inner"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPin(!showPin)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition cursor-pointer"
                   title={showPin ? "Hide PIN" : "Show PIN"}
                 >
                   {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -409,31 +424,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button
               type="submit"
               disabled={isSigningIn || adminPinInput.length !== 4}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-amber-500/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Crown className="w-4 h-4 text-black" />
-              <span>{isSigningIn ? "Verifying Credentials..." : "Unlock Platform Console"}</span>
+              <span>{isSigningIn ? "Verifying Authority..." : "Unlock Super Admin Console"}</span>
             </button>
           </form>
 
           {/* Optional Google Account Switcher */}
           <div className="relative py-1">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-zinc-800" />
+              <div className="w-full border-t border-slate-800" />
             </div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-500 bg-[#0c1220] px-2">
-              Or Verify Google Account First
+            <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 bg-[#0b1120] px-3">
+              Fast Google OAuth Verification
             </div>
           </div>
 
-          <div className="space-y-2 relative z-10">
+          <div className="space-y-2">
             <button
               type="button"
               disabled={isSigningIn}
               onClick={handleGoogleOAuthRedirect}
-              className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition active:scale-95 cursor-pointer disabled:opacity-50"
+              className="w-full py-2.5 px-4 bg-[#060a14] hover:bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 rounded-xl font-bold text-xs flex items-center justify-center gap-2.5 transition active:scale-[0.98] cursor-pointer disabled:opacity-50 shadow-xs"
             >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -455,12 +470,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
 
-          <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs text-slate-400 relative z-10">
-            <Link href="/app" className="hover:text-amber-400 flex items-center gap-1 transition">
+          <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <Link href="/app" className="hover:text-amber-400 flex items-center gap-1.5 transition font-medium">
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to App</span>
             </Link>
-            <span className="text-[10px] font-mono text-slate-500">Velvi Security Console</span>
+            <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              velvi.date • Secure
+            </span>
           </div>
         </div>
       </div>
@@ -480,22 +498,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col md:flex-row">
-      {/* Mobile Top Header (Sleek, compact, with Admin Role & Logout) */}
-      <header className="md:hidden sticky top-0 z-40 bg-[#0c1220]/95 backdrop-blur-md border-b border-zinc-800 px-4 py-2.5 flex items-center justify-between">
+    <div className="min-h-screen bg-[#050811] text-slate-100 flex flex-col md:flex-row antialiased selection:bg-amber-500 selection:text-black">
+      {/* Mobile Top Header (Sleek glassmorphism, compact, with Admin Role & Session Timer) */}
+      <header className="md:hidden sticky top-0 z-40 bg-[#080d19]/90 backdrop-blur-xl border-b border-amber-500/15 px-3.5 py-2.5 flex items-center justify-between shadow-lg">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-sm shadow-md">
-            🪔
+          <div className="relative">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-sm shadow-md shadow-amber-500/20">
+              🪔
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#080d19]" />
           </div>
           <div>
-            <h1 className="font-extrabold text-xs text-white tracking-wide">Velvi Super Admin</h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-extrabold text-xs text-white tracking-tight">Velvi Super Admin</h1>
+              <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                velvi.date
+              </span>
+            </div>
+            <div className="flex items-center gap-1 mt-0.5">
               {isSuperAdmin ? (
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <span className="text-[8.5px] px-1.5 py-0.2 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
                   👑 Super Admin
                 </span>
               ) : (
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                <span className="text-[8.5px] px-1.5 py-0.2 rounded font-black bg-blue-500/20 text-blue-300 border border-blue-500/30">
                   ✏️ Editor Admin
                 </span>
               )}
@@ -506,10 +532,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center gap-1.5">
           {secondsRemaining !== null && (
             <span
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px]"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-300 font-mono text-[10px] font-bold shadow-xs"
               title="Console locks automatically after 10 minutes"
             >
-              <Clock className="w-3 h-3 text-amber-400" />
+              <Clock className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: "12s" }} />
               <span>
                 {Math.floor(secondsRemaining / 60)}:
                 {String(secondsRemaining % 60).padStart(2, "0")}
@@ -519,7 +545,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button
             type="button"
             onClick={handleAdminSignOut}
-            className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-slate-400 hover:text-rose-400 transition"
+            className="p-1.5 bg-[#0b1120] border border-slate-800 rounded-lg text-slate-400 hover:text-rose-400 hover:border-rose-800/60 transition cursor-pointer"
             title="Sign Out of Admin Console"
           >
             <LogOut className="w-3.5 h-3.5" />
@@ -527,14 +553,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 bg-zinc-900 border border-zinc-800 rounded-lg text-slate-300 hover:text-white transition"
+            className="p-1.5 bg-[#0b1120] border border-slate-800 rounded-lg text-slate-300 hover:text-white transition cursor-pointer"
             title="Toggle Menu"
           >
-            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            {mobileMenuOpen ? <X className="w-4 h-4 text-amber-400" /> : <Menu className="w-4 h-4" />}
           </button>
           <Link
             href="/app"
-            className="px-2 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500 hover:text-black rounded-lg text-[10.5px] font-bold transition flex items-center gap-1"
+            className="px-2 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500 hover:text-black rounded-lg text-[10.5px] font-extrabold transition flex items-center gap-1 active:scale-95"
           >
             <ArrowLeft className="w-3 h-3" />
             <span>App</span>
@@ -544,10 +570,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile Dropdown Nav Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0c1220] border-b border-zinc-800 p-3 space-y-1 animate-in fade-in">
-          <div className="p-2.5 mb-2 bg-[#080c14] rounded-xl border border-zinc-800 text-xs">
-            <div className="text-[10px] text-slate-500">Logged in Admin:</div>
-            <div className="font-mono text-white text-[11px] truncate font-bold">{currentUser?.email || "manirajankg@gmail.com"}</div>
+        <div className="md:hidden bg-[#080d19]/95 backdrop-blur-xl border-b border-amber-500/15 p-3.5 space-y-1.5 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="p-3 mb-2 bg-[#050811] rounded-2xl border border-slate-800 text-xs flex items-center justify-between">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Session:</div>
+              <div className="font-mono text-white text-[11px] truncate font-bold">{currentUser?.email || "manirajankg@gmail.com"}</div>
+            </div>
+            <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              Verified
+            </span>
           </div>
           {navItems.map((item) => {
             const isActive =
@@ -560,13 +591,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   isActive
-                    ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold"
-                    : "text-slate-400 hover:text-white hover:bg-zinc-900"
+                    ? "bg-gradient-to-r from-amber-500/20 to-amber-500/5 text-amber-300 border border-amber-500/40 font-bold shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -574,25 +605,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* Desktop Sidebar (Only visible on md+ screens) */}
-      <aside className="hidden md:flex w-64 bg-[#0c1220] border-r border-zinc-800 p-4 space-y-6 flex-col justify-between shrink-0 sticky top-0 h-screen">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+      {/* Desktop Sidebar (Luxury Dark Slate with Golden Hairline Accents) */}
+      <aside className="hidden md:flex w-64 bg-[#080d19]/95 backdrop-blur-xl border-r border-amber-500/15 p-4 space-y-6 flex-col justify-between shrink-0 sticky top-0 h-screen shadow-2xl">
+        <div className="space-y-5">
+          {/* Logo Header */}
+          <div className="flex items-center justify-between pb-3.5 border-b border-slate-800/80">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-sm shadow-md">
-                🪔
+              <div className="relative">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 via-amber-500 to-yellow-400 text-black font-black flex items-center justify-center text-base shadow-md shadow-amber-500/25 ring-2 ring-amber-500/20">
+                  🪔
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#080d19]" />
               </div>
               <div>
-                <h1 className="font-bold text-sm text-white">Velvi Super Admin</h1>
-                <p className="text-[10px] text-amber-400 font-medium uppercase tracking-wider">
-                  Platform Console
-                </p>
+                <h1 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
+                  Velvi Super Admin
+                </h1>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-[9.5px] text-amber-400 font-mono font-semibold">velvi.date</span>
+                  <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">Live</span>
+                </div>
               </div>
             </div>
 
             <Link
               href="/app"
-              className="p-1.5 hover:bg-zinc-800 rounded-lg text-slate-400 hover:text-white transition"
+              className="p-1.5 hover:bg-slate-800/80 rounded-xl text-slate-400 hover:text-white transition cursor-pointer"
               title="Return to Mobile App"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -600,27 +638,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Active Admin Profile Card */}
-          <div className="p-3 bg-[#080c14] rounded-2xl border border-zinc-800 text-xs space-y-1.5">
+          <div className="p-3 bg-gradient-to-b from-[#0b1120] to-[#050811] rounded-2xl border border-slate-800/90 text-xs space-y-2 shadow-inner">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-slate-500">Active Admin</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Super Console</span>
               {isSuperAdmin ? (
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                  👑 All Access
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">
+                  👑 Root Super Admin
                 </span>
               ) : (
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                  ✏️ Edit Only
+                <span className="text-[9px] px-2 py-0.5 rounded-full font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                  ✏️ Editor Admin
                 </span>
               )}
             </div>
-            <div className="font-mono text-white text-[11px] truncate font-bold">
-              {currentUser?.email || "manirajankg@gmail.com"}
+            <div className="font-mono text-white text-[11px] truncate font-bold bg-[#050811] px-2.5 py-1.5 rounded-xl border border-slate-800/80 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+              <span className="truncate">{currentUser?.email || "manirajankg@gmail.com"}</span>
             </div>
-            <div className="text-[10px] text-slate-400">
-              {isSuperAdmin ? "Primary Super Administrator" : "Platform Editor Administrator"}
-            </div>
+            
+            {/* Session countdown */}
+            {secondsRemaining !== null && (
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>Session lock:</span>
+                </span>
+                <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                  {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, "0")}
+                </span>
+              </div>
+            )}
           </div>
 
+          {/* Nav Items */}
           <nav className="space-y-1">
             {navItems.map((item) => {
               const isActive =
@@ -633,13 +683,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group ${
                     isActive
-                      ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-zinc-900/80"
+                      ? "bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent text-amber-300 border-l-3 border-amber-400 font-bold shadow-xs"
+                      : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className={`w-4 h-4 transition group-hover:scale-110 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -647,31 +697,39 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </nav>
         </div>
 
-        <div className="space-y-2">
+        {/* Bottom Actions */}
+        <div className="space-y-2.5">
           <button
             type="button"
             onClick={handleAdminSignOut}
-            className="w-full py-2 px-3 bg-zinc-900 hover:bg-rose-950/60 border border-zinc-800 hover:border-rose-800 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-full py-2.5 px-3 bg-[#0b1120] hover:bg-rose-950/60 border border-slate-800 hover:border-rose-800/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.98]"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign Out Admin</span>
           </button>
 
-          <div className="p-3 bg-zinc-900/80 rounded-2xl border border-zinc-800 text-[11px] space-y-1">
-            <div className="flex items-center gap-1.5 text-amber-400 font-bold">
-              <Shield className="w-3.5 h-3.5" /> Platform Security Active
+          <div className="p-3 bg-gradient-to-b from-[#0b1120] to-[#050811] rounded-2xl border border-slate-800 text-[11px] space-y-1 shadow-inner">
+            <div className="flex items-center justify-between text-amber-400 font-bold">
+              <span className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <span>HMAC &amp; RLS Active</span>
+              </span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
-            <p className="text-slate-400 leading-tight">
-              Multi-tenant Row Level Security, Client IP tracking &amp; HMAC enforced.
+            <p className="text-[10px] text-slate-400 leading-snug">
+              Encrypted multi-tenant isolation on <strong className="text-slate-300 font-mono">velvi.date</strong>
             </p>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area (Clean padding on mobile and desktop) */}
+      {/* Main Content Area (Clean responsive padding across all devices) */}
       <main className="flex-1 p-3 sm:p-5 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
         {children}
       </main>
     </div>
   );
 }
+
+
+

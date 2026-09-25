@@ -3,7 +3,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { db } from "@/lib/db/store";
 import { User, Subscription } from "@/lib/types";
-import { Search, Shield, Plus, Clock, CheckCircle, AlertTriangle, X, RotateCcw, Trash2 } from "lucide-react";
+import {
+  Search,
+  Shield,
+  Plus,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  X,
+  RotateCcw,
+  Trash2,
+  ArrowUpRight,
+  Smartphone,
+  Mail,
+  Calendar,
+  Sparkles,
+} from "lucide-react";
+import Link from "next/link";
 import {
   syncSuperAdminDirectoryFromCloud,
   initSuperAdminRealtimeSync,
@@ -15,7 +31,9 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Modal actions
-  const [adjustmentType, setAdjustmentType] = useState<"EXTEND" | "REDUCE" | "PAUSE" | "ACTIVATE" | "EXPIRE" | "RESTORE">("EXTEND");
+  const [adjustmentType, setAdjustmentType] = useState<
+    "EXTEND" | "REDUCE" | "PAUSE" | "ACTIVATE" | "EXPIRE" | "RESTORE"
+  >("EXTEND");
   const [days, setDays] = useState<number>(30);
   const [reason, setReason] = useState<string>("Admin compensation adjustment");
   const [successMsg, setSuccessMsg] = useState("");
@@ -58,7 +76,11 @@ export default function AdminUsersPage() {
       const data = await res.json();
       db.purgeLegacyDummyData();
       await syncSuperAdminDirectoryFromCloud();
-      setSuccessMsg(data.success ? "All collections and non-super-admin users deleted!" : data.error || "Reset failed");
+      setSuccessMsg(
+        data.success
+          ? "All collections and non-super-admin users deleted!"
+          : data.error || "Reset failed"
+      );
       setTimeout(() => setSuccessMsg(""), 4000);
     } catch (e: any) {
       setSuccessMsg(e?.message || "Reset failed");
@@ -155,22 +177,28 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Users & Validity Control</h1>
-          <p className="text-xs text-gray-400">
+    <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-br from-[#0c1424] via-[#080d19] to-[#040710] border border-amber-500/25 rounded-3xl p-5 sm:p-7 text-slate-100 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="space-y-1.5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
+            <Shield className="w-3.5 h-3.5 text-amber-400" />
+            <span>Tenant Directory &amp; Validity Control</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+            Users &amp; Validity Control
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400">
             Real users only • Synchronized directly with Supabase Cloud
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative z-10 flex-wrap">
           <button
             type="button"
             onClick={handleCloudSync}
             disabled={isCloudSyncing}
-            className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
             <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
@@ -180,43 +208,51 @@ export default function AdminUsersPage() {
             type="button"
             onClick={handleResetCollections}
             disabled={isResetting}
-            className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            className="px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
             <span>{isResetting ? "Resetting..." : "Reset Collections"}</span>
           </button>
+
+          <Link
+            href="/admin"
+            className="px-3 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
+          >
+            <span>Super Console</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
+          </Link>
         </div>
       </div>
 
       {successMsg && (
-        <div className="bg-green-950 border border-green-800 text-green-300 p-3 rounded-xl text-xs flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
-          <span>{successMsg}</span>
+        <div className="bg-emerald-950/90 border border-emerald-700/80 text-emerald-200 p-3.5 rounded-2xl text-xs flex items-center gap-2.5 shadow-xl animate-in fade-in">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span className="font-semibold">{successMsg}</span>
         </div>
       )}
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5" />
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
           <input
             type="text"
             placeholder="Search by name, email, phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-500"
+            className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
           />
         </div>
 
-        <div className="flex gap-1.5 w-full sm:w-auto text-xs font-semibold">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-semibold">
           {["ALL", "ACTIVE", "TRIAL", "EXPIRED"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-xl transition ${
+              className={`px-3.5 py-2 rounded-xl transition cursor-pointer shrink-0 text-xs ${
                 filter === f
-                  ? "bg-amber-500 text-black font-bold"
-                  : "bg-gray-800 text-gray-400 hover:text-white"
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-xs"
+                  : "bg-[#0c1220] text-slate-400 border border-slate-800 hover:text-white"
               }`}
             >
               {f}
@@ -225,11 +261,69 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Users Table (Points 62 & 63) */}
-      <div className="bg-gray-800/60 rounded-3xl border border-gray-700/60 overflow-hidden shadow-lg">
+      {/* Mobile Card View (< 640px) */}
+      <div className="sm:hidden space-y-3">
+        {users.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
+            No users found matching &quot;{search}&quot;
+          </div>
+        ) : (
+          users.map((u) => {
+            const biz = businesses.find((b) => b.ownerId === u.id) || businesses[0];
+            const sub = subscriptions.find((s) => s.businessId === biz?.id) || subscriptions[0];
+            const validUntil = new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            });
+
+            return (
+              <div
+                key={u.id}
+                className="p-4 bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] rounded-2xl border border-slate-800/90 space-y-3 text-xs shadow-lg"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-white">{u.name}</h4>
+                    <div className="text-[11px] text-amber-400/90 font-medium">{biz?.name || "Independent"}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">{u.email}</div>
+                  </div>
+                  <span
+                    className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                      sub.status === "ACTIVE"
+                        ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                        : sub.status === "TRIAL"
+                        ? "bg-amber-950/80 text-amber-400 border border-amber-800"
+                        : "bg-rose-950/80 text-rose-400 border border-rose-800"
+                    }`}
+                  >
+                    {sub.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
+                  <span className="text-slate-400 font-mono">{u.mobile}</span>
+                  <span className="text-amber-300 font-mono font-bold">Valid: {validUntil}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(u)}
+                  className="w-full py-2 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-extrabold text-xs transition cursor-pointer active:scale-95"
+                >
+                  Adjust Validity
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View (>= 640px) */}
+      <div className="hidden sm:block bg-[#0c1220]/90 backdrop-blur-xl rounded-3xl border border-slate-800/90 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-300">
-            <thead className="bg-gray-900/80 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-700">
+          <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
+            <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
                 <th className="p-4">User</th>
                 <th className="p-4">Business</th>
@@ -239,7 +333,7 @@ export default function AdminUsersPage() {
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700/50">
+            <tbody className="divide-y divide-slate-800/60">
               {users.map((u) => {
                 const biz = businesses.find((b) => b.ownerId === u.id) || businesses[0];
                 const sub = subscriptions.find((s) => s.businessId === biz?.id) || subscriptions[0];
@@ -250,31 +344,31 @@ export default function AdminUsersPage() {
                 });
 
                 return (
-                  <tr key={u.id} className="hover:bg-gray-700/30 transition">
+                  <tr key={u.id} className="hover:bg-slate-800/30 transition">
                     <td className="p-4">
-                      <div className="font-bold text-white">{u.name}</div>
-                      <div className="text-[11px] text-gray-400">{u.email}</div>
+                      <div className="font-extrabold text-white text-sm">{u.name}</div>
+                      <div className="text-[11px] text-slate-400">{u.email}</div>
                     </td>
-                    <td className="p-4 text-gray-300">{biz?.name || "Independent"}</td>
-                    <td className="p-4 text-gray-300 font-mono">{u.mobile}</td>
+                    <td className="p-4 text-slate-300">{biz?.name || "Independent"}</td>
+                    <td className="p-4 text-slate-300 font-mono">{u.mobile}</td>
                     <td className="p-4">
                       <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
                           sub.status === "ACTIVE"
-                            ? "bg-green-950 text-green-400 border border-green-800"
+                            ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                             : sub.status === "TRIAL"
-                            ? "bg-amber-950 text-amber-400 border border-amber-800"
-                            : "bg-red-950 text-red-400 border border-red-800"
+                            ? "bg-amber-950/80 text-amber-400 border border-amber-800"
+                            : "bg-rose-950/80 text-rose-400 border border-rose-800"
                         }`}
                       >
                         {sub.status}
                       </span>
                     </td>
-                    <td className="p-4 font-semibold text-amber-400">{validUntil}</td>
+                    <td className="p-4 font-bold text-amber-400 font-mono">{validUntil}</td>
                     <td className="p-4 text-right">
                       <button
                         onClick={() => setSelectedUser(u)}
-                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold text-xs shadow transition"
+                        className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-extrabold text-xs shadow-xs transition active:scale-95 cursor-pointer"
                       >
                         Adjust Validity
                       </button>
@@ -287,30 +381,30 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Manual Validity Adjustment Drawer / Modal (Points 20 & 63) */}
+      {/* Manual Validity Adjustment Drawer / Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-gray-900 rounded-3xl p-6 max-w-md w-full space-y-4 border border-amber-500/40 shadow-2xl text-white">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#0c1424] rounded-3xl p-6 max-w-md w-full space-y-4 border border-amber-500/40 shadow-2xl text-white relative">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
-                <h3 className="font-bold text-base">Adjust Subscription Validity</h3>
-                <p className="text-xs text-gray-400">{selectedUser.name} ({selectedUser.email})</p>
+                <h3 className="font-extrabold text-base text-white">Adjust Subscription Validity</h3>
+                <p className="text-xs text-slate-400">{selectedUser.name} ({selectedUser.email})</p>
               </div>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="text-gray-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAdjustValidity} className="space-y-3.5 text-xs">
+            <form onSubmit={handleAdjustValidity} className="space-y-4 text-xs">
               <div>
-                <label className="text-gray-300 block mb-1 font-bold">Action Type</label>
+                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Action Type</label>
                 <select
                   value={adjustmentType}
                   onChange={(e) => setAdjustmentType(e.target.value as any)}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[#060a14] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 >
                   <option value="EXTEND">Extend Validity (+ Days)</option>
                   <option value="REDUCE">Reduce Validity (- Days)</option>
@@ -321,20 +415,20 @@ export default function AdminUsersPage() {
 
               {adjustmentType === "EXTEND" && (
                 <div>
-                  <label className="text-gray-300 block mb-1 font-bold">Preset Duration</label>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Preset Duration</label>
+                  <div className="grid grid-cols-4 gap-2">
                     {[7, 30, 90, 365].map((d) => (
                       <button
                         key={d}
                         type="button"
                         onClick={() => setDays(d)}
-                        className={`py-1.5 rounded-xl font-bold transition ${
+                        className={`py-2 rounded-xl font-bold transition text-xs cursor-pointer ${
                           days === d
-                            ? "bg-amber-500 text-black"
-                            : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                            ? "bg-amber-500 text-black font-extrabold"
+                            : "bg-[#060a14] text-slate-300 border border-slate-800 hover:bg-slate-800"
                         }`}
                       >
-                        +{d} Days
+                        +{d}d
                       </button>
                     ))}
                   </div>
@@ -342,17 +436,17 @@ export default function AdminUsersPage() {
               )}
 
               <div>
-                <label className="text-gray-300 block mb-1 font-bold">Custom Days Count</label>
+                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Custom Days Count</label>
                 <input
                   type="number"
                   value={days}
                   onChange={(e) => setDays(Number(e.target.value))}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-bold"
+                  className="w-full bg-[#060a14] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500 font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="text-gray-300 block mb-1 font-bold">
+                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">
                   Mandatory Audit Reason *
                 </label>
                 <input
@@ -361,23 +455,23 @@ export default function AdminUsersPage() {
                   placeholder="e.g. Customer support compensation, festival offer"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[#060a14] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="button"
                   onClick={() => setSelectedUser(null)}
-                  className="flex-1 py-2.5 bg-gray-800 text-gray-300 rounded-xl font-bold"
+                  className="flex-1 py-2.5 bg-slate-800 text-slate-300 hover:text-white rounded-xl font-bold transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold shadow"
+                  className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black rounded-xl font-black shadow-lg shadow-amber-500/20 transition cursor-pointer active:scale-95"
                 >
-                  Save & Log to Audit Trail
+                  Save &amp; Log
                 </button>
               </div>
             </form>

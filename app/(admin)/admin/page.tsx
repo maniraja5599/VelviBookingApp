@@ -795,30 +795,42 @@ export default function SuperAdminDashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
       {/* Refined Luxury Top Header Banner */}
-      <div className="bg-gradient-to-br from-[#111726] via-[#0d131f] to-[#080c14] border border-amber-500/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-slate-100 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-br from-[#0c1424] via-[#080d19] to-[#040710] border border-amber-500/25 rounded-3xl p-5 sm:p-7 text-slate-100 shadow-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative overflow-hidden">
+        {/* Ambient luxury radial glow */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="space-y-1 relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-[10px] sm:text-xs font-bold text-amber-400">
-            <Shield className="w-3 h-3 text-amber-400" />
-            <span>Developer Super Admin</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+        <div className="space-y-2 relative z-10 max-w-2xl">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-extrabold text-amber-300 shadow-xs">
+              <Shield className="w-3.5 h-3.5 text-amber-400" />
+              <span>Super Administrator</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10.5px] font-mono text-emerald-400">
+              <Globe className="w-3 h-3" />
+              <span>velvi.date • Production</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-[10.5px] font-mono text-blue-400">
+              <CreditCard className="w-3 h-3" />
+              <span>Cashfree Live</span>
+            </span>
           </div>
+
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            Velvi Platform Management
+            Velvi Platform Management Console
           </h1>
-          <p className="text-xs text-slate-400 font-medium">
-            Account: <strong className="text-amber-300 font-mono">manirajankg@gmail.com</strong> • Full tenant control, validity &amp; coupon engine
+          <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
+            Logged in as <strong className="text-amber-300 font-mono">manirajankg@gmail.com</strong> • Full tenant control, validity management &amp; promotional engine
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto relative z-10 flex-wrap">
+        <div className="flex items-center gap-2 self-start lg:self-center relative z-10 flex-wrap">
           <button
             type="button"
             onClick={handleCloudSync}
             disabled={isCloudSyncing}
-            className="px-3 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
             title="Fetch live real users and bookings directly from Supabase Cloud"
           >
             <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
@@ -829,7 +841,7 @@ export default function SuperAdminDashboardPage() {
             type="button"
             onClick={handleResetToRealData}
             disabled={isResetting}
-            className="px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
             title="Delete all non-super-admin users and reset collections in Supabase Cloud & Local"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
@@ -838,9 +850,9 @@ export default function SuperAdminDashboardPage() {
 
           <Link
             href="/app"
-            className="px-3.5 py-2 bg-zinc-800/80 hover:bg-zinc-700 border border-zinc-700 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
+            className="px-3.5 py-2.5 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95"
           >
-            <span>Open Mobile App</span>
+            <span>Open App</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -848,10 +860,10 @@ export default function SuperAdminDashboardPage() {
 
       {/* Notifications Toast */}
       {actionSuccess && (
-        <div className="bg-emerald-950/80 border border-emerald-700/80 text-emerald-200 p-3 sm:p-3.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-lg animate-fade-in">
-          <div className="flex items-center gap-2">
+        <div className="bg-emerald-950/90 border border-emerald-700/80 text-emerald-200 p-3.5 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-xl animate-in fade-in">
+          <div className="flex items-center gap-2.5">
             <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span className="font-semibold">{actionSuccess}</span>
+            <span className="font-semibold leading-relaxed">{actionSuccess}</span>
           </div>
           <button
             type="button"
@@ -864,10 +876,10 @@ export default function SuperAdminDashboardPage() {
       )}
 
       {actionError && (
-        <div className="bg-rose-950/80 border border-rose-700/80 text-rose-200 p-3 sm:p-3.5 rounded-2xl text-xs flex items-center justify-between gap-2 shadow-lg animate-fade-in">
-          <div className="flex items-center gap-2">
+        <div className="bg-rose-950/90 border border-rose-700/80 text-rose-200 p-3.5 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-xl animate-in fade-in">
+          <div className="flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span className="font-semibold">{actionError}</span>
+            <span className="font-semibold leading-relaxed">{actionError}</span>
           </div>
           <button
             type="button"
@@ -879,8 +891,8 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
-      {/* Responsive Sub-Tabs Bar (Scrollable on mobile) */}
-      <div className="bg-[#0c1220] border border-zinc-800 rounded-2xl p-1 flex overflow-x-auto no-scrollbar gap-1 shadow-inner">
+      {/* Responsive Sub-Tabs Bar (Luxury Glassmorphic Segmented Control) */}
+      <div className="bg-[#080d19]/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-1.5 flex overflow-x-auto no-scrollbar gap-1.5 shadow-xl">
         {[
           { id: "overview", label: "Overview", icon: LayoutDashboard },
           {
@@ -906,20 +918,20 @@ export default function SuperAdminDashboardPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
-                  ? "bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-xs"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-zinc-800/60"
+                  ? "bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/5 text-amber-300 border border-amber-500/40 shadow-sm"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               }`}
             >
-              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
               <span>{tab.label}</span>
               {tab.badge !== undefined && (
                 <span
-                  className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  className={`text-[9.5px] px-2 py-0.5 rounded-full font-mono font-bold ${
                     isActive
-                      ? "bg-amber-500/25 text-amber-200"
-                      : "bg-zinc-800 text-slate-400"
+                      ? "bg-amber-500/25 text-amber-200 border border-amber-500/30"
+                      : "bg-slate-800 text-slate-400"
                   }`}
                 >
                   {tab.badge}
@@ -935,104 +947,138 @@ export default function SuperAdminDashboardPage() {
       {/* ===================================================================== */}
       {activeTab === "overview" && (
         <div className="space-y-4 sm:space-y-6">
-          {/* Top KPI Cards (Responsive grid - Isolating Real Users) */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-            <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
-              <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
+          {/* Top KPI Cards (Ultra-luxury responsive dark glass cards) */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {/* Card 1: Total Users */}
+            <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-amber-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                 <span>Total Users</span>
-                <Users className="w-3.5 h-3.5 text-amber-400" />
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                  <Users className="w-4 h-4" />
+                </div>
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-white">{realUsersCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-amber-400/90 font-medium truncate">
-                Registered Users ({demoDirectoryMetrics.length} Demo)
+              <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                {realUsersCount}
+              </div>
+              <div className="mt-2 text-[10.5px] text-amber-400/90 font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span>Registered ({demoDirectoryMetrics.length} Demo isolated)</span>
               </div>
             </div>
 
-            <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
-              <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
+            {/* Card 2: Active Paid */}
+            <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-emerald-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                 <span>Active Paid</span>
-                <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">{realPaidCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium truncate">
-                {realUsersCount > 0
-                  ? `${Math.round((realPaidCount / realUsersCount) * 100)}% conversion`
-                  : "0%"}
+              <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
+                {realPaidCount}
+              </div>
+              <div className="mt-2 text-[10.5px] text-emerald-400 font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>
+                  {realUsersCount > 0
+                    ? `${Math.round((realPaidCount / realUsersCount) * 100)}% conversion rate`
+                    : "0% conversion"}
+                </span>
               </div>
             </div>
 
-            <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
-              <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
+            {/* Card 3: Real Bookings */}
+            <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-amber-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                 <span>Real Bookings</span>
-                <Activity className="w-3.5 h-3.5 text-amber-400" />
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                  <Activity className="w-4 h-4" />
+                </div>
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-300">{realBookingsCount}</div>
-              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium truncate">Live Bookings data</div>
+              <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight">
+                {realBookingsCount}
+              </div>
+              <div className="mt-2 text-[10.5px] text-slate-400 font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
+                <span>Live bookings ledger</span>
+              </div>
             </div>
 
-            <div className="bg-[#0f172a]/70 p-3.5 sm:p-4 rounded-2xl border border-zinc-800 shadow-sm space-y-1">
-              <div className="text-[11px] sm:text-xs font-medium text-slate-400 flex items-center justify-between">
+            {/* Card 4: Real Dakshina */}
+            <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-emerald-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
+              <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
                 <span>Real Dakshina</span>
-                <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                  <DollarSign className="w-4 h-4" />
+                </div>
               </div>
-              <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-400">
+              <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
                 ₹{realPlatformEarnings.toLocaleString("en-IN")}
               </div>
-              <div className="text-[10px] sm:text-[11px] text-emerald-500 font-medium truncate">Verified Real Accounts</div>
+              <div className="mt-2 text-[10.5px] text-emerald-400 font-medium truncate flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>Verified Real Accounts</span>
+              </div>
             </div>
           </div>
 
           {/* Demo User Data Isolation Banner */}
-          <div className="p-3 sm:p-3.5 bg-[#0a0f1d] border border-zinc-800/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-xs">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
-              <span className="text-slate-300 font-medium text-xs break-words">
-                <strong className="text-indigo-300">Demo Account (Ravi Iyer):</strong> {demoBookingsCount} Sample Bookings • ₹{demoPlatformEarnings.toLocaleString("en-IN")} Dakshina
+          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-indigo-950/40 via-[#0a0f1d] to-[#0a0f1d] border border-indigo-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0 animate-pulse" />
+              <span className="text-slate-300 font-medium text-xs break-words leading-relaxed">
+                <strong className="text-indigo-300 font-semibold">Demo Sandbox Account (Ravi Iyer):</strong> {demoBookingsCount} Sample Bookings • ₹{demoPlatformEarnings.toLocaleString("en-IN")} Dakshina
               </span>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-full shrink-0 self-start sm:self-auto">
-              Isolated from Real Overview
+            <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-3 py-1 rounded-full shrink-0 self-start sm:self-auto">
+              Isolated from Analytics
             </span>
           </div>
 
           {/* Revenue Chart & Upcoming Expiries */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
             {/* Monthly Trend Chart */}
-            <div className="lg:col-span-2 bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-4 shadow-md">
+            <div className="lg:col-span-2 bg-[#0c1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800/90 space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wide">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     Platform Revenue Trend
                   </span>
-                  <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white mt-0.5">
+                  <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white mt-0.5 tracking-tight">
                     ₹{realPlatformEarnings.toLocaleString("en-IN")}
                   </div>
                 </div>
-                <span className="text-[10px] sm:text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 sm:px-2.5 py-1 rounded-full font-bold">
+                <span className="text-[11px] text-emerald-400 bg-emerald-950/70 border border-emerald-700/80 px-3 py-1 rounded-full font-bold shadow-xs">
                   {monthlyRevenueTrend.growthText}
                 </span>
               </div>
 
-              <div className="pt-3 border-t border-zinc-800">
-                <div className="text-[10px] sm:text-[11px] text-slate-400 mb-2">Monthly Cashflow Trend</div>
-                <div className="flex items-end justify-between h-32 sm:h-36 gap-2 pt-2 px-1">
+              <div className="pt-3 border-t border-slate-800/80">
+                <div className="text-[11px] text-slate-400 mb-2 font-medium">Monthly Cashflow Trend</div>
+                <div className="flex items-end justify-between h-36 sm:h-40 gap-2.5 pt-2 px-1">
                   {monthlyRevenueTrend.bars.map((bar) => (
                     <div
                       key={bar.m}
-                      className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end"
+                      className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group cursor-pointer"
                     >
-                      <span className="text-[8px] sm:text-[9px] text-slate-400 font-mono font-medium">{bar.v}</span>
+                      <span className="text-[9px] text-slate-400 font-mono font-medium group-hover:text-amber-300 transition-colors">
+                        {bar.v}
+                      </span>
                       <div
                         style={{ height: bar.h }}
-                        className={`w-full rounded-t-lg transition-all duration-300 ${
+                        className={`w-full rounded-t-xl transition-all duration-300 ${
                           bar.current
-                            ? "bg-gradient-to-t from-amber-600 to-amber-400 shadow-md shadow-amber-500/20"
+                            ? "bg-gradient-to-t from-amber-600 via-amber-500 to-yellow-400 shadow-lg shadow-amber-500/25 ring-1 ring-amber-400"
                             : bar.raw > 0
-                            ? "bg-amber-800/50 hover:bg-amber-700/60"
-                            : "bg-zinc-800 hover:bg-zinc-700"
+                            ? "bg-gradient-to-t from-amber-900/60 to-amber-700/60 group-hover:from-amber-800 group-hover:to-amber-600"
+                            : "bg-slate-800/70 group-hover:bg-slate-700/80"
                         }`}
                       />
-                      <span className="text-[9px] sm:text-[10px] font-semibold text-slate-400">{bar.m}</span>
+                      <span className="text-[10px] font-semibold text-slate-400 group-hover:text-white transition-colors">{bar.m}</span>
                     </div>
                   ))}
                 </div>
@@ -1040,21 +1086,21 @@ export default function SuperAdminDashboardPage() {
             </div>
 
             {/* Upcoming Expiries */}
-            <div className="bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-3 shadow-md flex flex-col justify-between">
+            <div className="bg-[#0c1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800/90 space-y-4 shadow-xl flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
                   <div>
-                    <h3 className="font-bold text-xs sm:text-sm text-white">Upcoming Expiries</h3>
-                    <p className="text-[10px] text-slate-400">Accounts nearing validity renewal</p>
+                    <h3 className="font-extrabold text-sm text-white">Upcoming Expiries</h3>
+                    <p className="text-[10.5px] text-slate-400">Accounts nearing validity renewal</p>
                   </div>
-                  <span className="text-[10px] text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
-                    Priority Review
+                  <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 rounded-full shrink-0">
+                    Priority
                   </span>
                 </div>
 
-                <div className="space-y-2 mt-2.5">
+                <div className="space-y-2.5 mt-3">
                   {upcomingExpiries.length === 0 ? (
-                    <div className="p-3 text-center text-slate-400 text-xs bg-[#090d16] rounded-xl border border-zinc-800/80">
+                    <div className="p-4 text-center text-slate-400 text-xs bg-[#060a14] rounded-2xl border border-slate-800/80">
                       No active subscriptions due for expiry.
                     </div>
                   ) : (
@@ -1070,7 +1116,7 @@ export default function SuperAdminDashboardPage() {
                       return (
                         <div
                           key={metric.user.id}
-                          className="p-3 bg-[#090d16] rounded-xl border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs hover:border-zinc-700 transition"
+                          className="p-3 bg-[#060a14] rounded-2xl border border-slate-800 hover:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs transition shadow-sm"
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
@@ -1086,7 +1132,7 @@ export default function SuperAdminDashboardPage() {
                             </p>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
-                            <span className="text-[10.5px] text-amber-300 font-bold bg-amber-500/10 border border-amber-500/25 px-2 py-1 rounded-lg">
+                            <span className="text-[10px] text-amber-300 font-bold font-mono bg-amber-500/10 border border-amber-500/25 px-2 py-1 rounded-lg">
                               {expiryFormatted}
                             </span>
                             {metric.business && (
@@ -1101,7 +1147,7 @@ export default function SuperAdminDashboardPage() {
                                     30
                                   )
                                 }
-                                className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer active:scale-95 whitespace-nowrap shrink-0"
+                                className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-xs"
                               >
                                 Edit Validity
                               </button>
@@ -1117,7 +1163,7 @@ export default function SuperAdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("directory")}
-                className="w-full mt-3 py-2 bg-zinc-800/80 hover:bg-zinc-700 text-amber-300 text-xs font-bold rounded-xl border border-zinc-700/80 text-center transition cursor-pointer"
+                className="w-full mt-3 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-amber-300 text-xs font-bold rounded-xl border border-slate-700 text-center transition cursor-pointer active:scale-95"
               >
                 View Full Users Directory →
               </button>
@@ -1125,22 +1171,24 @@ export default function SuperAdminDashboardPage() {
           </div>
 
           {/* Recent Logins & Geo Audit Stream (Recent 10, Scrollable, Detailed Click Modal) */}
-          <div className="bg-[#0f172a]/70 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-zinc-800 space-y-3 shadow-md">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800 gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Globe className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="bg-[#0c1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800/90 space-y-3.5 shadow-xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
-                  <h3 className="font-bold text-xs sm:text-sm text-white truncate">Live Session Logins &amp; Locations</h3>
-                  <p className="text-[10px] text-slate-400 truncate">Click any session to view complete visit source &amp; telemetry</p>
+                  <h3 className="font-extrabold text-sm text-white truncate">Live Session Logins &amp; Locations</h3>
+                  <p className="text-[10.5px] text-slate-400 truncate">Click any session to view complete visit source &amp; telemetry</p>
                 </div>
               </div>
-              <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold shrink-0">
+              <span className="text-[10px] text-emerald-400 bg-emerald-950/70 border border-emerald-700/80 px-2.5 py-1 rounded-full font-bold shrink-0">
                 Recent 10 Logins
               </span>
             </div>
 
             {/* Scrollable container for recent 10 logins */}
-            <div className="max-h-80 overflow-y-auto pr-1 space-y-2">
+            <div className="max-h-84 overflow-y-auto pr-1 space-y-2">
               {((db.auditLogs || []).filter(
                 (a) => a.action.includes("LOGIN") || a.targetType === "AUTH_SESSION" || a.action.includes("GOOGLE") || a.action.includes("DEMO")
               ).length > 0
@@ -1168,16 +1216,18 @@ export default function SuperAdminDashboardPage() {
                     <div
                       key={log.id}
                       onClick={() => setSelectedSessionLog({ ...log, visitSource })}
-                      className="p-3 bg-[#090d16] hover:bg-[#11192b] hover:border-amber-500/40 rounded-xl border border-zinc-800/80 space-y-1.5 text-xs cursor-pointer transition shadow-xs"
+                      className="p-3 sm:p-3.5 bg-[#060a14] hover:bg-[#0e1628] hover:border-amber-500/40 rounded-2xl border border-slate-800 space-y-2 text-xs cursor-pointer transition shadow-xs group"
                       title="Click for full session details"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                          <span className="font-bold text-white truncate text-xs">{log.actorName}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
+                          <span className="font-extrabold text-white truncate text-xs group-hover:text-amber-300 transition-colors">
+                            {log.actorName}
+                          </span>
                         </div>
                         <span
-                          className={`text-[9px] px-1.5 py-0.2 rounded font-black uppercase shrink-0 ${
+                          className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase shrink-0 ${
                             isDemo
                               ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
                               : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
@@ -1187,18 +1237,18 @@ export default function SuperAdminDashboardPage() {
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 gap-2">
-                        <span className="flex items-center gap-1 font-mono text-amber-300/90 truncate max-w-[130px]">
+                      <div className="flex items-center justify-between text-[10.5px] text-slate-400 gap-2">
+                        <span className="flex items-center gap-1.5 font-mono text-amber-300/90 truncate max-w-[150px]">
                           <Globe className="w-3 h-3 text-amber-400 shrink-0" />
                           {displayIp}
                         </span>
-                        <span className="flex items-center gap-1 text-slate-300 truncate max-w-[140px]">
+                        <span className="flex items-center gap-1.5 text-slate-300 truncate max-w-[160px]">
                           <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
                           {displayLocation}
                         </span>
                       </div>
 
-                      <div className="text-[9.5px] text-slate-400 font-mono flex items-center justify-between border-t border-zinc-800/60 pt-1 gap-2">
+                      <div className="text-[10px] text-slate-400 font-mono flex items-center justify-between border-t border-slate-800/80 pt-1.5 gap-2">
                         <span className="truncate text-amber-400/90 font-sans">
                           Source: {visitSource}
                         </span>

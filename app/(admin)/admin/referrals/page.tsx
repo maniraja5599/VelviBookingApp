@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { db } from "@/lib/db/store";
-import { Gift, ShieldCheck, Clock, CheckCircle, Hourglass, Users, Search } from "lucide-react";
+import { Gift, ShieldCheck, Clock, CheckCircle, Hourglass, Users, Search, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminReferralsPage() {
   const [filter, setFilter] = useState<"ALL" | "SIGNUP_ONLY" | "PAID">("ALL");
@@ -29,153 +30,216 @@ export default function AdminReferralsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">Referrals & Reward Ledger</h1>
-        <p className="text-xs text-gray-400">
-          Track referral attribution, signup-only vs payment completion counts, and +30 day extensions
-        </p>
+    <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
+      {/* Header Banner */}
+      <div className="bg-gradient-to-br from-[#0c1424] via-[#080d19] to-[#040710] border border-amber-500/25 rounded-3xl p-5 sm:p-7 text-slate-100 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
+        <div className="space-y-1.5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
+            <Gift className="w-3.5 h-3.5 text-amber-400" />
+            <span>Viral Growth &amp; Rewards Engine</span>
+          </div>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
+            Referrals &amp; Reward Ledger
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Track referral invitations, conversion attribution, and +30 day dual rewards
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 relative z-10">
+          <Link
+            href="/admin"
+            className="px-3.5 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
+          >
+            <span>Super Console</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
+          </Link>
+        </div>
       </div>
 
       {/* KPI Counters: Total vs Signup Only vs Payment Done */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <div className="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-sm space-y-1">
-          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
-            <Users className="w-4 h-4 text-amber-400" /> Total Invites
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
+          <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+            <span>Total Invites</span>
+            <Users className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-white">{totalInvites}</div>
-          <div className="text-[11px] text-gray-400">Total viral invitations</div>
+          <div className="text-[10.5px] text-slate-400">Viral invitations sent</div>
         </div>
 
-        <div className="bg-gray-800/80 p-4 rounded-2xl border border-amber-900/40 shadow-sm space-y-1">
-          <div className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
-            <Hourglass className="w-4 h-4" /> Signed Up Only
+        <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
+          <div className="text-xs font-semibold text-amber-400 flex items-center justify-between">
+            <span>Signed Up Only</span>
+            <Hourglass className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-400">{signedUpOnlyCount}</div>
-          <div className="text-[11px] text-amber-500">Awaiting 1st payment</div>
+          <div className="text-2xl font-black text-amber-300">{signedUpOnlyCount}</div>
+          <div className="text-[10.5px] text-amber-400/90">Awaiting 1st payment</div>
         </div>
 
-        <div className="bg-gray-800/80 p-4 rounded-2xl border border-green-900/40 shadow-sm space-y-1">
-          <div className="text-xs font-semibold text-green-400 flex items-center gap-1.5">
-            <CheckCircle className="w-4 h-4" /> Paid & Subscribed
+        <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
+          <div className="text-xs font-semibold text-emerald-400 flex items-center justify-between">
+            <span>Paid &amp; Subscribed</span>
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="text-2xl font-black text-green-400">{paidCount}</div>
-          <div className="text-[11px] text-green-500">Verified payment completed</div>
+          <div className="text-2xl font-black text-emerald-400">{paidCount}</div>
+          <div className="text-[10.5px] text-emerald-500">Verified payment completed</div>
         </div>
 
-        <div className="bg-gray-800/80 p-4 rounded-2xl border border-gray-700/60 shadow-sm space-y-1">
-          <div className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
-            <Clock className="w-4 h-4 text-amber-400" /> Days Awarded
+        <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
+          <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
+            <span>Days Awarded</span>
+            <Clock className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="text-2xl font-black text-amber-400">+{totalDaysAwarded}</div>
-          <div className="text-[11px] text-gray-400">+30d per qualified pair</div>
+          <div className="text-2xl font-black text-amber-300">+{totalDaysAwarded}d</div>
+          <div className="text-[10.5px] text-slate-400">+30d per qualified pair</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 text-gray-500 absolute left-3 top-2.5" />
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="Search referrer or referee..."
+            placeholder="Search referrer, referee, or code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-amber-500"
+            className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
           />
         </div>
 
-        <div className="flex gap-1.5 w-full sm:w-auto text-xs font-semibold">
-          <button
-            onClick={() => setFilter("ALL")}
-            className={`px-3 py-1.5 rounded-xl transition ${
-              filter === "ALL"
-                ? "bg-amber-500 text-black font-bold"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-            }`}
-          >
-            All ({totalInvites})
-          </button>
-          <button
-            onClick={() => setFilter("SIGNUP_ONLY")}
-            className={`px-3 py-1.5 rounded-xl transition ${
-              filter === "SIGNUP_ONLY"
-                ? "bg-amber-500 text-black font-bold"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-            }`}
-          >
-            Signup Only ({signedUpOnlyCount})
-          </button>
-          <button
-            onClick={() => setFilter("PAID")}
-            className={`px-3 py-1.5 rounded-xl transition ${
-              filter === "PAID"
-                ? "bg-amber-500 text-black font-bold"
-                : "bg-gray-800 text-gray-400 hover:text-white"
-            }`}
-          >
-            Paid & Rewarded ({paidCount})
-          </button>
+        <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-semibold">
+          {[
+            { key: "ALL", label: `All (${totalInvites})` },
+            { key: "SIGNUP_ONLY", label: `⏳ Signup Only (${signedUpOnlyCount})` },
+            { key: "PAID", label: `🎁 Paid & Rewarded (${paidCount})` },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key as any)}
+              className={`px-3 py-2 rounded-xl transition cursor-pointer shrink-0 text-xs ${
+                filter === key
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shadow-xs"
+                  : "bg-[#0c1220] text-slate-400 border border-slate-800 hover:text-white"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Referrals Detailed Table */}
-      <div className="bg-gray-800/60 rounded-3xl border border-gray-700/60 overflow-hidden shadow-lg">
+      {/* Mobile Card View (< 640px) */}
+      <div className="sm:hidden space-y-3">
+        {filteredReferrals.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
+            No referral records found matching &quot;{search}&quot;
+          </div>
+        ) : (
+          filteredReferrals.map((r) => {
+            const isPaid = r.status === "REWARDED";
+            return (
+              <div
+                key={r.id}
+                className="p-4 bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] rounded-2xl border border-slate-800/90 space-y-2.5 text-xs shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase">Referrer → Friend</span>
+                    <div className="font-extrabold text-white text-sm">
+                      {r.referrerName} <span className="text-amber-400">→</span> {r.refereeName}
+                    </div>
+                  </div>
+                  <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-lg border border-amber-500/20 text-[10px]">
+                    {r.referralCode}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
+                  <span
+                    className={`text-[9.5px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 ${
+                      isPaid
+                        ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                        : "bg-amber-950/80 text-amber-400 border border-amber-800"
+                    }`}
+                  >
+                    {isPaid ? <CheckCircle className="w-3 h-3" /> : <Hourglass className="w-3 h-3" />}
+                    <span>{isPaid ? "Payment Verified" : "Awaiting Payment"}</span>
+                  </span>
+
+                  <span className={`font-bold text-[10.5px] ${isPaid ? "text-emerald-400" : "text-slate-500"}`}>
+                    {isPaid ? "+30d Added to Both" : "Pending"}
+                  </span>
+                </div>
+
+                <div className="text-[10px] text-slate-400 text-right font-mono">
+                  Joined: {new Date(r.createdAt).toLocaleDateString("en-IN")}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table View (>= 640px) */}
+      <div className="hidden sm:block bg-[#0c1220]/90 backdrop-blur-xl rounded-3xl border border-slate-800/90 overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-gray-300">
-            <thead className="bg-gray-900/80 text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-700">
+          <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
+            <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">Referrer (Who Referred)</th>
+                <th className="p-4">Referrer (Who Invited)</th>
                 <th className="p-4">Referred User (Friend)</th>
                 <th className="p-4">Code Used</th>
                 <th className="p-4">Payment Status</th>
                 <th className="p-4">Reward Status</th>
-                <th className="p-4">Joined Date</th>
+                <th className="p-4 text-right">Joined Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700/50">
+            <tbody className="divide-y divide-slate-800/60">
               {filteredReferrals.map((r) => {
                 const isPaid = r.status === "REWARDED";
 
                 return (
-                  <tr key={r.id} className="hover:bg-gray-700/30 transition">
+                  <tr key={r.id} className="hover:bg-slate-800/30 transition">
                     <td className="p-4">
-                      <div className="font-bold text-white">{r.referrerName}</div>
-                      <div className="text-[10px] text-gray-400">Referrer</div>
+                      <div className="font-extrabold text-white text-sm">{r.referrerName}</div>
+                      <div className="text-[10px] text-slate-400">Referrer</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-bold text-amber-300">{r.refereeName}</div>
-                      <div className="text-[10px] text-gray-400">New User</div>
+                      <div className="font-extrabold text-amber-300 text-sm">{r.refereeName}</div>
+                      <div className="text-[10px] text-slate-400">Devotee / Vadhyar</div>
                     </td>
-                    <td className="p-4 font-mono text-gray-300 font-semibold">{r.referralCode}</td>
+                    <td className="p-4 font-mono text-amber-300 font-bold tracking-wider">{r.referralCode}</td>
                     <td className="p-4">
                       <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1 ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1.5 ${
                           isPaid
-                            ? "bg-green-950 text-green-400 border border-green-800"
-                            : "bg-amber-950 text-amber-400 border border-amber-800"
+                            ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
+                            : "bg-amber-950/80 text-amber-400 border border-amber-800"
                         }`}
                       >
                         {isPaid ? (
                           <>
-                            <CheckCircle className="w-3 h-3" /> 1st Payment Verified
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>1st Payment Verified</span>
                           </>
                         ) : (
                           <>
-                            <Hourglass className="w-3 h-3" /> Signed Up • Awaiting Payment
+                            <Hourglass className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Signed Up • Awaiting Payment</span>
                           </>
                         )}
                       </span>
                     </td>
                     <td className="p-4 font-bold">
                       {isPaid ? (
-                        <span className="text-green-400">+30 Days Added to Both</span>
+                        <span className="text-emerald-400 font-extrabold">+30 Days Added to Both</span>
                       ) : (
-                        <span className="text-gray-500">Pending Payment</span>
+                        <span className="text-slate-500 font-medium">Pending 1st Payment</span>
                       )}
                     </td>
-                    <td className="p-4 text-gray-400">
+                    <td className="p-4 text-slate-400 text-right font-mono">
                       {new Date(r.createdAt).toLocaleDateString("en-IN")}
                     </td>
                   </tr>
