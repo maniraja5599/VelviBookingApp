@@ -1882,17 +1882,19 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(verifyPin("MANIRAJANKG@GMAIL.COM", "5599").success).toBe(true);
   });
 
-  // TEST CASE 58: UI String Verification - No 'unlimited' or 'வரம்பற்ற முன்பதிவு' in Pro profile badges
-  it("Test 58: Mobile profile dropdown pro card has clean branding without 'unlimited' or 'வரம்பற்ற'", () => {
-    // Read MobileHeader.tsx to ensure no trace in Pro active card
+  // TEST CASE 58: UI String Verification - Integrated Pro status without extra boxes or subtitles
+  it("Test 58: Mobile profile dropdown pro card has clean branding without separate box or extra subtitles", () => {
+    // Read MobileHeader.tsx to ensure clean integrated design
     const headerPath = path.resolve(__dirname, "../components/mobile/MobileHeader.tsx");
     const content = fs.readFileSync(headerPath, "utf-8");
 
     // Must have Velvi Pro Active
     expect(content).toContain("Velvi Pro Active");
-    expect(content).toContain("முழு அணுகல் • பிரீமியம் வசதிகள்");
 
-    // Profile card lines 657-735 must not contain "வரம்பற்ற முன்பதிவுகள் (Unlimited)"
+    // Must NOT contain separate box subtitle "முழு அணுகல் • பிரீமியம் வசதிகள்"
+    expect(content).not.toContain("முழு அணுகல் • பிரீமியம் வசதிகள்");
+
+    // Must not contain "வரம்பற்ற முன்பதிவுகள் (Unlimited)"
     expect(content).not.toContain("வரம்பற்ற முன்பதிவுகள் (Unlimited)");
   });
 });

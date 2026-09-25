@@ -542,6 +542,57 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         </p>
                       </div>
                     </div>
+
+                    {/* Integrated Velvi Pro Active status row - No extra box, only title & date */}
+                    {db.isUnlimitedBookings(businessId) ? (
+                      <div className="mt-2.5 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1.5 font-black text-[11.5px] text-slate-900 tracking-tight">
+                          <span className="text-amber-600 text-xs">👑</span>
+                          <span>Velvi Pro Active</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>
+                            {daysToExpiry !== null ? `${daysToExpiry} நாட்கள்` : "Active"}
+                          </span>
+                        </div>
+                      </div>
+                    ) : isExpired ? (
+                      <div className="mt-2.5 pt-2 border-t border-rose-200 flex items-center justify-between text-xs">
+                        <span className="text-[10.5px] font-bold text-rose-800">Plan Expired</span>
+                        <Link
+                          href="/app/subscription"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold shadow-2xs"
+                        >
+                          Renew
+                        </Link>
+                      </div>
+                    ) : isExpiringSoon ? (
+                      <div className="mt-2.5 pt-2 border-t border-amber-300 flex items-center justify-between text-xs">
+                        <span className="text-[10.5px] font-bold text-amber-900">{daysToExpiry} Days Left</span>
+                        <Link
+                          href="/app/subscription"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold shadow-2xs"
+                        >
+                          Renew
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="mt-2.5 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs">
+                        <span className="text-[10.5px] font-bold text-amber-900">
+                          Demo Mode ({db.getBookings(businessId).length}/20)
+                        </span>
+                        <Link
+                          href="/app/subscription"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="px-2 py-0.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-bold shadow-2xs"
+                        >
+                          Upgrade Pro
+                        </Link>
+                      </div>
+                    )}
                   </div>
 
                   {/* 2. Compact Cloud Sync Info - Just Time & Count under Profile Details */}
@@ -605,164 +656,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                     </div>
                   )}
 
-                {/* Compact Days to Expiry & Proactive Notice */}
-                {daysToExpiry !== null && (
-                  <div>
-                    {isExpired ? (
-                      <div className="p-2.5 bg-gradient-to-r from-rose-50 to-red-50/70 border border-rose-200 rounded-2xl flex items-center justify-between text-xs text-rose-950 shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center shrink-0">
-                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
-                          </div>
-                          <div className="min-w-0">
-                            <span className="font-black text-[11px] block text-rose-950 leading-tight">
-                              Plan Expired
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-rose-700">
-                              Renew to continue
-                            </span>
-                          </div>
-                        </div>
-                        <Link
-                          href="/app/subscription"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
-                        >
-                          Renew Now
-                        </Link>
-                      </div>
-                    ) : isExpiringSoon ? (
-                      <div className="p-2.5 bg-gradient-to-r from-amber-50 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs text-amber-950 shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
-                            <Clock className="w-3.5 h-3.5 text-amber-700 animate-spin" />
-                          </div>
-                          <div className="min-w-0">
-                            <span className="font-black text-[11px] block text-amber-950 leading-tight">
-                              {daysToExpiry} {daysToExpiry === 1 ? "Day" : "Days"} Left
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-amber-700">
-                              Expiring Soon
-                            </span>
-                          </div>
-                        </div>
-                        <Link
-                          href="/app/subscription"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
-                        >
-                          Renew
-                        </Link>
-                      </div>
-                    ) : db.isUnlimitedBookings(businessId) ? (
-                      <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50/80 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                            <Sparkles className="w-3.5 h-3.5 text-white" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11.5px] font-black text-emerald-950 tracking-tight block leading-tight">
-                                Velvi Pro Active
-                              </span>
-                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[8.5px] font-black uppercase tracking-wider">
-                                Pro
-                              </span>
-                            </div>
-                            <span className="text-[9.5px] font-semibold text-emerald-700 block mt-0.5">
-                              முழு அணுகல் • பிரீமியம் வசதிகள்
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-1 rounded-xl border border-emerald-300/80 shadow-2xs shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[10px] font-black text-emerald-950 tracking-tight">
-                            {daysToExpiry} {daysToExpiry === 1 ? "நாள்" : "நாட்கள்"}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3 text-amber-700" />
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-[11px] font-black text-amber-950 tracking-tight block leading-tight">
-                              🚀 Demo Mode (20 Cap)
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-amber-800">
-                              {db.getBookings(businessId).length}/20 முன்பதிவுகள்
-                            </span>
-                          </div>
-                        </div>
-                        <Link
-                          href="/app/subscription"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
-                        >
-                          Upgrade Pro
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {daysToExpiry === null && (
-                  <div>
-                    {db.isUnlimitedBookings(businessId) ? (
-                      <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50/80 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                            <Sparkles className="w-3.5 h-3.5 text-white" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11.5px] font-black text-emerald-950 tracking-tight block leading-tight">
-                                Velvi Pro Active
-                              </span>
-                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[8.5px] font-black uppercase tracking-wider">
-                                Lifetime
-                              </span>
-                            </div>
-                            <span className="text-[9.5px] font-semibold text-emerald-700 block mt-0.5">
-                              முழு அணுகல் • பிரீமியம் வசதிகள்
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-black bg-white px-2.5 py-1 rounded-xl border border-emerald-300 text-emerald-900 shadow-2xs shrink-0 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span>Active</span>
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="p-2.5 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-amber-100/50 border border-amber-300 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3 text-amber-700" />
-                          </div>
-                          <div className="min-w-0">
-                            <span className="text-[11px] font-black text-amber-950 tracking-tight block leading-tight">
-                              🚀 Demo Mode (20 Cap)
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-amber-800">
-                              {db.getBookings(businessId).length}/20 முன்பதிவுகள்
-                            </span>
-                          </div>
-                        </div>
-                        <Link
-                          href="/app/subscription"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-[10px] font-black shrink-0 transition shadow-2xs active:scale-95"
-                        >
-                          Upgrade Pro
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Quick Menu Links - Clean English Actions */}
+                  {/* Quick Menu Links - Clean English Actions */}
                 <div className="space-y-1 text-xs">
                   {/* Super Admin Console Shortcut */}
                   {isSuperAdmin && (
