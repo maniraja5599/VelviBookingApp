@@ -32,6 +32,7 @@ import { Coupon } from "@/lib/types";
 export default function SubscriptionPage() {
   const { currentBusiness, currentUser, subscription, refreshSubscription } = useAuth();
   const [activeTab, setActiveTab] = useState<"PLANS" | "VALIDITY_INVOICES">("PLANS");
+  const [validitySubTab, setValiditySubTab] = useState<"INVOICES" | "UPCOMING">("INVOICES");
   const [selectedCycle, setSelectedCycle] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -185,8 +186,12 @@ export default function SubscriptionPage() {
         window.history.replaceState({}, "", window.location.pathname);
       }
       const tabParam = params.get("tab");
-      if (tabParam === "validity" || tabParam === "invoices") {
+      if (tabParam === "validity") {
         setActiveTab("VALIDITY_INVOICES");
+        setValiditySubTab("UPCOMING");
+      } else if (tabParam === "invoices") {
+        setActiveTab("VALIDITY_INVOICES");
+        setValiditySubTab("INVOICES");
       }
     }
   }, []);
@@ -818,259 +823,311 @@ export default function SubscriptionPage() {
       {/* ========================================================================= */}
       {activeTab === "VALIDITY_INVOICES" && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          {/* 1. Primary Active Validity Card */}
-          <div className="bg-gradient-to-br from-velvi-creamLight via-white to-velvi-cream rounded-3xl p-5 border border-velvi-gold/30 shadow-sacred space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>👑 Velvi Pro Active</span>
+          {/* Sub Tab Switcher: Invoices & Receipts vs Upcoming & Validity */}
+          <div className="flex bg-velvi-cream/60 p-1 rounded-2xl border border-velvi-gold/25 text-xs shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setValiditySubTab("INVOICES")}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                validitySubTab === "INVOICES"
+                  ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
+                  : "text-velvi-brown/60 hover:text-velvi-brown"
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5 text-velvi-gold" />
+              <span>Invoices &amp; Receipts</span>
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-200">
+                {displayInvoices.length}
               </span>
-
-              <span className="text-xs font-bold text-velvi-goldDark flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                <span>Validity Status</span>
-              </span>
-            </div>
-
-            {/* Prominent Remaining Days Counter */}
-            <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold text-emerald-900/70 uppercase tracking-wider block">
-                  Days Remaining
-                </span>
-                <div className="text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
-                  <span>{daysRemaining}</span>
-                  <span className="text-sm font-bold text-emerald-800">Days</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-300/80 shadow-2xs flex items-center justify-center text-emerald-700">
-                <Calendar className="w-6 h-6" />
-              </div>
-            </div>
-
-            {/* Validity Details Grid */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                <span className="text-[10.5px] text-velvi-brown/60 block">Start Date</span>
-                <span className="font-bold text-velvi-brownDark">{formattedStartDate}</span>
-              </div>
-              <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                <span className="text-[10.5px] text-velvi-brown/60 block">Expiry Date</span>
-                <span className="font-extrabold text-emerald-900">{formattedDate}</span>
-              </div>
-            </div>
-
-            {/* Feature Pills */}
-            <div className="pt-2 border-t border-velvi-gold/20 space-y-1.5 text-xs text-velvi-brownDark">
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Unlimited Pooja Bookings &amp; Devotee Database</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>WhatsApp Automation, Invoices &amp; Reminder Receipts</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Cloud Backup &amp; Excel Export</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>100% Ad-Free &amp; No Watermark</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Upcoming / Queued Validity Indicator Card */}
-          <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 shrink-0">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="font-bold text-xs text-velvi-brownDark">
-                  Upcoming &amp; Queued Validity
-                </h4>
-                <p className="text-[10.5px] text-velvi-brown/60">
-                  How is validity extended?
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-amber-50/70 rounded-2xl p-3.5 border border-amber-200/70 text-xs text-velvi-brown space-y-2">
-              <p className="leading-relaxed text-[11.5px]">
-                🛡️ <strong>No Days Lost:</strong> If you renew or enter a promo code while your subscription is active, new days are automatically queued after your current expiry date (<strong>{formattedDate}</strong>).
-              </p>
-              <div className="flex items-center justify-between text-[11px] bg-white/90 p-2.5 rounded-xl border border-amber-200">
-                <span>New Expiry if Renewed Now:</span>
-                <strong className="text-emerald-900 font-black">
-                  {formattedProjectedDate} (+{totalDaysToAdd} Days)
-                </strong>
-              </div>
-            </div>
+            </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab("PLANS")}
-              className="w-full py-2.5 bg-velvi-cream hover:bg-velvi-creamDark text-velvi-brownDark rounded-xl text-xs font-bold border border-velvi-gold/30 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+              onClick={() => setValiditySubTab("UPCOMING")}
+              className={`flex-1 py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                validitySubTab === "UPCOMING"
+                  ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
+                  : "text-velvi-brown/60 hover:text-velvi-brown"
+              }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-velvi-gold" />
-              <span>Extend Plan Now →</span>
+              <Clock className="w-3.5 h-3.5 text-velvi-gold" />
+              <span>Upcoming &amp; Validity</span>
+              <span className="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded-full border border-amber-200">
+                {daysRemaining} Days
+              </span>
             </button>
           </div>
 
-          {/* 3. Validity History / Adjustments */}
-          <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-velvi-goldDark" />
-                <h4 className="font-bold text-xs text-velvi-brownDark">
-                  Validity Extension History
-                </h4>
+          {/* --------------------------------------------------------------------- */}
+          {/* SUB-TAB 1: INVOICES & RECEIPTS LIST                                   */}
+          {/* --------------------------------------------------------------------- */}
+          {validitySubTab === "INVOICES" && (
+            <div className="space-y-3 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-velvi-goldDark" />
+                  <h3 className="font-bold text-xs text-velvi-brownDark">
+                    Official Tax Invoices ({displayInvoices.length})
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Cashfree Verified
+                </span>
               </div>
-              <span className="text-[10px] font-bold text-velvi-brown/60">
-                {businessAdjustments.length + displayInvoices.length} entries
-              </span>
-            </div>
 
-            <div className="space-y-2">
-              {businessAdjustments.length > 0 ? (
-                businessAdjustments.slice(0, 5).map((adj) => (
+              {/* Clean Clickable Invoice List */}
+              <div className="space-y-2">
+                {displayInvoices.map((inv) => (
                   <div
-                    key={adj.id}
-                    className="p-3 bg-velvi-cream/30 rounded-2xl border border-velvi-gold/20 flex items-center justify-between text-xs"
+                    key={inv.id}
+                    onClick={() => setSelectedInvoice(inv)}
+                    className="group bg-white hover:bg-velvi-cream/30 transition p-4 rounded-2xl border border-velvi-gold/20 hover:border-velvi-gold shadow-xs hover:shadow-sm cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]"
                   >
-                    <div className="space-y-0.5 min-w-0 pr-2">
-                      <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
-                        <span className="text-emerald-700 font-extrabold">
-                          +{adj.daysChanged} Days
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-velvi-cream/80 border border-velvi-gold/30 flex items-center justify-center text-velvi-brown shrink-0 group-hover:bg-velvi-gold/20 transition">
+                        <FileText className="w-5 h-5 text-velvi-goldDark" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-bold text-xs text-velvi-brownDark group-hover:text-amber-900 transition">
+                            INV-VELVI-{inv.orderId.slice(-8).toUpperCase()}
+                          </span>
+                          <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-300">
+                            PAID
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-velvi-brown/60 flex items-center gap-1.5">
+                          <span>{new Date(inv.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          <span>•</span>
+                          <span>Velvi Pro ({inv.billingCycle})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="text-right">
+                        <span className="text-sm font-extrabold text-velvi-brownDark block">
+                          ₹{inv.amount}
                         </span>
-                        <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
-                          {adj.adjustmentType}
+                        <span className="text-[10px] text-emerald-700 font-semibold block">
+                          {inv.paymentMethod || "Cashfree PG"}
                         </span>
                       </div>
-                      <p className="text-[10.5px] text-velvi-brown/60 truncate max-w-[220px]">
-                        {adj.reason}
-                      </p>
-                      <span className="text-[9.5px] text-velvi-brown/40 block">
-                        {new Date(adj.createdAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
 
-                    <div className="text-right shrink-0">
-                      <span className="text-[10px] text-velvi-brown/60 block">New Expiry Date</span>
-                      <span className="font-bold text-slate-800 text-[11px]">
-                        {new Date(adj.newEndDate).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </span>
+                      <div className="flex items-center gap-1 pl-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedInvoice(inv);
+                          }}
+                          className="p-2 rounded-xl bg-velvi-cream/60 hover:bg-velvi-brown hover:text-white text-velvi-brown transition cursor-pointer"
+                          title="View & Download PDF"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShareWhatsAppInvoice(inv);
+                          }}
+                          className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition cursor-pointer"
+                          title="Share on WhatsApp"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                ))
-              ) : (
-                <div className="p-3 bg-velvi-cream/30 rounded-2xl border border-velvi-gold/20 flex items-center justify-between text-xs">
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
-                      <span className="text-emerald-700 font-extrabold">+30 Days Pro</span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
-                        ACTIVE
-                      </span>
-                    </div>
-                    <p className="text-[10.5px] text-velvi-brown/60">
-                      Velvi Pro Initial Activation • Unlimited Bookings
-                    </p>
-                    <span className="text-[9.5px] text-velvi-brown/40">
-                      {formattedStartDate}
-                    </span>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-[10px] text-velvi-brown/60 block">Valid Until</span>
-                    <span className="font-bold text-slate-800 text-[11px]">{formattedDate}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 4. Invoices & Receipts with Simple Download */}
-          <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-velvi-goldDark" />
-                <h4 className="font-bold text-xs text-velvi-brownDark">
-                  Invoices &amp; Receipts
-                </h4>
+                ))}
               </div>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                Official Receipts
-              </span>
             </div>
+          )}
 
-            <p className="text-[11px] text-velvi-brown/60">
-              View and download official tax receipts for your Velvi Pro subscription.
-            </p>
+          {/* --------------------------------------------------------------------- */}
+          {/* SUB-TAB 2: UPCOMING & VALIDITY                                        */}
+          {/* --------------------------------------------------------------------- */}
+          {validitySubTab === "UPCOMING" && (
+            <div className="space-y-4 animate-in fade-in duration-150">
+              {/* Active Validity Card */}
+              <div className="bg-gradient-to-br from-velvi-creamLight via-white to-velvi-cream rounded-3xl p-5 border border-velvi-gold/30 shadow-sacred space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>👑 Velvi Pro Active</span>
+                  </span>
 
-            <div className="space-y-2.5">
-              {displayInvoices.map((inv) => (
-                <div
-                  key={inv.id}
-                  className="bg-velvi-cream/30 hover:bg-velvi-cream/60 transition p-3.5 rounded-2xl border border-velvi-gold/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-black text-xs text-velvi-brownDark">
-                        INV-VELVI-{inv.orderId.slice(-8).toUpperCase()}
-                      </span>
-                      <span className="text-[9px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 rounded-full">
-                        {inv.status}
-                      </span>
-                    </div>
+                  <span className="text-xs font-bold text-velvi-goldDark flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Current Validity</span>
+                  </span>
+                </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-velvi-brown/70">
-                      <span>{new Date(inv.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
-                      <span>•</span>
-                      <span>Velvi Pro ({inv.billingCycle})</span>
-                    </div>
-
-                    <div className="text-xs font-black text-emerald-950">
-                      Amount: ₹{inv.amount}
+                {/* Days Remaining Counter */}
+                <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[11px] font-bold text-emerald-900/70 uppercase tracking-wider block">
+                      Days Remaining
+                    </span>
+                    <div className="text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
+                      <span>{daysRemaining}</span>
+                      <span className="text-sm font-bold text-emerald-800">Days</span>
                     </div>
                   </div>
-
-                  {/* Invoice Action Buttons */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedInvoice(inv)}
-                      className="px-3 py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
-                      title="Download or Print Invoice"
-                    >
-                      <Download className="w-3.5 h-3.5 text-velvi-goldLight" />
-                      <span>Download Receipt</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleShareWhatsAppInvoice(inv)}
-                      className="p-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl border border-emerald-300 transition cursor-pointer"
-                      title="Share on WhatsApp"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-300/80 shadow-2xs flex items-center justify-center text-emerald-700">
+                    <Calendar className="w-6 h-6" />
                   </div>
                 </div>
-              ))}
+
+                {/* Dates Grid */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
+                    <span className="text-[10.5px] text-velvi-brown/60 block">Start Date</span>
+                    <span className="font-bold text-velvi-brownDark">{formattedStartDate}</span>
+                  </div>
+                  <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
+                    <span className="text-[10.5px] text-velvi-brown/60 block">Expiry Date</span>
+                    <span className="font-extrabold text-emerald-900">{formattedDate}</span>
+                  </div>
+                </div>
+
+                {/* Compact Feature Chips */}
+                <div className="pt-2 border-t border-velvi-gold/20 flex flex-wrap gap-2 text-[11px] text-velvi-brownDark">
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
+                    <Check className="w-3 h-3 text-emerald-600" /> Unlimited Bookings
+                  </span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
+                    <Check className="w-3 h-3 text-emerald-600" /> WhatsApp Receipts
+                  </span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
+                    <Check className="w-3 h-3 text-emerald-600" /> Cloud Backup
+                  </span>
+                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
+                    <Check className="w-3 h-3 text-emerald-600" /> Ad-Free Pro
+                  </span>
+                </div>
+              </div>
+
+              {/* Upcoming Renewal & Queue Card (Clean & Concise) */}
+              <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 shrink-0">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-bold text-xs text-velvi-brownDark">
+                      Upcoming Renewal &amp; Queue
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-full">
+                    Auto-Queue Active
+                  </span>
+                </div>
+
+                {/* Clean Timeline: Current Expiry -> Queued Extension */}
+                <div className="grid grid-cols-2 gap-2 text-xs bg-amber-50/60 p-3 rounded-2xl border border-amber-200/60">
+                  <div>
+                    <span className="text-[10.5px] text-amber-900/70 block">Current Expiry:</span>
+                    <span className="font-bold text-velvi-brownDark">{formattedDate}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10.5px] text-amber-900/70 block">Next Renewal (+{totalDaysToAdd}d):</span>
+                    <span className="font-extrabold text-emerald-900">{formattedProjectedDate}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("PLANS")}
+                  className="w-full py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 shadow-2xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-velvi-goldLight" />
+                  <span>Extend Plan Now →</span>
+                </button>
+              </div>
+
+              {/* Validity History */}
+              <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-velvi-goldDark" />
+                    <h4 className="font-bold text-xs text-velvi-brownDark">
+                      Validity Extension History
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-velvi-brown/60">
+                    {businessAdjustments.length + displayInvoices.length} entries
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {businessAdjustments.length > 0 ? (
+                    businessAdjustments.slice(0, 5).map((adj) => (
+                      <div
+                        key={adj.id}
+                        className="p-3 bg-velvi-cream/30 rounded-2xl border border-velvi-gold/20 flex items-center justify-between text-xs"
+                      >
+                        <div className="space-y-0.5 min-w-0 pr-2">
+                          <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
+                            <span className="text-emerald-700 font-extrabold">
+                              +{adj.daysChanged} Days
+                            </span>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
+                              {adj.adjustmentType}
+                            </span>
+                          </div>
+                          <p className="text-[10.5px] text-velvi-brown/60 truncate max-w-[220px]">
+                            {adj.reason}
+                          </p>
+                          <span className="text-[9.5px] text-velvi-brown/40 block">
+                            {new Date(adj.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="text-[10px] text-velvi-brown/60 block">New Expiry</span>
+                          <span className="font-bold text-slate-800 text-[11px]">
+                            {new Date(adj.newEndDate).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 bg-velvi-cream/30 rounded-2xl border border-velvi-gold/20 flex items-center justify-between text-xs">
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
+                          <span className="text-emerald-700 font-extrabold">+30 Days Pro</span>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
+                            ACTIVE
+                          </span>
+                        </div>
+                        <p className="text-[10.5px] text-velvi-brown/60">
+                          Velvi Pro Initial Activation
+                        </p>
+                        <span className="text-[9.5px] text-velvi-brown/40">
+                          {formattedStartDate}
+                        </span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] text-velvi-brown/60 block">Valid Until</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{formattedDate}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -1207,133 +1264,179 @@ export default function SubscriptionPage() {
       {/* ========================================================================= */}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 bg-black/65 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-amber-200 overflow-hidden my-auto animate-in zoom-in-95">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-velvi-gold/30 overflow-hidden my-auto animate-in zoom-in-95">
             {/* Modal Top Bar (Hidden in Print) */}
-            <div className="no-print p-4 bg-velvi-cream/70 border-b border-velvi-gold/20 flex items-center justify-between">
+            <div className="no-print p-4 bg-gradient-to-r from-velvi-cream to-amber-50/80 border-b border-velvi-gold/20 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-velvi-gold" />
                 <span className="font-bold text-xs text-velvi-brownDark">
-                  Tax Invoice Preview
+                  Tax Invoice Preview &amp; PDF
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedInvoice(null)}
-                className="p-1 rounded-full text-velvi-brown/60 hover:bg-velvi-cream transition cursor-pointer"
+                className="w-7 h-7 rounded-full text-velvi-brown/60 hover:text-velvi-brown hover:bg-velvi-cream flex items-center justify-center transition cursor-pointer text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
             {/* Printable Invoice Body */}
-            <div id="printable-invoice" className="p-6 bg-white space-y-5 text-velvi-brownDark">
-              {/* Header with App Logo & Sacred Tag */}
-              <div className="flex items-start justify-between border-b pb-4 border-slate-200">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🪔</span>
+            <div id="printable-invoice" className="p-6 sm:p-8 bg-white space-y-6 text-slate-800 font-sans">
+              {/* Header: Company & Invoice Info */}
+              <div className="flex items-start justify-between border-b pb-5 border-slate-200">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-amber-800 text-white flex items-center justify-center text-xl shadow-xs shrink-0">
+                      🪔
+                    </div>
                     <div>
-                      <h2 className="text-xl font-black text-velvi-brownDark tracking-tight font-serif uppercase">
+                      <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase font-serif">
                         VELVI
                       </h2>
-                      <p className="text-[10px] font-bold text-amber-800">
-                        Sacred Platform for Priests &amp; Temples
+                      <p className="text-[10.5px] font-bold text-amber-800 tracking-wide">
+                        Sacred Ceremonies &amp; Temple Platform
                       </p>
                     </div>
                   </div>
-                  <p className="text-[10.5px] text-slate-500 mt-1">
-                    Velvi Priest &amp; Temple Ceremony Management
+                  <p className="text-[10px] text-slate-500 pt-1">
+                    Velvi Priest &amp; Temple Cloud Management Services
+                  </p>
+                  <p className="text-[9.5px] text-slate-400">
+                    SaaS Digital Platform • Support: support@velvi.app
                   </p>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right space-y-1">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
                     TAX INVOICE / RECEIPT
                   </span>
-                  <div className="font-mono font-bold text-sm text-slate-900 mt-0.5">
+                  <div className="font-mono font-extrabold text-sm text-slate-900 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 inline-block">
                     INV-VELVI-{selectedInvoice.orderId.slice(-8).toUpperCase()}
                   </div>
-                  <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                    PAID (SUCCESS)
-                  </span>
+                  <div className="pt-0.5 flex items-center justify-end gap-1.5">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs">
+                      <Check className="w-3 h-3 stroke-[3]" />
+                      <span>PAID (SUCCESS)</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Billed To and Meta Info */}
-              <div className="grid grid-cols-2 gap-4 text-xs">
+              {/* Billed To & Payment Information (Clean 2-Column Grid) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs bg-slate-50/60 p-4 rounded-2xl border border-slate-200">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    Billed To:
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                    Billed To (Subscriber):
                   </span>
-                  <p className="font-bold text-slate-900 text-sm">
+                  <p className="font-extrabold text-slate-900 text-sm">
                     {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
                   </p>
                   <p className="text-slate-600 text-[11px]">
-                    {currentBusiness?.serviceName || "Pooja • Homam • Seva"}
+                    {currentBusiness?.serviceName || "Vedic Priest & Pooja Services"}
                   </p>
-                  {currentUser?.mobile && (
-                    <p className="text-slate-600 text-[11px]">📞 {currentUser.mobile}</p>
-                  )}
+                  <p className="text-slate-600 text-[11px]">
+                    📞 {currentUser?.mobile || "+91 98765 43210"}
+                  </p>
                   {currentUser?.email && (
-                    <p className="text-slate-600 text-[11px]">✉️ {currentUser.email}</p>
+                    <p className="text-slate-600 text-[11px]">
+                      ✉️ {currentUser.email}
+                    </p>
                   )}
+                  <p className="text-[10px] text-slate-500">Tamil Nadu, India</p>
                 </div>
 
-                <div className="space-y-1 text-right">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    Payment Info:
+                <div className="space-y-1 sm:text-right border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
+                    Payment &amp; Transaction Details:
                   </span>
                   <p className="text-[11px] text-slate-700">
-                    <strong>Date:</strong> {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    <strong>Invoice Date:</strong> {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                   <p className="text-[11px] text-slate-700">
                     <strong>Order ID:</strong> <span className="font-mono">{selectedInvoice.orderId}</span>
                   </p>
                   <p className="text-[11px] text-slate-700">
-                    <strong>Gateway:</strong> {selectedInvoice.paymentMethod || "Cashfree PG"}
+                    <strong>Payment Mode:</strong> {selectedInvoice.paymentMethod || "Cashfree PG / UPI"}
+                  </p>
+                  <p className="text-[11px] text-slate-700">
+                    <strong>Gateway:</strong> Cashfree Payment Gateway
+                  </p>
+                  <p className="text-[10.5px] font-semibold text-emerald-800">
+                    Status: Settled &amp; Confirmed
                   </p>
                 </div>
               </div>
 
               {/* Itemized Table */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden text-xs">
-                <div className="bg-slate-50 px-4 py-2.5 font-bold text-slate-700 border-b border-slate-200 flex justify-between">
-                  <span>Service Description</span>
-                  <span>Amount</span>
+                <div className="bg-slate-100/80 px-4 py-2.5 font-bold text-slate-700 border-b border-slate-200 grid grid-cols-12 gap-2 text-[11px] uppercase tracking-wider">
+                  <span className="col-span-8">Description</span>
+                  <span className="col-span-2 text-center">Period</span>
+                  <span className="col-span-2 text-right">Amount</span>
                 </div>
-                <div className="p-4 space-y-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="font-bold text-slate-900 text-sm block">
-                        Velvi Pro Membership Subscription ({selectedInvoice.billingCycle})
-                      </span>
-                      <p className="text-[11px] text-slate-500">
-                        Unlimited Bookings, Devotee CRM, WhatsApp automation, Dual Calendar, Priority Cloud Backup
-                      </p>
-                      <p className="text-[11px] font-semibold text-emerald-800 mt-1">
-                        Validity Period: Until {formattedDate} ({daysRemaining} Days)
-                      </p>
-                    </div>
-                    <span className="font-bold text-slate-900 text-sm">
-                      ₹{selectedInvoice.amount}
+
+                <div className="p-4 grid grid-cols-12 gap-2 items-center">
+                  <div className="col-span-8 space-y-0.5">
+                    <span className="font-extrabold text-slate-900 text-sm block">
+                      Velvi Pro Membership Subscription ({selectedInvoice.billingCycle})
                     </span>
+                    <p className="text-[11px] text-slate-500">
+                      Unlimited Bookings, Devotee CRM, WhatsApp Reminders, Dual Calendar &amp; Cloud Backup
+                    </p>
+                  </div>
+                  <div className="col-span-2 text-center text-slate-600 font-semibold text-[11px]">
+                    {selectedInvoice.billingCycle === "YEARLY" ? "365 Days" : "30 Days"}
+                  </div>
+                  <div className="col-span-2 text-right font-extrabold text-slate-900 text-sm">
+                    ₹{selectedInvoice.amount}.00
                   </div>
                 </div>
 
-                <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-between items-center text-sm font-black">
-                  <span>Total Paid:</span>
-                  <span className="text-base text-emerald-900">₹{selectedInvoice.amount}</span>
+                {/* Subtotal, Tax & Total Box */}
+                <div className="bg-slate-50/90 p-4 border-t border-slate-200 space-y-1.5 text-xs">
+                  <div className="flex justify-between text-slate-600 text-[11px]">
+                    <span>Subtotal:</span>
+                    <span className="font-semibold">₹{selectedInvoice.amount}.00</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600 text-[11px]">
+                    <span>GST (Exempt / Inclusive):</span>
+                    <span className="font-semibold">₹0.00</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-slate-200 font-black text-sm">
+                    <span className="text-slate-900 font-bold">Total Amount Paid:</span>
+                    <span className="text-lg text-emerald-900 font-black">
+                      ₹{selectedInvoice.amount}.00
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Disclaimer / Note */}
-              <div className="text-[10.5px] text-slate-500 space-y-1 border-t pt-3 border-slate-100">
-                <p>
-                  🔒 This is an official computer-generated tax invoice. No signature required.
-                </p>
-                <p>
-                  Email: support@velvi.app • Website: https://velvi-booking-app.vercel.app
-                </p>
+              {/* Digital Authenticity Stamp & Disclaimer */}
+              <div className="pt-2 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-[11px]">
+                    <Shield className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Official Computer-Generated Tax Invoice</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Valid without physical signature under Information Technology Act, 2000.
+                  </p>
+                  <p className="text-[9.5px] text-slate-400">
+                    https://velvi-booking-app.vercel.app • support@velvi.app
+                  </p>
+                </div>
+
+                {/* Verification Stamp Badge */}
+                <div className="border-2 border-dashed border-emerald-500/50 bg-emerald-50/60 rounded-xl px-3 py-1.5 text-center shrink-0 self-start sm:self-auto">
+                  <span className="text-[9px] font-black text-emerald-900 tracking-wider uppercase block">
+                    ✓ VERIFIED &amp; CONFIRMED
+                  </span>
+                  <span className="text-[8px] font-mono text-emerald-700 block">
+                    CASHFREE PG SETTLED
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1345,7 +1448,17 @@ export default function SubscriptionPage() {
                 className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98"
               >
                 <Printer className="w-4 h-4 text-velvi-goldLight" />
-                <span>🖨️ Print / Save PDF</span>
+                <span>🖨️ Download / Print PDF</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleShareWhatsAppInvoice(selectedInvoice)}
+                className="px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold border border-emerald-300 transition cursor-pointer flex items-center gap-1.5 active:scale-98"
+                title="Share on WhatsApp"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">WhatsApp</span>
               </button>
 
               <button
