@@ -75,6 +75,40 @@ export async function POST(req: NextRequest) {
       db.payments.push(paymentRecord);
     }
 
+    // Direct PostgreSQL sync if DATABASE_URL is configured
+    if (process.env.DATABASE_URL) {
+      try {
+        const { Client } = await import("pg");
+        const client = new Client({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+        });
+        await client.connect();
+        try {
+          const newEnd =
+            adjustResult.subscription?.currentPeriodEnd ||
+            new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+          await client.query(
+            `UPDATE subscriptions 
+             SET current_period_end = $1, status = 'ACTIVE', billing_cycle = $2, updated_at = NOW() 
+             WHERE business_id = $3`,
+            [newEnd, cycle, businessId]
+          ).catch((e) => console.warn("Could not direct-update Postgres subscription:", e.message));
+
+          await client.query(
+            `INSERT INTO payments (business_id, user_id, order_id, gateway, gateway_payment_id, amount, currency, status, billing_cycle, payment_method, updated_at)
+             VALUES ($1, $2, $3, 'CASHFREE', $4, $5, 'INR', 'SUCCESS', $6, $7, NOW())
+             ON CONFLICT (order_id) DO NOTHING`,
+            [businessId, userId || "u-priest-01", orderId, gatewayPaymentId, amount, cycle, paymentMethod]
+          ).catch((e) => console.warn("Could not direct-insert Postgres payment:", e.message));
+        } finally {
+          await client.end().catch(() => {});
+        }
+      } catch (dbErr: any) {
+        console.warn("Postgres direct sync warning in verify-order:", dbErr?.message);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       verified: true,

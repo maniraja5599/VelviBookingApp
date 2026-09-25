@@ -63,7 +63,7 @@ export interface CashfreeCheckoutOptions {
 }
 
 /**
- * Initializes and triggers Cashfree Checkout modal
+ * Initializes and triggers Cashfree Checkout modal or full redirect
  */
 export async function openCashfreeCheckout(options: CashfreeCheckoutOptions): Promise<void> {
   const Cashfree = await loadCashfreeSDK();
@@ -73,9 +73,14 @@ export async function openCashfreeCheckout(options: CashfreeCheckoutOptions): Pr
     mode: mode,
   });
 
+  const isMobile =
+    typeof window !== "undefined" &&
+    (window.innerWidth < 768 ||
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
   const checkoutOptions = {
     paymentSessionId: options.paymentSessionId,
-    redirectTarget: "_modal",
+    redirectTarget: isMobile ? "_self" : "_modal",
   };
 
   return cashfreeInstance.checkout(checkoutOptions);
