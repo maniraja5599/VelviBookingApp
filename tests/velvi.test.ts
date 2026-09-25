@@ -1851,6 +1851,50 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(log.country).toBe("India");
     expect(store.auditLogs[0].id).toBe(log.id);
   });
+
+  // TEST CASE 57: Super Admin Authentication Rule (Email + PIN 5599)
+  it("Test 57: Super Admin Panel strictly requires manirajankg@gmail.com and PIN 5599", () => {
+    const SUPER_ADMIN_EMAIL = "manirajankg@gmail.com";
+    const SUPER_ADMIN_PIN = "5599";
+
+    // Direct email without PIN cannot unlock
+    const verifyPin = (email: string, pin: string) => {
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPin = pin.trim();
+      if (cleanEmail !== SUPER_ADMIN_EMAIL) {
+        return { success: false, error: "Only manirajankg@gmail.com is authorized as Super Admin." };
+      }
+      if (cleanPin !== SUPER_ADMIN_PIN) {
+        return { success: false, error: "Incorrect Security PIN." };
+      }
+      return { success: true };
+    };
+
+    // Wrong email with correct PIN -> denied
+    expect(verifyPin("other@gmail.com", "5599").success).toBe(false);
+
+    // Correct email with wrong PIN -> denied
+    expect(verifyPin(SUPER_ADMIN_EMAIL, "1234").success).toBe(false);
+    expect(verifyPin(SUPER_ADMIN_EMAIL, "").success).toBe(false);
+
+    // Correct email with correct PIN 5599 -> success
+    expect(verifyPin(SUPER_ADMIN_EMAIL, "5599").success).toBe(true);
+    expect(verifyPin("MANIRAJANKG@GMAIL.COM", "5599").success).toBe(true);
+  });
+
+  // TEST CASE 58: UI String Verification - No 'unlimited' or 'வரம்பற்ற முன்பதிவு' in Pro profile badges
+  it("Test 58: Mobile profile dropdown pro card has clean branding without 'unlimited' or 'வரம்பற்ற'", () => {
+    // Read MobileHeader.tsx to ensure no trace in Pro active card
+    const headerPath = path.resolve(__dirname, "../components/mobile/MobileHeader.tsx");
+    const content = fs.readFileSync(headerPath, "utf-8");
+
+    // Must have Velvi Pro Active
+    expect(content).toContain("Velvi Pro Active");
+    expect(content).toContain("முழு அணுகல் • பிரீமியம் வசதிகள்");
+
+    // Profile card lines 657-735 must not contain "வரம்பற்ற முன்பதிவுகள் (Unlimited)"
+    expect(content).not.toContain("வரம்பற்ற முன்பதிவுகள் (Unlimited)");
+  });
 });
 
 

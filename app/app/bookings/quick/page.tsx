@@ -983,11 +983,11 @@ function QuickBookingContent() {
               <div className="font-extrabold text-[11px] text-emerald-950 flex items-center gap-1.5 flex-wrap">
                 <span>வேள்வி ப்ரோ (Velvi Pro)</span>
                 <span className="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  வரம்பற்ற பதிவுகள் • Unlimited Bookings
+                  முழு அணுகல் • Premium
                 </span>
               </div>
               <p className="text-[10.5px] text-emerald-800 font-medium">
-                பூஜை முன்பதிவுகள் எந்த கட்டுப்பாடும் இன்றி தடையின்றி இயங்கும்
+                அனைத்து பிரீமியம் வசதிகள் மற்றும் மேகக்கணி தரவு பாதுகாப்புடன் இயங்குகிறது
               </p>
             </div>
           </div>

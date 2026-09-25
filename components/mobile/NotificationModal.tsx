@@ -249,11 +249,11 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     <div className="font-black text-xs text-emerald-950 flex items-center gap-1.5 flex-wrap">
                       <span>👑 Velvi Pro Active</span>
                       <span className="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.2 rounded-full uppercase tracking-wider">
-                        Unlimited Bookings
+                        Pro Plan
                       </span>
                     </div>
                     <p className="text-[10.5px] text-emerald-800 font-medium mt-0.5">
-                      {daysToExpiry !== null ? `${daysToExpiry} நாட்கள் செல்லுபடியாகும் (Days Left)` : "வரம்பற்ற முன்பதிவுகள் செயலில் உள்ளன"}
+                      {daysToExpiry !== null ? `${daysToExpiry} நாட்கள் செல்லுபடியாகும் (Days Left)` : "பிரீமியம் வசதிகள் அனைத்தும் செயலில் உள்ளன"}
                     </p>
                   </div>
                 </div>
@@ -279,7 +279,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                       </span>
                     </div>
                     <p className="text-[10.5px] text-amber-900 font-medium mt-0.5">
-                      வரம்பற்ற பதிவுகளுக்கு ப்ரோ திட்டத்திற்கு மேம்படுத்தவும்
+                      முழு பிரீமியம் வசதிகளைப் பெற ப்ரோ திட்டத்திற்கு மேம்படுத்தவும்
                     </p>
                   </div>
                 </div>

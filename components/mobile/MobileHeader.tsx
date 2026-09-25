@@ -655,24 +655,29 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                         </Link>
                       </div>
                     ) : db.isUnlimitedBookings(businessId) ? (
-                      <div className="p-2.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-amber-50/50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3 text-emerald-700" />
+                      <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50/80 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                            <Sparkles className="w-3.5 h-3.5 text-white" />
                           </div>
                           <div className="min-w-0">
-                            <span className="text-[11px] font-black text-emerald-950 tracking-tight block leading-tight">
-                              👑 Velvi Pro Active
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-emerald-700">
-                              வரம்பற்ற முன்பதிவுகள் (Unlimited)
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11.5px] font-black text-emerald-950 tracking-tight block leading-tight">
+                                Velvi Pro Active
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[8.5px] font-black uppercase tracking-wider">
+                                Pro
+                              </span>
+                            </div>
+                            <span className="text-[9.5px] font-semibold text-emerald-700 block mt-0.5">
+                              முழு அணுகல் • பிரீமியம் வசதிகள்
                             </span>
                           </div>
                         </div>
                         <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-1 rounded-xl border border-emerald-300/80 shadow-2xs shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[10.5px] font-black text-emerald-950 tracking-tight">
-                            {daysToExpiry} {daysToExpiry === 1 ? "Day" : "Days"} Left
+                          <span className="text-[10px] font-black text-emerald-950 tracking-tight">
+                            {daysToExpiry} {daysToExpiry === 1 ? "நாள்" : "நாட்கள்"}
                           </span>
                         </div>
                       </div>
@@ -706,22 +711,28 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                 {daysToExpiry === null && (
                   <div>
                     {db.isUnlimitedBookings(businessId) ? (
-                      <div className="p-2.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/50 to-amber-50/50 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center shrink-0">
-                            <Sparkles className="w-3 h-3 text-emerald-700" />
+                      <div className="p-3 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-emerald-50/80 border border-emerald-200/90 rounded-2xl flex items-center justify-between text-xs shadow-2xs">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                            <Sparkles className="w-3.5 h-3.5 text-white" />
                           </div>
                           <div className="min-w-0">
-                            <span className="text-[11px] font-black text-emerald-950 tracking-tight block leading-tight">
-                              👑 Velvi Pro Active
-                            </span>
-                            <span className="text-[9.5px] font-semibold text-emerald-700">
-                              வரம்பற்ற முன்பதிவுகள் (Unlimited)
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11.5px] font-black text-emerald-950 tracking-tight block leading-tight">
+                                Velvi Pro Active
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 text-[8.5px] font-black uppercase tracking-wider">
+                                Lifetime
+                              </span>
+                            </div>
+                            <span className="text-[9.5px] font-semibold text-emerald-700 block mt-0.5">
+                              முழு அணுகல் • பிரீமியம் வசதிகள்
                             </span>
                           </div>
                         </div>
-                        <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded-lg border border-emerald-300 text-emerald-900 shrink-0">
-                          Active
+                        <span className="text-[10px] font-black bg-white px-2.5 py-1 rounded-xl border border-emerald-300 text-emerald-900 shadow-2xs shrink-0 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>Active</span>
                         </span>
                       </div>
                     ) : (
