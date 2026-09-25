@@ -27,13 +27,13 @@ export default function AdminAuditLogsPage() {
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
             <History className="w-3.5 h-3.5 text-amber-400" />
-            <span>Cryptographic &amp; Traceable Trail</span>
+            <span>பாதுகாப்பு & தணிக்கை பதிவு • Immutable Audit Trail</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            Immutable Audit Logs
+            பாதுகாப்பு தணிக்கை பதிவுகள் (Audit Logs)
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            Traceable historical logs of all administrative modifications, validity changes, and reassignment events
+            நிர்வாகிகள் மேற்கொண்ட அனைத்து மாற்றங்கள், வேலிடிட்டி நீட்டிப்புகள் மற்றும் பாதுகாப்பு அமர்வு பதிவுகள்
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export default function AdminAuditLogsPage() {
             href="/admin"
             className="px-3.5 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>Super Console</span>
+            <span>முதன்மை பலகை (Super Console)</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -52,29 +52,29 @@ export default function AdminAuditLogsPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>Total Logged Actions</span>
+            <span>மொத்த தணிக்கை செயல்கள் (Actions)</span>
             <History className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-white">{totalLogs}</div>
-          <div className="text-[10.5px] text-slate-400">Traceable historical events</div>
+          <div className="text-[10.5px] text-slate-400">வரலாற்று நிகழ்வு பதிவுகள்</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>Auth &amp; Session Logins</span>
+            <span>உள்நுழைவு அமர்வுகள் (Auth Logins)</span>
             <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{loginEvents}</div>
-          <div className="text-[10.5px] text-emerald-500">Google &amp; PIN verifications</div>
+          <div className="text-[10.5px] text-emerald-500">கூகிள் & பின் சரிபார்ப்புகள்</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>Validity Modifications</span>
+            <span>வேலிடிட்டி மாற்றங்கள் (Validity Events)</span>
             <Activity className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-amber-300">{validityEvents}</div>
-          <div className="text-[10.5px] text-amber-400/90">Manual &amp; promo extensions</div>
+          <div className="text-[10.5px] text-amber-400/90">மேனுவல் & கூப்பன் நீட்டிப்புகள்</div>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function AdminAuditLogsPage() {
         <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
         <input
           type="text"
-          placeholder="Filter by action, actor, or reason..."
+          placeholder="செயல், நிர்வாகி பெயர் அல்லது காரணம் தேட..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
@@ -94,7 +94,7 @@ export default function AdminAuditLogsPage() {
       <div className="sm:hidden space-y-3">
         {logs.length === 0 ? (
           <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
-            No audit logs found matching &quot;{search}&quot;
+            தேடலுக்கு ஏற்ற தணிக்கை பதிவுகள் எதுவும் இல்லை &quot;{search}&quot;
           </div>
         ) : (
           logs.map((log) => {
@@ -116,7 +116,7 @@ export default function AdminAuditLogsPage() {
                 </div>
 
                 <div className="text-[11px] bg-[#060a14] p-2 rounded-xl border border-slate-800/80 text-slate-300">
-                  <div className="text-slate-400 text-[10px] uppercase">Target</div>
+                  <div className="text-slate-400 text-[10px] uppercase">இலக்கு (Target)</div>
                   <div className="font-semibold text-white truncate">{log.targetType} ({log.targetId || "Global"})</div>
                   {log.reason && (
                     <div className="text-slate-400 text-[10.5px] italic mt-1 pt-1 border-t border-slate-800/60">
@@ -140,11 +140,11 @@ export default function AdminAuditLogsPage() {
           <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">Timestamp</th>
-                <th className="p-4">Actor</th>
-                <th className="p-4">Action</th>
-                <th className="p-4">Target</th>
-                <th className="p-4">Reason / Notes</th>
+                <th className="p-4">நேரம் (Timestamp)</th>
+                <th className="p-4">நிர்வாகி (Actor)</th>
+                <th className="p-4">செயல் (Action)</th>
+                <th className="p-4">இலக்கு (Target)</th>
+                <th className="p-4">காரணம் / குறிப்பு (Reason)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">

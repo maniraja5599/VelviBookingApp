@@ -332,16 +332,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">Velvi Platform Console</h1>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">வேள்வி தள நிர்வாகம்</h1>
+              <p className="text-xs text-amber-300 font-mono">Velvi Super Admin Console</p>
+            </div>
             
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold shadow-xs">
               <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Executive Security Gate</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span>நிர்வாகி பாதுகாப்பு நுழைவாயில் (Security Gate)</span>
             </div>
 
             <p className="text-xs text-slate-400 max-w-xs pt-1 leading-relaxed">
-              Super Admin access is strictly protected. Enter authorized administrator credentials and 4-digit security PIN.
+              சூப்பர் அட்மின் அணுகல் பாதுகாப்பானது. உங்கள் அங்கீகரிக்கப்பட்ட மின்னஞ்சல் மற்றும் 4-இலக்க பாதுகாப்பு பின்னை உள்ளிடவும்.
             </p>
           </div>
 
@@ -365,7 +367,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Mail className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Admin Email</span>
+                  <span>நிர்வாகி மின்னஞ்சல் (Admin Email)</span>
                 </span>
                 <span className="text-[10px] text-amber-400/80 font-mono lowercase">manirajankg@gmail.com</span>
               </label>
@@ -388,7 +390,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Security PIN</span>
+                  <span>பாதுகாப்பு பின் (Security PIN)</span>
                 </label>
                 <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
                   Default: 5599
@@ -427,7 +429,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-amber-500/25 active:scale-[0.98] transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Crown className="w-4 h-4 text-black" />
-              <span>{isSigningIn ? "Verifying Authority..." : "Unlock Super Admin Console"}</span>
+              <span>{isSigningIn ? "சரிபார்க்கப்படுகிறது..." : "சூப்பர் அட்மின் தளத்தை திறக்க (Unlock)"}</span>
             </button>
           </form>
 
@@ -437,7 +439,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="w-full border-t border-slate-800" />
             </div>
             <div className="relative flex justify-center text-[10px] uppercase font-bold text-slate-400 bg-[#0b1120] px-3">
-              Fast Google OAuth Verification
+              கூகுள் கணக்கு சரிபார்ப்பு (Google OAuth)
             </div>
           </div>
 
@@ -466,14 +468,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                 />
               </svg>
-              <span>Verify Gmail via Google OAuth</span>
+              <span>ஜிமெயில் மூலம் சரிபார்க்க (Verify Gmail)</span>
             </button>
           </div>
 
           <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
             <Link href="/app" className="hover:text-amber-400 flex items-center gap-1.5 transition font-medium">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to App</span>
+              <span>செயலிக்கு திரும்ப (App)</span>
             </Link>
             <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -489,12 +491,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // GATE 3: AUTHORIZED ADMIN (SUPER ADMIN OR EDITOR ADMIN) -> FULL CONSOLE
   // ---------------------------------------------------------------------------
   const navItems = [
-    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/admin/users", label: "Users & Validity", icon: Users },
-    { href: "/admin/subscriptions", label: "Subscriptions", icon: Sparkles },
-    { href: "/admin/payments", label: "Cashfree Payments", icon: CreditCard },
-    { href: "/admin/referrals", label: "Referrals & Rewards", icon: Gift },
-    { href: "/admin/audit-logs", label: "Immutable Audit Logs", icon: History },
+    { href: "/admin", label: "Dashboard", subLabel: "முகப்பு பலகை", icon: LayoutDashboard },
+    { href: "/admin/users", label: "Users & Validity", subLabel: "பயனர்கள் & வேலிடிட்டி", icon: Users },
+    { href: "/admin/subscriptions", label: "Subscriptions", subLabel: "சந்தா விவரங்கள்", icon: Sparkles },
+    { href: "/admin/payments", label: "Cashfree Payments", subLabel: "பணப் பரிவர்த்தனைகள்", icon: CreditCard },
+    { href: "/admin/referrals", label: "Referrals & Rewards", subLabel: "பரிந்துரைகள் & சலுகைகள்", icon: Gift },
+    { href: "/admin/audit-logs", label: "Immutable Audit Logs", subLabel: "தணிக்கை பதிவுகள்", icon: History },
   ];
 
   return (
@@ -510,7 +512,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="font-extrabold text-xs text-white tracking-tight">Velvi Super Admin</h1>
+              <h1 className="font-extrabold text-xs text-white tracking-tight">வேள்வி நிர்வாகம்</h1>
               <span className="text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                 velvi.date
               </span>
@@ -518,11 +520,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex items-center gap-1 mt-0.5">
               {isSuperAdmin ? (
                 <span className="text-[8.5px] px-1.5 py-0.2 rounded font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  👑 Super Admin
+                  👑 சூப்பர் அட்மின்
                 </span>
               ) : (
                 <span className="text-[8.5px] px-1.5 py-0.2 rounded font-black bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  ✏️ Editor Admin
+                  ✏️ துணை நிர்வாகி
                 </span>
               )}
             </div>
@@ -546,7 +548,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             type="button"
             onClick={handleAdminSignOut}
             className="p-1.5 bg-[#0b1120] border border-slate-800 rounded-lg text-slate-400 hover:text-rose-400 hover:border-rose-800/60 transition cursor-pointer"
-            title="Sign Out of Admin Console"
+            title="வெளியேறு (Sign Out)"
           >
             <LogOut className="w-3.5 h-3.5" />
           </button>
@@ -554,7 +556,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-1.5 bg-[#0b1120] border border-slate-800 rounded-lg text-slate-300 hover:text-white transition cursor-pointer"
-            title="Toggle Menu"
+            title="மெனு (Menu)"
           >
             {mobileMenuOpen ? <X className="w-4 h-4 text-amber-400" /> : <Menu className="w-4 h-4" />}
           </button>
@@ -563,7 +565,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="px-2 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-300 hover:bg-amber-500 hover:text-black rounded-lg text-[10.5px] font-extrabold transition flex items-center gap-1 active:scale-95"
           >
             <ArrowLeft className="w-3 h-3" />
-            <span>App</span>
+            <span>செயலி</span>
           </Link>
         </div>
       </header>
@@ -573,11 +575,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="md:hidden bg-[#080d19]/95 backdrop-blur-xl border-b border-amber-500/15 p-3.5 space-y-1.5 shadow-2xl animate-in slide-in-from-top-2 duration-200">
           <div className="p-3 mb-2 bg-[#050811] rounded-2xl border border-slate-800 text-xs flex items-center justify-between">
             <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Active Session:</div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">நடப்பு அமர்வு (Active Admin):</div>
               <div className="font-mono text-white text-[11px] truncate font-bold">{currentUser?.email || "manirajankg@gmail.com"}</div>
             </div>
             <span className="text-[9px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-              Verified
+              சரிபார்க்கப்பட்டது
             </span>
           </div>
           {navItems.map((item) => {
@@ -591,14 +593,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   isActive
                     ? "bg-gradient-to-r from-amber-500/20 to-amber-500/5 text-amber-300 border border-amber-500/40 font-bold shadow-xs"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/60"
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-2.5">
+                  <Icon className={`w-4 h-4 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
+                  <div>
+                    <div className="font-bold text-white text-xs">{item.subLabel}</div>
+                    <div className="text-[10px] text-slate-400">{item.label}</div>
+                  </div>
+                </div>
               </Link>
             );
           })}
@@ -619,11 +626,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div>
                 <h1 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
-                  Velvi Super Admin
+                  வேள்வி நிர்வாகம்
                 </h1>
                 <div className="flex items-center gap-1 mt-0.5">
                   <span className="text-[9.5px] text-amber-400 font-mono font-semibold">velvi.date</span>
-                  <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">Live</span>
+                  <span className="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-1 rounded">நேரலை (Live)</span>
                 </div>
               </div>
             </div>
@@ -631,7 +638,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Link
               href="/app"
               className="p-1.5 hover:bg-slate-800/80 rounded-xl text-slate-400 hover:text-white transition cursor-pointer"
-              title="Return to Mobile App"
+              title="செயலிக்கு திரும்ப (Return to App)"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
@@ -640,14 +647,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Active Admin Profile Card */}
           <div className="p-3 bg-gradient-to-b from-[#0b1120] to-[#050811] rounded-2xl border border-slate-800/90 text-xs space-y-2 shadow-inner">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Super Console</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">நிர்வாக பலகை</span>
               {isSuperAdmin ? (
                 <span className="text-[9px] px-2 py-0.5 rounded-full font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">
-                  👑 Root Super Admin
+                  👑 முதன்மை நிர்வாகி
                 </span>
               ) : (
                 <span className="text-[9px] px-2 py-0.5 rounded-full font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                  ✏️ Editor Admin
+                  ✏️ துணை நிர்வாகி
                 </span>
               )}
             </div>
@@ -661,7 +668,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
                 <span className="flex items-center gap-1">
                   <Clock className="w-3 h-3 text-amber-400" />
-                  <span>Session lock:</span>
+                  <span>அமர்வு லாக் (Lock):</span>
                 </span>
                 <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
                   {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, "0")}
@@ -689,8 +696,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition group-hover:scale-110 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
-                  <span>{item.label}</span>
+                  <Icon className={`w-4 h-4 transition group-hover:scale-110 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
+                  <div className="min-w-0">
+                    <div className="font-bold text-white text-xs truncate leading-snug">{item.subLabel}</div>
+                    <div className="text-[9.5px] text-slate-400 truncate leading-snug">{item.label}</div>
+                  </div>
                 </Link>
               );
             })}
@@ -705,19 +715,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className="w-full py-2.5 px-3 bg-[#0b1120] hover:bg-rose-950/60 border border-slate-800 hover:border-rose-800/60 text-slate-400 hover:text-rose-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-[0.98]"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out Admin</span>
+            <span>வெளியேறு (Sign Out)</span>
           </button>
 
           <div className="p-3 bg-gradient-to-b from-[#0b1120] to-[#050811] rounded-2xl border border-slate-800 text-[11px] space-y-1 shadow-inner">
             <div className="flex items-center justify-between text-amber-400 font-bold">
               <span className="flex items-center gap-1.5">
                 <Shield className="w-3.5 h-3.5 text-amber-400" />
-                <span>HMAC &amp; RLS Active</span>
+                <span>பாதுகாப்பு இயங்குகிறது</span>
               </span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             </div>
             <p className="text-[10px] text-slate-400 leading-snug">
-              Encrypted multi-tenant isolation on <strong className="text-slate-300 font-mono">velvi.date</strong>
+              என்க்ரிப்ட் செய்யப்பட்ட நேரலை தளம்: <strong className="text-slate-300 font-mono">velvi.date</strong>
             </p>
           </div>
         </div>
