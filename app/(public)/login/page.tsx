@@ -43,6 +43,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [showDevContact, setShowDevContact] = useState(false);
+  const [showTestLogin, setShowTestLogin] = useState(false);
+  const [testUsername, setTestUsername] = useState("9876543210");
+  const [testPassword, setTestPassword] = useState("123456");
 
   // Google OAuth configuration
   const googleClientId =
@@ -381,6 +384,62 @@ export default function LoginPage() {
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </button>
+
+            {/* Reviewer / Test Credentials Login Accordion */}
+            <div className="pt-0.5 text-center">
+              <button
+                type="button"
+                onClick={() => setShowTestLogin(!showTestLogin)}
+                className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold underline decoration-dotted transition cursor-pointer"
+              >
+                {showTestLogin ? "Hide Reviewer / Test Login" : "Reviewer / Test Login (Username & Password)"}
+              </button>
+
+              {showTestLogin && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleInstantDemo();
+                  }}
+                  className="mt-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-left space-y-2.5 animate-in fade-in"
+                >
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-700">
+                    <span>Cashfree / Reviewer Test Account</span>
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-extrabold">Instant Access</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10.5px] font-bold text-slate-600 block mb-0.5">Username / Mobile</label>
+                    <input
+                      type="text"
+                      value={testUsername}
+                      onChange={(e) => setTestUsername(e.target.value)}
+                      placeholder="9876543210"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10.5px] font-bold text-slate-600 block mb-0.5">Password</label>
+                    <input
+                      type="password"
+                      value={testPassword}
+                      onChange={(e) => setTestPassword(e.target.value)}
+                      placeholder="••••••"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isDemoLoading}
+                    className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer shadow-2xs"
+                  >
+                    {isDemoLoading ? "Logging in..." : "Sign In with Test Credentials"}
+                  </button>
+                </form>
+              )}
+            </div>
 
             {/* Feature Highlights Grid - 6 Key Highlights */}
             <div className="pt-2 grid grid-cols-3 gap-2 text-center border-t border-slate-100 relative z-10">
