@@ -81,27 +81,47 @@ export class CashfreeService {
     this.appId = process.env.CASHFREE_APP_ID || "";
     this.secretKey = process.env.CASHFREE_SECRET_KEY || "";
     this.webhookSecret = process.env.CASHFREE_WEBHOOK_SECRET || "";
-    this.env = (process.env.CASHFREE_ENVIRONMENT as "TEST" | "PRODUCTION") || "TEST";
+    this.env = (process.env.CASHFREE_ENVIRONMENT as "TEST" | "PRODUCTION") || "PRODUCTION";
     this.baseUrl =
       this.env === "PRODUCTION"
         ? "https://api.cashfree.com/pg"
         : "https://sandbox.cashfree.com/pg";
   }
 
+  public getAppId(): string {
+    return process.env.CASHFREE_APP_ID || this.appId || "";
+  }
+
+  public getSecretKey(): string {
+    return process.env.CASHFREE_SECRET_KEY || this.secretKey || "";
+  }
+
+  public getWebhookSecret(): string {
+    return process.env.CASHFREE_WEBHOOK_SECRET || this.webhookSecret || "";
+  }
+
+  public getBaseUrl(): string {
+    return this.getEnvironment() === "PRODUCTION"
+      ? "https://api.cashfree.com/pg"
+      : "https://sandbox.cashfree.com/pg";
+  }
+
   /**
    * Check if live or sandbox credentials are configured
    */
   public isConfigured(): boolean {
+    const aid = this.getAppId();
+    const sec = this.getSecretKey();
     return (
-      Boolean(this.appId) &&
-      Boolean(this.secretKey) &&
-      this.appId !== "CF_SANDBOX_APP_ID" &&
-      this.secretKey !== "CF_SANDBOX_SECRET_KEY"
+      Boolean(aid) &&
+      Boolean(sec) &&
+      aid !== "CF_SANDBOX_APP_ID" &&
+      sec !== "CF_SANDBOX_SECRET_KEY"
     );
   }
 
   public getEnvironment(): "TEST" | "PRODUCTION" {
-    return this.env;
+    return (process.env.CASHFREE_ENVIRONMENT as "TEST" | "PRODUCTION") || this.env || "PRODUCTION";
   }
 
   /**
@@ -156,12 +176,20 @@ export class CashfreeService {
     // If live/sandbox credentials are provided, call Cashfree API
     if (this.isConfigured()) {
       try {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const res = await fetch(`${this.baseUrl}/orders`, {
+        const rawAppUrl =
+          process.env.NEXT_PUBLIC_APP_URL ||
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://velvi-booking-app.vercel.app");
+        const appUrl = rawAppUrl.startsWith("http://localhost")
+          ? "https://velvi-booking-app.vercel.app"
+          : rawAppUrl.startsWith("http")
+          ? rawAppUrl
+          : `https://${rawAppUrl}`;
+
+        const res = await fetch(`${this.getBaseUrl()}/orders`, {
           method: "POST",
           headers: {
-            "x-client-id": this.appId,
-            "x-client-secret": this.secretKey,
+            "x-client-id": this.getAppId(),
+            "x-client-secret": this.getSecretKey(),
             "x-api-version": "2023-08-01",
             "Content-Type": "application/json",
           },
@@ -171,8 +199,8 @@ export class CashfreeService {
             order_currency: "INR",
             customer_details: {
               customer_id: userId || `user_${Date.now()}`,
-              customer_email: customer.email || "priest@velvi.app",
-              customer_phone: cleanPhone || "9840012345",
+              customer_email: customer.email || "manirajankg@gmail.com",
+              customer_phone: cleanPhone || "9159036301",
               customer_name: customer.name || "Velvi Vadhyar",
             },
             order_meta: {
