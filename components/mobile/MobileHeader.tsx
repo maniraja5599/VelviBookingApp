@@ -546,20 +546,26 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       </div>
                     </div>
 
-                    {/* Integrated Velvi Pro Active status row - No extra box, only title & date */}
+                    {/* Integrated Velvi Pro Active status row - Clicking navigates to Subscription page */}
                     {db.isUnlimitedBookings(businessId) ? (
-                      <div className="mt-2.5 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-1.5 font-black text-[11.5px] text-slate-900 tracking-tight">
+                      <Link
+                        href="/app/subscription?tab=validity"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="mt-2.5 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs hover:bg-amber-100/60 p-1 -mx-1 rounded-xl transition group cursor-pointer"
+                        title="செல்லுபடியாகும் காலம் & சந்தா விவரங்கள் (Subscription & Validity Details)"
+                      >
+                        <div className="flex items-center gap-1.5 font-black text-[11.5px] text-slate-900 tracking-tight group-hover:text-amber-950">
                           <span className="text-amber-600 text-xs">👑</span>
                           <span>Velvi Pro Active</span>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0">
+                        <div className="flex items-center gap-1 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0 group-hover:border-emerald-500">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           <span>
                             {daysToExpiry !== null ? `${daysToExpiry} நாட்கள்` : "Active"}
                           </span>
+                          <span className="text-emerald-700 text-[10px] ml-0.5 group-hover:translate-x-0.5 transition-transform">→</span>
                         </div>
-                      </div>
+                      </Link>
                     ) : isExpired ? (
                       <div className="mt-2.5 pt-2 border-t border-rose-200 flex items-center justify-between text-xs">
                         <span className="text-[10.5px] font-bold text-rose-800">Plan Expired</span>
