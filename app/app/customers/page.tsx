@@ -48,7 +48,7 @@ export default function CustomersPage() {
   const [showAddPriestModal, setShowAddPriestModal] = useState(false);
   const [newPriestName, setNewPriestName] = useState("");
   const [newPriestMobile, setNewPriestMobile] = useState("");
-  const [newPriestSpec, setNewPriestSpec] = useState("உதவி குருக்கள் (Assistant Priest)");
+  const [newPriestSpec, setNewPriestSpec] = useState("Assistant Priest");
   const [priestError, setPriestError] = useState("");
 
   React.useEffect(() => {
@@ -154,7 +154,7 @@ export default function CustomersPage() {
   const handleAddPriest = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPriestName.trim()) {
-      setPriestError("குருக்கள் பெயர் அவசியம் / Priest Name is required.");
+      setPriestError("Priest Name is required.");
       return;
     }
     setPriestError("");
@@ -163,11 +163,11 @@ export default function CustomersPage() {
       name: newPriestName.trim(),
       mobile: newPriestMobile.trim(),
       role: "IYER",
-      specialization: newPriestSpec.trim() || "உதவி குருக்கள் (Assistant Priest)",
+      specialization: newPriestSpec.trim() || "Assistant Priest",
     });
     setNewPriestName("");
     setNewPriestMobile("");
-    setNewPriestSpec("உதவி குருக்கள் (Assistant Priest)");
+    setNewPriestSpec("Assistant Priest");
     setShowAddPriestModal(false);
   };
 
@@ -187,7 +187,7 @@ export default function CustomersPage() {
       const foundMember = members.find((m) => m.id === latestWithPriest.assignedIyerId || m.name === latestWithPriest.assignedIyerName);
       return {
         id: foundMember?.id || latestWithPriest.assignedIyerId,
-        name: latestWithPriest.assignedIyerName || foundMember?.name || "வேள்வி தலைமை குருக்கள்",
+        name: latestWithPriest.assignedIyerName || foundMember?.name || "Chief Priest",
         mobile: foundMember?.mobile || "",
         role: foundMember?.role || "ASSISTANT",
       };
@@ -200,7 +200,7 @@ export default function CustomersPage() {
       role: owner.role,
     } : {
       id: "default",
-      name: currentBusiness?.name || "வேள்வி தலைமை குருக்கள்",
+      name: currentBusiness?.name || "Chief Priest",
       mobile: currentBusiness?.phone || "",
       role: "OWNER",
     };
@@ -211,7 +211,7 @@ export default function CustomersPage() {
     setFormError("");
 
     if (!name.trim()) {
-      setFormError("வாடிக்கையாளர் பெயர் அவசியம் / Customer Name is required.");
+      setFormError("Devotee Name is required.");
       return;
     }
 
@@ -219,14 +219,14 @@ export default function CustomersPage() {
     if (mobile.trim()) {
       const cleanDigits = mobile.replace(/\D/g, "");
       if (cleanDigits.length !== 10) {
-        setFormError("சரியான 10 இலக்க மொபைல் எண்ணை உள்ளிடவும் அல்லது காலியாக விடவும்.");
+        setFormError("Please enter a valid 10-digit mobile number or leave blank.");
         return;
       }
       normalizedMobile = normalizeIndianMobile(cleanDigits);
 
       // Duplicate check within business
       if (customers.some((c) => c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile)) {
-        setFormError("இந்த மொபைல் எண்ணுடன் ஏற்கனவே ஒரு வாடிக்கையாளர் உள்ளார்.");
+        setFormError("A devotee with this mobile number already exists.");
         return;
       }
     }
@@ -250,7 +250,7 @@ export default function CustomersPage() {
   };
 
   const handleDeleteCustomer = (customer: Customer) => {
-    if (confirm(`Delete devotee "${customer.name}"? (பக்தர் "${customer.name}" விபரத்தை நீக்கவா?)`)) {
+    if (confirm(`Delete devotee "${customer.name}"? This action cannot be undone.`)) {
       db.deleteCustomer(customer.id);
       setSelectedCustomer(null);
     }
@@ -270,7 +270,7 @@ export default function CustomersPage() {
           }`}
         >
           <span>👥</span>
-          <span>பக்தர்கள் / Devotees ({uniqueCustomers.length})</span>
+          <span>Devotees ({uniqueCustomers.length})</span>
         </button>
         <button
           type="button"
@@ -282,7 +282,7 @@ export default function CustomersPage() {
           }`}
         >
           <span>🪔</span>
-          <span>குருக்கள் / Priests ({uniqueMembers.length})</span>
+          <span>Priests ({uniqueMembers.length})</span>
         </button>
       </div>
 
@@ -291,7 +291,7 @@ export default function CustomersPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-velvi-brownDark">பக்தர்கள் (Devotees)</h2>
+              <h2 className="text-base font-bold text-velvi-brownDark">Devotees</h2>
               <p className="text-xs text-velvi-brown/60">
                 {filteredCustomers.length} registered devotees
               </p>
@@ -303,7 +303,7 @@ export default function CustomersPage() {
               className="px-3 py-1.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition cursor-pointer"
             >
               <Plus className="w-4 h-4 text-velvi-goldLight stroke-[3]" />
-              <span>புதிய பக்தர் (Add)</span>
+              <span>Add Devotee</span>
             </button>
           </div>
 
@@ -393,7 +393,7 @@ export default function CustomersPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-emerald-950">குருக்கள் (Priests)</h2>
+              <h2 className="text-base font-bold text-emerald-950">Priests</h2>
               <p className="text-xs text-slate-500">
                 {filteredPriests.length} assigned priests
               </p>
@@ -404,7 +404,7 @@ export default function CustomersPage() {
               className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-amber-300 rounded-xl text-xs font-black flex items-center gap-1 shadow-sm transition cursor-pointer"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>புதிய குருக்கள் (Add)</span>
+              <span>Add Priest</span>
             </button>
           </div>
 
@@ -547,8 +547,8 @@ export default function CustomersPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-velvi-brown flex items-center gap-1">
-                    <span>அலைபேசி எண் / Mobile</span>
-                    <span className="text-[10px] text-gray-500 font-normal">(விருப்பத்தேர்வு / Optional)</span>
+                    <span>Mobile Number</span>
+                    <span className="text-[10px] text-gray-500 font-normal">(Optional)</span>
                   </label>
                   <button
                     type="button"
@@ -557,7 +557,7 @@ export default function CustomersPage() {
                     title="Paste from clipboard"
                   >
                     <Clipboard className="w-3 h-3 text-velvi-gold" />
-                    <span>ஒட்டு (Paste)</span>
+                    <span>Paste</span>
                   </button>
                 </div>
 
@@ -586,11 +586,11 @@ export default function CustomersPage() {
                         : "text-amber-700"
                     }`}
                   >
-                    <span>{mobileInspection.messageTa}</span>
+                    <span>{mobileInspection.messageEn || mobileInspection.messageTa}</span>
                   </div>
                 ) : (
                   <p className="text-[10px] text-gray-400 mt-1">
-                    எண் இல்லாவிட்டாலும் வாடிக்கையாளரைச் சேர்க்கலாம்.
+                    You can add a devotee without a mobile number as well.
                   </p>
                 )}
               </div>
@@ -690,14 +690,14 @@ export default function CustomersPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    <span>ஒதுக்கப்பட்ட வாத்யார் (Assigned Priest)</span>
+                    <span>Assigned Priest</span>
                   </span>
                   <Link
                     href="/app/team"
                     className="text-[10.5px] font-extrabold text-amber-900 hover:text-amber-950 flex items-center gap-0.5 underline transition"
-                    title="வாத்யார்கள் & குழு மேலாண்மை"
+                    title="Priests & Team Management"
                   >
-                    <span>குழு பட்டியல் (Team)</span>
+                    <span>Team</span>
                     <ChevronRight className="w-3 h-3" />
                   </Link>
                 </div>
@@ -712,7 +712,7 @@ export default function CustomersPage() {
                         {associatedPriest.name}
                       </h4>
                       <p className="text-[10.5px] text-amber-800 font-bold truncate flex items-center gap-1">
-                        <span>வாத்யார் • Priest</span>
+                        <span>Priest</span>
                         {associatedPriest.mobile && <span>• {associatedPriest.mobile}</span>}
                       </p>
                     </div>
@@ -763,8 +763,8 @@ export default function CustomersPage() {
                         {b.date} • {b.startTime}
                       </div>
                       <div className="text-[10px] font-bold text-amber-900 mt-0.5 flex items-center gap-1">
-                        <span>👤 வாத்யார்:</span>
-                        <span>{b.assignedIyerName || associatedPriest?.name || "வேள்வி வாத்யார்"}</span>
+                        <span>👤 Priest:</span>
+                        <span>{b.assignedIyerName || associatedPriest?.name || "Priest"}</span>
                       </div>
                     </div>
                     <div className="text-right">
@@ -794,7 +794,7 @@ export default function CustomersPage() {
                 className="flex-1 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-800 hover:from-emerald-800 hover:to-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition text-center cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>புதிய பதிவு (Book Pooja)</span>
+                <span>Book Pooja</span>
               </Link>
               <button
                 type="button"
@@ -817,7 +817,7 @@ export default function CustomersPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-black text-base text-slate-900 flex items-center gap-1.5">
                 <span>🪔</span>
-                <span>புதிய குருக்கள் சேர்க்க / Add Priest</span>
+                <span>Add Priest</span>
               </h3>
               <button
                 type="button"
@@ -837,12 +837,12 @@ export default function CustomersPage() {
             <form onSubmit={handleAddPriest} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  குருக்கள் பெயர் (Priest Name) *
+                  Priest Name *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="எ.கா: சுந்தரமூர்த்தி வாத்யார் / Sundar Iyer"
+                  placeholder="e.g. Sundar Iyer"
                   value={newPriestName}
                   onChange={(e) => setNewPriestName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
@@ -851,7 +851,7 @@ export default function CustomersPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  மொபைல் எண் (Mobile - Optional)
+                  Mobile Number (Optional)
                 </label>
                 <div className="flex items-center gap-1.5">
                   <div className="bg-slate-100 border border-slate-200 rounded-xl px-2 py-2 text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
@@ -871,11 +871,11 @@ export default function CustomersPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  பொறுப்பு / சிறப்பு (Specialization)
+                  Specialization / Role
                 </label>
                 <input
                   type="text"
-                  placeholder="எ.கா: உதவி குருக்கள் / ஹோமம் & பூஜா"
+                  placeholder="e.g. Assistant Priest / Homam & Pooja"
                   value={newPriestSpec}
                   onChange={(e) => setNewPriestSpec(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
@@ -888,13 +888,13 @@ export default function CustomersPage() {
                   onClick={() => setShowAddPriestModal(false)}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
                 >
-                  ரத்து / Cancel
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-xs transition cursor-pointer"
                 >
-                  ✓ சேமி / Save Priest
+                  Save Priest
                 </button>
               </div>
             </form>
@@ -953,7 +953,7 @@ export default function CustomersPage() {
                             : "bg-blue-50 text-blue-900 border-blue-200"
                         }`}
                       >
-                        {isOwner ? "தலைமை குருக்கள்" : "உதவி குருக்கள்"}
+                        {isOwner ? "Chief Priest" : "Assistant Priest"}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 font-semibold mt-0.5">
@@ -1001,20 +1001,20 @@ export default function CustomersPage() {
               <div className="bg-gradient-to-br from-slate-900 to-emerald-950 text-white p-3.5 rounded-2xl space-y-2.5 shadow-md">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-amber-200 flex items-center gap-1">
-                    <span>📊 மொத்த வசூல் & கணக்கு (Total Collections)</span>
+                    <span>📊 Total Collections & Accounts</span>
                   </span>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 bg-emerald-800/80 rounded-full text-emerald-200 border border-emerald-700">
-                    {priestBookings.length} பூஜைகள்
+                    {priestBookings.length} Poojas
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10">
                   <div className="bg-white/10 p-2 rounded-xl">
-                    <span className="text-[10px] text-slate-300 block">மொத்த தட்சணை (Billed)</span>
+                    <span className="text-[10px] text-slate-300 block">Total Billed</span>
                     <span className="text-base font-black text-white">₹{totalBilled.toLocaleString("en-IN")}</span>
                   </div>
                   <div className="bg-white/10 p-2 rounded-xl">
-                    <span className="text-[10px] text-rose-300 block">மீதி நிலுவை (Pending)</span>
+                    <span className="text-[10px] text-rose-300 block">Pending Due</span>
                     <span className="text-base font-black text-rose-200">₹{totalPending.toLocaleString("en-IN")}</span>
                   </div>
                 </div>
@@ -1024,7 +1024,7 @@ export default function CustomersPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-emerald-200 flex items-center gap-1">
                       <span>🏛️</span>
-                      <span>நிர்வாகக் கணக்கு (Business Account):</span>
+                      <span>Business Account:</span>
                     </span>
                     <span className="font-black text-emerald-300">
                       ₹{businessAccountAmount.toLocaleString("en-IN")}
@@ -1033,7 +1033,7 @@ export default function CustomersPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] text-amber-200 flex items-center gap-1">
                       <span>👤</span>
-                      <span>வாத்யாரிடம் நேரடி வசூல் (Direct to Priest):</span>
+                      <span>Direct to Priest:</span>
                     </span>
                     <span className="font-black text-amber-300">
                       ₹{directPriestAmount.toLocaleString("en-IN")}
@@ -1047,12 +1047,12 @@ export default function CustomersPage() {
                 <div className="flex items-center justify-between">
                   <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center gap-1">
                     <span>🪔</span>
-                    <span>பூஜைகள் பட்டியல் ({priestBookings.length})</span>
+                    <span>Assigned Poojas ({priestBookings.length})</span>
                   </h4>
                 </div>
 
                 {priestBookings.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-3 text-center">இவருக்கு இன்னும் எந்த பூஜையும் ஒதுக்கப்படவில்லை.</p>
+                  <p className="text-xs text-slate-400 py-3 text-center">No poojas have been assigned to this priest yet.</p>
                 ) : (
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-0.5">
                     {priestBookings.map((b) => (
@@ -1080,11 +1080,11 @@ export default function CustomersPage() {
                           <div>
                             {b.paymentRecipient === "PRIEST" ? (
                               <span className="px-1.5 py-0.5 bg-amber-100 text-amber-900 rounded text-[9.5px] font-bold border border-amber-300 block">
-                                👤 நேரடி
+                                👤 Direct
                               </span>
                             ) : (
                               <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-900 rounded text-[9.5px] font-bold border border-emerald-300 block">
-                                🏛️ நிர்வாகம்
+                                🏛️ Business
                               </span>
                             )}
                           </div>
@@ -1099,7 +1099,7 @@ export default function CustomersPage() {
                 onClick={() => setSelectedPriest(null)}
                 className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer"
               >
-                மூடுக / Close
+                Close
               </button>
             </div>
           </div>

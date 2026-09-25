@@ -193,7 +193,7 @@ export default function PaymentsPage() {
 
     if (res.success) {
       setBookings([...db.getBookings(businessId)]);
-      setPaymentSuccessMsg(`₹${Number(paymentAmount).toLocaleString("en-IN")} கட்டணம் பெறப்பட்டது (${paymentBooking.customerName})!`);
+      setPaymentSuccessMsg(`Payment of ₹${Number(paymentAmount).toLocaleString("en-IN")} recorded (${paymentBooking.customerName})!`);
     }
 
     setPaymentBooking(null);
@@ -211,7 +211,7 @@ export default function PaymentsPage() {
 
     if (res.success) {
       setBookings([...db.getBookings(businessId)]);
-      setPaymentSuccessMsg(`பதிவு #${resetConfirmBooking.bookingNumber} கட்டணம் நீக்கப்பட்டு ₹${resetConfirmBooking.totalAmount.toLocaleString("en-IN")} நிலுவையாக மாற்றப்பட்டது.`);
+      setPaymentSuccessMsg(`Booking #${resetConfirmBooking.bookingNumber} payment reset. ₹${resetConfirmBooking.totalAmount.toLocaleString("en-IN")} marked as pending due.`);
     }
 
     setResetConfirmBooking(null);
@@ -281,10 +281,10 @@ export default function PaymentsPage() {
         <div>
           <h2 className="text-base sm:text-lg font-bold text-velvi-brownDark flex items-center gap-1.5">
             <Wallet className="w-5 h-5 text-velvi-gold" />
-            <span>வரவு செலவு & கணக்குகள்</span>
+            <span>Payments &amp; Accounts</span>
           </h2>
           <p className="text-xs text-velvi-brown/70">
-            Payments, Devotee Receipts & Iyer Settlements
+            Payments, Devotee Receipts &amp; Priest Settlements
           </p>
         </div>
       </div>
@@ -294,52 +294,52 @@ export default function PaymentsPage() {
         {/* Total Expected */}
         <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-1">
           <span className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wide block">
-            மொத்த வரவு (Total)
+            Total Expected
           </span>
           <div className="text-base sm:text-lg font-black text-slate-900 leading-tight">
             ₹{totalRevenueExpected.toLocaleString("en-IN")}
           </div>
           <span className="text-[10px] text-slate-400 font-medium block">
-            {bookings.length} பூஜைகள் மதிப்பு
+            {bookings.length} bookings total
           </span>
         </div>
 
         {/* Received Amount */}
         <div className="bg-emerald-50/80 p-3 rounded-2xl border border-emerald-200/80 shadow-2xs space-y-1">
           <span className="text-[10.5px] font-bold text-emerald-900 uppercase tracking-wide flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-700" /> பெற்றது (Received)
+            <CheckCircle2 className="w-3 h-3 text-emerald-700" /> Received (Paid)
           </span>
           <div className="text-base sm:text-lg font-black text-emerald-900 leading-tight">
             ₹{totalReceived.toLocaleString("en-IN")}
           </div>
           <span className="text-[10px] text-emerald-700 font-medium block">
-            முன்பணம் & கட்டணம்
+            Advance &amp; Balance Paid
           </span>
         </div>
 
         {/* Pending Balance */}
         <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200/80 shadow-2xs space-y-1">
           <span className="text-[10.5px] font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1">
-            <Clock className="w-3 h-3 text-amber-700" /> நிலுவை (Due)
+            <Clock className="w-3 h-3 text-amber-700" /> Pending Due
           </span>
           <div className="text-base sm:text-lg font-black text-amber-950 leading-tight">
             ₹{totalPendingDues.toLocaleString("en-IN")}
           </div>
           <span className="text-[10px] text-amber-800 font-medium block">
-            வசூலிக்க வேண்டியவை
+            To be collected
           </span>
         </div>
 
         {/* Iyer Settled */}
         <div className="bg-purple-50/80 p-3 rounded-2xl border border-purple-200/80 shadow-2xs space-y-1">
           <span className="text-[10.5px] font-bold text-purple-900 uppercase tracking-wide flex items-center gap-1">
-            <Users className="w-3 h-3 text-purple-700" /> குருக்கள் பகிர்வு
+            <Users className="w-3 h-3 text-purple-700" /> Priest Payouts
           </span>
           <div className="text-base sm:text-lg font-black text-purple-950 leading-tight">
             ₹{totalIyerSettled.toLocaleString("en-IN")}
           </div>
           <span className="text-[10px] text-purple-800 font-medium block">
-            செலுத்தப்பட்ட பகிர்வு
+            Settled payouts
           </span>
         </div>
       </div>
@@ -361,7 +361,7 @@ export default function PaymentsPage() {
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <span>👤 பக்தர்கள் ரசீது & நிலுவை</span>
+          <span>👤 Devotee Receipts &amp; Dues</span>
           <span className="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded-full font-black">
             {bookings.length}
           </span>
@@ -374,7 +374,7 @@ export default function PaymentsPage() {
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
-          <span>👥 குருக்கள் பகிர்வு கணக்கு</span>
+          <span>👥 Priest Settlements &amp; Sharing</span>
           <span className="text-[10px] px-1.5 py-0.2 bg-slate-100 rounded-full font-black">
             {members.length}
           </span>
@@ -493,7 +493,7 @@ export default function PaymentsPage() {
                   : "text-slate-600 hover:text-slate-900 font-bold"
               }`}
             >
-              <span>நிலுவைத் தொகை (Pending Dues)</span>
+              <span>Pending Dues</span>
               <span
                 className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-black ${
                   receiptFilter === "PENDING"
@@ -514,7 +514,7 @@ export default function PaymentsPage() {
                   : "text-slate-600 hover:text-slate-900 font-bold"
               }`}
             >
-              <span>அனைத்து கட்டணங்கள் (All)</span>
+              <span>All Payments</span>
               <span
                 className={`text-[9.5px] px-1.5 py-0.2 rounded-full font-black ${
                   receiptFilter === "ALL"
@@ -536,20 +536,20 @@ export default function PaymentsPage() {
                   <div className="flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-slate-700" />
                     <span className="font-extrabold text-xs text-slate-900">
-                      நிலுவைத் தொகை பகுப்பாய்வு (Pending Breakdown)
+                      Pending Breakdown
                     </span>
                   </div>
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-slate-800 border border-slate-200 shadow-2xs">
-                    {pendingDevoteesCount} பக்தர்கள் நிலுவை
+                    {pendingDevoteesCount} Devotees with Dues
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-500">பூஜை முடிந்தவை (Overdue)</span>
+                      <span className="text-[10px] font-bold text-slate-500">Overdue Dues</span>
                       <span className="text-[9px] font-bold px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded">
-                        {overdueDueBookings.length} பூஜைகள்
+                        {overdueDueBookings.length} bookings
                       </span>
                     </div>
                     <div className="font-black text-slate-900 text-sm mt-1">
@@ -559,9 +559,9 @@ export default function PaymentsPage() {
 
                   <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-500">வரவிருப்பவை (Upcoming)</span>
+                      <span className="text-[10px] font-bold text-slate-500">Upcoming Dues</span>
                       <span className="text-[9px] font-bold px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded">
-                        {upcomingDueBookings.length} பூஜைகள்
+                        {upcomingDueBookings.length} bookings
                       </span>
                     </div>
                     <div className="font-black text-slate-900 text-sm mt-1">
@@ -583,7 +583,7 @@ export default function PaymentsPage() {
                         : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
                     }`}
                   >
-                    அனைத்தும் ({allPendingDueBookings.length})
+                    All ({allPendingDueBookings.length})
                   </button>
                   <button
                     type="button"
@@ -595,7 +595,7 @@ export default function PaymentsPage() {
                     }`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" />
-                    <span>முடிந்தவை ({overdueDueBookings.length})</span>
+                    <span>Overdue ({overdueDueBookings.length})</span>
                   </button>
                   <button
                     type="button"
@@ -607,7 +607,7 @@ export default function PaymentsPage() {
                     }`}
                   >
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                    <span>வரவிருப்பவை ({upcomingDueBookings.length})</span>
+                    <span>Upcoming ({upcomingDueBookings.length})</span>
                   </button>
                 </div>
               </div>
@@ -683,7 +683,7 @@ export default function PaymentsPage() {
             {filteredBookings.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 text-center text-xs text-slate-400 space-y-2 border border-dashed border-slate-200">
                 <Wallet className="w-8 h-8 text-slate-300 mx-auto" />
-                <p>ரசீதுகள் எதுவும் பொருந்தவில்லை</p>
+                <p>No receipts or payments match this filter</p>
               </div>
             ) : (
               filteredBookings.map((b) => {
@@ -704,17 +704,17 @@ export default function PaymentsPage() {
                           {isOverdue ? (
                             <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
-                              <span>பூஜை முடிந்தது • நிலுவை ({b.date})</span>
+                              <span>Pooja Completed • Pending Due ({b.date})</span>
                             </span>
                           ) : isUpcomingDue ? (
                             <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                              <span>வரவிருக்கும் பூஜை ({b.date})</span>
+                              <span>Upcoming Pooja • Due ({b.date})</span>
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 text-[9.5px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-emerald-800 border border-slate-200">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                              <span>முழுதும் செலுத்தப்பட்டது ✅</span>
+                              <span>Paid in Full ✅</span>
                             </span>
                           )}
                         </div>
@@ -757,10 +757,10 @@ export default function PaymentsPage() {
                             b.balanceAmount > 0 ? "text-slate-900" : "text-emerald-700"
                           }`}
                         >
-                          {b.balanceAmount > 0 ? `நிலுவை: ₹${b.balanceAmount.toLocaleString("en-IN")}` : "Paid ✅"}
+                          {b.balanceAmount > 0 ? `Due: ₹${b.balanceAmount.toLocaleString("en-IN")}` : "Paid ✅"}
                         </span>
                         <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">
-                          மொத்தம்: ₹{b.totalAmount.toLocaleString("en-IN")}
+                          Total: ₹{b.totalAmount.toLocaleString("en-IN")}
                         </span>
                       </div>
                     </div>
@@ -768,19 +768,19 @@ export default function PaymentsPage() {
                     {/* Financial Numbers Strip */}
                     <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/80 text-center text-xs">
                       <div>
-                        <div className="text-[9.5px] text-slate-500 font-semibold">மொத்தக் கட்டணம்</div>
+                        <div className="text-[9.5px] text-slate-500 font-semibold">Total Amount</div>
                         <div className="font-extrabold text-slate-900 mt-0.5">
                           ₹{b.totalAmount?.toLocaleString("en-IN")}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[9.5px] text-slate-500 font-semibold">செலுத்தியது</div>
+                        <div className="text-[9.5px] text-slate-500 font-semibold">Paid Amount</div>
                         <div className="font-extrabold text-emerald-800 mt-0.5">
                           ₹{(b.advanceAmount || 0).toLocaleString("en-IN")}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[9.5px] text-slate-500 font-semibold">மீதமுள்ள நிலுவை</div>
+                        <div className="text-[9.5px] text-slate-500 font-semibold">Balance Due</div>
                         <div className={`font-black mt-0.5 ${b.balanceAmount > 0 ? "text-slate-900 font-black" : "text-slate-400"}`}>
                           ₹{(b.balanceAmount || 0).toLocaleString("en-IN")}
                         </div>
@@ -808,7 +808,7 @@ export default function PaymentsPage() {
                             className="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
                           >
                             <IndianRupee className="w-3.5 h-3.5" />
-                            <span>கட்டணம் பதிவு</span>
+                            <span>Record Payment</span>
                           </button>
                         )}
 
@@ -817,7 +817,7 @@ export default function PaymentsPage() {
                             type="button"
                             onClick={() => setResetConfirmBooking(b)}
                             className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 cursor-pointer"
-                            title="கட்டணத்தை நீக்க/மீட்டமைக்க (Reset Payment)"
+                            title="Reset Payment"
                           >
                             <span>Reset</span>
                           </button>
@@ -829,7 +829,7 @@ export default function PaymentsPage() {
                           className="px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition shadow-2xs active:scale-95 border bg-white hover:bg-slate-50 text-slate-700 border-slate-200 cursor-pointer"
                         >
                           <Share2 className="w-3.5 h-3.5" />
-                          <span>{isOverdue ? "நினைவூட்டல்" : "ரசீது"}</span>
+                          <span>{isOverdue ? "Reminder" : "Receipt"}</span>
                         </button>
                       </div>
                     </div>
@@ -849,10 +849,10 @@ export default function PaymentsPage() {
           {/* Explanation Banner */}
           <div className="bg-gradient-to-r from-purple-50 via-amber-50 to-purple-50 p-3.5 rounded-2xl border border-purple-200 shadow-2xs space-y-1">
             <h4 className="text-xs font-extrabold text-purple-950 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🤝</span> குருக்கள் கட்டண பகிர்வு முறை (40% Standard Settlement)
+              <span>🤝</span> Priest Fee Sharing System (40% Standard Settlement)
             </h4>
             <p className="text-xs text-purple-900/80 leading-relaxed">
-              உதவி குருக்கள் மற்றும் குழு உறுப்பினர்களுக்கு அவர்கள் செய்த பூஜைகளுக்கான தொகையை ரொக்கமாகவோ அல்லது UPI மூலமாகவோ வழங்கி கணக்கில் பதிவு செய்யலாம்.
+              Record settlements paid to assistant priests and team members via Cash or UPI for ceremonies conducted.
             </p>
           </div>
 
@@ -886,11 +886,11 @@ export default function PaymentsPage() {
                                 : "bg-blue-100 text-blue-900 border border-blue-300"
                             }`}
                           >
-                            {iyer.role === "OWNER" ? "முதன்மை குருக்கள்" : "குழு குருக்கள்"}
+                            {iyer.role === "OWNER" ? "Chief Priest" : "Assistant Priest"}
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          {iyerBookings.length} பூஜைகள் • மொத்த மதிப்பு: ₹
+                          {iyerBookings.length} Bookings • Total Value: ₹
                           {totalValue.toLocaleString("en-IN")}
                         </p>
                       </div>
@@ -904,26 +904,26 @@ export default function PaymentsPage() {
                       }}
                       className="px-3 py-1.5 bg-purple-800 hover:bg-purple-900 text-white rounded-xl text-xs font-bold shadow-2xs transition active:scale-95 flex items-center gap-1 shrink-0"
                     >
-                      <span>பகிர்வு வழங்கு</span>
+                      <span>Pay Share</span>
                     </button>
                   </div>
 
                   {/* Financial Metrics Strip */}
                   <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-center text-xs">
                     <div>
-                      <div className="text-[10px] text-slate-500 font-semibold">பங்கு (40%)</div>
+                      <div className="text-[10px] text-slate-500 font-semibold">Share (40%)</div>
                       <div className="font-extrabold text-slate-900 mt-0.5">
                         ₹{estimatedShare.toLocaleString("en-IN")}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-emerald-700 font-semibold">வழங்கியது</div>
+                      <div className="text-[10px] text-emerald-700 font-semibold">Paid</div>
                       <div className="font-extrabold text-emerald-800 mt-0.5">
                         ₹{paidAmount.toLocaleString("en-IN")}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-amber-800 font-semibold">நிலுவை</div>
+                      <div className="text-[10px] text-amber-800 font-semibold">Balance Due</div>
                       <div className={`font-extrabold mt-0.5 ${pendingBalance > 0 ? "text-amber-900" : "text-slate-400"}`}>
                         ₹{pendingBalance.toLocaleString("en-IN")}
                       </div>
@@ -934,7 +934,7 @@ export default function PaymentsPage() {
                   {iyerSettlements.length > 0 && (
                     <div className="pt-2 border-t border-slate-100 space-y-1.5">
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block">
-                        சமீபத்திய பரிவர்த்தனைகள் ({iyerSettlements.length})
+                        Recent Settlements ({iyerSettlements.length})
                       </span>
                       <div className="space-y-1">
                         {iyerSettlements.map((st) => (
@@ -963,7 +963,7 @@ export default function PaymentsPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-1.5">
                 <IndianRupee className="w-4 h-4 text-emerald-700" />
-                <span>கட்டணம் பெறுதல் / Record Payment</span>
+                <span>Record Payment</span>
               </h3>
               <button
                 type="button"
@@ -978,14 +978,14 @@ export default function PaymentsPage() {
               <div className="font-bold text-slate-900">{paymentBooking.customerName}</div>
               <div className="text-slate-600">{paymentBooking.poojaEnglishName} • {paymentBooking.bookingNumber}</div>
               <div className="text-amber-900 font-extrabold pt-1">
-                மொத்த நிலுவைத் தொகை: ₹{paymentBooking.balanceAmount?.toLocaleString("en-IN")}
+                Total Balance Due: ₹{paymentBooking.balanceAmount?.toLocaleString("en-IN")}
               </div>
             </div>
 
             <form onSubmit={handleConfirmRecordPayment} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  பெற்ற தொகை / Amount Received (₹) *
+                  Amount Received (₹) *
                 </label>
                 <input
                   type="number"
@@ -1001,7 +1001,7 @@ export default function PaymentsPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-700">
-                    கட்டண தேதி / Payment Date *
+                    Payment Date *
                   </label>
                   <div className="flex items-center gap-1 text-[10px]">
                     <button
@@ -1013,7 +1013,7 @@ export default function PaymentsPage() {
                           : "bg-slate-100 hover:bg-slate-200 text-slate-600"
                       }`}
                     >
-                      இன்று (Today)
+                      Today
                     </button>
                     <button
                       type="button"
@@ -1024,7 +1024,7 @@ export default function PaymentsPage() {
                       }}
                       className="px-1.5 py-0.5 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition"
                     >
-                      நேற்று
+                      Yesterday
                     </button>
                   </div>
                 </div>
@@ -1039,7 +1039,7 @@ export default function PaymentsPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  செலுத்திய முறை / Payment Method
+                  Payment Method
                 </label>
                 <select
                   value={paymentMethod}
@@ -1047,8 +1047,8 @@ export default function PaymentsPage() {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
                 >
                   <option value="UPI">UPI / Google Pay / PhonePe</option>
-                  <option value="CASH">ரொக்கம் (Cash in Hand)</option>
-                  <option value="BANK_TRANSFER">வங்கிப் பரிவர்த்தனை (Bank Transfer)</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
                 </select>
               </div>
 
@@ -1058,13 +1058,13 @@ export default function PaymentsPage() {
                   onClick={() => setPaymentBooking(null)}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
-                  ரத்து
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-sm transition"
                 >
-                  கட்டணம் பதிவு செய்
+                  Record Payment
                 </button>
               </div>
             </form>
@@ -1079,7 +1079,7 @@ export default function PaymentsPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-rose-900 flex items-center gap-1.5">
                 <AlertCircle className="w-5 h-5 text-rose-600" />
-                <span>கட்டணத்தை நீக்க / Reset</span>
+                <span>Reset Payment</span>
               </h3>
               <button
                 type="button"
@@ -1091,11 +1091,11 @@ export default function PaymentsPage() {
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              பக்தர் <strong className="text-slate-900">{resetConfirmBooking.customerName}</strong> அவர்களின் 
-              <strong className="text-slate-900"> #{resetConfirmBooking.bookingNumber}</strong> பதிவிற்கு செலுத்தப்பட்ட முன்பணம் 
-              <strong className="text-emerald-800"> ₹{(resetConfirmBooking.advanceAmount || 0).toLocaleString("en-IN")}</strong> நீக்கப்பட்டு, 
-              முழுத் தொகையும் (<strong className="text-amber-900">₹{resetConfirmBooking.totalAmount.toLocaleString("en-IN")}</strong>) 
-              மீண்டும் நிலுவையாக மாற்றப்படும். தொடரவா?
+              Devotee <strong className="text-slate-900">{resetConfirmBooking.customerName}</strong>&apos;s advance payment of 
+              <strong className="text-emerald-800"> ₹{(resetConfirmBooking.advanceAmount || 0).toLocaleString("en-IN")}</strong> for booking 
+              <strong className="text-slate-900"> #{resetConfirmBooking.bookingNumber}</strong> will be removed, and the full amount (
+              <strong className="text-amber-900">₹{resetConfirmBooking.totalAmount.toLocaleString("en-IN")}</strong>) 
+              will be restored as pending due. Are you sure you want to proceed?
             </p>
 
             <div className="flex gap-2 pt-1">
@@ -1104,14 +1104,14 @@ export default function PaymentsPage() {
                 onClick={() => setResetConfirmBooking(null)}
                 className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                வேண்டாம் / Cancel
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={handleConfirmResetPayment}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black shadow-2xs transition cursor-pointer"
               >
-                ஆம், நீக்கு / Reset
+                Yes, Reset Payment
               </button>
             </div>
           </div>
@@ -1123,7 +1123,7 @@ export default function PaymentsPage() {
         <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-slate-900">குருக்கள் பகிர்வு தொகை பதிவு</h3>
+              <h3 className="font-extrabold text-base text-slate-900">Record Priest Payout</h3>
               <button
                 type="button"
                 onClick={() => setSelectedIyerForSettlement(null)}
@@ -1136,7 +1136,7 @@ export default function PaymentsPage() {
             <form onSubmit={handleRecordSettlement} className="space-y-3.5">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  வழங்கிய தொகை (₹) *
+                  Payout Amount (₹) *
                 </label>
                 <input
                   type="number"
@@ -1150,7 +1150,7 @@ export default function PaymentsPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  வழங்கிய முறை / Payment Method
+                  Payment Method
                 </label>
                 <select
                   value={settlementMethod}
@@ -1158,14 +1158,14 @@ export default function PaymentsPage() {
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-purple-600"
                 >
                   <option value="UPI">UPI / Google Pay / PhonePe</option>
-                  <option value="CASH">ரொக்கம் (Cash in Hand)</option>
-                  <option value="BANK_TRANSFER">வங்கிப் பரிவர்த்தனை (NEFT / IMPS)</option>
+                  <option value="CASH">Cash</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
                 </select>
               </div>
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">
-                  குறிப்பு / UTR Reference (விருப்பத்தேர்வு)
+                  Reference / UTR / Note (Optional)
                 </label>
                 <input
                   type="text"
@@ -1182,13 +1182,13 @@ export default function PaymentsPage() {
                   onClick={() => setSelectedIyerForSettlement(null)}
                   className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
                 >
-                  ரத்து
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-purple-800 hover:bg-purple-900 text-white rounded-xl text-xs font-bold shadow-sm transition"
                 >
-                  உறுதி செய்க (Confirm)
+                  Confirm Payout
                 </button>
               </div>
             </form>

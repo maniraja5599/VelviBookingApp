@@ -1917,8 +1917,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(content).toContain("fetchCloudStats");
     expect(content).toContain("handlePerformCloudSync");
 
-    // Must have Tamil labels
-    expect(content).toContain("மேகக்கணி நேரலை தரவு சேமிப்பு");
+    // Must have cloud backup labels
+    expect(content).toContain("Cloud Storage");
   });
 });
 

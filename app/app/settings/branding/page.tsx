@@ -202,7 +202,7 @@ export default function BrandingSettingsPage() {
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brownDark flex items-center gap-1.5 uppercase tracking-wider">
               <ImageIcon className="w-3.5 h-3.5 text-velvi-gold" />
-              Business Logo / சின்னம்
+              Business Logo / Emblem
             </label>
             <span
               className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -280,7 +280,7 @@ export default function BrandingSettingsPage() {
             </div>
 
             <p className="text-[10px] text-velvi-brown/60 flex items-center gap-1">
-              <Info className="w-3 h-3 text-velvi-gold shrink-0" />
+              <Info className="w-3.5 h-3.5 text-velvi-gold shrink-0" />
               JPEG, PNG, WebP allowed up to 10MB. If empty, Velvi sacred Deepam logo is used.
             </p>
           </div>
@@ -290,7 +290,7 @@ export default function BrandingSettingsPage() {
         <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brown block">
-              Business Name (வணிகப் பெயர்)
+              Business Name
             </label>
             <span className="text-[10px] text-velvi-goldDark font-semibold">User Name by default</span>
           </div>
@@ -298,7 +298,7 @@ export default function BrandingSettingsPage() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. ஸ்ரீ வெங்கடேஸ்வரா வைதீக சேவைகள்"
+            placeholder="e.g. Sri Venkateswara Vaidheeka Services"
             className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold placeholder:text-velvi-brown/35"
           />
           <p className="text-[10px] text-velvi-brown/50">
@@ -310,7 +310,7 @@ export default function BrandingSettingsPage() {
         <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brown block">
-              Service Name / Subtitle (சேவைத் தலைப்பு)
+              Service Name / Subtitle
             </label>
             <span className="text-[10px] text-velvi-goldDark font-semibold">Default: Pooja • Homam • Seva</span>
           </div>
@@ -330,7 +330,7 @@ export default function BrandingSettingsPage() {
         <div className="bg-white p-3.5 rounded-2xl border border-velvi-gold/20 shadow-sm space-y-1">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-velvi-brown block">
-              Vadhyar / Iyer Name (சாஸ்திரிகள் பெயர்)
+              Vadhyar / Purohit Name
             </label>
             <span className="text-[10px] text-velvi-brown/50">Optional</span>
           </div>
@@ -481,20 +481,20 @@ export default function BrandingSettingsPage() {
         <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-3.5 space-y-2 text-xs">
           <div className="flex items-center gap-2 font-bold text-amber-900">
             <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>பயனுள்ள வழிகாட்டல் குறிப்புகள் (Helpful Tips)</span>
+            <span>Helpful Branding Tips</span>
           </div>
           <div className="space-y-1.5 text-[11px] text-amber-900/85 leading-relaxed">
             <p className="flex items-start gap-1.5">
               <span className="shrink-0">💡</span>
-              <span><strong>வணிக & சேவை பெயர்:</strong> உங்கள் ரசீதுகள் மற்றும் வாட்ஸ்அப் அழைப்பிதழ்களில் வணிகப் பெயரும் சேவைத் தலைப்பும் கம்பீரமாகத் தோன்றும்.</span>
+              <span><strong>Business &amp; Service Name:</strong> Your business name and service title will appear prominently on receipts and WhatsApp reminders.</span>
             </p>
             <p className="flex items-start gap-1.5">
               <span className="shrink-0">💡</span>
-              <span><strong>10MB உயர்தர சின்னம்:</strong> கோவில் கோபுரம், சுவாமி படம் அல்லது உங்கள் லோகோவை 10MB வரை தெளிவாகப் பதிவேற்றலாம்.</span>
+              <span><strong>High Quality Logo:</strong> Upload your temple tower, deity image, or custom emblem up to 10MB.</span>
             </p>
             <p className="flex items-start gap-1.5">
               <span className="shrink-0">💡</span>
-              <span><strong>வேள்வி வாட்டர்மார்க்:</strong> Velvi Pro சந்தாதாரர்கள் வாட்டர்மார்க்கை நீக்கி முழுமையான சொந்த பிராண்டிங் பெறலாம்.</span>
+              <span><strong>Velvi Watermark:</strong> Velvi Pro subscribers enjoy 100% white-label branding with no watermark.</span>
             </p>
           </div>
         </div>
@@ -503,10 +503,10 @@ export default function BrandingSettingsPage() {
         <div className="bg-gradient-to-b from-[#FFFDF8] to-[#FFF8EC] border-2 border-velvi-gold/40 rounded-3xl p-4 shadow-sacred space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-velvi-goldDark flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-velvi-gold" /> நேரடி மாதிரி தோற்றம் (Live Sample Preview)
+              <Sparkles className="w-3.5 h-3.5 text-velvi-gold" /> Live Sample Preview
             </span>
             <span className="text-[10px] bg-velvi-gold/20 text-velvi-brownDark px-2 py-0.5 rounded-full font-bold">
-              பக்தர்கள் பார்க்கும் வடிவம்
+              Devotee View Preview
             </span>
           </div>
 
@@ -517,18 +517,18 @@ export default function BrandingSettingsPage() {
                 size="md"
                 variant="icon"
                 customLogoUrl={logoUrl}
-                businessName={name || currentUser?.name || "வேத புரோஹிதர்"}
+                businessName={name || currentUser?.name || "Vedic Purohit"}
               />
               <div className="min-w-0 flex-1">
                 <h3 className="font-extrabold text-sm text-velvi-brownDark truncate leading-tight">
-                  {name || currentUser?.name || "ஸ்ரீ வெங்கடேஸ்வரா வைதீக சேவைகள்"}
+                  {name || currentUser?.name || "Sri Venkateswara Vaidheeka Services"}
                 </h3>
                 <p className="text-[11px] font-bold text-velvi-goldDark truncate">
                   {serviceName || "Pooja • Homam • Seva"}
                 </p>
                 {iyerName && (
                   <p className="text-[10px] text-velvi-brown/60 truncate">
-                    சாஸ்திரிகள்: {iyerName}
+                    Purohit: {iyerName}
                   </p>
                 )}
               </div>
@@ -561,12 +561,12 @@ export default function BrandingSettingsPage() {
               {showWatermark ? (
                 <div className="flex items-center gap-1.5 text-velvi-brown/60 bg-velvi-cream/60 px-2.5 py-1 rounded-lg w-full justify-center font-medium">
                   <span>⚡ Powered by</span>
-                  <span className="font-black text-velvi-brownDark tracking-wider">VELVI (வேள்வி)</span>
+                  <span className="font-black text-velvi-brownDark tracking-wider">VELVI</span>
                   <span className="text-[9px] text-velvi-brown/50">• www.velvi.app</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg w-full justify-center font-bold">
-                  <span>✨ 100% தூய தனிப்பயன் பிராண்டிங் (No Velvi Watermark)</span>
+                  <span>✨ 100% Custom Branding (No Velvi Watermark)</span>
                 </div>
               )}
             </div>

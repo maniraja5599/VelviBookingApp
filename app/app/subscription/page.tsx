@@ -135,7 +135,7 @@ export default function SubscriptionPage() {
   ];
 
   const handleCopyInvoiceText = (inv: any) => {
-    const text = `வேள்வி - Velvi Pro Subscription Receipt\n--------------------------------\nInvoice No: INV-VELVI-${inv.orderId}\nDate: ${new Date(inv.createdAt).toLocaleDateString("en-IN")}\nPriest/Business: ${currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}\nPlan: Velvi Pro (${inv.billingCycle})\nAmount Paid: ₹${inv.amount}\nStatus: PAID (SUCCESS)\nPayment Method: ${inv.paymentMethod || "Cashfree PG"}\nValid Until: ${formattedDate}\n--------------------------------\nThank you for choosing Velvi App!`;
+    const text = `VELVI - Velvi Pro Subscription Receipt\n--------------------------------\nInvoice No: INV-VELVI-${inv.orderId}\nDate: ${new Date(inv.createdAt).toLocaleDateString("en-IN")}\nPriest/Business: ${currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}\nPlan: Velvi Pro (${inv.billingCycle})\nAmount Paid: ₹${inv.amount}\nStatus: PAID (SUCCESS)\nPayment Method: ${inv.paymentMethod || "Cashfree PG"}\nValid Until: ${formattedDate}\n--------------------------------\nThank you for choosing Velvi App!`;
     navigator.clipboard.writeText(text);
     setCopyInvoiceSuccess(true);
     setTimeout(() => setCopyInvoiceSuccess(false), 2500);
@@ -143,15 +143,15 @@ export default function SubscriptionPage() {
 
   const handleShareWhatsAppInvoice = (inv: any) => {
     const msg = encodeURIComponent(
-      `*வேள்வி - Velvi Pro Subscription Tax Receipt*\n\n` +
-      `📄 *ரசீது எண் (Invoice No):* INV-VELVI-${inv.orderId}\n` +
-      `📅 *தேதி:* ${new Date(inv.createdAt).toLocaleDateString("en-IN")}\n` +
-      `👤 *பெயர்:* ${currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}\n` +
-      `💎 *திட்டம் (Plan):* Velvi Pro (${inv.billingCycle})\n` +
-      `💰 *செலுத்திய தொகை:* ₹${inv.amount}\n` +
-      `✅ *நிலை:* வெற்றி (Paid in Full)\n` +
-      `⏳ *செல்லுபடியாகும் இறுதி நாள்:* ${formattedDate} (${daysRemaining} நாட்கள்)\n\n` +
-      `_நல்லதே நம் நோக்கம் • Velvi Booking App_`
+      `*Velvi Pro Subscription Tax Receipt*\n\n` +
+      `📄 *Invoice No:* INV-VELVI-${inv.orderId}\n` +
+      `📅 *Date:* ${new Date(inv.createdAt).toLocaleDateString("en-IN")}\n` +
+      `👤 *Name:* ${currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}\n` +
+      `💎 *Plan:* Velvi Pro (${inv.billingCycle})\n` +
+      `💰 *Amount Paid:* ₹${inv.amount}\n` +
+      `✅ *Status:* Paid in Full (SUCCESS)\n` +
+      `⏳ *Valid Until:* ${formattedDate} (${daysRemaining} Days)\n\n` +
+      `_Velvi Booking App • Sacred Ceremonies Platform_`
     );
     window.open(`https://wa.me/?text=${msg}`, "_blank");
   };
@@ -251,13 +251,12 @@ export default function SubscriptionPage() {
           month: "short",
           year: "numeric",
         });
-
         setPaymentSuccessMessage(
-          `கூப்பன் '${appliedCoupon.code}' வெற்றிகரமாக ஏற்கப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${res.daysAdded} நாட்கள் இலவசம்).`
+          `Coupon '${appliedCoupon.code}' applied successfully! Velvi Pro validity extended to ${newExpiry} (+${res.daysAdded} bonus days).`
         );
         handleRemoveCoupon();
       } else {
-        setCouponError(res.error || "கூப்பன் பயன்படுத்த முடியவில்லை");
+        setCouponError(res.error || "Unable to redeem coupon");
       }
     } catch (e: any) {
       setCouponError(e.message || "Failed to redeem coupon");
@@ -425,7 +424,7 @@ export default function SubscriptionPage() {
           : formattedProjectedDate;
 
         setPaymentSuccessMessage(
-          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${totalDaysToAdd} நாட்கள்).`
+          `Cashfree payment verified! Velvi Pro validity extended to ${newExpiry} (+${totalDaysToAdd} days).`
         );
         handleRemoveCoupon();
         setShowCheckoutModal(false);
@@ -434,7 +433,7 @@ export default function SubscriptionPage() {
         setPaymentSuccessMessage("");
         setCouponError(
           verifyData?.message ||
-            "கட்டணம் செலுத்தப்படவில்லை அல்லது ரத்து செய்யப்பட்டது. சந்தா செல்லுபடியாகும் காலம் மாற்றப்படவில்லை."
+            "Payment was not completed or cancelled. Subscription validity remains unchanged."
         );
         setShowCheckoutModal(false);
         setShowCancelledModal(true);
@@ -505,7 +504,7 @@ export default function SubscriptionPage() {
           }`}
         >
           <Sparkles className="w-3.5 h-3.5 text-velvi-gold" />
-          <span>திட்டங்கள் &amp; புதுப்பித்தல் (Plans)</span>
+          <span>Plans &amp; Renewal</span>
         </button>
 
         <button
@@ -518,9 +517,9 @@ export default function SubscriptionPage() {
           }`}
         >
           <FileText className="w-3.5 h-3.5 text-velvi-gold" />
-          <span>செல்லுபடியாகும் காலம் &amp; ரசீதுகள்</span>
+          <span>Validity &amp; Invoices</span>
           <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-300">
-            {daysRemaining} நாட்கள்
+            {daysRemaining} Days
           </span>
         </button>
       </div>
@@ -601,7 +600,7 @@ export default function SubscriptionPage() {
             <Gift className="w-4 h-4" />
             <span>
               {isProcessing
-                ? "செயல்படுத்துகிறது..."
+                ? "Processing..."
                 : `🎁 Redeem Free Velvi Pro (+${totalDaysToAdd} Days)`}
             </span>
           </button>
@@ -669,7 +668,7 @@ export default function SubscriptionPage() {
 
         {/* Projected Validity Information */}
         <div className="text-[11px] text-velvi-brown/80 bg-velvi-cream/40 p-2.5 rounded-xl border border-velvi-gold/20 flex items-center justify-between">
-          <span>புதிய செல்லுபடியாகும் தேதி (New Validity):</span>
+          <span>New Validity:</span>
           <strong className="text-velvi-brownDark font-bold">
             {formattedProjectedDate} (+{totalDaysToAdd} days)
           </strong>
@@ -684,7 +683,7 @@ export default function SubscriptionPage() {
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-velvi-goldDark" />
             <h4 className="font-bold text-xs text-velvi-brownDark">
-              Promo / Coupon Code (கூப்பன் குறியீடு)
+              Promo / Coupon Code
             </h4>
           </div>
           {appliedCoupon && (
@@ -829,7 +828,7 @@ export default function SubscriptionPage() {
 
               <span className="text-xs font-bold text-velvi-goldDark flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                <span>செல்லுபடியாகும் நிலை</span>
+                <span>Validity Status</span>
               </span>
             </div>
 
@@ -837,11 +836,11 @@ export default function SubscriptionPage() {
             <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between">
               <div className="space-y-0.5">
                 <span className="text-[11px] font-bold text-emerald-900/70 uppercase tracking-wider block">
-                  மீதமுள்ள நாட்கள் (Days Remaining)
+                  Days Remaining
                 </span>
                 <div className="text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
                   <span>{daysRemaining}</span>
-                  <span className="text-sm font-bold text-emerald-800">நாட்கள் (Days)</span>
+                  <span className="text-sm font-bold text-emerald-800">Days</span>
                 </div>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-300/80 shadow-2xs flex items-center justify-center text-emerald-700">
@@ -852,11 +851,11 @@ export default function SubscriptionPage() {
             {/* Validity Details Grid */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                <span className="text-[10.5px] text-velvi-brown/60 block">தொடக்க தேதி (Start Date)</span>
+                <span className="text-[10.5px] text-velvi-brown/60 block">Start Date</span>
                 <span className="font-bold text-velvi-brownDark">{formattedStartDate}</span>
               </div>
               <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                <span className="text-[10.5px] text-velvi-brown/60 block">முடிவடையும் நாள் (Expiry Date)</span>
+                <span className="text-[10.5px] text-velvi-brown/60 block">Expiry Date</span>
                 <span className="font-extrabold text-emerald-900">{formattedDate}</span>
               </div>
             </div>
@@ -865,19 +864,19 @@ export default function SubscriptionPage() {
             <div className="pt-2 border-t border-velvi-gold/20 space-y-1.5 text-xs text-velvi-brownDark">
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>வரம்பற்ற பூஜா முன்பதிவுகள் &amp; பக்தர் தரவுத்தளம்</span>
+                <span>Unlimited Pooja Bookings &amp; Devotee Database</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>வாட்ஸ்அப் ஆட்டோமேஷன், பில் &amp; நினைவூட்டல் ரசீதுகள்</span>
+                <span>WhatsApp Automation, Invoices &amp; Reminder Receipts</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>மேகக்கணி காப்புப்பிரதி &amp; எக்செல் ஏற்றுமதி வசதி</span>
+                <span>Cloud Backup &amp; Excel Export</span>
               </div>
               <div className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>100% விளம்பரமற்ற அசல் வாட்டர்மார்க் இல்லாத சேவை</span>
+                <span>100% Ad-Free &amp; No Watermark</span>
               </div>
             </div>
           </div>
@@ -890,22 +889,22 @@ export default function SubscriptionPage() {
               </div>
               <div>
                 <h4 className="font-bold text-xs text-velvi-brownDark">
-                  வரவிருக்கும் நீட்டிப்பு நிலை (Upcoming &amp; Queued Validity)
+                  Upcoming &amp; Queued Validity
                 </h4>
                 <p className="text-[10.5px] text-velvi-brown/60">
-                  சந்தா காலம் எவ்வாறு சேர்க்கப்படுகிறது?
+                  How is validity extended?
                 </p>
               </div>
             </div>
 
             <div className="bg-amber-50/70 rounded-2xl p-3.5 border border-amber-200/70 text-xs text-velvi-brown space-y-2">
               <p className="leading-relaxed text-[11.5px]">
-                🛡️ <strong>முந்தைய நாட்கள் இழக்கப்படாது:</strong> உங்கள் சந்தா இப்போது செயலில் இருக்கும் போதே நீங்கள் புதுப்பித்தாலோ அல்லது ப்ரோமோ கோட் உள்ளிட்டாலோ, புதிய நாட்கள் தற்போதைய முடிவு தேதியான <strong>{formattedDate}</strong>-லிருந்து தானாகவே அடுத்தடுத்து வரிசையில் சேர்க்கப்படும்.
+                🛡️ <strong>No Days Lost:</strong> If you renew or enter a promo code while your subscription is active, new days are automatically queued after your current expiry date (<strong>{formattedDate}</strong>).
               </p>
               <div className="flex items-center justify-between text-[11px] bg-white/90 p-2.5 rounded-xl border border-amber-200">
-                <span>இப்போது புதுப்பித்தால் புதிய இறுதி நாள்:</span>
+                <span>New Expiry if Renewed Now:</span>
                 <strong className="text-emerald-900 font-black">
-                  {formattedProjectedDate} (+{totalDaysToAdd} நாட்கள்)
+                  {formattedProjectedDate} (+{totalDaysToAdd} Days)
                 </strong>
               </div>
             </div>
@@ -916,7 +915,7 @@ export default function SubscriptionPage() {
               className="w-full py-2.5 bg-velvi-cream hover:bg-velvi-creamDark text-velvi-brownDark rounded-xl text-xs font-bold border border-velvi-gold/30 transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
             >
               <Sparkles className="w-3.5 h-3.5 text-velvi-gold" />
-              <span>புதிய திட்டத்தை சேர்க்க / புதுப்பிக்க (Extend Plan Now →)</span>
+              <span>Extend Plan Now →</span>
             </button>
           </div>
 
@@ -926,11 +925,11 @@ export default function SubscriptionPage() {
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-velvi-goldDark" />
                 <h4 className="font-bold text-xs text-velvi-brownDark">
-                  செல்லுபடியாகும் கால நீட்டிப்பு வரலாறு (Validity History)
+                  Validity Extension History
                 </h4>
               </div>
               <span className="text-[10px] font-bold text-velvi-brown/60">
-                {businessAdjustments.length + displayInvoices.length} பதிவுகள்
+                {businessAdjustments.length + displayInvoices.length} entries
               </span>
             </div>
 
@@ -944,7 +943,7 @@ export default function SubscriptionPage() {
                     <div className="space-y-0.5 min-w-0 pr-2">
                       <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
                         <span className="text-emerald-700 font-extrabold">
-                          +{adj.daysChanged} நாட்கள்
+                          +{adj.daysChanged} Days
                         </span>
                         <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
                           {adj.adjustmentType}
@@ -965,7 +964,7 @@ export default function SubscriptionPage() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[10px] text-velvi-brown/60 block">புதிய முடிவு நாள்</span>
+                      <span className="text-[10px] text-velvi-brown/60 block">New Expiry Date</span>
                       <span className="font-bold text-slate-800 text-[11px]">
                         {new Date(adj.newEndDate).toLocaleDateString("en-IN", {
                           day: "numeric",
@@ -980,7 +979,7 @@ export default function SubscriptionPage() {
                 <div className="p-3 bg-velvi-cream/30 rounded-2xl border border-velvi-gold/20 flex items-center justify-between text-xs">
                   <div className="space-y-0.5">
                     <div className="font-bold text-velvi-brownDark flex items-center gap-1.5">
-                      <span className="text-emerald-700 font-extrabold">+30 நாட்கள் Pro</span>
+                      <span className="text-emerald-700 font-extrabold">+30 Days Pro</span>
                       <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-semibold">
                         ACTIVE
                       </span>
@@ -994,7 +993,7 @@ export default function SubscriptionPage() {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] text-velvi-brown/60 block">செல்லுபடியாகும் நாள்</span>
+                    <span className="text-[10px] text-velvi-brown/60 block">Valid Until</span>
                     <span className="font-bold text-slate-800 text-[11px]">{formattedDate}</span>
                   </div>
                 </div>
@@ -1008,7 +1007,7 @@ export default function SubscriptionPage() {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-velvi-goldDark" />
                 <h4 className="font-bold text-xs text-velvi-brownDark">
-                  கட்டண ரசீதுகள் &amp; பதிவிறக்கம் (Invoices &amp; Receipts)
+                  Invoices &amp; Receipts
                 </h4>
               </div>
               <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -1017,7 +1016,7 @@ export default function SubscriptionPage() {
             </div>
 
             <p className="text-[11px] text-velvi-brown/60">
-              உங்கள் Velvi Pro சந்தாவுக்கான வரி ரசீதை (Tax Invoice) எளிதாகப் பார்க்கவும், பதிவிறக்கவும் செய்யலாம்.
+              View and download official tax receipts for your Velvi Pro subscription.
             </p>
 
             <div className="space-y-2.5">
@@ -1043,7 +1042,7 @@ export default function SubscriptionPage() {
                     </div>
 
                     <div className="text-xs font-black text-emerald-950">
-                      தொகை: ₹{inv.amount}
+                      Amount: ₹{inv.amount}
                     </div>
                   </div>
 
@@ -1056,7 +1055,7 @@ export default function SubscriptionPage() {
                       title="Download or Print Invoice"
                     >
                       <Download className="w-3.5 h-3.5 text-velvi-goldLight" />
-                      <span>ரசீதை பதிவிறக்கு</span>
+                      <span>Download Receipt</span>
                     </button>
 
                     <button
@@ -1128,7 +1127,7 @@ export default function SubscriptionPage() {
             </div>
 
             <p className="text-[11px] text-velvi-brown/60 leading-normal">
-              🔒 Cashfree நேரடி Payment Gateway வழி செலுத்துதல். தற்போதைய சந்தா முடிவடைந்த நாளிலிருந்து மேலும் {totalDaysToAdd} நாட்கள் நீட்டிக்கப்படும்.
+              🔒 Direct payment via Cashfree Payment Gateway. {totalDaysToAdd} days will be added starting from your current expiry date.
             </p>
 
             <div className="space-y-2 pt-1">
@@ -1149,7 +1148,7 @@ export default function SubscriptionPage() {
                 onClick={() => setShowCheckoutModal(false)}
                 className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
               >
-                ரத்து செய்க (Cancel)
+                Cancel
               </button>
             </div>
           </div>
@@ -1214,7 +1213,7 @@ export default function SubscriptionPage() {
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-velvi-gold" />
                 <span className="font-bold text-xs text-velvi-brownDark">
-                  ரசீது முன்னோட்டம் (Tax Invoice Preview)
+                  Tax Invoice Preview
                 </span>
               </div>
               <button
@@ -1235,10 +1234,10 @@ export default function SubscriptionPage() {
                     <span className="text-2xl">🪔</span>
                     <div>
                       <h2 className="text-xl font-black text-velvi-brownDark tracking-tight font-serif uppercase">
-                        வேள்வி (VELVI)
+                        VELVI
                       </h2>
                       <p className="text-[10px] font-bold text-amber-800">
-                        நல்லதே நம் நோக்கம் • Sacred Platform
+                        Sacred Platform for Priests &amp; Temples
                       </p>
                     </div>
                   </div>
@@ -1249,13 +1248,13 @@ export default function SubscriptionPage() {
 
                 <div className="text-right">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block">
-                    TAX INVOICE / ரசீது
+                    TAX INVOICE / RECEIPT
                   </span>
                   <div className="font-mono font-bold text-sm text-slate-900 mt-0.5">
                     INV-VELVI-{selectedInvoice.orderId.slice(-8).toUpperCase()}
                   </div>
                   <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                    PAID (வெற்றி)
+                    PAID (SUCCESS)
                   </span>
                 </div>
               </div>
@@ -1264,7 +1263,7 @@ export default function SubscriptionPage() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="space-y-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    பெறுநர் (Billed To):
+                    Billed To:
                   </span>
                   <p className="font-bold text-slate-900 text-sm">
                     {currentBusiness?.name || currentUser?.name || "Velvi Vadhyar"}
@@ -1282,10 +1281,10 @@ export default function SubscriptionPage() {
 
                 <div className="space-y-1 text-right">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                    கட்டண விவரம் (Payment Info):
+                    Payment Info:
                   </span>
                   <p className="text-[11px] text-slate-700">
-                    <strong>தேதி:</strong> {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                    <strong>Date:</strong> {new Date(selectedInvoice.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                   <p className="text-[11px] text-slate-700">
                     <strong>Order ID:</strong> <span className="font-mono">{selectedInvoice.orderId}</span>
@@ -1299,8 +1298,8 @@ export default function SubscriptionPage() {
               {/* Itemized Table */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden text-xs">
                 <div className="bg-slate-50 px-4 py-2.5 font-bold text-slate-700 border-b border-slate-200 flex justify-between">
-                  <span>சேவை விவரம் (Service Description)</span>
-                  <span>தொகை (Amount)</span>
+                  <span>Service Description</span>
+                  <span>Amount</span>
                 </div>
                 <div className="p-4 space-y-1">
                   <div className="flex justify-between items-start">
@@ -1309,10 +1308,10 @@ export default function SubscriptionPage() {
                         Velvi Pro Membership Subscription ({selectedInvoice.billingCycle})
                       </span>
                       <p className="text-[11px] text-slate-500">
-                        Unlimited Bookings, Devotee CRM, WhatsApp automation, Dual Tamil-English Calendar, Priority Cloud Backup
+                        Unlimited Bookings, Devotee CRM, WhatsApp automation, Dual Calendar, Priority Cloud Backup
                       </p>
                       <p className="text-[11px] font-semibold text-emerald-800 mt-1">
-                        செல்லுபடியாகும் காலம்: {formattedDate} வரை ({daysRemaining} நாட்கள்)
+                        Validity Period: Until {formattedDate} ({daysRemaining} Days)
                       </p>
                     </div>
                     <span className="font-bold text-slate-900 text-sm">
@@ -1322,7 +1321,7 @@ export default function SubscriptionPage() {
                 </div>
 
                 <div className="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-between items-center text-sm font-black">
-                  <span>மொத்த தொகை (Total Paid):</span>
+                  <span>Total Paid:</span>
                   <span className="text-base text-emerald-900">₹{selectedInvoice.amount}</span>
                 </div>
               </div>
@@ -1330,10 +1329,10 @@ export default function SubscriptionPage() {
               {/* Disclaimer / Note */}
               <div className="text-[10.5px] text-slate-500 space-y-1 border-t pt-3 border-slate-100">
                 <p>
-                  🔒 இது கணினியால் உருவாக்கப்பட்ட அதிகாரப்பூர்வ வரி ரசீது (Computer generated tax invoice). கையொப்பம் தேவையில்லை.
+                  🔒 This is an official computer-generated tax invoice. No signature required.
                 </p>
                 <p>
-                  மின்னஞ்சல்: support@velvi.app • இணையதளம்: https://velvi-booking-app.vercel.app
+                  Email: support@velvi.app • Website: https://velvi-booking-app.vercel.app
                 </p>
               </div>
             </div>
@@ -1346,7 +1345,7 @@ export default function SubscriptionPage() {
                 className="flex-1 py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98"
               >
                 <Printer className="w-4 h-4 text-velvi-goldLight" />
-                <span>🖨️ PDF / பிரிண்ட் செய்க</span>
+                <span>🖨️ Print / Save PDF</span>
               </button>
 
               <button
@@ -1355,7 +1354,7 @@ export default function SubscriptionPage() {
                 className="px-3 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition cursor-pointer active:scale-98"
                 title="Copy Text Receipt"
               >
-                {copyInvoiceSuccess ? "நகலெடுக்கப்பட்டது!" : "📋 Copy"}
+                {copyInvoiceSuccess ? "Copied!" : "📋 Copy"}
               </button>
 
               <button
@@ -1363,7 +1362,7 @@ export default function SubscriptionPage() {
                 onClick={() => setSelectedInvoice(null)}
                 className="px-3 py-2.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold border border-slate-300 transition cursor-pointer"
               >
-                மூடுக
+                Close
               </button>
             </div>
           </div>

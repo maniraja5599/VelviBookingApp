@@ -234,7 +234,7 @@ export default function DataBackupPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-base text-slate-900">
-                  மேகக்கணி சேமிப்பு (Cloud Storage)
+                  Cloud Storage
                 </h3>
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -242,7 +242,7 @@ export default function DataBackupPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                மேகக்கணி நேரலை தரவு சேமிப்பு &amp; ஒத்திசைவு நிலை
+                Live Cloud Data Storage &amp; Sync Status
               </p>
             </div>
           </div>
@@ -266,8 +266,7 @@ export default function DataBackupPage() {
             <div className="text-xl font-black text-slate-900 mt-0.5">
               {cloudData?.business?.bookingsCount ?? bookingCount}
             </div>
-            <div className="text-[11px] font-bold text-amber-950">முன்பதிவுகள்</div>
-            <div className="text-[10px] text-slate-500 font-medium">Bookings</div>
+            <div className="text-xs font-bold text-amber-950 mt-1">Bookings</div>
           </div>
 
           {/* Devotees */}
@@ -276,8 +275,7 @@ export default function DataBackupPage() {
             <div className="text-xl font-black text-slate-900 mt-0.5">
               {cloudData?.business?.customersCount ?? customerCount}
             </div>
-            <div className="text-[11px] font-bold text-emerald-950">பக்தர்கள்</div>
-            <div className="text-[10px] text-slate-500 font-medium">Devotees</div>
+            <div className="text-xs font-bold text-emerald-950 mt-1">Devotees</div>
           </div>
 
           {/* Poojas */}
@@ -286,8 +284,7 @@ export default function DataBackupPage() {
             <div className="text-xl font-black text-slate-900 mt-0.5">
               {cloudData?.business?.poojasCount ?? poojaCount}
             </div>
-            <div className="text-[11px] font-bold text-rose-950">பூஜைகள்</div>
-            <div className="text-[10px] text-slate-500 font-medium">Poojas</div>
+            <div className="text-xs font-bold text-rose-950 mt-1">Poojas</div>
           </div>
         </div>
 
@@ -297,16 +294,16 @@ export default function DataBackupPage() {
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <div>
               <span className="font-bold text-slate-900">
-                பாதுகாப்பான மேகக்கணி தரவுத்தளம் ({cloudData?.business?.totalRecords ?? (bookingCount + customerCount + poojaCount)} records)
+                Secure Cloud Database ({cloudData?.business?.totalRecords ?? (bookingCount + customerCount + poojaCount)} records)
               </span>
               <span className="text-[11px] text-slate-500 block">
-                {lastVerifiedTime ? `கடைசியாக சரிபார்க்கப்பட்டது: ${lastVerifiedTime}` : "இணைப்பு தயாராக உள்ளது"}
+                {lastVerifiedTime ? `Last synced: ${lastVerifiedTime}` : "Connection Ready"}
                 {cloudData?.business?.paymentsCount !== undefined && ` • ${cloudData.business.paymentsCount} payments`}
               </span>
             </div>
           </div>
           <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-            ✓ 100% பாதுகாப்பானது
+            ✓ 100% Secure
           </span>
         </div>
 
@@ -321,12 +318,12 @@ export default function DataBackupPage() {
             {isSyncingCloud ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                <span>மேகக்கணியுடன் ஒத்திசைக்கிறது...</span>
+                <span>Syncing with Cloud...</span>
               </>
             ) : (
               <>
                 <Cloud className="w-4 h-4 text-amber-100" />
-                <span>இப்போதே மேகக்கணியுடன் ஒத்திசை (Sync to Cloud Now)</span>
+                <span>Sync to Cloud Now</span>
               </>
             )}
           </button>

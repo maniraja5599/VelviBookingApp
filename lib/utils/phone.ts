@@ -49,16 +49,18 @@ export function cleanPastedIndianMobile(input: string): string {
 export function inspectIndianMobile(input: string): {
   status: "EMPTY" | "VALID" | "TOO_SHORT" | "TOO_LONG" | "INVALID_START";
   messageTa: string;
+  messageEn: string;
   digitCount: number;
 } {
   const digits = input.replace(/\D/g, "");
   if (!digits) {
-    return { status: "EMPTY", messageTa: "விருப்பத்தேர்வு (Optional)", digitCount: 0 };
+    return { status: "EMPTY", messageTa: "விருப்பத்தேர்வு (Optional)", messageEn: "Optional", digitCount: 0 };
   }
   if (digits.length < 10) {
     return {
       status: "TOO_SHORT",
       messageTa: `⚠️ ${digits.length}/10 இலக்கங்கள் (இன்னும் ${10 - digits.length} எண்கள் தேவை)`,
+      messageEn: `⚠️ ${digits.length}/10 digits (${10 - digits.length} more needed)`,
       digitCount: digits.length,
     };
   }
@@ -66,6 +68,7 @@ export function inspectIndianMobile(input: string): {
     return {
       status: "TOO_LONG",
       messageTa: `⚠️ 10 இலக்கங்களுக்கு மேல் உள்ளது (${digits.length} எண்கள்)`,
+      messageEn: `⚠️ Exceeds 10 digits (${digits.length} digits entered)`,
       digitCount: digits.length,
     };
   }
@@ -73,12 +76,14 @@ export function inspectIndianMobile(input: string): {
     return {
       status: "INVALID_START",
       messageTa: "⚠️ எண் 6, 7, 8 அல்லது 9-ல் தொடங்க வேண்டும்",
+      messageEn: "⚠️ Number must begin with 6, 7, 8, or 9",
       digitCount: digits.length,
     };
   }
   return {
     status: "VALID",
     messageTa: "✅ சரியான 10 இலக்க எண்",
+    messageEn: "✅ Valid 10-digit mobile number",
     digitCount: 10,
   };
 }

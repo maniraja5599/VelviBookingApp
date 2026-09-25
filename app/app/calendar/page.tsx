@@ -1249,8 +1249,8 @@ export default function CalendarPage() {
                 <div className="border border-dashed border-amber-300 rounded-xl p-2.5 sm:p-3 bg-[#fefcf3] flex items-center justify-center gap-2.5 text-center">
                   <span className="text-xl">🪔</span>
                   <div className="text-xs text-slate-700 font-semibold leading-relaxed">
-                    <div>இத்தேதியில் முன்பதிவுகள் ஏதுமில்லை</div>
-                    <div className="text-slate-500 text-[10.5px] font-normal">(புதிய பதிவு செய்யலாம்)</div>
+                    <div>No bookings scheduled on this date</div>
+                    <div className="text-slate-500 text-[10.5px] font-normal">(Open for bookings)</div>
                   </div>
                 </div>
               ) : (
@@ -1308,7 +1308,7 @@ export default function CalendarPage() {
                           href={`/app/bookings/${b.id}`}
                           className="text-[10.5px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
                         >
-                          <span>விவரம்</span>
+                          <span>Details</span>
                           <ArrowRight className="w-3 h-3 text-slate-400" />
                         </Link>
 
@@ -1322,7 +1322,7 @@ export default function CalendarPage() {
                           className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer"
                         >
                           <FileText className="w-3 h-3 text-amber-800" />
-                          <span>Pooja Slip (ரசீது & QR)</span>
+                          <span>Pooja Slip &amp; QR</span>
                         </button>
                       </div>
                     </div>
@@ -1628,7 +1628,7 @@ export default function CalendarPage() {
               onClick={() => setShowPanchangamGuide(false)}
               className="w-full py-2.5 bg-velvi-brown text-white font-bold rounded-xl text-xs hover:bg-velvi-brownLight transition active:scale-95 shadow-sm"
             >
-              சரி, புரிந்தது (Close)
+              Close
             </button>
           </div>
         </div>
@@ -1652,10 +1652,10 @@ export default function CalendarPage() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm sm:text-base text-emerald-950">
-                    மாதம் &amp; வருடம் தேர்வு
+                    Select Month &amp; Year
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    விரும்பிய மாதம் மற்றும் வருடத்திற்கு நேரடியாக செல்லலாம்
+                    Jump directly to any desired month and year
                   </p>
                 </div>
               </div>
@@ -1672,10 +1672,10 @@ export default function CalendarPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-bold text-slate-700 tracking-wide">
-                  வருடம் (Year)
+                  Year
                 </label>
                 <span className="text-[11px] font-bold text-emerald-800">
-                  தேர்வு: {pickerYear}
+                  Selected: {pickerYear}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
@@ -1699,7 +1699,7 @@ export default function CalendarPage() {
             {/* 12 Months Grid */}
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-2 tracking-wide">
-                மாதம் (Month) – {pickerYear}
+                Month – {pickerYear}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {MONTH_PICKER_DATA.map((m, idx) => {
@@ -1765,7 +1765,7 @@ export default function CalendarPage() {
                 onClick={handlePickerJumpToday}
                 className="flex-1 py-2.5 px-3 bg-amber-100 hover:bg-amber-200/80 text-amber-950 font-bold rounded-xl text-xs transition active:scale-95 border border-amber-300/60"
               >
-                இன்றைய தேதி (Current Month)
+                Current Month
               </button>
               <button
                 type="button"
@@ -2081,7 +2081,7 @@ export default function CalendarPage() {
                     href={`/app/bookings/new?date=${selectedDate}`}
                     className="text-[11px] font-bold text-amber-800 hover:text-amber-900 flex items-center gap-0.5"
                   >
-                    <span>+ புதிய பதிவு</span>
+                    <span>+ New Booking</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -2089,17 +2089,17 @@ export default function CalendarPage() {
                 {selectedDayBookings.length === 0 ? (
                   <div className="border border-dashed border-amber-300/80 rounded-2xl p-4 text-center text-xs bg-amber-50/50 space-y-2">
                     <p className="font-extrabold text-amber-950">
-                      இத்தேதியில் இதுவரை முன்பதிவுகள் ஏதுமில்லை (Open for Bookings)
+                      No bookings scheduled on this date (Open for Bookings)
                     </p>
                     <p className="text-[11px] text-slate-600">
-                      பக்தர்களுக்கு புதிய பூஜை முன்பதிவு செய்ய கீழேயுள்ள பட்டனை கிளிக் செய்யவும்.
+                      Click the button below to create a new pooja booking for devotees.
                     </p>
                     <Link
                       href={`/app/bookings/new?date=${selectedDate}`}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-900 hover:bg-emerald-950 text-white rounded-xl font-bold text-xs shadow-2xs transition active:scale-95"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>பூஜை முன்பதிவு செய்ய</span>
+                      <span>Book Pooja</span>
                     </Link>
                   </div>
                 ) : (
@@ -2158,7 +2158,7 @@ export default function CalendarPage() {
                             href={`/app/bookings/${b.id}`}
                             className="text-[11px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-1"
                           >
-                            <span>முழு விவரம்</span>
+                            <span>Details</span>
                             <ArrowRight className="w-3 h-3 text-slate-400" />
                           </Link>
 
@@ -2172,7 +2172,7 @@ export default function CalendarPage() {
                             className="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300/80 rounded-lg text-[10.5px] font-extrabold flex items-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer"
                           >
                             <FileText className="w-3 h-3 text-amber-800" />
-                            <span>Pooja Slip (ரசீது & QR)</span>
+                            <span>Pooja Slip &amp; QR</span>
                           </button>
                         </div>
                       </div>
@@ -2191,8 +2191,7 @@ export default function CalendarPage() {
                 title="Share Panchangam on WhatsApp"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">வாட்ஸ்அப்</span>
-                <span>பகிர்</span>
+                <span>Share</span>
               </button>
 
               <Link
@@ -2200,7 +2199,7 @@ export default function CalendarPage() {
                 className="flex-1 py-2.5 px-3 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-700 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>இந்த தேதியில் பூஜை பதிவு</span>
+                <span>Book Pooja on this Date</span>
               </Link>
 
               <button

@@ -742,7 +742,7 @@ export default function SettingsHubPage() {
                     Recycle Bin &amp; Change Log
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    நீக்கப்பட்டவை மற்றும் சமீபத்திய மாற்றங்கள் வரலாறு
+                    Deleted items and recent activity history
                   </p>
                 </div>
               </div>
@@ -767,7 +767,7 @@ export default function SettingsHubPage() {
                 }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>நீக்கப்பட்டவை ({recentlyDeleted.length})</span>
+                <span>Recycle Bin ({recentlyDeleted.length})</span>
               </button>
               <button
                 type="button"
@@ -779,7 +779,7 @@ export default function SettingsHubPage() {
                 }`}
               >
                 <History className="w-3.5 h-3.5" />
-                <span>மாற்றங்கள் வரலாறு ({auditLogs.length})</span>
+                <span>Change History ({auditLogs.length})</span>
               </button>
             </div>
 
@@ -792,20 +792,20 @@ export default function SettingsHubPage() {
                       <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                     </div>
                     <h4 className="font-bold text-xs text-slate-800">
-                      நீக்கப்பட்ட பதிவுகள் எதுவும் இல்லை
+                      No Deleted Items Found
                     </h4>
                     <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
-                      நீங்கள் நீக்கும் முன்பதிவுகள், பூஜைகள் அல்லது பக்தர்கள் இங்கு பட்டியலிடப்பட்டு மீட்டெடுக்க முடியும்.
+                      Any bookings, poojas, or devotees you delete will appear here and can be restored anytime.
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-[11px] text-slate-500 pb-1">
-                      <span>மொத்தம்: {recentlyDeleted.length} பதிவுகள்</span>
+                      <span>Total: {recentlyDeleted.length} items</span>
                       <button
                         type="button"
                         onClick={() => {
-                          if (confirm("குப்பைத் தொட்டியில் உள்ள அனைத்து பதிவுகளையும் நிரந்தரமாக அழிக்கவா?")) {
+                          if (confirm("Permanently empty all items in the recycle bin?")) {
                             db.clearRecentlyDeleted();
                             setRecentlyDeleted([]);
                           }
@@ -853,7 +853,7 @@ export default function SettingsHubPage() {
                           title="Restore Record"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
-                          <span>மீட்டெடு</span>
+                          <span>Restore</span>
                         </button>
                       </div>
                     ))}
@@ -863,7 +863,7 @@ export default function SettingsHubPage() {
                 /* History Tab */
                 auditLogs.length === 0 ? (
                   <div className="py-12 text-center text-slate-400 text-xs">
-                    பதிவுகள் எதுவும் இல்லை (No change logs)
+                    No change logs recorded yet
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -897,7 +897,7 @@ export default function SettingsHubPage() {
                 onClick={() => setShowTrashModal(false)}
                 className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition"
               >
-                Close (மூடு)
+                Close
               </button>
             </div>
           </div>
@@ -923,13 +923,13 @@ export default function SettingsHubPage() {
                   Clear Demo Data?
                 </h3>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  மாதிரித் தரவுகளை நீக்கு
+                  Reset sample records
                 </p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed bg-rose-50/70 p-3 rounded-2xl border border-rose-100">
-              மாதிரி முன்பதிவுகள் (Demo Bookings) மற்றும் மாதிரி பக்தர்களின் விவரங்களை நீக்கவா? உங்கள் சொந்த முன்பதிவுகள் பாதிக்கப்படாது.
+              Clear all sample demo bookings and devotees? Your real bookings and devotees will remain completely safe.
             </p>
 
             <div className="flex items-center gap-2 pt-1">
@@ -938,19 +938,19 @@ export default function SettingsHubPage() {
                 onClick={() => setShowClearDemoModal(false)}
                 className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={() => {
                   const res = db.clearDemoData();
                   setShowClearDemoModal(false);
-                  setToastMessage(`மாதிரி முன்பதிவுகள் (${res.removedBookings}) மற்றும் பக்தர்கள் (${res.removedCustomers}) வெற்றிகரமாக நீக்கப்பட்டன!`);
+                  setToastMessage(`Demo bookings (${res.removedBookings}) and devotees (${res.removedCustomers}) cleared successfully!`);
                   setTimeout(() => setToastMessage(null), 4000);
                 }}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-sm transition cursor-pointer"
               >
-                ஆம், நீக்கு (Clear)
+                Confirm Clear
               </button>
             </div>
           </div>
