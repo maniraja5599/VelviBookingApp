@@ -1897,6 +1897,30 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     // Must not contain "வரம்பற்ற முன்பதிவுகள் (Unlimited)"
     expect(content).not.toContain("வரம்பற்ற முன்பதிவுகள் (Unlimited)");
   });
+
+  // TEST CASE 59: Real Cloud Database Telemetry & Storage Metrics
+  it("Test 59: Real Cloud Database Telemetry and Metrics are integrated in DataBackup page", () => {
+    const backupPath = path.resolve(__dirname, "../app/app/data-backup/page.tsx");
+    const content = fs.readFileSync(backupPath, "utf-8");
+
+    // Must query live cloud stats from /api/cloud/stats
+    expect(content).toContain("/api/cloud/stats");
+
+    // Must display real storage metrics: Total records, Bookings, Devotees, Poojas, Payments
+    expect(content).toContain("totalRecords");
+    expect(content).toContain("bookingsCount");
+    expect(content).toContain("customersCount");
+    expect(content).toContain("poojasCount");
+    expect(content).toContain("paymentsCount");
+
+    // Must have verification and sync triggers
+    expect(content).toContain("fetchCloudStats");
+    expect(content).toContain("handlePerformCloudSync");
+
+    // Must have Tamil labels
+    expect(content).toContain("மேகக்கணி நேரலை தரவு சேமிப்பு");
+  });
 });
+
 
 

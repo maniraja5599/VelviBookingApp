@@ -235,12 +235,13 @@ export default function SettingsHubPage() {
         },
         {
           href: "/app/data-backup",
-          label: "Data & Cloud Backup",
-          desc: "Excel export, contacts import & safe backup",
+          label: "Data & Cloud Backup (மேகக்கணி நேரலை தரவு)",
+          desc: "Real-time cloud database storage, sync status & Excel export",
           icon: Cloud,
           iconBg: "bg-cyan-100/90 border border-cyan-200",
           iconColor: "text-cyan-800",
-          keywords: "backup export excel csv import restore cloud data",
+          badge: "☁️ Live Cloud",
+          keywords: "backup export excel csv import restore cloud data மேகக்கணி நேரலை தரவு சேமிப்பு",
         },
         ...(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01"
           ? [
