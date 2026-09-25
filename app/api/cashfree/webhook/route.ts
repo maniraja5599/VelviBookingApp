@@ -105,3 +105,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
   }
 }
+
+export async function GET() {
+  return NextResponse.json({
+    status: "ACTIVE",
+    service: "Velvi Cashfree Webhook Service",
+    timestamp: new Date().toISOString(),
+  });
+}
+
