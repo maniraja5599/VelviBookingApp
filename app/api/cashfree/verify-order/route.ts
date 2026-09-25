@@ -25,8 +25,7 @@ export async function POST(req: NextRequest) {
     const successfulPayment = payments.find((p) => p.paymentStatus === "SUCCESS");
     const isPaid =
       orderDetails?.order_status === "PAID" ||
-      Boolean(successfulPayment) ||
-      !cashfree.isConfigured(); // Sandbox dev simulation if unconfigured
+      Boolean(successfulPayment);
 
     if (!isPaid) {
       return NextResponse.json({

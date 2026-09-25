@@ -224,9 +224,11 @@ export class CashfreeService {
         } else {
           const errorBody = await res.text();
           console.error("Cashfree order creation returned error status:", res.status, errorBody);
+          throw new Error(`Cashfree order creation failed (${res.status}): ${errorBody}`);
         }
-      } catch (err) {
-        console.error("Cashfree API network error, falling back to simulated order session:", err);
+      } catch (err: any) {
+        console.error("Cashfree API network error:", err);
+        throw err;
       }
     }
 

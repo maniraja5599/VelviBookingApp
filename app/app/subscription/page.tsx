@@ -350,64 +350,20 @@ export default function SubscriptionPage() {
         handleRemoveCoupon();
         setShowCheckoutModal(false);
       } else {
-        // Local simulation fallback
-        const resAdj = db.adjustSubscriptionValidity({
-          businessId,
-          adminUserId: currentUser?.id || "u-priest-01",
-          adminName: appliedCoupon ? `Cashfree + Coupon: ${appliedCoupon.code}` : "Cashfree Webhook Gateway",
-          adjustmentType: "EXTEND",
-          days: totalDaysToAdd,
-          reason: `Cashfree verified payment of ₹${payableAmount} (${selectedCycle})${appliedCoupon ? ` with Coupon ${appliedCoupon.code}` : ""}`,
-        });
-
-        if (appliedCoupon) {
-          appliedCoupon.usedCount += 1;
-        }
-
-        db.payments.push({
-          id: `pay-${Date.now()}`,
-          businessId,
-          userId: currentUser?.id || "u-priest-01",
-          orderId: oid,
-          gateway: "CASHFREE",
-          gatewayPaymentId: `cf_${Date.now()}`,
-          amount: payableAmount,
-          currency: "INR",
-          status: "SUCCESS",
-          billingCycle: selectedCycle,
-          paymentMethod: appliedCoupon ? `Cashfree (Coupon ${appliedCoupon.code})` : "Cashfree UPI/Card",
-          createdAt: new Date().toISOString(),
-        });
-        db.saveToLocalStorage();
-
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("velvi:db-change"));
-        }
-
-        try {
-          confetti({
-            particleCount: 70,
-            spread: 65,
-            origin: { y: 0.6 },
-          });
-        } catch {}
-
-        refreshSubscription(resAdj.subscription);
-        const newExpiry = resAdj.subscription?.currentPeriodEnd
-          ? new Date(resAdj.subscription.currentPeriodEnd).toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : formattedProjectedDate;
-
-        setPaymentSuccessMessage(
-          `Cashfree கட்டணம் உறுதி செய்யப்பட்டது! Velvi Pro செல்லுபடியாகும் தேதி: ${newExpiry} வரை நீட்டிக்கப்பட்டுள்ளது (+${totalDaysToAdd} நாட்கள்).`
+        // STRICT SECURITY: Payment was NOT verified on Cashfree! DO NOT extend subscription!
+        setPaymentSuccessMessage("");
+        setCouponError(
+          verifyData?.message ||
+            "கட்டணம் செலுத்தப்படவில்லை அல்லது ரத்து செய்யப்பட்டது. சந்தா செல்லுபடியாகும் காலம் மாற்றப்படவில்லை. (Payment was not completed or was cancelled. Validity unchanged.)"
         );
-        handleRemoveCoupon();
         setShowCheckoutModal(false);
       }
-    } catch {
+    } catch (err: any) {
+      console.warn("Payment verification error:", err);
+      setPaymentSuccessMessage("");
+      setCouponError(
+        "கட்டணம் சரிபார்ப்பதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும். (Error checking payment status)"
+      );
       setShowCheckoutModal(false);
     } finally {
       setIsProcessing(false);

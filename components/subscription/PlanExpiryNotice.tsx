@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { AlertCircle, ArrowRight, Sparkles, X, Check, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db/store";
 
 export const PlanExpiryNotice: React.FC = () => {
+  const router = useRouter();
   const { currentBusiness, subscription, refreshSubscription } = useAuth();
   const [showRenewalModal, setShowRenewalModal] = useState(false);
   const [isRenewing, setIsRenewing] = useState(false);
@@ -23,34 +25,8 @@ export const PlanExpiryNotice: React.FC = () => {
   if (!isExpired) return null;
 
   const handleInstantRenew = () => {
-    if (!currentBusiness) return;
-    setIsRenewing(true);
-
-    setTimeout(() => {
-      db.adjustSubscriptionValidity({
-        businessId: currentBusiness.id,
-        adminUserId: "u-super-admin-01",
-        adminName: "Cashfree Payment Gateway",
-        adjustmentType: "EXTEND",
-        days: 30,
-        reason: "Velvi Pro Monthly Renewal ₹499 via UPI/Card",
-      });
-
-      const sub = db.subscriptions.find((s) => s.businessId === currentBusiness.id);
-      if (sub) {
-        sub.status = "ACTIVE";
-        sub.planCode = "VELVI_PRO";
-        sub.planName = "Velvi Pro";
-      }
-
-      refreshSubscription();
-      setIsRenewing(false);
-      setRenewedSuccess(true);
-      setTimeout(() => {
-        setRenewedSuccess(false);
-        setShowRenewalModal(false);
-      }, 2500);
-    }, 1000);
+    setShowRenewalModal(false);
+    router.push("/app/subscription");
   };
 
   return (
