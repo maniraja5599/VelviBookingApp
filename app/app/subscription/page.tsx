@@ -17,6 +17,7 @@ import {
   Gift,
   Percent,
   XCircle,
+  AlertCircle,
   Copy,
 } from "lucide-react";
 import { Coupon } from "@/lib/types";
@@ -26,6 +27,7 @@ export default function SubscriptionPage() {
   const [selectedCycle, setSelectedCycle] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [showCancelledModal, setShowCancelledModal] = useState(false);
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState("");
   const [cashfreeStatus, setCashfreeStatus] = useState<{
     isConfigured: boolean;
@@ -210,6 +212,8 @@ export default function SubscriptionPage() {
           businessId,
           userId: currentUser?.id || "u-priest-01",
           planCycle: selectedCycle,
+          customAmount: payableAmount,
+          couponCode: appliedCoupon?.code,
           customer: {
             name: currentBusiness?.name || currentUser?.name || "Velvi Vadhyar",
             email: currentUser?.email || "priest@velvi.app",
@@ -221,14 +225,14 @@ export default function SubscriptionPage() {
       const orderData = await res.json();
 
       // If live Cashfree credentials configured, open Cashfree official checkout
-      if (orderData.isConfigured && !orderData.isSimulated) {
+      if (orderData.isConfigured && !orderData.isSimulated && orderData.paymentSessionId) {
         try {
           await openCashfreeCheckout({
             paymentSessionId: orderData.paymentSessionId,
             mode: orderData.environment === "PRODUCTION" ? "production" : "sandbox",
           });
         } catch (e) {
-          console.warn("Cashfree checkout window closed:", e);
+          console.warn("Cashfree checkout window closed or cancelled:", e);
         }
 
         // Verify order on backend
@@ -256,6 +260,9 @@ export default function SubscriptionPage() {
           businessId,
           userId: currentUser?.id || "u-priest-01",
           planCycle: selectedCycle,
+          customAmount: payableAmount,
+          couponCode: appliedCoupon?.code,
+          customDaysToAdd: totalDaysToAdd,
         }),
       });
 
@@ -354,17 +361,16 @@ export default function SubscriptionPage() {
         setPaymentSuccessMessage("");
         setCouponError(
           verifyData?.message ||
-            "கட்டணம் செலுத்தப்படவில்லை அல்லது ரத்து செய்யப்பட்டது. சந்தா செல்லுபடியாகும் காலம் மாற்றப்படவில்லை. (Payment was not completed or was cancelled. Validity unchanged.)"
+            "கட்டணம் செலுத்தப்படவில்லை அல்லது ரத்து செய்யப்பட்டது. சந்தா செல்லுபடியாகும் காலம் மாற்றப்படவில்லை."
         );
         setShowCheckoutModal(false);
+        setShowCancelledModal(true);
       }
     } catch (err: any) {
       console.warn("Payment verification error:", err);
       setPaymentSuccessMessage("");
-      setCouponError(
-        "கட்டணம் சரிபார்ப்பதில் பிழை ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும். (Error checking payment status)"
-      );
       setShowCheckoutModal(false);
+      setShowCancelledModal(true);
     } finally {
       setIsProcessing(false);
     }
@@ -773,6 +779,53 @@ export default function SubscriptionPage() {
                 ரத்து செய்க (Cancel)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Cancelled / Incomplete Notification Popup Modal */}
+      {showCancelledModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl border border-amber-200 text-center animate-in zoom-in-95">
+            <div className="w-14 h-14 mx-auto rounded-full bg-amber-50 border-2 border-amber-200 flex items-center justify-center text-amber-600 shadow-inner">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-velvi-brownDark">
+                கட்டணம் ரத்து செய்யப்பட்டது
+              </h3>
+              <p className="text-xs font-semibold text-amber-700">
+                Payment Cancelled / Incomplete
+              </p>
+            </div>
+
+            <div className="bg-amber-50/70 rounded-2xl p-3.5 border border-amber-200/60 text-left space-y-2 text-xs text-velvi-brown">
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-xs text-velvi-brownDark">
+                  <strong>பணம் கழிக்கப்படவில்லை:</strong> உங்கள் வங்கி அல்லது UPI கணக்கிலிருந்து பணம் எதுவும் பிடிக்கப்படவில்லை.
+                </span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-emerald-600 font-bold">✓</span>
+                <span className="text-xs text-velvi-brownDark">
+                  <strong>சந்தா காலம் மாறவில்லை:</strong> உங்கள் தற்போதைய Velvi Pro சந்தா காலம் மாற்றமின்றி பாதுகாப்பாக உள்ளது.
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-velvi-brown/60 leading-normal">
+              நீங்கள் எப்போது வேண்டுமானாலும் மீண்டும் Velvi Pro திட்டத்தை தேர்வு செய்து பாதுகாப்பாக பணம் செலுத்தலாம்.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setShowCancelledModal(false)}
+              className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold shadow-sm transition active:scale-98 cursor-pointer"
+            >
+              சரி, புரிந்தது (Got it)
+            </button>
           </div>
         </div>
       )}

@@ -5,7 +5,7 @@ import { db } from "@/lib/db/store";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { orderId, businessId, userId, planCycle } = body;
+    const { orderId, businessId, userId, planCycle, couponCode, customDaysToAdd, customAmount } = body;
 
     if (!orderId || !businessId) {
       return NextResponse.json(
@@ -15,8 +15,6 @@ export async function POST(req: NextRequest) {
     }
 
     const cycle: "MONTHLY" | "YEARLY" = planCycle === "YEARLY" ? "YEARLY" : "MONTHLY";
-    const daysToAdd = cycle === "MONTHLY" ? 30 : 365;
-    const amount = cycle === "MONTHLY" ? 499 : 4999;
 
     // 1. Fetch order details & payments from Cashfree
     const orderDetails = await cashfree.getOrderDetails(orderId);
@@ -37,6 +35,21 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Calculate actual amount and bonus days
+    let daysToAdd = typeof customDaysToAdd === "number" && customDaysToAdd > 0
+      ? customDaysToAdd
+      : (cycle === "MONTHLY" ? 30 : 365);
+
+    if (couponCode) {
+      const coupValidation = db.validateCoupon(couponCode, cycle);
+      if (coupValidation.valid && coupValidation.coupon) {
+        daysToAdd = (cycle === "MONTHLY" ? 30 : 365) + (coupValidation.bonusDays || 0);
+      }
+    }
+
+    const amount = Number(orderDetails?.order_amount) ||
+      (typeof customAmount === "number" && customAmount >= 0 ? customAmount : (cycle === "MONTHLY" ? 499 : 4999));
+
     const gatewayPaymentId =
       successfulPayment?.cfPaymentId || `cf_pay_${Date.now()}`;
     const paymentMethod =
@@ -46,10 +59,10 @@ export async function POST(req: NextRequest) {
     const adjustResult = db.adjustSubscriptionValidity({
       businessId,
       adminUserId: "u-super-admin-01",
-      adminName: "Cashfree Payment Gateway",
+      adminName: couponCode ? `Cashfree + Promo (${couponCode})` : "Cashfree Payment Gateway",
       adjustmentType: "EXTEND",
       days: daysToAdd,
-      reason: `Cashfree verified payment for Velvi Pro (${cycle}) - Order: ${orderId}`,
+      reason: `Cashfree verified payment of ₹${amount} for Velvi Pro (${cycle})${couponCode ? ` with Promo ${couponCode}` : ""} - Order: ${orderId}`,
     });
 
     // 3. Record verified payment in financial audit log

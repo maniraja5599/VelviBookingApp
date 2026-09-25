@@ -166,9 +166,12 @@ export class CashfreeService {
     businessId: string,
     userId: string,
     planCycle: "MONTHLY" | "YEARLY",
-    customer: { name: string; email: string; phone: string }
+    customer: { name: string; email: string; phone: string },
+    customAmount?: number,
+    couponCode?: string
   ): Promise<CashfreeOrderResponse> {
-    const amount = planCycle === "MONTHLY" ? 499 : 4999;
+    const baseAmount = planCycle === "MONTHLY" ? 499 : 4999;
+    const amount = typeof customAmount === "number" && customAmount > 0 ? customAmount : baseAmount;
     const cleanBizId = (businessId || "biz").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 12);
     const orderId = `order_${cleanBizId}_${Date.now()}`;
     const cleanPhone = (customer.phone || "9840012345").replace(/[^0-9]/g, "").slice(-10);
@@ -207,7 +210,9 @@ export class CashfreeService {
               return_url: `${appUrl}/app/subscription?order_id={order_id}`,
               notify_url: `${appUrl}/api/cashfree/webhook`,
             },
-            order_note: `Velvi Pro ${planCycle === "MONTHLY" ? "Monthly" : "Annual"} Subscription Plan`,
+            order_note: couponCode
+              ? `Velvi Pro ${planCycle === "MONTHLY" ? "Monthly" : "Annual"} (Promo: ${couponCode})`
+              : `Velvi Pro ${planCycle === "MONTHLY" ? "Monthly" : "Annual"} Subscription Plan`,
           }),
         });
 

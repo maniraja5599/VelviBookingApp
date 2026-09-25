@@ -4,7 +4,7 @@ import { cashfree } from "@/lib/payments/cashfree";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { businessId, userId, planCycle, customer } = body;
+    const { businessId, userId, planCycle, customer, customAmount, couponCode } = body;
 
     if (!businessId || !userId) {
       return NextResponse.json(
@@ -25,7 +25,9 @@ export async function POST(req: NextRequest) {
       businessId,
       userId,
       cycle,
-      customerDetails
+      customerDetails,
+      typeof customAmount === "number" && customAmount > 0 ? customAmount : undefined,
+      couponCode
     );
 
     return NextResponse.json({

@@ -22,9 +22,11 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function BrandingSettingsPage() {
+  const router = useRouter();
   const { currentUser, currentBusiness, updateBusiness, updateUser, subscription, refreshSubscription } = useAuth();
   const business = currentBusiness || db.businesses[0];
 
@@ -132,38 +134,10 @@ export default function BrandingSettingsPage() {
     }
   };
 
-  // Simulate payment / plan activation
+  // Upgrade to Velvi Pro via official subscription page
   const handleActivatePlanAndRemoveWatermark = () => {
-    setIsProcessingPayment(true);
-
-    setTimeout(() => {
-      // Extend and activate Velvi Pro in database store
-      db.adjustSubscriptionValidity({
-        businessId: business.id,
-        adminUserId: "u-super-admin-01",
-        adminName: "Payment Gateway",
-        adjustmentType: "EXTEND",
-        days: 30,
-        reason: "Velvi Pro ₹499 / month activated via Branding Watermark Removal",
-      });
-
-      // Ensure plan code is VELVI_PRO and status is ACTIVE
-      const sub = db.subscriptions.find((s) => s.businessId === business.id);
-      if (sub) {
-        sub.status = "ACTIVE";
-        sub.planCode = "VELVI_PRO";
-        sub.planName = "Velvi Pro";
-      }
-
-      refreshSubscription();
-      setShowWatermark(false);
-      updateBusiness({ showWatermark: false });
-
-      setIsProcessingPayment(false);
-      setShowUpgradeModal(false);
-      setPlanActivatedSuccess(true);
-      setTimeout(() => setPlanActivatedSuccess(false), 4000);
-    }, 900);
+    setShowUpgradeModal(false);
+    router.push("/app/subscription");
   };
 
   const handleSave = (e: React.FormEvent) => {
