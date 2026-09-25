@@ -133,9 +133,10 @@ export default function PrivacyPolicyPage() {
               <span>Privacy Contact</span>
             </h2>
             <div className="p-3 bg-emerald-50/80 rounded-2xl border border-emerald-200 text-xs space-y-1">
-              <p><strong>Privacy Officer:</strong> Mani Raja</p>
-              <p><strong>Email:</strong> support@velvi.app</p>
-              <p><strong>Phone:</strong> +91-8300030123</p>
+              <p><strong>Legal Entity / Data Officer:</strong> NACHIMUTHU MANIRAJA (Velvi SaaS)</p>
+              <p><strong>Email:</strong> manirajankg@gmail.com / support@velvi.app</p>
+              <p><strong>Phone:</strong> +91 9159036301 / +91 8300030123</p>
+              <p><strong>Location:</strong> Namakkal &amp; Chennai, Tamil Nadu, India</p>
             </div>
           </section>
         </div>

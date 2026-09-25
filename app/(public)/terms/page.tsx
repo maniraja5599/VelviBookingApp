@@ -122,9 +122,10 @@ export default function TermsAndConditionsPage() {
               For questions regarding these Terms &amp; Conditions, please reach out via our official support channels:
             </p>
             <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 text-xs space-y-1">
-              <p><strong>Support Email:</strong> support@velvi.app</p>
-              <p><strong>Mobile / WhatsApp:</strong> +91-8300030123</p>
-              <p><strong>Operating Address:</strong> Chennai, Tamil Nadu, India</p>
+              <p><strong>Legal Entity:</strong> NACHIMUTHU MANIRAJA (Trade Name: Velvi)</p>
+              <p><strong>Support Email:</strong> manirajankg@gmail.com / support@velvi.app</p>
+              <p><strong>Contact Phone:</strong> +91 9159036301 / +91 8300030123</p>
+              <p><strong>Operating Address:</strong> Namakkal &amp; Chennai, Tamil Nadu, India</p>
             </div>
           </section>
         </div>

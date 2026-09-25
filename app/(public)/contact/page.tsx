@@ -73,12 +73,18 @@ export default function ContactUsPage() {
             </div>
             <div className="pt-2 border-t border-slate-100 space-y-1">
               <a
+                href="tel:+919159036301"
+                className="text-emerald-700 hover:text-emerald-800 font-bold text-sm block"
+              >
+                +91-9159036301
+              </a>
+              <a
                 href="https://wa.me/918300030123"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-emerald-700 hover:text-emerald-800 font-bold text-sm block"
+                className="text-slate-600 hover:text-emerald-700 font-medium text-xs block"
               >
-                +91-8300030123
+                Secondary WhatsApp: +91-8300030123
               </a>
               <span className="text-[11px] text-slate-500 font-medium">Available 08:00 AM – 09:00 PM IST (All Days)</span>
             </div>
@@ -95,8 +101,14 @@ export default function ContactUsPage() {
             </div>
             <div className="pt-2 border-t border-slate-100 space-y-1">
               <a
-                href="mailto:support@velvi.app"
+                href="mailto:manirajankg@gmail.com"
                 className="text-blue-700 hover:text-blue-800 font-bold text-sm block"
+              >
+                manirajankg@gmail.com
+              </a>
+              <a
+                href="mailto:support@velvi.app"
+                className="text-slate-600 hover:text-blue-700 font-medium text-xs block"
               >
                 support@velvi.app
               </a>
@@ -105,33 +117,36 @@ export default function ContactUsPage() {
           </div>
         </div>
 
-        {/* Operating Address & Founder Details */}
+        {/* Operating Address & Legal Entity Details */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200/80 shadow-xs space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-amber-100 text-amber-900 text-xs font-black flex items-center justify-center">2</span>
-            <span>Registered Operating Address &amp; Representation</span>
+            <span>Registered Legal Entity &amp; Operating Address</span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
               <div className="flex items-center gap-2 font-bold text-slate-900 text-xs">
-                <MapPin className="w-4 h-4 text-rose-600" />
-                <span>Operating Location</span>
+                <User className="w-4 h-4 text-amber-700" />
+                <span>Legal Business Entity</span>
               </div>
-              <p className="text-xs text-slate-700 font-medium">
-                Velvi Software &amp; Astrology Solutions<br />
-                Chennai, Tamil Nadu, 600001, India.
+              <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                <strong>Legal Name:</strong> NACHIMUTHU MANIRAJA<br />
+                <strong>Trade / Brand Name:</strong> Velvi (Vedic SaaS)<br />
+                <strong>Email:</strong> manirajankg@gmail.com<br />
+                <strong>Contact Phone:</strong> +91 9159036301
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1">
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
               <div className="flex items-center gap-2 font-bold text-slate-900 text-xs">
-                <User className="w-4 h-4 text-amber-700" />
-                <span>Founder &amp; Lead Architect</span>
+                <MapPin className="w-4 h-4 text-rose-600" />
+                <span>Registered Operating Location</span>
               </div>
-              <p className="text-xs text-slate-700 font-medium">
-                Mani Raja (@maniraja__)<br />
-                Contact: +91-8300030123
+              <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                Velvi Software &amp; Astrology Solutions<br />
+                Namakkal &amp; Chennai, Tamil Nadu, 600001, India.<br />
+                Website: <span className="font-mono text-amber-800 font-semibold">https://velvi-booking-app.vercel.app</span>
               </p>
             </div>
           </div>

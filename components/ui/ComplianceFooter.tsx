@@ -61,12 +61,26 @@ export function ComplianceFooter() {
         <span>Chennai, Tamil Nadu, India</span>
       </div>
 
+      {/* Merchant Legal Information for Payment Gateway Compliance */}
+      <div className="text-[11px] text-slate-500 max-w-xl mx-auto leading-relaxed pt-1 px-4">
+        <p>
+          <strong className="text-slate-700">Legal Entity:</strong> NACHIMUTHU MANIRAJA &bull; <strong className="text-slate-700">Brand:</strong> Velvi &bull; <strong className="text-slate-700">Support:</strong>{" "}
+          <a href="mailto:manirajankg@gmail.com" className="underline hover:text-amber-900">
+            manirajankg@gmail.com
+          </a>{" "}
+          &bull;{" "}
+          <a href="tel:+919159036301" className="underline hover:text-amber-900">
+            +91 9159036301
+          </a>
+        </p>
+      </div>
+
       {/* Developer and Copyright */}
       <div className="pt-1">
         <DeveloperCredit />
       </div>
       <p className="text-[10px] text-slate-400">
-        &copy; {new Date().getFullYear()} Velvi SaaS Platform. All rights reserved.
+        &copy; {new Date().getFullYear()} Velvi SaaS Platform (NACHIMUTHU MANIRAJA). All rights reserved.
       </p>
     </footer>
   );

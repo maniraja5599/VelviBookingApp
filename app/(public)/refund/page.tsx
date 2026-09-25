@@ -106,14 +106,25 @@ export default function CancellationAndRefundPage() {
             </p>
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
               <p>
-                <strong>Email:</strong>{" "}
-                <a href="mailto:support@velvi.app" className="text-emerald-700 font-bold hover:underline">
+                <strong>Legal Entity:</strong> NACHIMUTHU MANIRAJA (Velvi SaaS)
+              </p>
+              <p>
+                <strong>Official Email:</strong>{" "}
+                <a href="mailto:manirajankg@gmail.com" className="text-emerald-700 font-bold hover:underline">
+                  manirajankg@gmail.com
+                </a>{" "}
+                /{" "}
+                <a href="mailto:support@velvi.app" className="text-slate-600 hover:underline">
                   support@velvi.app
                 </a>
               </p>
               <p>
-                <strong>WhatsApp / Call:</strong>{" "}
-                <a href="https://wa.me/918300030123" target="_blank" rel="noopener noreferrer" className="text-emerald-700 font-bold hover:underline">
+                <strong>Phone / WhatsApp:</strong>{" "}
+                <a href="tel:+919159036301" className="text-emerald-700 font-bold hover:underline">
+                  +91-9159036301
+                </a>{" "}
+                /{" "}
+                <a href="https://wa.me/918300030123" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:underline">
                   +91-8300030123
                 </a>
               </p>
