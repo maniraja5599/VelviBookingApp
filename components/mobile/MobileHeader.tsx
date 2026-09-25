@@ -308,14 +308,17 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileMenuOpen]);
 
-  // Determine display name
+  // Determine display name - honor user's actual Google name
   const rawName =
-    (currentBusiness?.iyerName && currentBusiness.iyerName.trim()) ||
     (currentUser?.name && currentUser.name.trim()) ||
+    (currentBusiness?.iyerName && currentBusiness.iyerName.trim()) ||
     (currentBusiness?.name && currentBusiness.name.trim()) ||
     "";
-  const displayName = rawName && rawName.toLowerCase() !== "maniraja" ? rawName : "Vadhyar";
-  const initial = displayName ? displayName[0].toUpperCase() : "V";
+  const displayName =
+    currentUser?.email?.toLowerCase() === "manirajankg@gmail.com"
+      ? (currentUser?.name?.trim() || "Maniraja")
+      : (rawName || "Maniraja");
+  const initial = displayName ? displayName[0].toUpperCase() : "M";
 
   const handleLogout = async () => {
     setIsProfileMenuOpen(false);

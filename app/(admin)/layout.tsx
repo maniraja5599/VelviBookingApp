@@ -24,6 +24,7 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  Clock,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
@@ -37,9 +38,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginSuccessNotice, setLoginSuccessNotice] = useState("");
-  const [adminEmailInput, setAdminEmailInput] = useState("manirajankg@gmail.com");
+  const [adminEmailInput, setAdminEmailInput] = useState("");
   const [adminPinInput, setAdminPinInput] = useState("");
   const [showPin, setShowPin] = useState(false);
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [googleVerifiedProfile, setGoogleVerifiedProfile] = useState<{
     email: string;
     name?: string;
@@ -54,15 +56,50 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsMounted(true);
     if (typeof window !== "undefined") {
       const verified = sessionStorage.getItem("velvi_super_admin_verified") === "true";
-      setAdminSessionVerified(verified);
+      const loginAt = Number(sessionStorage.getItem("velvi_super_admin_login_at") || 0);
+      const TEN_MINUTES_MS = 10 * 60 * 1000;
+
+      if (verified && loginAt && Date.now() - loginAt > TEN_MINUTES_MS) {
+        // 10 minutes exceeded, force logout
+        sessionStorage.removeItem("velvi_super_admin_verified");
+        sessionStorage.removeItem("velvi_super_admin_login_at");
+        setAdminSessionVerified(false);
+      } else {
+        setAdminSessionVerified(verified);
+      }
     }
   }, []);
 
+  // 10-Minute Auto Logout Inactivity / Session Monitor
   React.useEffect(() => {
-    if (currentUser?.email) {
-      setAdminEmailInput(currentUser.email);
+    if (!adminSessionVerified) {
+      setSecondsRemaining(null);
+      return;
     }
-  }, [currentUser]);
+
+    const checkTimeout = () => {
+      if (typeof window === "undefined") return;
+      const loginAt = Number(sessionStorage.getItem("velvi_super_admin_login_at") || 0);
+      if (!loginAt) return;
+      const TEN_MINUTES_MS = 10 * 60 * 1000;
+      const elapsed = Date.now() - loginAt;
+      const remainingMs = TEN_MINUTES_MS - elapsed;
+
+      if (remainingMs <= 0) {
+        sessionStorage.removeItem("velvi_super_admin_verified");
+        sessionStorage.removeItem("velvi_super_admin_login_at");
+        setAdminSessionVerified(false);
+        setSecondsRemaining(null);
+        setLoginError("Session expired (10 minutes limit reached). Please login again.");
+      } else {
+        setSecondsRemaining(Math.ceil(remainingMs / 1000));
+      }
+    };
+
+    checkTimeout();
+    const interval = setInterval(checkTimeout, 1000);
+    return () => clearInterval(interval);
+  }, [adminSessionVerified]);
 
   // Check URL hash for Google OAuth 2.0 access_token redirect callback
   React.useEffect(() => {
@@ -193,7 +230,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         googleVerifiedProfile?.picture
       );
       sessionStorage.setItem("velvi_super_admin_verified", "true");
+      sessionStorage.setItem("velvi_super_admin_login_at", Date.now().toString());
       setAdminSessionVerified(true);
+      setSecondsRemaining(600);
     } catch (err: any) {
       setLoginError(err?.message || "Super Admin authorization failed.");
     } finally {
@@ -204,8 +243,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleAdminSignOut = () => {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("velvi_super_admin_verified");
+      sessionStorage.removeItem("velvi_super_admin_login_at");
       setAdminSessionVerified(false);
       setAdminPinInput("");
+      setAdminEmailInput("");
+      setSecondsRemaining(null);
       setGoogleVerifiedProfile(null);
       setLoginSuccessNotice("");
       setLoginError("");
@@ -241,14 +283,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <h1 className="text-xl sm:text-2xl font-black text-white">Velvi Platform Console</h1>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
               <Lock className="w-3.5 h-3.5 text-amber-400" />
-              <span>Gmail &amp; Secret PIN (5599) Required</span>
+              <span>Administrator Authorization Gate</span>
             </div>
             <p className="text-xs text-slate-400 max-w-xs pt-1 leading-relaxed">
-              Super Admin access is strictly protected. Direct login is disabled. Enter your verified email and 4-digit security PIN.
+              Super Admin access is strictly protected. Enter your authorized administrator email and 4-digit security PIN.
             </p>
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700 text-[10.5px] text-amber-300/90 font-mono">
-              👑 Super Admin: manirajankg@gmail.com
-            </div>
           </div>
 
           {loginSuccessNotice && (
@@ -270,7 +309,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div>
               <label className="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                 <Mail className="w-3.5 h-3.5 text-amber-400" />
-                <span>Super Admin Gmail / மின்னஞ்சல்</span>
+                <span>Admin Email / மின்னஞ்சல்</span>
               </label>
               <div className="relative">
                 <input
@@ -281,7 +320,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setAdminEmailInput(e.target.value);
                     setLoginError("");
                   }}
-                  placeholder="manirajankg@gmail.com"
+                  placeholder="Enter administrator email"
                   className="w-full px-3.5 py-2.5 bg-[#080c14] border border-zinc-700 focus:border-amber-400 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
                 />
               </div>
@@ -293,7 +332,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                   <span>Security PIN / பாதுகாப்பு PIN</span>
                 </label>
-                <span className="text-[10px] text-amber-400/90 font-mono font-bold">4-Digits (5599)</span>
+                <span className="text-[10px] text-amber-400/90 font-mono font-bold">4-Digits</span>
               </div>
               <div className="relative">
                 <input
@@ -308,7 +347,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setAdminPinInput(val);
                     setLoginError("");
                   }}
-                  placeholder="Enter PIN (5599)"
+                  placeholder="••••"
                   className="w-full pl-3.5 pr-10 py-2.5 bg-[#080c14] border border-zinc-700 focus:border-amber-400 rounded-xl text-white font-mono text-center text-base tracking-widest focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
                 />
                 <button
@@ -328,7 +367,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               className="w-full py-3.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-extrabold text-xs sm:text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25 active:scale-95 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Crown className="w-4 h-4 text-black" />
-              <span>{isSigningIn ? "Verifying Credentials..." : "Unlock Super Admin (Email + PIN)"}</span>
+              <span>{isSigningIn ? "Verifying Credentials..." : "Unlock Platform Console"}</span>
             </button>
           </form>
 
@@ -374,9 +413,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs text-slate-400 relative z-10">
             <Link href="/app" className="hover:text-amber-400 flex items-center gap-1 transition">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Devotee App</span>
+              <span>Return to App</span>
             </Link>
-            <span className="text-[10px] font-mono text-slate-500">v2.5.5 PIN Gate (5599)</span>
+            <span className="text-[10px] font-mono text-slate-500">Velvi Security Console</span>
           </div>
         </div>
       </div>
@@ -420,6 +459,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="flex items-center gap-1.5">
+          {secondsRemaining !== null && (
+            <span
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px]"
+              title="Console locks automatically after 10 minutes"
+            >
+              <Clock className="w-3 h-3 text-amber-400" />
+              <span>
+                {Math.floor(secondsRemaining / 60)}:
+                {String(secondsRemaining % 60).padStart(2, "0")}
+              </span>
+            </span>
+          )}
           <button
             type="button"
             onClick={handleAdminSignOut}
