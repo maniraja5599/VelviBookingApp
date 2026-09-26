@@ -1138,12 +1138,28 @@ export function formatTimeRangeTo12H(rangeStr?: string, includeAmPm: boolean = f
 }
 
 /**
- * Format any time string (e.g. "18:00", "08:00", "08:00 AM", "6:00 PM") to 12-hour AM/PM format ("06:00 PM", "08:00 AM")
+ * Format any time string (e.g. "18:00", "08:00", "08:00 AM", "6:00 PM", "காலை: 07:45 - 08:45 | மாலை: 16:45 - 17:45") to 12-hour AM/PM format
  */
 export function formatTime12H(timeStr?: string): string {
   if (!timeStr) return "";
   const trimmed = timeStr.trim();
   if (!trimmed) return "";
+
+  // Handle pipe separated segments (e.g. "காலை: 07:45 - 08:45 | மாலை: 16:45 - 17:45")
+  if (trimmed.includes("|")) {
+    return trimmed
+      .split("|")
+      .map((part) => formatTime12H(part.trim()))
+      .join(" | ");
+  }
+
+  // Handle labels / prefixes like "காலை: " or "மாலை: " or "Morning: "
+  const prefixMatch = trimmed.match(/^([^0-9]+:\s*)(.+)$/);
+  if (prefixMatch) {
+    const prefix = prefixMatch[1];
+    const rest = prefixMatch[2];
+    return `${prefix}${formatTime12H(rest)}`;
+  }
 
   // Handle range like "18:00 - 20:00"
   if (trimmed.includes(" - ")) {
