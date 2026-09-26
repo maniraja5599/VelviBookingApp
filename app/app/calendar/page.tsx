@@ -994,7 +994,7 @@ export default function CalendarPage() {
                     onDoubleClick={() => router.push(`/app/bookings/new?date=${dateStr}`)}
                     style={{ touchAction: "manipulation" }}
                     title="இருமுறை கிளிக்: புதிய பதிவு | அழுத்திப் பிடிக்க: நாள் விவரங்கள்"
-                    className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 pb-2.5 sm:pb-3 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
+                    className={`min-h-[66px] sm:min-h-[78px] md:min-h-[90px] p-1 sm:p-1.5 pb-1 border-r border-b border-gray-200 flex flex-col items-center justify-between text-center transition relative group select-none ${
                       isSelected
                         ? "bg-amber-100/90 ring-2 ring-amber-600 ring-inset z-10 font-bold shadow-2xs"
                         : isToday
@@ -1033,19 +1033,16 @@ export default function CalendarPage() {
                       <div className="h-3" />
                     )}
 
-                    {/* Bottom: Full bottom line with uneven raised mound ("மேடு") for booking count */}
+                    {/* Bottom: Clean booking count number + elegant light color bottom line (No bulky mound) */}
                     {hasBookings ? (
-                      <div className="absolute inset-x-0 bottom-0 flex flex-col items-center pointer-events-none">
-                        {/* Raised organic mound / crest ("மேடு") */}
-                        <div className="inline-flex items-center justify-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-t-xl sm:rounded-t-2xl bg-gradient-to-t from-emerald-950 via-emerald-900 to-emerald-850 text-amber-300 text-[9px] sm:text-[10px] md:text-[10.5px] font-black border-t-2 border-x border-amber-400 shadow-xs group-hover:-translate-y-0.5 transition-transform">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                          <span className="leading-none tracking-tight">{dayBookings.length}</span>
-                        </div>
-                        {/* Full bottom line spanning across cell edge to edge */}
-                        <div className="w-full h-1 sm:h-1.5 bg-gradient-to-r from-emerald-700 via-amber-500 to-emerald-700 shrink-0" />
+                      <div className="w-full flex flex-col items-center justify-end pb-0.5 pointer-events-none">
+                        <span className="text-[10.5px] sm:text-xs font-black text-emerald-800 leading-none mb-0.5">
+                          {dayBookings.length}
+                        </span>
+                        <div className="w-full h-[2px] sm:h-[2.5px] rounded-full bg-emerald-500/85" />
                       </div>
                     ) : (
-                      <div className="h-1.5" />
+                      <div className="h-1" />
                     )}
                   </button>
                 );
