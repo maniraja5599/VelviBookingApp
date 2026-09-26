@@ -93,6 +93,7 @@ export default function SubscriptionPage() {
     month: "short",
     year: "numeric",
   });
+  const cumulativeTotalDays = daysRemaining + totalDaysToAdd;
 
   const businessId =
     currentBusiness?.id ||
@@ -497,34 +498,34 @@ export default function SubscriptionPage() {
         </div>
       )}
 
-      {/* Sacred Dual Tab Selector */}
-      <div className="flex rounded-2xl bg-velvi-cream/70 p-1 border border-velvi-gold/30 text-xs shadow-2xs">
+      {/* Sacred Dual Tab Selector - Sleek & Compact (Kutty a) */}
+      <div className="flex rounded-xl bg-velvi-cream/80 p-0.5 border border-velvi-gold/30 text-[11px] shadow-2xs">
         <button
           type="button"
           onClick={() => setActiveTab("PLANS")}
-          className={`flex-1 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+          className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition cursor-pointer active:scale-98 ${
             activeTab === "PLANS"
               ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
               : "text-velvi-brown/60 hover:text-velvi-brown"
           }`}
         >
-          <Sparkles className="w-3.5 h-3.5 text-velvi-gold" />
+          <Sparkles className="w-3 h-3 text-velvi-gold shrink-0" />
           <span>Plans &amp; Renewal</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab("VALIDITY_INVOICES")}
-          className={`flex-1 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+          className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition cursor-pointer active:scale-98 ${
             activeTab === "VALIDITY_INVOICES"
               ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
               : "text-velvi-brown/60 hover:text-velvi-brown"
           }`}
         >
-          <FileText className="w-3.5 h-3.5 text-velvi-gold" />
+          <FileText className="w-3 h-3 text-velvi-gold shrink-0" />
           <span>Validity &amp; Invoices</span>
-          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-300">
-            {daysRemaining} Days
+          <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-300">
+            {daysRemaining}d
           </span>
         </button>
       </div>
@@ -823,20 +824,20 @@ export default function SubscriptionPage() {
       {/* ========================================================================= */}
       {activeTab === "VALIDITY_INVOICES" && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          {/* Sub Tab Switcher: Invoices & Receipts vs Upcoming & Validity */}
-          <div className="flex bg-velvi-cream/60 p-1 rounded-2xl border border-velvi-gold/25 text-xs shadow-2xs">
+          {/* Sub Tab Switcher: Invoices & Receipts vs Upcoming Cumulative Validity - Sleek & Compact (Kutty a) */}
+          <div className="flex bg-velvi-cream/60 p-0.5 rounded-xl border border-velvi-gold/25 text-[11px] shadow-2xs">
             <button
               type="button"
               onClick={() => setValiditySubTab("INVOICES")}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition cursor-pointer active:scale-98 ${
                 validitySubTab === "INVOICES"
                   ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
                   : "text-velvi-brown/60 hover:text-velvi-brown"
               }`}
             >
-              <FileText className="w-3.5 h-3.5 text-velvi-gold" />
+              <FileText className="w-3 h-3 text-velvi-gold shrink-0" />
               <span>Invoices &amp; Receipts</span>
-              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-200">
+              <span className="text-[9px] bg-emerald-100 text-emerald-800 font-extrabold px-1.5 py-0.2 rounded-full border border-emerald-200">
                 {displayInvoices.length}
               </span>
             </button>
@@ -844,16 +845,16 @@ export default function SubscriptionPage() {
             <button
               type="button"
               onClick={() => setValiditySubTab("UPCOMING")}
-              className={`flex-1 py-2 px-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+              className={`flex-1 py-1.5 px-2 rounded-lg font-bold flex items-center justify-center gap-1 transition cursor-pointer active:scale-98 ${
                 validitySubTab === "UPCOMING"
                   ? "bg-white text-velvi-brownDark shadow-xs border border-velvi-gold/20"
                   : "text-velvi-brown/60 hover:text-velvi-brown"
               }`}
             >
-              <Clock className="w-3.5 h-3.5 text-velvi-gold" />
-              <span>Upcoming &amp; Validity</span>
-              <span className="text-[10px] bg-amber-100 text-amber-800 font-extrabold px-1.5 py-0.2 rounded-full border border-amber-200">
-                {daysRemaining} Days
+              <Clock className="w-3 h-3 text-velvi-gold shrink-0" />
+              <span>Upcoming Validity</span>
+              <span className="text-[9px] bg-amber-100 text-amber-900 font-extrabold px-1.5 py-0.2 rounded-full border border-amber-300">
+                {cumulativeTotalDays}d Cumul
               </span>
             </button>
           </div>
@@ -946,104 +947,103 @@ export default function SubscriptionPage() {
           )}
 
           {/* --------------------------------------------------------------------- */}
-          {/* SUB-TAB 2: UPCOMING & VALIDITY                                        */}
+          {/* SUB-TAB 2: CUMULATIVE UPCOMING VALIDITY                               */}
           {/* --------------------------------------------------------------------- */}
           {validitySubTab === "UPCOMING" && (
-            <div className="space-y-4 animate-in fade-in duration-150">
-              {/* Active Validity Card */}
-              <div className="bg-gradient-to-br from-velvi-creamLight via-white to-velvi-cream rounded-3xl p-5 border border-velvi-gold/30 shadow-sacred space-y-4">
+            <div className="space-y-3.5 animate-in fade-in duration-150">
+              {/* Cumulative Upcoming Validity Card */}
+              <div className="bg-gradient-to-br from-velvi-creamLight via-white to-velvi-cream rounded-2xl p-4 sm:p-5 border border-velvi-gold/30 shadow-sacred space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>👑 Velvi Pro Active</span>
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-black bg-emerald-50 text-emerald-900 border border-emerald-300 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>👑 Cumulative Upcoming Validity</span>
                   </span>
 
-                  <span className="text-xs font-bold text-velvi-goldDark flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Current Validity</span>
+                  <span className="text-[10.5px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3 text-amber-600" />
+                    <span>ஒட்டுமொத்த செல்லுபடி</span>
                   </span>
                 </div>
 
-                {/* Days Remaining Counter */}
-                <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 flex items-center justify-between">
+                {/* Cumulative Days Counter */}
+                <div className="bg-gradient-to-r from-emerald-50/90 via-emerald-100/50 to-amber-50/80 border border-emerald-200/90 rounded-xl p-3.5 flex items-center justify-between shadow-2xs">
                   <div className="space-y-0.5">
-                    <span className="text-[11px] font-bold text-emerald-900/70 uppercase tracking-wider block">
-                      Days Remaining
+                    <span className="text-[10px] font-extrabold text-emerald-900/80 uppercase tracking-wider block">
+                      Total Cumulative Protection Period
                     </span>
-                    <div className="text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
-                      <span>{daysRemaining}</span>
-                      <span className="text-sm font-bold text-emerald-800">Days</span>
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-950 flex items-baseline gap-1.5">
+                      <span>{cumulativeTotalDays}</span>
+                      <span className="text-xs sm:text-sm font-bold text-emerald-800">Days Cumulative</span>
+                    </div>
+                    <span className="text-[10.5px] font-semibold text-slate-600 block mt-0.5">
+                      Continuous valid coverage until{" "}
+                      <strong className="text-emerald-900 font-extrabold">{formattedProjectedDate}</strong>
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-xl bg-white border border-emerald-300 shadow-xs flex items-center justify-center text-emerald-700 shrink-0">
+                    <Calendar className="w-5 h-5" />
+                  </div>
+                </div>
+
+                {/* Cumulative Stacking Equation Bar */}
+                <div className="bg-white/90 p-3 rounded-xl border border-velvi-gold/25 shadow-2xs space-y-2">
+                  <div className="text-[10.5px] font-bold text-slate-700 flex items-center justify-between">
+                    <span>Sequential Validity Stacking Calculation</span>
+                    <span className="text-[9.5px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                      Zero Day Loss
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 text-center">
+                    <div className="bg-amber-50/60 p-2 rounded-lg border border-amber-200/60">
+                      <span className="text-[9.5px] text-amber-900/70 block font-medium">Currently Active</span>
+                      <span className="font-extrabold text-amber-950 text-xs">{daysRemaining} Days</span>
+                      <span className="text-[8.5px] text-slate-500 block truncate">till {formattedDate}</span>
+                    </div>
+
+                    <div className="bg-emerald-50/60 p-2 rounded-lg border border-emerald-200/60">
+                      <span className="text-[9.5px] text-emerald-900/70 block font-medium">+ Upcoming Queued</span>
+                      <span className="font-extrabold text-emerald-800 text-xs">+{totalDaysToAdd} Days</span>
+                      <span className="text-[8.5px] text-slate-500 block truncate">{selectedCycle === "MONTHLY" ? "Monthly" : "Annual"}</span>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-emerald-100/90 to-emerald-200/60 p-2 rounded-lg border border-emerald-300 shadow-2xs">
+                      <span className="text-[9.5px] text-emerald-950 block font-bold">Cumulative Total</span>
+                      <span className="font-black text-emerald-950 text-xs">{cumulativeTotalDays} Days</span>
+                      <span className="text-[8.5px] text-emerald-900 font-bold block truncate">till {formattedProjectedDate}</span>
                     </div>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-300/80 shadow-2xs flex items-center justify-center text-emerald-700">
-                    <Calendar className="w-6 h-6" />
-                  </div>
-                </div>
 
-                {/* Dates Grid */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                    <span className="text-[10.5px] text-velvi-brown/60 block">Start Date</span>
-                    <span className="font-bold text-velvi-brownDark">{formattedStartDate}</span>
-                  </div>
-                  <div className="bg-velvi-cream/40 p-3 rounded-2xl border border-velvi-gold/20">
-                    <span className="text-[10.5px] text-velvi-brown/60 block">Expiry Date</span>
-                    <span className="font-extrabold text-emerald-900">{formattedDate}</span>
-                  </div>
+                  <p className="text-[10px] text-slate-600 leading-tight pt-1 border-t border-slate-100 flex items-center gap-1">
+                    <Shield className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <span>Validity always accumulates sequentially on top of your current expiry date ({formattedDate}). Days never overlap or get wasted.</span>
+                  </p>
                 </div>
 
                 {/* Compact Feature Chips */}
-                <div className="pt-2 border-t border-velvi-gold/20 flex flex-wrap gap-2 text-[11px] text-velvi-brownDark">
-                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
-                    <Check className="w-3 h-3 text-emerald-600" /> Unlimited Bookings
+                <div className="pt-1 flex flex-wrap gap-1.5 text-[10.5px] text-velvi-brownDark">
+                  <span className="px-2 py-0.5 bg-white rounded-md border border-velvi-gold/20 flex items-center gap-1">
+                    <Check className="w-2.5 h-2.5 text-emerald-600" /> Unlimited Bookings
                   </span>
-                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
-                    <Check className="w-3 h-3 text-emerald-600" /> WhatsApp Receipts
+                  <span className="px-2 py-0.5 bg-white rounded-md border border-velvi-gold/20 flex items-center gap-1">
+                    <Check className="w-2.5 h-2.5 text-emerald-600" /> WhatsApp Receipts
                   </span>
-                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
-                    <Check className="w-3 h-3 text-emerald-600" /> Cloud Backup
+                  <span className="px-2 py-0.5 bg-white rounded-md border border-velvi-gold/20 flex items-center gap-1">
+                    <Check className="w-2.5 h-2.5 text-emerald-600" /> Cloud Backup
                   </span>
-                  <span className="px-2.5 py-1 bg-white rounded-lg border border-velvi-gold/20 flex items-center gap-1.5">
-                    <Check className="w-3 h-3 text-emerald-600" /> Ad-Free Pro
-                  </span>
-                </div>
-              </div>
-
-              {/* Upcoming Renewal & Queue Card (Clean & Concise) */}
-              <div className="bg-white rounded-3xl p-5 border border-velvi-gold/25 shadow-sm space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-amber-800 shrink-0">
-                      <TrendingUp className="w-4 h-4" />
-                    </div>
-                    <h4 className="font-bold text-xs text-velvi-brownDark">
-                      Upcoming Renewal &amp; Queue
-                    </h4>
-                  </div>
-                  <span className="text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-full">
-                    Auto-Queue Active
+                  <span className="px-2 py-0.5 bg-white rounded-md border border-velvi-gold/20 flex items-center gap-1">
+                    <Check className="w-2.5 h-2.5 text-emerald-600" /> Ad-Free Pro
                   </span>
                 </div>
 
-                {/* Clean Timeline: Current Expiry -> Queued Extension */}
-                <div className="grid grid-cols-2 gap-2 text-xs bg-amber-50/60 p-3 rounded-2xl border border-amber-200/60">
-                  <div>
-                    <span className="text-[10.5px] text-amber-900/70 block">Current Expiry:</span>
-                    <span className="font-bold text-velvi-brownDark">{formattedDate}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10.5px] text-amber-900/70 block">Next Renewal (+{totalDaysToAdd}d):</span>
-                    <span className="font-extrabold text-emerald-900">{formattedProjectedDate}</span>
-                  </div>
-                </div>
-
+                {/* Quick Action Button to Stack More */}
                 <button
                   type="button"
                   onClick={() => setActiveTab("PLANS")}
-                  className="w-full py-2.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 shadow-2xs"
+                  className="w-full py-2 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-98 shadow-2xs"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-velvi-goldLight" />
-                  <span>Extend Plan Now →</span>
+                  <span>Stack More Validity (+{totalDaysToAdd} Days) →</span>
                 </button>
               </div>
 
