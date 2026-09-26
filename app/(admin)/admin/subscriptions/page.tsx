@@ -33,13 +33,13 @@ export default function AdminSubscriptionsPage() {
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>திட்ட மேலாண்மை (Subscription Engine)</span>
+            <span>SUBSCRIPTION ENGINE &amp; BILLING TIERS</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            சந்தா விவரங்கள் &amp; வேலிடிட்டி (Subscriptions)
+            Subscription Management &amp; Ledger
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            திட்ட அடுக்குகள், புதுப்பித்தல் சுழற்சிகள் மற்றும் வாத்தியார் சந்தா நிலை மேலாண்மை
+            Plan tiers, renewal cycles, and tenant subscription status overview
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function AdminSubscriptionsPage() {
             href="/admin"
             className="px-3.5 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>முதன்மை பலகை (Super Console)</span>
+            <span>Super Console</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -58,38 +58,38 @@ export default function AdminSubscriptionsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>மொத்த சந்தாக்கள்</span>
+            <span>Total Subscriptions</span>
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-white">{subscriptions.length}</div>
-          <div className="text-[10.5px] text-slate-400">பதிவு செய்யப்பட்ட கணக்குகள்</div>
+          <div className="text-[10.5px] text-slate-400">Registered Accounts</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>கட்டண சந்தாதாரர்</span>
+            <span>Active Paid Plans</span>
             <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{totalActive}</div>
-          <div className="text-[10.5px] text-emerald-400">செயலில் உள்ள வேலிடிட்டி</div>
+          <div className="text-[10.5px] text-emerald-400">Valid Active Access</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>வருடாந்திர சந்தா</span>
+            <span>Annual Plans</span>
             <Calendar className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-amber-300">{totalAnnual}</div>
-          <div className="text-[10.5px] text-slate-400">365-நாள் திட்டங்கள்</div>
+          <div className="text-[10.5px] text-slate-400">365-Day Cycle</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>மாதாந்திர சந்தா</span>
+            <span>Monthly Plans</span>
             <Clock className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-amber-300">{totalMonthly}</div>
-          <div className="text-[10.5px] text-slate-400">30-நாள் சுழற்சி</div>
+          <div className="text-[10.5px] text-slate-400">30-Day Cycle</div>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export default function AdminSubscriptionsPage() {
         <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
         <input
           type="text"
-          placeholder="தொழில், திட்டம், வாத்தியார் பெயர் தேட... (Filter subscriptions)"
+          placeholder="Filter by business name, plan tier, priest name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
@@ -125,27 +125,27 @@ export default function AdminSubscriptionsPage() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-extrabold text-sm text-white">{biz?.name || "சுயாதீன சேவை"}</h4>
-                  <div className="text-[11px] text-slate-400">{user?.name || "வாத்தியார்"}</div>
+                  <h4 className="font-extrabold text-sm text-white">{biz?.name || "Independent Service"}</h4>
+                  <div className="text-[11px] text-slate-400">{user?.name || "Priest"}</div>
                 </div>
                 <span
-                  className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                  className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                     sub.status === "ACTIVE"
                       ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                       : "bg-amber-950/80 text-amber-400 border border-amber-800"
                   }`}
                 >
-                  {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status}
+                  {sub.status === "ACTIVE" ? "Active" : sub.status}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
                 <div>
-                  <span className="text-[9.5px] text-slate-400 block uppercase">திட்டம் &amp; சுழற்சி</span>
+                  <span className="text-[9.5px] text-slate-400 block uppercase">Plan &amp; Billing Cycle</span>
                   <span className="font-bold text-amber-300">{sub.planName} ({sub.billingCycle})</span>
                 </div>
                 <div>
-                  <span className="text-[9.5px] text-slate-400 block uppercase">வேலிடிட்டி முடிவு</span>
+                  <span className="text-[9.5px] text-slate-400 block uppercase">Period Expiry</span>
                   <span className="font-bold text-white font-mono">{expiryFormatted}</span>
                 </div>
               </div>
@@ -160,12 +160,12 @@ export default function AdminSubscriptionsPage() {
           <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">தொழில் &amp; வாத்தியார் (Business &amp; Priest)</th>
-                <th className="p-4">திட்ட பெயர் (Plan Name)</th>
-                <th className="p-4">கட்டண சுழற்சி (Billing Cycle)</th>
-                <th className="p-4">நிலை (Status)</th>
-                <th className="p-4">துவக்கம் (Period Start)</th>
-                <th className="p-4">முடிவு (Period End)</th>
+                <th className="p-4">Business &amp; Priest</th>
+                <th className="p-4">Plan Name</th>
+                <th className="p-4">Billing Cycle</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Period Start</th>
+                <th className="p-4">Period Expiry</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -183,20 +183,20 @@ export default function AdminSubscriptionsPage() {
                 return (
                   <tr key={sub.id} className="hover:bg-slate-800/30 transition">
                     <td className="p-4">
-                      <div className="font-extrabold text-white text-sm">{biz?.name || "சுயாதீன சேவை"}</div>
+                      <div className="font-extrabold text-white text-sm">{biz?.name || "Independent Service"}</div>
                       <div className="text-[10.5px] text-slate-400">{user?.name}</div>
                     </td>
                     <td className="p-4 text-amber-400 font-bold">{sub.planName}</td>
                     <td className="p-4 uppercase text-[10.5px] font-mono text-slate-300 font-semibold">{sub.billingCycle}</td>
                     <td className="p-4">
                       <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                           sub.status === "ACTIVE"
                             ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                             : "bg-amber-950/80 text-amber-400 border border-amber-800"
                         }`}
                       >
-                        {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status}
+                        {sub.status === "ACTIVE" ? "Active" : sub.status}
                       </span>
                     </td>
                     <td className="p-4 text-slate-400 font-mono">

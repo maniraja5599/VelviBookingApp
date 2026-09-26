@@ -183,13 +183,13 @@ export default function AdminUsersPage() {
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
             <Shield className="w-3.5 h-3.5 text-amber-400" />
-            <span>பயனர்கள் & வேலிடிட்டி மேலாண்மை • Tenant Directory &amp; Validity Control</span>
+            <span>TENANT DIRECTORY &amp; VALIDITY CONTROL</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            பயனர்கள் &amp; வேலிடிட்டி கட்டுப்பாடு (Users &amp; Validity)
+            User Directory &amp; Validity Management
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            நேரடி வாடிக்கையாளர்கள் &amp; வாத்தியார்கள் • Supabase Cloud உடன் நேரலை ஒத்திசைவு
+            Real tenants, active subscriptions, and quota control • Real-time cloud sync
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export default function AdminUsersPage() {
             className="px-3 py-2 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
-            <span>{isCloudSyncing ? "ஒத்திசைக்கிறது..." : "கிளவுட் ஒத்திசைவு (Sync)"}</span>
+            <span>{isCloudSyncing ? "Syncing..." : "Sync Cloud"}</span>
           </button>
 
           <button
@@ -211,14 +211,14 @@ export default function AdminUsersPage() {
             className="px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>{isResetting ? "மீட்டமைக்கிறது..." : "தரவு மீட்டமை (Reset)"}</span>
+            <span>{isResetting ? "Resetting..." : "Purge Sandbox"}</span>
           </button>
 
           <Link
             href="/admin"
             className="px-3 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>முதன்மை பலகை (Super Console)</span>
+            <span>Super Console</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -237,7 +237,7 @@ export default function AdminUsersPage() {
           <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="பெயர், மின்னஞ்சல், தொலைபேசி தேட..."
+            placeholder="Search by name, email, phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
@@ -246,10 +246,10 @@ export default function AdminUsersPage() {
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-semibold">
           {[
-            { id: "ALL", label: "அனைத்தும் (All)" },
-            { id: "ACTIVE", label: "கட்டண சந்தா (Active)" },
-            { id: "TRIAL", label: "சோதனை காலம் (Trial)" },
-            { id: "EXPIRED", label: "காலாவதியானது (Expired)" },
+            { id: "ALL", label: "All Users" },
+            { id: "ACTIVE", label: "Paid Subscriptions" },
+            { id: "TRIAL", label: "Free Trial" },
+            { id: "EXPIRED", label: "Expired" },
           ].map((f) => (
             <button
               key={f.id}
@@ -270,7 +270,7 @@ export default function AdminUsersPage() {
       <div className="sm:hidden space-y-3">
         {users.length === 0 ? (
           <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
-            தேடலுக்கு ஏற்ற பயனர்கள் யாரும் இல்லை &quot;{search}&quot;
+            No users found matching &quot;{search}&quot;
           </div>
         ) : (
           users.map((u) => {
@@ -290,11 +290,11 @@ export default function AdminUsersPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h4 className="font-extrabold text-sm text-white">{u.name}</h4>
-                    <div className="text-[11px] text-amber-400/90 font-medium">{biz?.name || "தனிப்பட்ட வாத்தியார்"}</div>
+                    <div className="text-[11px] text-amber-400/90 font-medium">{biz?.name || "Independent Consultant / Priest"}</div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">{u.email}</div>
                   </div>
                   <span
-                    className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                    className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                       sub.status === "ACTIVE"
                         ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                         : sub.status === "TRIAL"
@@ -302,13 +302,13 @@ export default function AdminUsersPage() {
                         : "bg-rose-950/80 text-rose-400 border border-rose-800"
                     }`}
                   >
-                    {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status === "TRIAL" ? "சோதனை காலம்" : "காலாவதியானது"}
+                    {sub.status === "ACTIVE" ? "Active" : sub.status === "TRIAL" ? "Trial" : "Expired"}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
                   <span className="text-slate-400 font-mono">{u.mobile}</span>
-                  <span className="text-amber-300 font-mono font-bold">வேலிடிட்டி: {validUntil}</span>
+                  <span className="text-amber-300 font-mono font-bold">Valid Until: {validUntil}</span>
                 </div>
 
                 <button
@@ -316,7 +316,7 @@ export default function AdminUsersPage() {
                   onClick={() => setSelectedUser(u)}
                   className="w-full py-2 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-extrabold text-xs transition cursor-pointer active:scale-95"
                 >
-                  வேலிடிட்டி மாற்று (Adjust)
+                  Adjust Validity
                 </button>
               </div>
             );
@@ -330,12 +330,12 @@ export default function AdminUsersPage() {
           <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">பயனர் / வாத்தியார் (User)</th>
-                <th className="p-4">வணிகம் / தொழில் (Business)</th>
-                <th className="p-4">தொலைபேசி (Mobile)</th>
-                <th className="p-4">சந்தா நிலை (Status)</th>
-                <th className="p-4">முடிவடையும் நாள் (Valid Until)</th>
-                <th className="p-4 text-right">செயல் (Actions)</th>
+                <th className="p-4">User / Tenant</th>
+                <th className="p-4">Business / Organization</th>
+                <th className="p-4">Phone Number</th>
+                <th className="p-4">Subscription Status</th>
+                <th className="p-4">Validity Expiry</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -354,11 +354,11 @@ export default function AdminUsersPage() {
                       <div className="font-extrabold text-white text-sm">{u.name}</div>
                       <div className="text-[11px] text-slate-400">{u.email}</div>
                     </td>
-                    <td className="p-4 text-slate-300">{biz?.name || "தனிப்பட்ட வாத்தியார்"}</td>
+                    <td className="p-4 text-slate-300">{biz?.name || "Independent Consultant / Priest"}</td>
                     <td className="p-4 text-slate-300 font-mono">{u.mobile}</td>
                     <td className="p-4">
                       <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
+                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
                           sub.status === "ACTIVE"
                             ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800"
                             : sub.status === "TRIAL"
@@ -366,7 +366,7 @@ export default function AdminUsersPage() {
                             : "bg-rose-950/80 text-rose-400 border border-rose-800"
                         }`}
                       >
-                        {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status === "TRIAL" ? "சோதனை காலம்" : "காலாவதியானது"}
+                        {sub.status === "ACTIVE" ? "Active" : sub.status === "TRIAL" ? "Trial" : "Expired"}
                       </span>
                     </td>
                     <td className="p-4 font-bold text-amber-400 font-mono">{validUntil}</td>
@@ -375,7 +375,7 @@ export default function AdminUsersPage() {
                         onClick={() => setSelectedUser(u)}
                         className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-extrabold text-xs shadow-xs transition active:scale-95 cursor-pointer"
                       >
-                        வேலிடிட்டி மாற்று
+                        Adjust Validity
                       </button>
                     </td>
                   </tr>
@@ -392,7 +392,7 @@ export default function AdminUsersPage() {
           <div className="bg-[#0c1424] rounded-3xl p-6 max-w-md w-full space-y-4 border border-amber-500/40 shadow-2xl text-white relative">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
-                <h3 className="font-extrabold text-base text-white">சந்தா வேலிடிட்டி மாற்றம்</h3>
+                <h3 className="font-extrabold text-base text-white">Adjust Subscription Validity</h3>
                 <p className="text-xs text-slate-400">{selectedUser.name} ({selectedUser.email})</p>
               </div>
               <button
@@ -405,22 +405,22 @@ export default function AdminUsersPage() {
 
             <form onSubmit={handleAdjustValidity} className="space-y-4 text-xs">
               <div>
-                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">செயல் வகை (Action Type)</label>
+                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Action Type</label>
                 <select
                   value={adjustmentType}
                   onChange={(e) => setAdjustmentType(e.target.value as any)}
                   className="w-full bg-[#060a14] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 >
-                  <option value="EXTEND">நாட்களை நீட்டிக்க (+ நாட்கள்)</option>
-                  <option value="REDUCE">நாட்களை குறைக்க (- நாட்கள்)</option>
-                  <option value="ACTIVATE">மீண்டும் செயல்படுத்த (Activate Plan)</option>
-                  <option value="EXPIRE">உடனடியாக காலாவதியாக்க (Expire)</option>
+                  <option value="EXTEND">Extend Duration (+ Add Days)</option>
+                  <option value="REDUCE">Reduce Duration (- Deduct Days)</option>
+                  <option value="ACTIVATE">Reactivate Plan (Set Active)</option>
+                  <option value="EXPIRE">Expire Immediately (Revoke Access)</option>
                 </select>
               </div>
 
               {adjustmentType === "EXTEND" && (
                 <div>
-                  <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">விரைவு தேர்வு (Preset Duration)</label>
+                  <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Preset Duration</label>
                   <div className="grid grid-cols-4 gap-2">
                     {[7, 30, 90, 365].map((d) => (
                       <button
@@ -441,7 +441,7 @@ export default function AdminUsersPage() {
               )}
 
               <div>
-                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">கூடுதல் நாட்கள் எண்ணிக்கை (Days Count)</label>
+                <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">Adjustment Duration (Days)</label>
                 <input
                   type="number"
                   value={days}
@@ -452,12 +452,12 @@ export default function AdminUsersPage() {
 
               <div>
                 <label className="text-slate-300 block mb-1.5 font-bold uppercase text-[10.5px]">
-                  காரணம் / தணிக்கை குறிப்பு (Mandatory Reason) *
+                  Audit Reason / Admin Note *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="எ.கா. வாடிக்கையாளர் ஆதரவு, திருவிழா சலுகை..."
+                  placeholder="e.g. Customer support extension, goodwill promo, invoice settlement..."
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   className="w-full bg-[#060a14] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
@@ -470,13 +470,13 @@ export default function AdminUsersPage() {
                   onClick={() => setSelectedUser(null)}
                   className="flex-1 py-2.5 bg-slate-800 text-slate-300 hover:text-white rounded-xl font-bold transition cursor-pointer"
                 >
-                  ரத்து (Cancel)
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black rounded-xl font-black shadow-lg shadow-amber-500/20 transition cursor-pointer active:scale-95"
                 >
-                  சேமித்து புதுப்பி (Save &amp; Log)
+                  Save &amp; Apply Adjustment
                 </button>
               </div>
             </form>

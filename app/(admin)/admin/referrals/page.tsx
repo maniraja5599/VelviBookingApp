@@ -36,13 +36,13 @@ export default function AdminReferralsPage() {
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-bold text-amber-300 shadow-xs">
             <Gift className="w-3.5 h-3.5 text-amber-400" />
-            <span>பரிந்துரை &amp; வெகுமதி என்ஜின் (Viral Rewards)</span>
+            <span>VIRAL GROWTH &amp; REFERRAL ENGINE</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            பரிந்துரைகள் &amp; வெகுமதி லெட்ஜர் (Referrals)
+            Referral Network &amp; Reward Ledger
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            பரிந்துரை அழைப்புகள், பதிவு நிலவரம் மற்றும் இருவருக்கும் +30 நாட்கள் போனஸ் வேலிடிட்டி
+            Track tenant invitations, conversion milestones, and mutual +30 days bonus validity
           </p>
         </div>
 
@@ -51,7 +51,7 @@ export default function AdminReferralsPage() {
             href="/admin"
             className="px-3.5 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>முதன்மை பலகை (Super Console)</span>
+            <span>Super Console</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -61,38 +61,38 @@ export default function AdminReferralsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>மொத்த அழைப்புகள்</span>
+            <span>Total Invitations</span>
             <Users className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-white">{totalInvites}</div>
-          <div className="text-[10.5px] text-slate-400">அனுப்பப்பட்ட அழைப்புகள்</div>
+          <div className="text-[10.5px] text-slate-400">Outbound Invites</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-amber-400 flex items-center justify-between">
-            <span>பதிவு மட்டும்</span>
+            <span>Signed Up (Unpaid)</span>
             <Hourglass className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-amber-300">{signedUpOnlyCount}</div>
-          <div className="text-[10.5px] text-amber-400/90">முதல் கட்டணம் நிலுவையில்</div>
+          <div className="text-[10.5px] text-amber-400/90">Pending First Payment</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-emerald-400 flex items-center justify-between">
-            <span>கட்டணம் செலுத்தியவை</span>
+            <span>Paid &amp; Converted</span>
             <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-emerald-400">{paidCount}</div>
-          <div className="text-[10.5px] text-emerald-500">வெகுமதி வழங்கப்பட்டது</div>
+          <div className="text-[10.5px] text-emerald-500">Rewards Unlocked</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>வழங்கப்பட்ட நாட்கள்</span>
+            <span>Bonus Days Given</span>
             <Clock className="w-4 h-4 text-amber-400" />
           </div>
           <div className="text-2xl font-black text-amber-300">+{totalDaysAwarded}d</div>
-          <div className="text-[10.5px] text-slate-400">இருவருக்கும் +30 நாட்கள் வீதம்</div>
+          <div className="text-[10.5px] text-slate-400">+30 Days to Each Party</div>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export default function AdminReferralsPage() {
           <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
           <input
             type="text"
-            placeholder="பரிந்துரைத்தவர், நண்பர் அல்லது குறியீடு தேட..."
+            placeholder="Search by referrer, friend, or code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
@@ -111,9 +111,9 @@ export default function AdminReferralsPage() {
 
         <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar text-xs font-semibold">
           {[
-            { key: "ALL", label: `அனைத்தும் (${totalInvites})` },
-            { key: "SIGNUP_ONLY", label: `⏳ பதிவு மட்டும் (${signedUpOnlyCount})` },
-            { key: "PAID", label: `🎁 வெகுமதி பெற்றது (${paidCount})` },
+            { key: "ALL", label: `All Referrals (${totalInvites})` },
+            { key: "SIGNUP_ONLY", label: `Pending Payment (${signedUpOnlyCount})` },
+            { key: "PAID", label: `Rewarded (${paidCount})` },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -134,7 +134,7 @@ export default function AdminReferralsPage() {
       <div className="sm:hidden space-y-3">
         {filteredReferrals.length === 0 ? (
           <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
-            &quot;{search}&quot; என்ற குறிப்பில் பரிந்துரைகள் எதுவும் இல்லை.
+            No referrals found matching &quot;{search}&quot;.
           </div>
         ) : (
           filteredReferrals.map((r) => {
@@ -146,7 +146,7 @@ export default function AdminReferralsPage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] text-slate-400 block uppercase">பரிந்துரைத்தவர் → நண்பர்</span>
+                    <span className="text-[10px] text-slate-400 block uppercase">Referrer → Referee</span>
                     <div className="font-extrabold text-white text-sm">
                       {r.referrerName} <span className="text-amber-400">→</span> {r.refereeName}
                     </div>
@@ -165,16 +165,16 @@ export default function AdminReferralsPage() {
                     }`}
                   >
                     {isPaid ? <CheckCircle className="w-3 h-3" /> : <Hourglass className="w-3 h-3" />}
-                    <span>{isPaid ? "கட்டணம் சரிபார்க்கப்பட்டது" : "கட்டணம் நிலுவையில்"}</span>
+                    <span>{isPaid ? "Payment Verified" : "Payment Pending"}</span>
                   </span>
 
                   <span className={`font-bold text-[10.5px] ${isPaid ? "text-emerald-400" : "text-slate-500"}`}>
-                    {isPaid ? "+30 நாட்கள் இருவருக்கும்" : "நிலுவை"}
+                    {isPaid ? "+30 Days to Both" : "Pending"}
                   </span>
                 </div>
 
                 <div className="text-[10px] text-slate-400 text-right font-mono">
-                  இணைந்தது: {new Date(r.createdAt).toLocaleDateString("en-IN")}
+                  Joined: {new Date(r.createdAt).toLocaleDateString("en-IN")}
                 </div>
               </div>
             );
@@ -188,12 +188,12 @@ export default function AdminReferralsPage() {
           <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">பரிந்துரைத்தவர் (Referrer)</th>
-                <th className="p-4">இணைந்த பயனர் (Friend)</th>
-                <th className="p-4">பயன்படுத்திய குறியீடு (Code)</th>
-                <th className="p-4">கட்டண நிலை (Payment)</th>
-                <th className="p-4">வெகுமதி நிலை (Reward)</th>
-                <th className="p-4 text-right">இணைந்த தேதி (Date)</th>
+                <th className="p-4">Referrer</th>
+                <th className="p-4">Invited Tenant (Friend)</th>
+                <th className="p-4">Promo Code</th>
+                <th className="p-4">Payment Status</th>
+                <th className="p-4">Reward Status</th>
+                <th className="p-4 text-right">Joined Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -204,11 +204,11 @@ export default function AdminReferralsPage() {
                   <tr key={r.id} className="hover:bg-slate-800/30 transition">
                     <td className="p-4">
                       <div className="font-extrabold text-white text-sm">{r.referrerName}</div>
-                      <div className="text-[10px] text-slate-400">பரிந்துரைத்தவர்</div>
+                      <div className="text-[10px] text-slate-400">Referrer</div>
                     </td>
                     <td className="p-4">
                       <div className="font-extrabold text-amber-300 text-sm">{r.refereeName}</div>
-                      <div className="text-[10px] text-slate-400">பக்தர் / வாத்தியார்</div>
+                      <div className="text-[10px] text-slate-400">Priest / Client</div>
                     </td>
                     <td className="p-4 font-mono text-amber-300 font-bold tracking-wider">{r.referralCode}</td>
                     <td className="p-4">
@@ -222,21 +222,21 @@ export default function AdminReferralsPage() {
                         {isPaid ? (
                           <>
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>முதல் கட்டணம் உறுதியானது</span>
+                            <span>First Payment Confirmed</span>
                           </>
                         ) : (
                           <>
                             <Hourglass className="w-3.5 h-3.5 text-amber-400" />
-                            <span>பதிவு செய்தார் • கட்டணம் நிலுவை</span>
+                            <span>Signed Up • Payment Pending</span>
                           </>
                         )}
                       </span>
                     </td>
                     <td className="p-4 font-bold">
                       {isPaid ? (
-                        <span className="text-emerald-400 font-extrabold">+30 நாட்கள் இருவருக்கும் சேர்க்கப்பட்டது</span>
+                        <span className="text-emerald-400 font-extrabold">+30 Days Awarded to Both</span>
                       ) : (
-                        <span className="text-slate-500 font-medium">முதல் கட்டணம் நிலுவை</span>
+                        <span className="text-slate-500 font-medium">Awaiting First Payment</span>
                       )}
                     </td>
                     <td className="p-4 text-slate-400 text-right font-mono">

@@ -31,13 +31,13 @@ export default function AdminPaymentsPage() {
         <div className="space-y-1.5 relative z-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/35 text-[11px] font-bold text-emerald-300 shadow-xs">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>கேஷ்பிரீ நேரலை கட்டண கேட்வே (Cashfree PG)</span>
+            <span>CASHFREE PRODUCTION GATEWAY</span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-            கேஷ்பிரீ கட்டணங்கள் &amp; பணப்புழக்கம் (Payments)
+            Cashfree Payments &amp; Cashflow
           </h1>
           <p className="text-xs sm:text-sm text-slate-400">
-            நிகழ்நேர சரிபார்க்கப்பட்ட பரிவர்த்தனைகள், வெப்ஹூக் ஆர்டர் நிகழ்வுகள் மற்றும் லெட்ஜர்
+            Real-time verified transactions, webhook order events, and payment ledger records
           </p>
         </div>
 
@@ -46,7 +46,7 @@ export default function AdminPaymentsPage() {
             href="/admin"
             className="px-3.5 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>முதன்மை பலகை (Super Console)</span>
+            <span>Super Console</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -56,38 +56,38 @@ export default function AdminPaymentsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>மொத்த பரிவர்த்தனை</span>
+            <span>Total Volume</span>
             <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-emerald-400">₹{totalAmount.toLocaleString("en-IN")}</div>
-          <div className="text-[10.5px] text-emerald-500">திரட்டப்பட்ட தக்ஷிணை / சந்தாக்கள்</div>
+          <div className="text-[10.5px] text-emerald-500">Processed Collections</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>சரிபார்க்கப்பட்டவை</span>
+            <span>Verified Orders</span>
             <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
           </div>
           <div className="text-2xl font-black text-white">{totalSuccess}</div>
-          <div className="text-[10.5px] text-slate-400">வெப்ஹூக் மூலம் உறுதியானது</div>
+          <div className="text-[10.5px] text-slate-400">Webhook Confirmed</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>கேட்வே என்ஜின்</span>
+            <span>Gateway Engine</span>
             <CreditCard className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-lg font-black text-amber-300 font-mono">Cashfree 2026</div>
-          <div className="text-[10.5px] text-slate-400">நேரலை இயக்கம் (Production)</div>
+          <div className="text-[10.5px] text-slate-400">Production Mode</div>
         </div>
 
         <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 rounded-2xl border border-slate-800/90 shadow-xl space-y-1">
           <div className="text-xs font-semibold text-slate-400 flex items-center justify-between">
-            <span>இணைக்கப்பட்ட டொமைன்</span>
+            <span>Connected Domain</span>
             <Globe className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <div className="text-lg font-black text-white font-mono truncate">velvi.date</div>
-          <div className="text-[10.5px] text-emerald-400">செயலில் உள்ள வெப்ஹூக்</div>
+          <div className="text-[10.5px] text-emerald-400">Active Production Webhook</div>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ export default function AdminPaymentsPage() {
         <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
         <input
           type="text"
-          placeholder="ஆர்டர் எண், கட்டண எண் அல்லது சுழற்சி தேட... (Filter payments)"
+          placeholder="Search by order ID, gateway ref, or cycle..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-3 py-2.5 bg-[#080d19] border border-slate-800 focus:border-amber-400 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none transition shadow-inner"
@@ -107,7 +107,7 @@ export default function AdminPaymentsPage() {
       <div className="sm:hidden space-y-3">
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-slate-800">
-            &quot;{search}&quot; என்ற குறிப்பில் பரிவர்த்தனைகள் எதுவும் இல்லை.
+            No transactions found matching &quot;{search}&quot;.
           </div>
         ) : (
           filtered.map((p) => (
@@ -151,13 +151,13 @@ export default function AdminPaymentsPage() {
           <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
             <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800/90">
               <tr>
-                <th className="p-4">ஆர்டர் எண் (Order ID)</th>
-                <th className="p-4">கேட்வே எண் (Gateway Ref)</th>
-                <th className="p-4">தொகை (Amount)</th>
-                <th className="p-4">சுழற்சி (Cycle)</th>
-                <th className="p-4">நிலை (Status)</th>
-                <th className="p-4">கட்டண முறை (Method)</th>
-                <th className="p-4 text-right">தேதி (Date)</th>
+                <th className="p-4">Order ID</th>
+                <th className="p-4">Gateway Reference</th>
+                <th className="p-4">Amount</th>
+                <th className="p-4">Billing Cycle</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Payment Method</th>
+                <th className="p-4 text-right">Transaction Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">

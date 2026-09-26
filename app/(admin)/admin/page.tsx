@@ -804,28 +804,28 @@ export default function SuperAdminDashboardPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/35 text-[11px] font-extrabold text-amber-300 shadow-xs">
               <Shield className="w-3.5 h-3.5 text-amber-400" />
-              <span>சூப்பர் அட்மின் (Super Admin)</span>
+              <span>Super Administrator</span>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[10.5px] font-mono text-emerald-400">
               <Globe className="w-3 h-3" />
-              <span>velvi.date • நேரலை (Live)</span>
+              <span>velvi.date • Live Production</span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-[10.5px] font-mono text-blue-400">
               <CreditCard className="w-3 h-3" />
-              <span>கேஷ்பிரீ நேரலை (Cashfree Live)</span>
+              <span>Cashfree Live Gateway</span>
             </span>
           </div>
 
           <div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white">
-              வேள்வி தள மேலாண்மை பலகை
+              Platform Management Console
             </h1>
-            <p className="text-xs text-amber-300 font-mono">Velvi Platform Management Console</p>
+            <p className="text-xs text-amber-400 font-mono mt-0.5">Enterprise Super Administrator Portal</p>
           </div>
 
           <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
-            நிர்வாகி: <strong className="text-amber-300 font-mono">manirajankg@gmail.com</strong> • முழுமையான பயனர் கட்டுப்பாடு, வேலிடிட்டி மேலாண்மை &amp; சலுகை பலகை
+            Administrator: <strong className="text-amber-300 font-mono">manirajankg@gmail.com</strong> • Full tenant control, subscription validity management, and promo governance.
           </p>
         </div>
 
@@ -835,10 +835,10 @@ export default function SuperAdminDashboardPage() {
             onClick={handleCloudSync}
             disabled={isCloudSyncing}
             className="px-3.5 py-2.5 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
-            title="கிளவுட் பயனர்கள் மற்றும் புக்கிங் விவரங்களை ஒத்திசைக்க"
+            title="Synchronize live users and bookings from Supabase Cloud"
           >
             <RotateCcw className={`w-3.5 h-3.5 text-emerald-400 ${isCloudSyncing ? "animate-spin" : ""}`} />
-            <span>{isCloudSyncing ? "ஒத்திசைக்கப்படுகிறது..." : "கிளவுட் ஒத்திசைவு (Sync)"}</span>
+            <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
           </button>
 
           <button
@@ -846,17 +846,17 @@ export default function SuperAdminDashboardPage() {
             onClick={handleResetToRealData}
             disabled={isResetting}
             className="px-3.5 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
-            title="அனைத்து டெமோ தரவுகளையும் மீட்டமைக்க"
+            title="Reset demo data and refresh directory"
           >
             <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>{isResetting ? "மீட்டமைக்கப்படுகிறது..." : "தரவு மீட்டமை (Reset)"}</span>
+            <span>{isResetting ? "Resetting..." : "Reset Collections"}</span>
           </button>
 
           <Link
             href="/app"
             className="px-3.5 py-2.5 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95"
           >
-            <span>செயலி (App)</span>
+            <span>Open User App</span>
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-400" />
           </Link>
         </div>
@@ -895,27 +895,25 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
-      {/* Responsive Sub-Tabs Bar (Luxury Glassmorphic Segmented Control with Tamil Subtitles) */}
+      {/* Responsive Sub-Tabs Bar (Luxury Segmented Control in Pure English) */}
       <div className="bg-[#080d19]/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-1.5 flex overflow-x-auto no-scrollbar gap-1.5 shadow-xl">
         {[
-          { id: "overview", label: "Overview", subLabel: "மேலோட்டம்", icon: LayoutDashboard },
+          { id: "overview", label: "Overview", icon: LayoutDashboard },
           {
             id: "directory",
-            label: "Directory",
-            subLabel: "பயனர்கள் பட்டியல்",
+            label: "User Directory",
             icon: Users,
             badge: totalUsersCount,
           },
           {
             id: "coupons",
-            label: "Coupons",
-            subLabel: "கூப்பன்கள் & சலுகைகள்",
+            label: "Coupons & Promos",
             icon: Tag,
             badge: coupons.length,
           },
-          { id: "subscriptions", label: "Subscriptions", subLabel: "சந்தா லெட்ஜர்", icon: CreditCard },
-          { id: "branding", label: "Branding", subLabel: "தள பிராண்டிங்", icon: Palette },
-          { id: "dev-info", label: "Dev Specs", subLabel: "தொழில்நுட்ப விவரம்", icon: Terminal, badge: "v2.5.3" },
+          { id: "subscriptions", label: "Subscriptions & Ledger", icon: CreditCard },
+          { id: "branding", label: "Platform Branding", icon: Palette },
+          { id: "dev-info", label: "Developer Specs", icon: Terminal, badge: "v2.5.3" },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -924,17 +922,14 @@ export default function SuperAdminDashboardPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer whitespace-nowrap shrink-0 ${
                 isActive
                   ? "bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/5 text-amber-300 border border-amber-500/40 shadow-sm"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               }`}
             >
-              <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
-              <div className="text-left">
-                <span className="block font-bold text-white leading-tight text-xs">{tab.subLabel}</span>
-                <span className="block text-[9.5px] text-slate-400 font-normal leading-tight">{tab.label}</span>
-              </div>
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
+              <span className="font-bold text-xs">{tab.label}</span>
               {tab.badge !== undefined && (
                 <span
                   className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ml-1 ${
@@ -956,16 +951,13 @@ export default function SuperAdminDashboardPage() {
       {/* ===================================================================== */}
       {activeTab === "overview" && (
         <div className="space-y-4 sm:space-y-6">
-          {/* Top KPI Cards (Ultra-luxury responsive dark glass cards with Tamil Headings) */}
+          {/* Top KPI Cards (Ultra-luxury responsive dark glass cards in Pure English) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Card 1: Total Users */}
             <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-amber-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                <div>
-                  <div className="font-bold text-white text-xs">மொத்த பயனர்கள்</div>
-                  <div className="text-[10px] text-slate-400">Total Users</div>
-                </div>
+                <span className="font-bold text-white text-xs">Total Registered Users</span>
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
                   <Users className="w-4 h-4" />
                 </div>
@@ -975,7 +967,7 @@ export default function SuperAdminDashboardPage() {
               </div>
               <div className="mt-2 text-[10.5px] text-amber-400/90 font-medium truncate flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                <span>பதிவான பயனர்கள் ({demoDirectoryMetrics.length} டெமோ)</span>
+                <span>Verified cloud accounts ({demoDirectoryMetrics.length} demo isolated)</span>
               </div>
             </div>
 
@@ -983,10 +975,7 @@ export default function SuperAdminDashboardPage() {
             <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-emerald-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                <div>
-                  <div className="font-bold text-emerald-300 text-xs">கட்டண சந்தாதாரர்</div>
-                  <div className="text-[10px] text-slate-400">Active Paid Subscriptions</div>
-                </div>
+                <span className="font-bold text-emerald-300 text-xs">Active Paid Tenants</span>
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                   <CheckCircle className="w-4 h-4" />
                 </div>
@@ -998,8 +987,8 @@ export default function SuperAdminDashboardPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>
                   {realUsersCount > 0
-                    ? `${Math.round((realPaidCount / realUsersCount) * 100)}% கன்வர்ஷன் விகிதம்`
-                    : "0% கன்வர்ஷன்"}
+                    ? `${Math.round((realPaidCount / realUsersCount) * 100)}% Conversion rate`
+                    : "0% Conversion"}
                 </span>
               </div>
             </div>
@@ -1008,10 +997,7 @@ export default function SuperAdminDashboardPage() {
             <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-amber-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                <div>
-                  <div className="font-bold text-amber-300 text-xs">நிகழ்நேர புக்கிங்</div>
-                  <div className="text-[10px] text-slate-400">Real Bookings</div>
-                </div>
+                <span className="font-bold text-amber-300 text-xs">Real Pooja Bookings</span>
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
                   <Activity className="w-4 h-4" />
                 </div>
@@ -1021,7 +1007,7 @@ export default function SuperAdminDashboardPage() {
               </div>
               <div className="mt-2 text-[10.5px] text-slate-400 font-medium truncate flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-                <span>நேரலை புக்கிங் அட்டவணை</span>
+                <span>Live devotees scheduled</span>
               </div>
             </div>
 
@@ -1029,10 +1015,7 @@ export default function SuperAdminDashboardPage() {
             <div className="bg-gradient-to-br from-[#0c1424] via-[#090e1a] to-[#050811] p-4 sm:p-5 rounded-2xl border border-slate-800/90 hover:border-emerald-500/40 transition-all duration-300 shadow-xl group relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
               <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
-                <div>
-                  <div className="font-bold text-emerald-300 text-xs">மொத்த தக்ஷிணை</div>
-                  <div className="text-[10px] text-slate-400">Real Dakshina Volume</div>
-                </div>
+                <span className="font-bold text-emerald-300 text-xs">Total Dakshina Volume</span>
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                   <DollarSign className="w-4 h-4" />
                 </div>
@@ -1042,7 +1025,7 @@ export default function SuperAdminDashboardPage() {
               </div>
               <div className="mt-2 text-[10.5px] text-emerald-400 font-medium truncate flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>உறுதிப்படுத்தப்பட்ட கணக்குகள்</span>
+                <span>Gross platform volume</span>
               </div>
             </div>
           </div>
@@ -1052,11 +1035,11 @@ export default function SuperAdminDashboardPage() {
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0 animate-pulse" />
               <span className="text-slate-300 font-medium text-xs break-words leading-relaxed">
-                <strong className="text-indigo-300 font-semibold">மாதிரி கணக்கு (Demo - Ravi Iyer):</strong> {demoBookingsCount} மாதிரி புக்கிங் • ₹{demoPlatformEarnings.toLocaleString("en-IN")} தக்ஷிணை
+                <strong className="text-indigo-300 font-semibold">Demo Sandbox Account (Ravi Iyer):</strong> {demoBookingsCount} simulated bookings • ₹{demoPlatformEarnings.toLocaleString("en-IN")} demo dakshina
               </span>
             </div>
             <span className="text-[10px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 px-3 py-1 rounded-full shrink-0 self-start sm:self-auto">
-              தனிமைப்படுத்தப்பட்டது (Isolated)
+              Isolated Sandbox
             </span>
           </div>
 
@@ -1066,8 +1049,8 @@ export default function SuperAdminDashboardPage() {
             <div className="lg:col-span-2 bg-[#0c1220]/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-slate-800/90 space-y-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-extrabold text-sm text-white">தள வருவாய் போக்கு</h3>
-                  <span className="text-[10.5px] text-slate-400 font-mono">Platform Revenue Trend</span>
+                  <h3 className="font-extrabold text-sm text-white">Platform Revenue Trend</h3>
+                  <span className="text-[10.5px] text-slate-400 font-mono">Real-time billing &amp; bookings inflow</span>
                   <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-white mt-1 tracking-tight">
                     ₹{realPlatformEarnings.toLocaleString("en-IN")}
                   </div>
@@ -1078,7 +1061,7 @@ export default function SuperAdminDashboardPage() {
               </div>
 
               <div className="pt-3 border-t border-slate-800/80">
-                <div className="text-[11px] text-slate-400 mb-2 font-medium">மாதாந்திர பணப்புழக்கம் (Monthly Cashflow Trend)</div>
+                <div className="text-[11px] text-slate-400 mb-2 font-medium">Monthly Cashflow Trend</div>
                 <div className="flex items-end justify-between h-36 sm:h-40 gap-2.5 pt-2 px-1">
                   {monthlyRevenueTrend.bars.map((bar) => (
                     <div
@@ -1110,18 +1093,18 @@ export default function SuperAdminDashboardPage() {
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
                   <div>
-                    <h3 className="font-extrabold text-sm text-white">முடிவடையும் சந்தாக்கள்</h3>
-                    <p className="text-[10.5px] text-slate-400">புதுப்பிக்க வேண்டிய பயனர் கணக்குகள்</p>
+                    <h3 className="font-extrabold text-sm text-white">Expiring Subscriptions</h3>
+                    <p className="text-[10.5px] text-slate-400">Accounts requiring renewal or validity extension</p>
                   </div>
                   <span className="text-[10px] text-amber-400 font-bold bg-amber-500/10 border border-amber-500/25 px-2.5 py-0.5 rounded-full shrink-0">
-                    முன்னுரிமை (Priority)
+                    Priority Queue
                   </span>
                 </div>
 
                 <div className="space-y-2.5 mt-3">
                   {upcomingExpiries.length === 0 ? (
                     <div className="p-4 text-center text-slate-400 text-xs bg-[#060a14] rounded-2xl border border-slate-800/80">
-                      காலாவதியாகும் சந்தாக்கள் எதுவும் இல்லை.
+                      No expiring subscriptions found.
                     </div>
                   ) : (
                     upcomingExpiries.map((metric) => {
@@ -1132,7 +1115,7 @@ export default function SuperAdminDashboardPage() {
                             month: "short",
                             year: "numeric",
                           })
-                        : "சோதனை காலம் (Trial)";
+                        : "Trial Period";
                       return (
                         <div
                           key={metric.user.id}
@@ -1143,12 +1126,12 @@ export default function SuperAdminDashboardPage() {
                               <h4 className="font-bold text-white truncate text-xs">{metric.user.name}</h4>
                               {metric.isDemo && (
                                 <span className="text-[8.5px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                  டெமோ
+                                  Demo
                                 </span>
                               )}
                             </div>
                             <p className="text-[10.5px] text-slate-400 truncate mt-0.5">
-                              {metric.business?.name || "சேவை"} • {sub?.planName || "Pro"}
+                              {metric.business?.name || "Service Profile"} • {sub?.planName || "Pro"}
                             </p>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
@@ -1169,7 +1152,7 @@ export default function SuperAdminDashboardPage() {
                                 }
                                 className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer active:scale-95 whitespace-nowrap shrink-0 shadow-xs"
                               >
-                                வேலிடிட்டி மாற்று
+                                Adjust Validity
                               </button>
                             )}
                           </div>
@@ -1185,7 +1168,7 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setActiveTab("directory")}
                 className="w-full mt-3 py-2.5 bg-slate-800/80 hover:bg-slate-700 text-amber-300 text-xs font-bold rounded-xl border border-slate-700 text-center transition cursor-pointer active:scale-95"
               >
-                பயனர்கள் முழுப் பட்டியல் பார்க்க →
+                View Full User Directory →
               </button>
             </div>
           </div>
@@ -1198,12 +1181,12 @@ export default function SuperAdminDashboardPage() {
                   <Globe className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="font-extrabold text-sm text-white truncate">நேரலை லாக்-இன் &amp; இருப்பிடம் (Live Logins)</h3>
-                  <p className="text-[10.5px] text-slate-400 truncate">முழுமையான அமர்வு மற்றும் ஐபி விவரங்களை காண கிளிக் செய்யவும்</p>
+                  <h3 className="font-extrabold text-sm text-white truncate">Live Logins &amp; Telemetry</h3>
+                  <p className="text-[10.5px] text-slate-400 truncate">Click any session for detailed IP, origin, and device telemetry</p>
                 </div>
               </div>
               <span className="text-[10px] text-emerald-400 bg-emerald-950/70 border border-emerald-700/80 px-2.5 py-1 rounded-full font-bold shrink-0">
-                சமீபத்திய 10 லாக்-இன்
+                Latest 10 Sessions
               </span>
             </div>
 
@@ -1298,7 +1281,7 @@ export default function SuperAdminDashboardPage() {
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="பெயர், தொலைபேசி, மின்னஞ்சல், ஐபி, ஊர் தேட... (Search users)"
+                placeholder="Search by name, mobile, email, IP, or location..."
                 value={directorySearch}
                 onChange={(e) => setDirectorySearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-[#0c1220] border border-zinc-800 rounded-xl text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
@@ -1307,10 +1290,10 @@ export default function SuperAdminDashboardPage() {
 
             <div className="flex gap-1.5 text-xs font-semibold overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
               {[
-                { key: "ALL", label: `அனைத்து பயனர்கள் (${directoryMetrics.length})` },
+                { key: "ALL", label: `All Users (${directoryMetrics.length})` },
                 {
                   key: "PAID",
-                  label: `👑 கட்டண சந்தாதாரர் (${
+                  label: `👑 Paid Tenants (${
                     directoryMetrics.filter(
                       (m) =>
                         (m.subscription?.status === "ACTIVE" ||
@@ -1325,11 +1308,11 @@ export default function SuperAdminDashboardPage() {
                 },
                 {
                   key: "ADMINS",
-                  label: `🛡️ நிர்வாகிகள் (${directoryMetrics.filter((m) => m.isAdmin || m.isSuperAdmin).length})`,
+                  label: `🛡️ Admin Team (${directoryMetrics.filter((m) => m.isAdmin || m.isSuperAdmin).length})`,
                 },
                 {
                   key: "TRIAL",
-                  label: `⏳ சோதனை காலம் (${
+                  label: `⏳ Free Trial (${
                     directoryMetrics.filter(
                       (m) =>
                         m.subscription?.status === "TRIAL" &&
@@ -1344,7 +1327,7 @@ export default function SuperAdminDashboardPage() {
                 },
                 {
                   key: "EXPIRED",
-                  label: `⚠️ காலாவதியானது (${
+                  label: `⚠️ Expired (${
                     directoryMetrics.filter(
                       (m) =>
                         (m.subscription?.status === "EXPIRED" ||
@@ -1356,7 +1339,7 @@ export default function SuperAdminDashboardPage() {
                 },
                 {
                   key: "DEMO",
-                  label: `🚀 மாதிரி கணக்கு (${directoryMetrics.filter((m) => m.isDemo || m.user.id === "u-ravi-iyer-01").length})`,
+                  label: `🚀 Demo Sandbox (${directoryMetrics.filter((m) => m.isDemo || m.user.id === "u-ravi-iyer-01").length})`,
                 },
               ].map(({ key, label }) => (
                 <button
@@ -1385,13 +1368,13 @@ export default function SuperAdminDashboardPage() {
                   </div>
                   <div>
                     <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                      நிர்வாக குழு &amp; அணுகல் கட்டுப்பாடு
+                      Administrative Team &amp; Access Control
                       <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-black uppercase">
-                        முதன்மை நிர்வாகி (Super Admin)
+                        Super Admin
                       </span>
                     </h3>
                     <p className="text-[11px] text-slate-400">
-                      முதன்மை நிர்வாகிக்கு முழு உரிமை உண்டு. நியமிக்கப்பட்ட நிர்வாகிகளுக்கு பயனர்களுக்கு உதவ திருத்த அனுமதி (Edit-Only) வழங்கப்படுகிறது.
+                      Super Admin holds full unrestricted access. Designated administrators receive safe edit-only permissions to support users.
                     </p>
                   </div>
                 </div>
@@ -1401,7 +1384,7 @@ export default function SuperAdminDashboardPage() {
               <form onSubmit={handleInviteAdmin} className="bg-[#080c14] p-3.5 rounded-2xl border border-zinc-800/80 space-y-2.5">
                 <div className="flex items-center gap-2">
                   <UserCheck className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold text-slate-200">ஜிமெயில் மூலம் நிர்வாகியை இணைக்க / பதவி உயர்த்துக (Invite / Promote Admin)</span>
+                  <span className="text-xs font-bold text-slate-200">Invite &amp; Promote Administrator via Google Account</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <div className="sm:col-span-1">
@@ -1417,7 +1400,7 @@ export default function SuperAdminDashboardPage() {
                   <div className="sm:col-span-1">
                     <input
                       type="text"
-                      placeholder="காரணம் / துறை (எ.கா. உதவி நிர்வாகி)"
+                      placeholder="Department / Role (e.g. Support Lead)"
                       value={inviteAdminReason}
                       onChange={(e) => setInviteAdminReason(e.target.value)}
                       className="w-full bg-[#0c1220] border border-zinc-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
@@ -1429,7 +1412,7 @@ export default function SuperAdminDashboardPage() {
                       className="w-full py-2 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>நிர்வாகி அனுமதி வழங்க (Grant Admin)</span>
+                      <span>Grant Admin Access</span>
                     </button>
                   </div>
                 </div>
@@ -1438,7 +1421,7 @@ export default function SuperAdminDashboardPage() {
               {/* Active Admins Quick List */}
               <div className="space-y-2 pt-1">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                  செயலில் உள்ள நிர்வாகிகள் ({directoryMetrics.filter(m => m.isAdmin || m.isSuperAdmin).length})
+                  Active Administrators ({directoryMetrics.filter(m => m.isAdmin || m.isSuperAdmin).length})
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {directoryMetrics
@@ -1460,7 +1443,7 @@ export default function SuperAdminDashboardPage() {
                                     : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
                                 }`}
                               >
-                                {isRoot ? "👑 முதன்மை நிர்வாகி" : "✏️ உதவி நிர்வாகி"}
+                                {isRoot ? "👑 Super Admin" : "✏️ Editor Admin"}
                               </span>
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono truncate">{admin.user.email}</div>
@@ -1472,7 +1455,7 @@ export default function SuperAdminDashboardPage() {
                               onClick={() => setAdminToDemote({ id: admin.user.id, name: admin.user.name })}
                               className="px-2.5 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer shrink-0"
                             >
-                              ரத்து (Revoke)
+                              Revoke
                             </button>
                           )}
                         </div>
@@ -1489,7 +1472,7 @@ export default function SuperAdminDashboardPage() {
           <div className="sm:hidden space-y-3">
             {filteredMetrics.length === 0 ? (
               <div className="p-8 text-center text-slate-400 bg-[#0c1220] rounded-2xl border border-zinc-800">
-                &quot;{directorySearch}&quot; என்ற பெயரில் எந்த பயனரும் கிடைக்கவில்லை.
+                No users matching &quot;{directorySearch}&quot; found.
               </div>
             ) : (
               filteredMetrics.map((item) => {
@@ -1524,25 +1507,25 @@ export default function SuperAdminDashboardPage() {
                           <span className="font-extrabold text-sm text-white">{item.user.name}</span>
                           {item.isSuperAdmin ? (
                             <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase">
-                              👑 முதன்மை நிர்வாகி
+                              👑 Super Admin
                             </span>
                           ) : item.isAdmin ? (
                             <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase">
-                              ✏️ உதவி நிர்வாகி
+                              ✏️ Editor Admin
                             </span>
                           ) : (
                             <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
-                              {item.user.role === "IYER" ? "🪔 வாத்தியார்" : "👤 பயனர்"}
+                              {item.user.role === "IYER" ? "🪔 Priest / Vadhyar" : "👤 Devotee / User"}
                             </span>
                           )}
                           {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
                             <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[9px] font-black uppercase">
-                              மாதிரி (Demo)
+                              Demo Sandbox
                             </span>
                           )}
                         </div>
                         <div className="text-[11px] text-amber-400/90 font-medium">
-                          {biz?.name || "சேவைகள்"}
+                          {biz?.name || "Independent Service"}
                         </div>
                       </div>
 
@@ -1555,7 +1538,7 @@ export default function SuperAdminDashboardPage() {
                             : "bg-rose-950 text-rose-400 border border-rose-800"
                         }`}
                       >
-                        {subStatus === "ACTIVE" ? "செயலில் உள்ளது" : subStatus === "TRIAL" ? "சோதனை காலம்" : "காலாவதியானது"}
+                        {subStatus === "ACTIVE" ? "Active" : subStatus === "TRIAL" ? "Free Trial" : "Expired"}
                       </span>
                     </div>
 
@@ -1577,7 +1560,7 @@ export default function SuperAdminDashboardPage() {
                         </span>
                         <span className="flex items-center gap-1 text-slate-300 font-sans">
                           <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "இருப்பிடம் நிலுவையில்"}</span>
+                          <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "Location Pending"}</span>
                         </span>
                       </div>
                     </div>
@@ -1585,17 +1568,17 @@ export default function SuperAdminDashboardPage() {
                     {/* Stats Grid: Joined Date, Bookings, Total Dakshina */}
                     <div className="grid grid-cols-3 gap-2 text-center bg-[#090d16] p-2 rounded-xl border border-zinc-800/60 text-xs">
                       <div>
-                        <span className="text-[9px] text-slate-400 block uppercase">இணைந்தது</span>
+                        <span className="text-[9px] text-slate-400 block uppercase">Joined</span>
                         <span className="font-semibold text-slate-200 text-[11px]">{joinedFormatted}</span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-slate-400 block uppercase">புக்கிங்</span>
+                        <span className="text-[9px] text-slate-400 block uppercase">Bookings</span>
                         <span className="font-extrabold text-white text-[11px]">
-                          {item.bookingCount} ({item.completedBookingsCount} முடிவு)
+                          {item.bookingCount} ({item.completedBookingsCount} done)
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] text-slate-400 block uppercase">தக்ஷிணை</span>
+                        <span className="text-[9px] text-slate-400 block uppercase">Dakshina</span>
                         <span className="font-extrabold text-emerald-400 text-[11px]">
                           ₹{item.totalEarnings.toLocaleString("en-IN")}
                         </span>
@@ -1605,7 +1588,7 @@ export default function SuperAdminDashboardPage() {
                     {/* Validity Info & Quick Action Buttons */}
                     <div className="pt-1 flex items-center justify-between gap-1 flex-wrap">
                       <div className="text-[10px] text-slate-400">
-                        வேலிடிட்டி: <strong className="text-slate-200">{expiryFormatted}</strong>
+                        Validity: <strong className="text-slate-200">{expiryFormatted}</strong>
                       </div>
 
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1616,7 +1599,7 @@ export default function SuperAdminDashboardPage() {
                               onClick={() => setAdminToDemote({ id: item.user.id, name: item.user.name })}
                               className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
                             >
-                              ரத்து
+                              Revoke
                             </button>
                           ) : (
                             <button
@@ -1624,7 +1607,7 @@ export default function SuperAdminDashboardPage() {
                               onClick={() => setUserToPromote({ id: item.user.id, name: item.user.name })}
                               className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
                             >
-                              + நிர்வாகி ஆக்கு
+                              + Make Admin
                             </button>
                           )
                         )}
@@ -1643,7 +1626,7 @@ export default function SuperAdminDashboardPage() {
                             }
                             className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer"
                           >
-                            வேலிடிட்டி மாற்று
+                            Adjust Validity
                           </button>
                         )}
 
@@ -1652,10 +1635,10 @@ export default function SuperAdminDashboardPage() {
                             type="button"
                             onClick={() => setUserToDelete({ id: item.user.id, name: item.user.name, email: item.user.email })}
                             className="px-2 py-1 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
-                            title="பயனரை நீக்கு"
+                            title="Delete User Account"
                           >
                             <Trash2 className="w-3 h-3" />
-                            <span>நீக்கு</span>
+                            <span>Delete</span>
                           </button>
                         )}
                       </div>
@@ -1674,21 +1657,21 @@ export default function SuperAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-300 min-w-[800px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
-                    <th className="p-4">பயனர் &amp; தொழில் (User &amp; Biz)</th>
-                    <th className="p-4">ஐபி &amp; இருப்பிடம் (IP &amp; Location)</th>
-                    <th className="p-4">இணைந்த தேதி (Joined)</th>
-                    <th className="p-4">புக்கிங் (Bookings)</th>
-                    <th className="p-4">மொத்த தக்ஷிணை (Dakshina)</th>
-                    <th className="p-4">நிலை (Status)</th>
-                    <th className="p-4">வேலிடிட்டி முடிவு (Valid Until)</th>
-                    <th className="p-4 text-right">செயல்கள் (Controls)</th>
+                    <th className="p-4">User &amp; Business</th>
+                    <th className="p-4">IP Address &amp; Location</th>
+                    <th className="p-4">Joined Date</th>
+                    <th className="p-4">Bookings</th>
+                    <th className="p-4">Total Dakshina</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Valid Until</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {filteredMetrics.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-slate-400">
-                        &quot;{directorySearch}&quot; என்ற பெயரில் எந்த பயனரும் கிடைக்கவில்லை.
+                        No users matching &quot;{directorySearch}&quot; found.
                       </td>
                     </tr>
                   ) : (
@@ -1721,25 +1704,25 @@ export default function SuperAdminDashboardPage() {
                               </span>
                               {item.isSuperAdmin ? (
                                 <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase">
-                                  👑 முதன்மை நிர்வாகி
+                                  👑 Super Admin
                                 </span>
                               ) : item.isAdmin ? (
                                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[9px] font-black uppercase">
-                                  ✏️ உதவி நிர்வாகி
+                                  ✏️ Editor Admin
                                 </span>
                               ) : (
                                 <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-slate-400 border border-zinc-700 text-[9px] font-medium uppercase">
-                                  {item.user.role === "IYER" ? "🪔 வாத்தியார்" : "👤 பயனர்"}
+                                  {item.user.role === "IYER" ? "🪔 Priest / Vadhyar" : "👤 Devotee / User"}
                                 </span>
                               )}
                               {(item.user.id === "u-ravi-iyer-01" || biz?.id === "biz-venkateswara-01") && (
                                 <span className="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-[9px] font-black uppercase">
-                                  மாதிரி (Demo)
+                                  Demo Sandbox
                                 </span>
                               )}
                             </div>
                             <div className="text-[11px] text-amber-400/90 font-medium">
-                              {biz?.name || "சேவைகள்"}
+                              {biz?.name || "Independent Service"}
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono">
                               {item.user.mobile} • {item.user.email}
@@ -1773,7 +1756,7 @@ export default function SuperAdminDashboardPage() {
                                 {item.bookingCount}
                               </span>
                               <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-800/80">
-                                {item.completedBookingsCount} முடிவு
+                                {item.completedBookingsCount} done
                               </span>
                             </div>
                           </td>
@@ -1794,7 +1777,7 @@ export default function SuperAdminDashboardPage() {
                                   : "bg-rose-950 text-rose-400 border border-rose-800"
                               }`}
                             >
-                              {subStatus === "ACTIVE" ? "செயலில் உள்ளது" : subStatus === "TRIAL" ? "சோதனை காலம்" : "காலாவதியானது"}
+                              {subStatus === "ACTIVE" ? "Active" : subStatus === "TRIAL" ? "Free Trial" : "Expired"}
                             </span>
                           </td>
 
@@ -1812,7 +1795,7 @@ export default function SuperAdminDashboardPage() {
                                     className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/40 text-rose-300 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap"
                                     title="Revoke Admin Access"
                                   >
-                                    ரத்து
+                                    Revoke
                                   </button>
                                 ) : (
                                   <button
@@ -1821,7 +1804,7 @@ export default function SuperAdminDashboardPage() {
                                     className="px-2 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap"
                                     title="Promote to Editor Admin"
                                   >
-                                    + நிர்வாகி ஆக்கு
+                                    + Make Admin
                                   </button>
                                 )
                               )}
@@ -1840,10 +1823,10 @@ export default function SuperAdminDashboardPage() {
                                   }
                                   className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-lg text-[10.5px] font-extrabold transition cursor-pointer whitespace-nowrap"
                                 >
-                                  வேலிடிட்டி மாற்று
+                                  Adjust Validity
                                 </button>
                               ) : (
-                                <span className="text-[10px] text-slate-500">தொழில் இல்லை</span>
+                                <span className="text-[10px] text-slate-500">No Business</span>
                               )}
 
                               {isSuperAdmin && !item.isSuperAdmin && (
@@ -1851,10 +1834,10 @@ export default function SuperAdminDashboardPage() {
                                   type="button"
                                   onClick={() => setUserToDelete({ id: item.user.id, name: item.user.name, email: item.user.email })}
                                   className="px-2.5 py-1 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/30 text-red-400 rounded-lg text-[10px] font-bold transition cursor-pointer whitespace-nowrap flex items-center gap-1"
-                                  title="பயனரை நிரந்தரமாக நீக்கு"
+                                  title="Purge user account"
                                 >
                                   <Trash2 className="w-3 h-3" />
-                                  <span>நீக்கு</span>
+                                  <span>Delete</span>
                                 </button>
                               )}
                             </div>
@@ -1881,14 +1864,14 @@ export default function SuperAdminDashboardPage() {
               <div className="flex items-center gap-2.5">
                 <Crown className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-white">உதவி நிர்வாகி பார்வை (Edit-Only Promo Controls)</h3>
+                  <h3 className="text-xs sm:text-sm font-bold text-white">Editor Admin View (Promo Controls)</h3>
                   <p className="text-[11px] text-slate-400">
-                    கூப்பன்களை உருவாக்குதல் மற்றும் நீக்குதல் முதன்மை நிர்வாகிக்கு மட்டுமே உண்டு. நீங்கள் கூப்பன்களை பார்த்து நகலெடுக்கலாம்.
+                    Coupon creation and deletion are restricted to Super Admin. You have read-only privileges to view and copy promo codes.
                   </p>
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase">
-                ✏️ திருத்த அனுமதி மட்டும்
+                ✏️ View Only
               </span>
             </div>
           ) : (
@@ -1898,9 +1881,9 @@ export default function SuperAdminDashboardPage() {
                   <Tag className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white">புதிய கூப்பன் உருவாக்குக (Create Promo Pass)</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-white">Create Promo Code &amp; Discount Pass</h3>
                   <p className="text-[11px] text-slate-400">
-                    100% இலவச பாஸ், சதவீத தள்ளுபடி அல்லது போனஸ் வேலிடிட்டி நாட்கள் அமைத்தல்
+                    Configure 100% free passes, percentage discounts, flat fee deductions, or bonus validity extensions.
                   </p>
                 </div>
               </div>
@@ -1909,12 +1892,12 @@ export default function SuperAdminDashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div>
                   <label className="text-slate-300 font-bold block mb-1">
-                    கூப்பன் குறியீடு (Coupon Code) *
+                    Coupon Code *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="எ.கா. VELVIPRO100, MANISUPER"
+                    placeholder="e.g. VELVIPRO100, FESTIVAL50"
                     value={newCouponCode}
                     onChange={(e) => setNewCouponCode(e.target.value.toUpperCase())}
                     className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-amber-500"
@@ -1923,12 +1906,12 @@ export default function SuperAdminDashboardPage() {
 
                 <div className="sm:col-span-2">
                   <label className="text-slate-300 font-bold block mb-1">
-                    விவரம் &amp; சலுகை விளக்கம் (Description) *
+                    Description &amp; Offer Details *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="எ.கா. 100% இலவச வேள்வி ப்ரோ சந்தா (சிறப்பு சலுகை)"
+                    placeholder="e.g. 100% Free Velvi Pro Annual Pass"
                     value={newCouponDesc}
                     onChange={(e) => setNewCouponDesc(e.target.value)}
                     className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
@@ -1936,7 +1919,7 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">தள்ளுபடி வகை (Discount Type)</label>
+                  <label className="text-slate-300 font-bold block mb-1">Discount Type</label>
                   <select
                     value={newCouponDiscountType}
                     onChange={(e) =>
@@ -1944,15 +1927,15 @@ export default function SuperAdminDashboardPage() {
                     }
                     className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value="FREE_VALIDITY">FREE_VALIDITY (100% இலவச பாஸ்)</option>
-                    <option value="PERCENTAGE">PERCENTAGE (% சதவீத தள்ளுபடி)</option>
-                    <option value="FLAT">FLAT (நிலையான ₹ தொகை கழிவு)</option>
+                    <option value="FREE_VALIDITY">100% Free Pass (FREE_VALIDITY)</option>
+                    <option value="PERCENTAGE">Percentage Off % (PERCENTAGE)</option>
+                    <option value="FLAT">Flat ₹ Deduction (FLAT)</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-slate-300 font-bold block mb-1">
-                    தள்ளுபடி மதிப்பு ({newCouponDiscountType === "PERCENTAGE" ? "%" : "₹"})
+                    Discount Value ({newCouponDiscountType === "PERCENTAGE" ? "%" : "₹"})
                   </label>
                   <input
                     type="number"
@@ -1965,12 +1948,12 @@ export default function SuperAdminDashboardPage() {
 
                 <div>
                   <label className="text-slate-300 font-bold block mb-1">
-                    கூடுதல் வேலிடிட்டி நாட்கள் (+Bonus Days)
+                    Bonus Validity Days (+Days)
                   </label>
                   <input
                     type="number"
                     min={0}
-                    placeholder="எ.கா. 30, 90, 365"
+                    placeholder="e.g. 30, 90, 365"
                     value={newCouponBonusDays}
                     onChange={(e) => setNewCouponBonusDays(Number(e.target.value))}
                     className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
@@ -1978,7 +1961,7 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">அதிகபட்ச பயன்பாட்டு வரம்பு (Max Uses)</label>
+                  <label className="text-slate-300 font-bold block mb-1">Maximum Redemptions (Max Uses)</label>
                   <input
                     type="number"
                     min={1}
@@ -1989,7 +1972,7 @@ export default function SuperAdminDashboardPage() {
                 </div>
 
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">காலாவதி தேதி (Valid Until)</label>
+                  <label className="text-slate-300 font-bold block mb-1">Expiry Date (Valid Until)</label>
                   <input
                     type="date"
                     value={newCouponValidUntil}
@@ -2007,7 +1990,7 @@ export default function SuperAdminDashboardPage() {
                     className="w-4 h-4 rounded border-zinc-700 text-amber-500 focus:ring-amber-400 bg-zinc-900 cursor-pointer"
                   />
                   <label htmlFor="newCouponShowInSuggestions" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
-                    செக்-அவுட் பக்கத்தில் பரிந்துரையாக காட்டுக <span className="text-slate-500 font-normal">(டிக் நீக்கினால் ரகசிய கூப்பனாக இருக்கும்)</span>
+                    Show as suggested coupon in checkout <span className="text-slate-500 font-normal">(uncheck for private/secret code)</span>
                   </label>
                 </div>
 
@@ -2017,7 +2000,7 @@ export default function SuperAdminDashboardPage() {
                     className="w-full py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>+ கூப்பன் உருவாக்கி செயல்படுத்துக (Create Coupon)</span>
+                    <span>+ Create &amp; Activate Coupon</span>
                   </button>
                 </div>
               </div>
@@ -2029,10 +2012,10 @@ export default function SuperAdminDashboardPage() {
           <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
             <div className="p-3.5 sm:p-4 border-b border-zinc-800 flex items-center justify-between">
               <h3 className="font-bold text-xs sm:text-sm text-white">
-                செயலில் உள்ள கூப்பன்கள் &amp; பயன்பாடுகள் ({coupons.length})
+                Active Promo Codes &amp; Redemptions ({coupons.length})
               </h3>
               <span className="text-[10px] sm:text-[11px] text-slate-400">
-                சந்தா செக்-அவுட்டில் பயன்படுத்தலாம் (Redeemable in checkout)
+                Available for instant checkout redemption
               </span>
             </div>
 
@@ -2068,9 +2051,9 @@ export default function SuperAdminDashboardPage() {
                               ? "bg-sky-950 text-sky-400 border-sky-800"
                               : "bg-zinc-900 text-slate-500 border-zinc-800"
                           }`}
-                          title="பரிந்துரை பார்வையை மாற்ற"
+                          title="Toggle suggestion visibility"
                         >
-                          {c.showInSuggestions !== false ? "👁️ பரிந்துரை" : "🔒 ரகசியம்"}
+                          {c.showInSuggestions !== false ? "👁️ Public" : "🔒 Secret"}
                         </button>
                         <button
                           type="button"
@@ -2081,14 +2064,14 @@ export default function SuperAdminDashboardPage() {
                               : "bg-zinc-800 text-slate-400 border-zinc-700"
                           }`}
                         >
-                          {c.isActive ? "செயலில் உள்ளது" : "முடக்கம்"}
+                          {c.isActive ? "Active" : "Disabled"}
                         </button>
                         {isSuperAdmin && (
                           <button
                             type="button"
                             onClick={() => requestDeleteCoupon(c.id, c.code)}
                             className="p-1 text-slate-400 hover:text-rose-400"
-                            title="கூப்பனை நீக்கு"
+                            title="Delete Coupon"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -2099,9 +2082,9 @@ export default function SuperAdminDashboardPage() {
                     <p className="text-[11px] text-slate-300 font-medium">{c.description}</p>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-zinc-800">
-                      <span>தள்ளுபடி: <strong className="text-emerald-400">{c.discountType === "FREE_VALIDITY" ? "100% இலவசம்" : c.discountValue}</strong></span>
-                      <span>போனஸ்: <strong className="text-amber-300">+{c.validityDaysBonus} நாள்</strong></span>
-                      <span>பயன்பாடு: <strong className="text-white">{c.usedCount}/{c.maxUses}</strong></span>
+                      <span>Discount: <strong className="text-emerald-400">{c.discountType === "FREE_VALIDITY" ? "100% Free" : c.discountValue}</strong></span>
+                      <span>Bonus: <strong className="text-amber-300">+{c.validityDaysBonus} days</strong></span>
+                      <span>Uses: <strong className="text-white">{c.usedCount}/{c.maxUses}</strong></span>
                     </div>
                   </div>
                 );
@@ -2113,14 +2096,14 @@ export default function SuperAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
-                    <th className="p-4">கூப்பன் குறியீடு (Code)</th>
-                    <th className="p-4">விளக்கம் (Description)</th>
-                    <th className="p-4">தள்ளுபடி (Discount)</th>
-                    <th className="p-4">கூடுதல் நாட்கள் (Bonus)</th>
-                    <th className="p-4">பயன்பாட்டு விபரம் (Usage)</th>
-                    <th className="p-4">பரிந்துரை (Suggestions)</th>
-                    <th className="p-4">நிலை (Status)</th>
-                    <th className="p-4 text-right">செயல்கள் (Actions)</th>
+                    <th className="p-4">Coupon Code</th>
+                    <th className="p-4">Description</th>
+                    <th className="p-4">Discount</th>
+                    <th className="p-4">Bonus Days</th>
+                    <th className="p-4">Redemptions</th>
+                    <th className="p-4">Visibility</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
@@ -2138,7 +2121,7 @@ export default function SuperAdminDashboardPage() {
                             type="button"
                             onClick={() => handleCopyCode(c.code)}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg font-mono font-bold text-xs tracking-wider cursor-pointer"
-                            title="நகலெடுக்க கிளிக் செய்க"
+                            title="Click to copy code"
                           >
                             <span>{c.code}</span>
                             {isCopied ? (
@@ -2152,30 +2135,30 @@ export default function SuperAdminDashboardPage() {
                         <td className="p-4 text-slate-200">
                           <div className="font-semibold">{c.description}</div>
                           <div className="text-[10px] text-slate-400">
-                            காலாவதி: {new Date(c.validUntil).toLocaleDateString("en-IN")}
+                            Expires: {new Date(c.validUntil).toLocaleDateString("en-IN")}
                           </div>
                         </td>
 
                         <td className="p-4">
                           <span className="font-bold text-emerald-400">
                             {c.discountType === "FREE_VALIDITY"
-                              ? "100% இலவச பாஸ்"
+                              ? "100% Free Pass"
                               : c.discountType === "PERCENTAGE"
-                              ? `${c.discountValue}% கழிவு`
-                              : `₹${c.discountValue} கழிவு`}
+                              ? `${c.discountValue}% OFF`
+                              : `₹${c.discountValue} OFF`}
                           </span>
                         </td>
 
                         <td className="p-4">
                           <span className="font-bold text-amber-400">
-                            +{c.validityDaysBonus} நாட்கள்
+                            +{c.validityDaysBonus} Days
                           </span>
                         </td>
 
                         <td className="p-4">
                           <div className="space-y-1 min-w-[100px]">
                             <div className="flex justify-between text-[10px] font-mono">
-                              <span className="text-white font-bold">{c.usedCount} பயன்படுத்தப்பட்டது</span>
+                              <span className="text-white font-bold">{c.usedCount} redeemed</span>
                               <span className="text-slate-400">/ {c.maxUses}</span>
                             </div>
                             <div className="w-full bg-[#080c14] rounded-full h-1.5 overflow-hidden border border-zinc-800">
@@ -2196,9 +2179,9 @@ export default function SuperAdminDashboardPage() {
                                 ? "bg-sky-950 hover:bg-sky-900 text-sky-300 border-sky-800"
                                 : "bg-zinc-900 hover:bg-zinc-800 text-slate-400 border-zinc-700"
                             }`}
-                            title="பயனர்களுக்கு பரிந்துரையாக காட்ட/மறைக்க"
+                            title="Toggle user checkout visibility"
                           >
-                            {c.showInSuggestions !== false ? "👁️ பயனர் பார்வை" : "🔒 மறைக்கப்பட்டது"}
+                            {c.showInSuggestions !== false ? "👁️ Public" : "🔒 Private"}
                           </button>
                         </td>
 
@@ -2212,7 +2195,7 @@ export default function SuperAdminDashboardPage() {
                                 : "bg-zinc-800 text-slate-400 border-zinc-700"
                             }`}
                           >
-                            {c.isActive ? "செயலில் உள்ளது" : "முடக்கம்"}
+                            {c.isActive ? "Active" : "Disabled"}
                           </button>
                         </td>
 
@@ -2222,7 +2205,7 @@ export default function SuperAdminDashboardPage() {
                               type="button"
                               onClick={() => requestDeleteCoupon(c.id, c.code)}
                               className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
-                              title="கூப்பனை நீக்கு"
+                              title="Delete Coupon"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -2249,13 +2232,13 @@ export default function SuperAdminDashboardPage() {
           <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
             <div className="p-3.5 sm:p-4 border-b border-zinc-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-xs sm:text-sm text-white">வாத்தியார் சந்தா விவரங்கள் (Active Subscriptions)</h3>
+                <h3 className="font-bold text-xs sm:text-sm text-white">Active Tenant Subscriptions</h3>
                 <p className="text-[10px] sm:text-xs text-slate-400">
-                  திட்ட அடுக்குகள், வேலிடிட்டி காலம் மற்றும் உறுப்பினர் நிலை ({db.subscriptions.length})
+                  Tier breakdown, validity timelines, and membership state ({db.subscriptions.length})
                 </p>
               </div>
               <span className="px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-full text-[9px] sm:text-[10px] font-bold">
-                திட்ட மேலாண்மை (Tier Engine)
+                Tier Engine
               </span>
             </div>
 
@@ -2280,8 +2263,8 @@ export default function SuperAdminDashboardPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="font-bold text-white text-xs">{biz?.name || "சுயாதீன சேவை"}</div>
-                        <div className="text-[10.5px] text-slate-400">{user?.name || "வாத்தியார்"}</div>
+                        <div className="font-bold text-white text-xs">{biz?.name || "Independent Service"}</div>
+                        <div className="text-[10.5px] text-slate-400">{user?.name || "Tenant / Priest"}</div>
                       </div>
                       <span
                         className={`text-[9px] px-2 py-0.5 rounded-full font-bold border ${
@@ -2290,13 +2273,13 @@ export default function SuperAdminDashboardPage() {
                             : "bg-amber-950 text-amber-400 border-amber-800"
                         }`}
                       >
-                        {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status}
+                        {sub.status === "ACTIVE" ? "Active" : sub.status}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between text-[10.5px] text-slate-400 pt-1 border-t border-zinc-800/60">
-                      <span>திட்டம்: <strong className="text-amber-400">{sub.planName} ({sub.billingCycle})</strong></span>
-                      <span>வேலிடிட்டி: <strong className="text-white">{expiryFormatted}</strong></span>
+                      <span>Plan: <strong className="text-amber-400">{sub.planName} ({sub.billingCycle})</strong></span>
+                      <span>Validity: <strong className="text-white">{expiryFormatted}</strong></span>
                     </div>
 
                     <div className="flex items-center gap-2 pt-1">
@@ -2305,7 +2288,7 @@ export default function SuperAdminDashboardPage() {
                         onClick={() => setSelectedLedgerEntry({ payment, user, biz, subscription: sub })}
                         className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-lg text-[10px] font-bold transition text-center cursor-pointer"
                       >
-                        பயனர் விவரங்கள்
+                        User Dossier
                       </button>
                       {biz && (
                         <button
@@ -2321,7 +2304,7 @@ export default function SuperAdminDashboardPage() {
                           }
                           className="flex-1 py-1.5 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10px] font-bold transition text-center cursor-pointer"
                         >
-                          வேலிடிட்டி மாற்று
+                          Adjust Validity
                         </button>
                       )}
                     </div>
@@ -2335,13 +2318,13 @@ export default function SuperAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
-                    <th className="p-4">தொழில் &amp; வாத்தியார் (Business &amp; Priest)</th>
-                    <th className="p-4">திட்ட பெயர் (Plan Name)</th>
-                    <th className="p-4">சுழற்சி (Cycle)</th>
-                    <th className="p-4">நிலை (Status)</th>
-                    <th className="p-4">துவக்கம் (Period Start)</th>
-                    <th className="p-4">முடிவு (Period End)</th>
-                    <th className="p-4 text-right">செயல்கள் (Actions)</th>
+                    <th className="p-4">Business &amp; Priest</th>
+                    <th className="p-4">Plan Name</th>
+                    <th className="p-4">Billing Cycle</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">Period Start</th>
+                    <th className="p-4">Period End</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
@@ -2360,7 +2343,7 @@ export default function SuperAdminDashboardPage() {
                     return (
                       <tr key={sub.id} className="hover:bg-zinc-800/25 transition">
                         <td className="p-4">
-                          <div className="font-bold text-white">{biz?.name || "சுயாதீன சேவை"}</div>
+                          <div className="font-bold text-white">{biz?.name || "Independent Service"}</div>
                           <div className="text-[10px] text-slate-400">{user?.name}</div>
                         </td>
                         <td className="p-4 text-amber-400 font-semibold">{sub.planName}</td>
@@ -2373,7 +2356,7 @@ export default function SuperAdminDashboardPage() {
                                 : "bg-amber-950 text-amber-400 border border-amber-800"
                             }`}
                           >
-                            {sub.status === "ACTIVE" ? "செயலில் உள்ளது" : sub.status}
+                            {sub.status === "ACTIVE" ? "Active" : sub.status}
                           </span>
                         </td>
                         <td className="p-4 text-slate-400">
@@ -2386,7 +2369,7 @@ export default function SuperAdminDashboardPage() {
                             onClick={() => setSelectedLedgerEntry({ payment, user, biz, subscription: sub })}
                             className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
                           >
-                            விவரங்கள்
+                            Dossier
                           </button>
                           {biz && (
                             <button
@@ -2402,7 +2385,7 @@ export default function SuperAdminDashboardPage() {
                               }
                               className="px-2.5 py-1 bg-amber-500/15 hover:bg-amber-500 hover:text-black border border-amber-500/30 text-amber-300 rounded-lg text-[10.5px] font-bold transition cursor-pointer"
                             >
-                              வேலிடிட்டி மாற்று
+                              Adjust Validity
                             </button>
                           )}
                         </td>
@@ -2418,20 +2401,20 @@ export default function SuperAdminDashboardPage() {
           <div className="bg-[#0c1220] rounded-2xl sm:rounded-3xl border border-zinc-800 overflow-hidden shadow-xl">
             <div className="p-3.5 sm:p-4 border-b border-zinc-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-xs sm:text-sm text-white">கேஷ்பிரீ கட்டண லெட்ஜர் &amp; தணிக்கை (Cashfree Ledger)</h3>
+                <h3 className="font-bold text-xs sm:text-sm text-white">Cashfree Payment Gateway Ledger</h3>
                 <p className="text-[10px] sm:text-xs text-slate-400">
-                  பணப் பரிவர்த்தனைகள் &amp; தானியங்கி வேலிடிட்டி சேர்க்கைகள் ({db.payments.length}) • முழு விவரத்தை காண கிளிக் செய்க
+                  Gateway transactions &amp; automated validity settlements ({db.payments.length}) • Click for full audit dossier
                 </p>
               </div>
               <span className="px-2 py-0.5 bg-emerald-950 border border-emerald-800 text-emerald-300 rounded-full text-[9px] sm:text-[10px] font-bold">
-                கேட்வே சரிபார்க்கப்பட்டது (Verified)
+                Gateway Verified
               </span>
             </div>
 
             {/* Mobile Cards for Payments */}
             <div className="sm:hidden p-3 space-y-2.5">
               {db.payments.length === 0 ? (
-                <div className="p-4 text-center text-slate-400 text-xs">பரிவர்த்தனைகள் எதுவும் பதிவு செய்யப்படவில்லை.</div>
+                <div className="p-4 text-center text-slate-400 text-xs">No transaction records found.</div>
               ) : (
                 db.payments.map((p) => {
                   const biz = db.businesses.find((b) => b.id === p.businessId);
@@ -2444,18 +2427,18 @@ export default function SuperAdminDashboardPage() {
                       className="p-3 bg-[#080c14] hover:bg-[#11192b] border border-zinc-800/80 hover:border-amber-500/40 rounded-xl space-y-2 text-xs cursor-pointer transition"
                     >
                       <div className="flex items-center justify-between">
-                        <div className="font-bold text-white text-xs">{biz?.name || "சுயாதீன சேவை"}</div>
+                        <div className="font-bold text-white text-xs">{biz?.name || "Independent Service"}</div>
                         <span className="font-mono font-black text-emerald-400 text-sm">₹{p.amount}</span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-400">
-                        <span>ஆர்டர்: <strong className="text-slate-300 font-mono">{p.orderId}</strong></span>
+                        <span>Order: <strong className="text-slate-300 font-mono">{p.orderId}</strong></span>
                         <span className="px-2 py-0.2 rounded-full font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px]">
                           {p.status}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-zinc-800/60">
-                        <span>{user?.name || "வாத்தியார்"} • {p.billingCycle}</span>
-                        <span className="text-amber-400 font-semibold">பயனர் விபரம் காண தட்டவும் →</span>
+                        <span>{user?.name || "Tenant / Priest"} • {p.billingCycle}</span>
+                        <span className="text-amber-400 font-semibold">Tap to view user dossier →</span>
                       </div>
                     </div>
                   );
@@ -2468,20 +2451,20 @@ export default function SuperAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
                 <thead className="bg-[#080c14] text-slate-400 uppercase text-[10px] tracking-wider border-b border-zinc-800">
                   <tr>
-                    <th className="p-4">ஆர்டர் எண் / பரிவர்த்தனை எண் (Order ID)</th>
-                    <th className="p-4">வாத்தியார் &amp; தொழில் (Priest &amp; Biz)</th>
-                    <th className="p-4">சுழற்சி (Cycle)</th>
-                    <th className="p-4">தொகை (Amount)</th>
-                    <th className="p-4">கட்டண முறை (Method)</th>
-                    <th className="p-4">நிலை (Status)</th>
-                    <th className="p-4 text-right">தேதி (Date)</th>
+                    <th className="p-4">Order ID / Gateway Payment ID</th>
+                    <th className="p-4">Priest &amp; Business</th>
+                    <th className="p-4">Billing Cycle</th>
+                    <th className="p-4">Amount</th>
+                    <th className="p-4">Payment Method</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {db.payments.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="p-6 text-center text-slate-400">
-                        பரிவர்த்தனைகள் எதுவும் பதிவு செய்யப்படவில்லை.
+                        No transaction records found.
                       </td>
                     </tr>
                   ) : (
@@ -2494,7 +2477,7 @@ export default function SuperAdminDashboardPage() {
                           key={p.id}
                           onClick={() => setSelectedLedgerEntry({ payment: p, user, biz, subscription: sub })}
                           className="hover:bg-zinc-800/40 hover:border-amber-500/30 cursor-pointer transition"
-                          title="முழு விவரங்களையும் காண கிளிக் செய்க"
+                          title="Click to view full dossier"
                         >
                           <td className="p-4 font-mono">
                             <div className="font-bold text-white">{p.orderId}</div>
@@ -2502,7 +2485,7 @@ export default function SuperAdminDashboardPage() {
                           </td>
                           <td className="p-4">
                             <div className="font-semibold text-white">
-                              {biz?.name || "சுயாதீன சேவை"}
+                              {biz?.name || "Independent Service"}
                             </div>
                             <div className="text-[10px] text-slate-400">{user?.name}</div>
                           </td>
@@ -2546,14 +2529,14 @@ export default function SuperAdminDashboardPage() {
               <div className="flex items-center gap-2.5">
                 <Crown className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-white">முதன்மை நிர்வாகி மட்டுமே மாற்ற முடியும் (Super Admin Only)</h3>
+                  <h3 className="text-xs sm:text-sm font-bold text-white">Super Admin Restricted Access</h3>
                   <p className="text-[11px] text-slate-400">
-                    உதவி நிர்வாகிகளுக்கு தள பிராண்டிங் மற்றும் அமைப்புகள் பார்வை அனுமதி மட்டுமே உள்ளது.
+                    Editor admins have read-only permissions for platform branding and system settings.
                   </p>
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 uppercase">
-                பார்வை மட்டும்
+                Read Only
               </span>
             </div>
           )}
@@ -2562,9 +2545,9 @@ export default function SuperAdminDashboardPage() {
               <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h2 className="text-sm sm:text-base font-bold text-white">தள பிராண்டிங் &amp; அமைப்புகள் (Platform Branding)</h2>
+              <h2 className="text-sm sm:text-base font-bold text-white">Platform Branding &amp; Metadata</h2>
               <p className="text-[11px] text-slate-400">
-                செயலியின் லோகோ, பிராண்ட் அடையாளம், கணினி அறிவிப்புகள் மற்றும் உருவாக்குனர் விவரங்கள்
+                Application logo, brand identity, broadcast announcements, and developer credentials
               </p>
             </div>
           </div>
@@ -2574,7 +2557,7 @@ export default function SuperAdminDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 flex flex-col items-center justify-center text-center space-y-2">
                 <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                  நேரலை லோகோ பார்வை (Live Logo)
+                  Live Brand Preview
                 </span>
                 <div className="p-3 bg-velvi-cream rounded-2xl border border-velvi-gold/40 flex items-center justify-center shadow-inner">
                   <VelviLogo size="md" variant="full" showTagline={false} />
@@ -2586,20 +2569,20 @@ export default function SuperAdminDashboardPage() {
 
               <div className="md:col-span-2 space-y-3">
                 <label className="text-xs font-bold text-slate-300 block">
-                  செயலி ஐகான் / சின்னம் தேர்வு (Choose App Icon)
+                  Select Brand Symbol Preset
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { id: "flame", label: "புனித தீபம் (Sacred Flame)", icon: "🪔" },
-                    { id: "kalasam", label: "வேத கலசம் (Vedic Kalasam)", icon: "🏺" },
-                    { id: "om", label: "ஓம் பிரணவம் (Divine Om)", icon: "🕉️" },
-                    { id: "diya", label: "பித்தளை விளக்கு (Brass Diya)", icon: "🪔" },
+                    { id: "flame", label: "Sacred Flame", icon: "🪔" },
+                    { id: "kalasam", label: "Vedic Kalasam", icon: "🏺" },
+                    { id: "om", label: "Divine Om", icon: "🕉️" },
+                    { id: "diya", label: "Brass Diya", icon: "🪔" },
                   ].map((preset) => (
                     <button
                       key={preset.id}
                       type="button"
                       onClick={() => setLogoPreset(preset.id)}
-                      className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
+                      className={`p-2 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
                         logoPreset === preset.id
                           ? "bg-amber-500/15 border-amber-400 text-amber-300"
                           : "bg-[#080c14] border-zinc-800 text-slate-400 hover:text-white"
@@ -2613,7 +2596,7 @@ export default function SuperAdminDashboardPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-400 block mb-1">
-                    தனிப்பயன் லோகோ URL (விருப்பத்தேர்வு)
+                    Custom Logo URL (Optional)
                   </label>
                   <input
                     type="text"
@@ -2630,7 +2613,7 @@ export default function SuperAdminDashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800">
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">
-                  செயலி பெயர் (ஆங்கிலம்) / App Name (English)
+                  App Name (English)
                 </label>
                 <input
                   type="text"
@@ -2642,7 +2625,7 @@ export default function SuperAdminDashboardPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">
-                  செயலி பெயர் (தமிழ்) / App Name (Tamil)
+                  App Name (Tamil / Native)
                 </label>
                 <input
                   type="text"
@@ -2654,7 +2637,7 @@ export default function SuperAdminDashboardPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">
-                  நோக்க வாசகம் (ஆங்கிலம்) / Tagline (English)
+                  Tagline (English)
                 </label>
                 <input
                   type="text"
@@ -2666,7 +2649,7 @@ export default function SuperAdminDashboardPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-300 block mb-1">
-                  நோக்க வாசகம் (தமிழ்) / Tagline (Tamil)
+                  Tagline (Tamil / Native)
                 </label>
                 <input
                   type="text"
@@ -2682,14 +2665,14 @@ export default function SuperAdminDashboardPage() {
               <div className="flex items-center gap-2">
                 <Radio className="w-4 h-4 text-amber-400" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                  அறிவிப்பு பலகை &amp; பதிப்பு (Broadcasts &amp; Version)
+                  System Broadcast &amp; Versioning
                 </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-300 block mb-1">
-                    செயலி பதிப்பு (App Version)
+                    Application Version
                   </label>
                   <input
                     type="text"
@@ -2703,16 +2686,16 @@ export default function SuperAdminDashboardPage() {
                 <div className="sm:col-span-2">
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-slate-300">
-                      அறிவிப்பு பட்டை (Announcement Banner)
+                      Global Announcement Banner
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={announcementActive}
                         onChange={(e) => setAnnouncementActive(e.target.checked)}
-                        className="rounded text-amber-500 focus:ring-amber-500 bg-[#080c14] border-zinc-700"
+                        className="rounded text-amber-500 focus:ring-amber-500 bg-[#080c14] border-zinc-700 cursor-pointer"
                       />
-                      <span className="text-[11px] font-semibold text-slate-400">இயக்கத்தில் உள்ளது (Active)</span>
+                      <span className="text-[11px] font-semibold text-slate-400">Active Broadcast</span>
                     </label>
                   </div>
                   <input
@@ -2728,13 +2711,13 @@ export default function SuperAdminDashboardPage() {
             {/* Developer Credits */}
             <div className="pt-2 border-t border-zinc-800 space-y-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                உருவாக்குனர் விவரம் (Developer Credits)
+                Lead Creator &amp; Architect Details
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    உருவாக்குனர் பெயர் (Developer Name)
+                    Developer Name
                   </label>
                   <input
                     type="text"
@@ -2746,7 +2729,7 @@ export default function SuperAdminDashboardPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    தொடர்பு எண் (Contact Mobile)
+                    Contact Mobile
                   </label>
                   <input
                     type="text"
@@ -2758,7 +2741,7 @@ export default function SuperAdminDashboardPage() {
 
                 <div>
                   <label className="text-xs font-semibold text-slate-300 block mb-1">
-                    இன்ஸ்டாகிராம் (Instagram Handle)
+                    Instagram Handle
                   </label>
                   <input
                     type="text"
@@ -2778,7 +2761,7 @@ export default function SuperAdminDashboardPage() {
                   className="w-full sm:w-auto px-6 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
                   <Save className="w-4 h-4" />
-                  <span>அமைப்புகளை சேமிக்க (Save Settings)</span>
+                  <span>Save Platform Configuration</span>
                 </button>
               </div>
             )}
@@ -2813,7 +2796,7 @@ export default function SuperAdminDashboardPage() {
                     </span>
                   </div>
                   <p className="text-xs text-amber-200/90 font-semibold">
-                    Velvi Tech (வேள்வி டெக்னாலஜிஸ்) • Tamil Nadu, India
+                    Velvi Technologies • Tamil Nadu, India
                   </p>
                   <p className="text-[11px] text-slate-400 font-medium">
                     Account: <strong className="text-white font-mono">manirajankg@gmail.com</strong> • ID: <strong className="text-white font-mono">u-super-admin-01</strong>
@@ -3124,9 +3107,9 @@ export default function SuperAdminDashboardPage() {
               <>
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
                   <div>
-                    <h3 className="font-bold text-sm sm:text-base text-white">சந்தா வேலிடிட்டி மாற்றம் (Edit Validity)</h3>
+                    <h3 className="font-bold text-sm sm:text-base text-white">Adjust Subscription Validity</h3>
                     <p className="text-[11px] text-amber-400 font-medium">
-                      {selectedBizForModal.userName} • தற்போதைய முடிவு: {selectedBizForModal.currentExpiry}
+                      {selectedBizForModal.userName} • Current Expiry: {selectedBizForModal.currentExpiry}
                     </p>
                   </div>
                   <button
@@ -3140,24 +3123,24 @@ export default function SuperAdminDashboardPage() {
 
                 <form onSubmit={handleModalAdjustSubmit} className="space-y-3.5 text-xs">
                   <div>
-                    <label className="text-slate-300 block mb-1 font-bold">மாற்ற வகை (Adjustment Action)</label>
+                    <label className="text-slate-300 block mb-1 font-bold">Adjustment Action</label>
                     <select
                       value={modalAdjustmentType}
                       onChange={(e) => setModalAdjustmentType(e.target.value as any)}
                       className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                     >
-                      <option value="EXTEND">EXTEND (நாட்களை நீட்டிக்க / Add Days)</option>
-                      <option value="REDUCE">REDUCE (நாட்களை குறைக்க / Subtract Days)</option>
-                      <option value="PAUSE">PAUSE (சந்தாவை இடைநிறுத்த / Pause)</option>
-                      <option value="ACTIVATE">ACTIVATE (செயல்படுத்த / Force Active)</option>
-                      <option value="EXPIRE">EXPIRE (உடனடியாக காலாவதியாக்க / Expire)</option>
+                      <option value="EXTEND">EXTEND (Add Days)</option>
+                      <option value="REDUCE">REDUCE (Subtract Days)</option>
+                      <option value="PAUSE">PAUSE (Temporary Suspension)</option>
+                      <option value="ACTIVATE">ACTIVATE (Force Active Plan)</option>
+                      <option value="EXPIRE">EXPIRE (Immediate Expiration)</option>
                     </select>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-slate-300 font-bold">விரைவு தேர்வு (Quick Presets)</label>
-                      <span className="text-[10px] text-slate-400">நாட்களை தேர்வு செய்க</span>
+                      <label className="text-slate-300 font-bold">Quick Presets</label>
+                      <span className="text-[10px] text-slate-400">Select days</span>
                     </div>
                     <div className="grid grid-cols-4 gap-1.5 mb-2">
                       {[7, 30, 90, 365].map((d) => (
@@ -3183,7 +3166,7 @@ export default function SuperAdminDashboardPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10.5px] text-slate-400 block mb-0.5">நாட்கள் எண்ணிக்கை (Days Count)</label>
+                        <label className="text-[10.5px] text-slate-400 block mb-0.5">Days Count</label>
                         <input
                           type="number"
                           min={1}
@@ -3195,13 +3178,13 @@ export default function SuperAdminDashboardPage() {
                               computeNewExpiryDateISO(selectedBizForModal.rawExpiryDate, val, modalAdjustmentType)
                             );
                           }}
-                          placeholder="எ.கா. 30"
+                          placeholder="e.g. 30"
                           className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10.5px] text-slate-400 block mb-0.5">அல்லது இலக்கு தேதி (Target Date)</label>
+                        <label className="text-[10.5px] text-slate-400 block mb-0.5">Or Target Date</label>
                         <input
                           type="date"
                           value={customTargetDate}
@@ -3215,24 +3198,24 @@ export default function SuperAdminDashboardPage() {
                   {/* Live Calculation Preview Banner */}
                   <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between text-xs">
                     <div>
-                      <div className="text-[10px] uppercase font-bold text-amber-400">கணக்கிடப்பட்ட புதிய தேதி</div>
+                      <div className="text-[10px] uppercase font-bold text-amber-400">Calculated Expiry Date</div>
                       <div className="text-white font-extrabold text-sm font-mono">
                         {computeNewExpiryDate(selectedBizForModal.rawExpiryDate, modalDays, modalAdjustmentType)}
                       </div>
                     </div>
                     <span className="text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2 py-1 rounded-lg">
-                      {modalAdjustmentType === "REDUCE" ? `-${modalDays}d` : `+${modalDays} நாட்கள்`}
+                      {modalAdjustmentType === "REDUCE" ? `-${modalDays}d` : `+${modalDays} days`}
                     </span>
                   </div>
 
                   <div>
                     <label className="text-slate-300 block mb-1 font-bold">
-                      கட்டாய தணிக்கை காரணம் (Mandatory Reason) *
+                      Audit Log Reason *
                     </label>
                     <input
                       type="text"
                       required
-                      placeholder="எ.கா. வாடிக்கையாளர் உதவி, திருவிழா சலுகை நீட்டிப்பு"
+                      placeholder="e.g. Customer support courtesy, seasonal bonus, offline payment confirmation"
                       value={modalReason}
                       onChange={(e) => setModalReason(e.target.value)}
                       className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
@@ -3245,13 +3228,13 @@ export default function SuperAdminDashboardPage() {
                       onClick={() => setSelectedBizForModal(null)}
                       className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center"
                     >
-                      ரத்து (Cancel)
+                      Cancel
                     </button>
                     <button
                       type="submit"
                       className="flex-1 py-2.5 bg-amber-500/20 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 rounded-xl font-bold transition cursor-pointer active:scale-95 text-center"
                     >
-                      சரிபார்த்து உறுதிப்படுத்துக →
+                      Review &amp; Confirm →
                     </button>
                   </div>
                 </form>
@@ -3265,8 +3248,8 @@ export default function SuperAdminDashboardPage() {
                       <Shield className="w-4 h-4 text-amber-400" />
                     </div>
                     <div>
-                      <h3 className="font-black text-sm sm:text-base text-white">வேலிடிட்டி நீட்டிப்பை உறுதி செய்க</h3>
-                      <p className="text-[10.5px] text-slate-400">தரவுத்தளத்தில் மாற்றும் முன் சரிபார்க்கவும்</p>
+                      <h3 className="font-black text-sm sm:text-base text-white">Confirm Validity Adjustment</h3>
+                      <p className="text-[10.5px] text-slate-400">Review database impact before committing change</p>
                     </div>
                   </div>
                   <button
@@ -3280,36 +3263,36 @@ export default function SuperAdminDashboardPage() {
 
                 <div className="bg-[#080c14] rounded-2xl p-4 border border-amber-500/30 space-y-2.5 text-xs">
                   <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                    <span className="text-slate-400 font-medium">பயனர் / கணக்கு:</span>
+                    <span className="text-slate-400 font-medium">User / Account:</span>
                     <span className="font-bold text-white text-right">{selectedBizForModal.userName}</span>
                   </div>
 
                   <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                    <span className="text-slate-400 font-medium">மாற்ற வகை:</span>
+                    <span className="text-slate-400 font-medium">Adjustment Type:</span>
                     <span className="font-bold text-amber-400 font-mono">{modalAdjustmentType}</span>
                   </div>
 
                   <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                    <span className="text-slate-400 font-medium">கூடுதல் நாட்கள்:</span>
+                    <span className="text-slate-400 font-medium">Day Adjustment:</span>
                     <span className="font-mono font-extrabold text-emerald-400 text-sm">
-                      +{modalDays} நாட்கள்
+                      +{modalDays} Days
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                    <span className="text-slate-400 font-medium">முந்தைய தேதி:</span>
+                    <span className="text-slate-400 font-medium">Previous Expiry:</span>
                     <span className="text-slate-300 font-mono">{selectedBizForModal.currentExpiry}</span>
                   </div>
 
                   <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                    <span className="text-slate-400 font-medium">புதிய வேலிடிட்டி தேதி:</span>
+                    <span className="text-slate-400 font-medium">New Expiry Date:</span>
                     <span className="font-mono font-black text-amber-300 text-sm bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
                       {computeNewExpiryDate(selectedBizForModal.rawExpiryDate, modalDays, modalAdjustmentType)}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between pt-0.5">
-                    <span className="text-slate-400 font-medium">தணிக்கை காரணம்:</span>
+                    <span className="text-slate-400 font-medium">Audit Reason:</span>
                     <span className="text-slate-200 text-right truncate max-w-[200px]">{modalReason}</span>
                   </div>
                 </div>
@@ -3320,14 +3303,14 @@ export default function SuperAdminDashboardPage() {
                     onClick={() => setIsConfirmingValidity(false)}
                     className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center"
                   >
-                    ← பின்செல் (Back)
+                    ← Back
                   </button>
                   <button
                     type="button"
                     onClick={handleModalAdjustConfirm}
                     className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold rounded-xl transition shadow-lg shadow-emerald-500/20 cursor-pointer active:scale-95 text-center"
                   >
-                    உறுதிசெய்து செயல்படுத்துக
+                    Confirm &amp; Commit Change
                   </button>
                 </div>
               </div>
@@ -3347,13 +3330,13 @@ export default function SuperAdminDashboardPage() {
                 <AlertTriangle className="w-5 h-5 text-rose-400" />
               </div>
               <div>
-                <h3 className="font-bold text-sm sm:text-base text-white">கூப்பனை நீக்கவா?</h3>
+                <h3 className="font-bold text-sm sm:text-base text-white">Delete Promo Coupon?</h3>
                 <p className="text-[11px] text-rose-300 font-mono font-bold">{couponToDelete.code}</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong className="text-white font-mono">{couponToDelete.code}</strong> என்ற கூப்பன் குறியீட்டை நிரந்தரமாக நீக்க விரும்புகிறீர்களா? இனி பக்தர்கள் மற்றும் வாத்தியார்கள் இந்த சலுகை குறியீட்டை பயன்படுத்த முடியாது.
+              Are you sure you want to permanently delete promo code <strong className="text-white font-mono">{couponToDelete.code}</strong>? Devotees and priests will no longer be able to apply or redeem this discount pass.
             </p>
 
             <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
@@ -3362,14 +3345,14 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setCouponToDelete(null)}
                 className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-300 rounded-xl font-bold transition cursor-pointer text-center text-xs"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={confirmDeleteCoupon}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition shadow-lg shadow-rose-600/30 cursor-pointer active:scale-95 text-center text-xs"
               >
-                ஆம், நீக்குக (Delete)
+                Delete Coupon
               </button>
             </div>
           </div>
@@ -3388,8 +3371,8 @@ export default function SuperAdminDashboardPage() {
                   <Globe className="w-4 h-4 text-amber-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-white">நேரலை அமர்வு விவரங்கள் (Session Details)</h3>
-                  <p className="text-[10.5px] text-slate-400">உள்நுழைவு மற்றும் அமர்வு ஆதாரத் தகவல்கள்</p>
+                  <h3 className="font-bold text-sm sm:text-base text-white">Live Session &amp; Telemetry Details</h3>
+                  <p className="text-[10.5px] text-slate-400">Authentication session origin, client IP, and device telemetry</p>
                 </div>
               </div>
               <button
@@ -3403,45 +3386,45 @@ export default function SuperAdminDashboardPage() {
 
             <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2.5 text-xs">
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">பயனர் / வாத்தியார்:</span>
+                <span className="text-slate-400 font-medium">User / Actor:</span>
                 <span className="font-bold text-white text-right">{selectedSessionLog.actorName}</span>
               </div>
 
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">செயல் வகை:</span>
+                <span className="text-slate-400 font-medium">Action Type:</span>
                 <span className="font-mono text-emerald-400 font-bold">{selectedSessionLog.action}</span>
               </div>
 
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">வருகை ஆதாரம்:</span>
+                <span className="text-slate-400 font-medium">Visit Source:</span>
                 <span className="font-bold text-amber-300 text-right">
                   {selectedSessionLog.visitSource || "Direct Web / PWA Session"}
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">ஐபி முகவரி:</span>
+                <span className="text-slate-400 font-medium">IP Address:</span>
                 <span className="font-mono text-white">{selectedSessionLog.ipAddress || "Direct / Localhost"}</span>
               </div>
 
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">இருப்பிடம்:</span>
+                <span className="text-slate-400 font-medium">Location:</span>
                 <span className="text-slate-300">
                   {selectedSessionLog.city
                     ? `${selectedSessionLog.city}${selectedSessionLog.country ? `, ${selectedSessionLog.country}` : ""}`
-                    : "நிலுவையில் உள்ளது"}
+                    : "Pending Location"}
                 </span>
               </div>
 
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
-                <span className="text-slate-400 font-medium">சாதனம் / உலாவி:</span>
+                <span className="text-slate-400 font-medium">Device / Client:</span>
                 <span className="text-slate-300 font-mono text-[11px] truncate max-w-[200px]" title={selectedSessionLog.userAgent}>
                   {selectedSessionLog.userAgent || "Velvi Mobile PWA / Chrome Client"}
                 </span>
               </div>
 
               <div className="flex items-center justify-between pt-0.5">
-                <span className="text-slate-400 font-medium">உள்நுழைந்த நேரம்:</span>
+                <span className="text-slate-400 font-medium">Session Timestamp:</span>
                 <span className="text-slate-300 font-mono">
                   {new Date(selectedSessionLog.createdAt).toLocaleString("en-IN")}
                 </span>
@@ -3453,7 +3436,7 @@ export default function SuperAdminDashboardPage() {
               onClick={() => setSelectedSessionLog(null)}
               className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold transition cursor-pointer text-center text-xs"
             >
-              விவரங்களை மூடுக (Close)
+              Close Details
             </button>
           </div>
         </div>
@@ -3471,8 +3454,8 @@ export default function SuperAdminDashboardPage() {
                   <CreditCard className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm sm:text-base text-white">வாத்தியார் சந்தா &amp; கட்டண முழு விபரம் (Dossier)</h3>
-                  <p className="text-[10.5px] text-slate-400">பயனர் தொடர்பு, தொழில் விவரம் மற்றும் கட்டணத் தகவல்கள்</p>
+                  <h3 className="font-bold text-sm sm:text-base text-white">Tenant Subscription &amp; Payment Dossier</h3>
+                  <p className="text-[10.5px] text-slate-400">Contact profile, business enterprise, and gateway transaction records</p>
                 </div>
               </div>
               <button
@@ -3488,44 +3471,44 @@ export default function SuperAdminDashboardPage() {
               {/* User & Contact Information */}
               <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
                 <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
-                  1. பயனர் சுயவிவரம் &amp; தொடர்பு (Profile &amp; Contact)
+                  1. User Profile &amp; Contact Information
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">பெயர்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Name:</span>
                     <strong className="text-white font-semibold">
                       {selectedLedgerEntry.user?.name || selectedLedgerEntry.biz?.name || "User"}
                     </strong>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">மின்னஞ்சல்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Email:</span>
                     <strong className="text-amber-300 font-mono text-[11px] truncate block">
-                      {selectedLedgerEntry.user?.email || "பதிவு செய்யப்படவில்லை"}
+                      {selectedLedgerEntry.user?.email || "Not provided"}
                     </strong>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">தொலைபேசி / வாட்ஸ்அப்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Mobile / WhatsApp:</span>
                     <strong className="text-white font-mono">
-                      {selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone || "பதிவு செய்யப்படவில்லை"}
+                      {selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone || "Not provided"}
                     </strong>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">தொழில் / கோயில்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Business / Temple:</span>
                     <strong className="text-white font-semibold">
-                      {selectedLedgerEntry.biz?.name || "சுயாதீன சேவை"}
+                      {selectedLedgerEntry.biz?.name || "Independent Service"}
                     </strong>
                   </div>
 
                   <div className="sm:col-span-2">
-                    <span className="text-slate-400 text-[10.5px] block">முகவரி / இருப்பிடம்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Address / Location:</span>
                     <strong className="text-slate-200">
                       {selectedLedgerEntry.biz?.address
                         ? `${selectedLedgerEntry.biz.address}, ${selectedLedgerEntry.biz.city || ""}`
-                        : "சென்னை, தமிழ்நாடு, இந்தியா"}
+                        : "Chennai, Tamil Nadu, India"}
                     </strong>
                   </div>
                 </div>
@@ -3534,37 +3517,37 @@ export default function SuperAdminDashboardPage() {
               {/* Subscription & Validity Information */}
               <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
                 <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider block">
-                  2. திட்ட அடுக்கு &amp; வேலிடிட்டி (Plan &amp; Validity)
+                  2. Subscription Tier &amp; Validity
                 </span>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">திட்டம்:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Plan Tier:</span>
                     <strong className="text-amber-300 font-bold">
                       {selectedLedgerEntry.subscription?.planName || "Pro Enterprise"}
                     </strong>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">கட்டண சுழற்சி:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Billing Cycle:</span>
                     <strong className="text-white uppercase font-bold">
                       {selectedLedgerEntry.payment?.billingCycle || selectedLedgerEntry.subscription?.billingCycle || "MONTHLY"}
                     </strong>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">உறுப்பினர் நிலை:</span>
+                    <span className="text-slate-400 text-[10.5px] block">Membership Status:</span>
                     <span className="inline-block px-2 py-0.2 rounded-full font-bold text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800">
-                      {selectedLedgerEntry.subscription?.status === "ACTIVE" ? "செயலில் உள்ளது" : (selectedLedgerEntry.subscription?.status || "ACTIVE")}
+                      {selectedLedgerEntry.subscription?.status === "ACTIVE" ? "Active" : (selectedLedgerEntry.subscription?.status || "ACTIVE")}
                     </span>
                   </div>
 
                   <div>
-                    <span className="text-slate-400 text-[10.5px] block">முடிவு தேதி (வேலிடிட்டி):</span>
+                    <span className="text-slate-400 text-[10.5px] block">Expiry Date (Validity):</span>
                     <strong className="text-white font-mono">
                       {selectedLedgerEntry.subscription?.currentPeriodEnd
                         ? new Date(selectedLedgerEntry.subscription.currentPeriodEnd).toLocaleDateString("en-IN")
-                        : "தொடர்கிறது"}
+                        : "Ongoing Active"}
                     </strong>
                   </div>
                 </div>
@@ -3574,47 +3557,47 @@ export default function SuperAdminDashboardPage() {
               {selectedLedgerEntry.payment && (
                 <div className="bg-[#080c14] rounded-2xl p-4 border border-zinc-800 space-y-2">
                   <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">
-                    3. கேஷ்பிரீ கட்டண விவரம் (Cashfree PG)
+                    3. Cashfree Gateway Transaction Details
                   </span>
 
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-slate-400 text-[10.5px] block">செலுத்திய தொகை:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Amount Paid:</span>
                       <strong className="text-emerald-400 font-mono font-black text-sm">
                         ₹{selectedLedgerEntry.payment.amount}
                       </strong>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[10.5px] block">கட்டண முறை:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Payment Method:</span>
                       <strong className="text-white">
                         {selectedLedgerEntry.payment.paymentMethod || "Cashfree PG"}
                       </strong>
                     </div>
 
                     <div className="col-span-2">
-                      <span className="text-slate-400 text-[10.5px] block">ஆர்டர் எண்:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Order ID:</span>
                       <strong className="text-white font-mono text-[11px] block truncate">
                         {selectedLedgerEntry.payment.orderId}
                       </strong>
                     </div>
 
                     <div className="col-span-2">
-                      <span className="text-slate-400 text-[10.5px] block">பரிவர்த்தனை எண்:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Payment ID:</span>
                       <strong className="text-slate-300 font-mono text-[11px] block truncate">
                         {selectedLedgerEntry.payment.gatewayPaymentId || "Auto-settled via Webhook"}
                       </strong>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[10.5px] block">நிலை:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Status:</span>
                       <span className="inline-block px-2 py-0.2 rounded-full font-bold text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800">
                         {selectedLedgerEntry.payment.status}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-slate-400 text-[10.5px] block">நேரம்:</span>
+                      <span className="text-slate-400 text-[10.5px] block">Timestamp:</span>
                       <span className="text-slate-300 font-mono text-[11px]">
                         {new Date(selectedLedgerEntry.payment.createdAt).toLocaleDateString("en-IN")}
                       </span>
@@ -3630,7 +3613,7 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setSelectedLedgerEntry(null)}
                 className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold transition cursor-pointer text-center text-xs"
               >
-                மூடுக (Close)
+                Close Dossier
               </button>
 
               {(selectedLedgerEntry.user?.phone || selectedLedgerEntry.biz?.phone) && (
@@ -3641,7 +3624,7 @@ export default function SuperAdminDashboardPage() {
                   className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-1.5 text-xs"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
-                  <span>வாட்ஸ்அப் தொடர்பு (WhatsApp)</span>
+                  <span>Contact via WhatsApp</span>
                 </a>
               )}
             </div>
@@ -3659,13 +3642,13 @@ export default function SuperAdminDashboardPage() {
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">நிர்வாகி அனுமதியை ரத்து செய்யவா?</h3>
-                <p className="text-[11px] text-slate-400">வழக்கமான வாத்தியார் கணக்காக மாற்றப்படும்</p>
+                <h3 className="text-sm sm:text-base font-bold text-white">Revoke Administrator Access?</h3>
+                <p className="text-[11px] text-slate-400">Account will revert to standard tenant privileges</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong className="text-rose-400 font-bold">{adminToDemote.name}</strong> என்பவரிடமிருந்து உதவி நிர்வாகி அனுமதியை நீக்க விரும்புகிறீர்களா? இவர்கள் நிர்வாக தளத்திற்கான அணுகலை உடனடியாக இழப்பார்கள்.
+              Are you sure you want to revoke administrator privileges for <strong className="text-rose-400 font-bold">{adminToDemote.name}</strong>? They will immediately lose access to the administrative console and all tenant management tools.
             </p>
 
             <div className="flex gap-2.5 pt-2">
@@ -3674,14 +3657,14 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setAdminToDemote(null)}
                 className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleRemoveAdmin(adminToDemote.id, adminToDemote.name)}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-rose-600/30 transition cursor-pointer"
               >
-                அனுமதியை ரத்து செய்க (Revoke)
+                Revoke Admin Access
               </button>
             </div>
           </div>
@@ -3699,13 +3682,13 @@ export default function SuperAdminDashboardPage() {
                 <Crown className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">உதவி நிர்வாகியாக பதவி உயர்த்தவா?</h3>
-                <p className="text-[11px] text-slate-400">நிர்வாக தளத்திற்கான திருத்த அனுமதி வழங்கப்படும்</p>
+                <h3 className="text-sm sm:text-base font-bold text-white">Promote to Editor Administrator?</h3>
+                <p className="text-[11px] text-slate-400">Grant operational access to assist tenants and manage subscriptions</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong className="text-amber-300 font-bold">{userToPromote.name}</strong> என்பவருக்கு உதவி நிர்வாகி அனுமதி வழங்க விரும்புகிறீர்களா? இவர்கள் கூகுள் மூலம் உள்நுழைந்து வாத்தியார்களுக்கு உதவவும் வேலிடிட்டி மாற்றவும் முடியும்.
+              Are you sure you want to grant editor administrator access to <strong className="text-amber-300 font-bold">{userToPromote.name}</strong>? They will be able to log in securely with their Google account to support tenants and adjust subscription validities.
             </p>
 
             <div className="flex gap-2.5 pt-2">
@@ -3714,14 +3697,14 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setUserToPromote(null)}
                 className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handlePromoteUser(userToPromote.id, userToPromote.name)}
                 className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-xs shadow-lg shadow-amber-500/30 transition cursor-pointer"
               >
-                அனுமதி வழங்குக (Grant Admin)
+                Grant Admin Access
               </button>
             </div>
           </div>
@@ -3739,13 +3722,13 @@ export default function SuperAdminDashboardPage() {
                 <Trash2 className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">பயனரை நிரந்தரமாக நீக்கவா?</h3>
-                <p className="text-[11px] text-rose-400 font-semibold">மீட்டெடுக்க முடியாத அழிவு நடவடிக்கை (Irreversible)</p>
+                <h3 className="text-sm sm:text-base font-bold text-white">Permanently Purge User Account?</h3>
+                <p className="text-[11px] text-rose-400 font-semibold">Irreversible database cascade action</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 leading-relaxed">
-              <strong className="text-rose-300 font-bold">{userToDelete.name}</strong> ({userToDelete.email}) என்ற பயனரை நிரந்தரமாக நீக்க விரும்புகிறீர்களா? இவருடன் தொடர்புடைய தொழில், பக்தர்கள், புக்கிங், சந்தாக்கள் மற்றும் பரிவர்த்தனைகள் அனைத்தும் தளத்திலிருந்து நீக்கப்படும்.
+              Are you sure you want to permanently delete <strong className="text-rose-300 font-bold">{userToDelete.name}</strong> ({userToDelete.email})? All associated business profiles, devotee records, bookings, subscriptions, and payment ledgers will be permanently deleted from the platform.
             </p>
 
             <div className="flex gap-2.5 pt-2">
@@ -3755,7 +3738,7 @@ export default function SuperAdminDashboardPage() {
                 onClick={() => setUserToDelete(null)}
                 className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer disabled:opacity-50"
               >
-                ரத்து (Cancel)
+                Cancel
               </button>
               <button
                 type="button"
@@ -3766,12 +3749,12 @@ export default function SuperAdminDashboardPage() {
                 {isDeletingUser ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>நீக்குகிறது...</span>
+                    <span>Deleting account...</span>
                   </>
                 ) : (
                   <>
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>நீக்குவதை உறுதி செய்க</span>
+                    <span>Confirm Permanent Purge</span>
                   </>
                 )}
               </button>
