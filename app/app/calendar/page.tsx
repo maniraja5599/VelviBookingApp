@@ -8,6 +8,7 @@ import { getTamilDate, formatTimeRangeTo12H, getLocalDateString } from "@/lib/ca
 import { db } from "@/lib/db/store";
 import { Booking } from "@/lib/types";
 import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
+import { DailyPanchangamWidget } from "@/components/panchangam/DailyPanchangamWidget";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -1074,164 +1075,12 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          {/* 1. Selected Day Container: Compact & Sleek */}
-          <div className="rounded-2xl border border-slate-200/90 shadow-2xs bg-white p-2.5 sm:p-3 space-y-2.5">
-            {/* Top Row: Compact Date Box + Tamil Info + Muhurtham Badge */}
-            <div className="flex items-center justify-between gap-2 sm:gap-2.5">
-              {/* Left Date Box - Compact */}
-              <div className="bg-[#eef8f2] border border-emerald-300/80 rounded-xl px-2 py-1 text-center min-w-[54px] sm:min-w-[60px] flex flex-col items-center justify-center shrink-0 shadow-2xs">
-                <span className="text-xl sm:text-2xl font-black text-emerald-950 leading-none">
-                  {selDayNum}
-                </span>
-                <span className="text-[8.5px] font-black text-emerald-900 uppercase tracking-tight mt-0.5 leading-tight">
-                  {selMonthEn} {selYear}
-                </span>
-                <span className="text-[7px] font-bold text-emerald-700 uppercase tracking-wider leading-none mt-0.5">
-                  {selDayOfWeekEn}
-                </span>
-              </div>
-
-              {/* Center & Right: Tamil Solar Month, Day, Weekday & Sacred Badges */}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-1 flex-wrap">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="font-black text-xs sm:text-sm text-slate-900 leading-tight">
-                      {selectedTamilInfo.tamilMonth} {selectedTamilInfo.tamilDay}
-                    </h3>
-                    <span className="font-bold text-slate-500 text-[11px]">
-                      ({selectedTamilInfo.dayOfWeekTa})
-                    </span>
-                  </div>
-
-                  {selectedTamilInfo.isMuhurtham && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-extrabold shadow-2xs">
-                      <span>💍</span> சுப முகூர்த்தம்
-                    </span>
-                  )}
-                  {selectedTamilInfo.isPournami && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold shadow-2xs">
-                      <span>🌕</span> பௌர்ணமி
-                    </span>
-                  )}
-                  {selectedTamilInfo.isAmavasai && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-800 text-white text-[10px] font-extrabold shadow-2xs">
-                      <span>🌑</span> அமாவாசை
-                    </span>
-                  )}
-                  {selectedTamilInfo.isKarinaal && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-300 text-[10px] font-bold shadow-2xs">
-                      <span>⚠️</span> கரிநாள்
-                    </span>
-                  )}
-                  {selectedTamilInfo.festivalName && !selectedTamilInfo.isMuhurtham && !selectedTamilInfo.isPournami && !selectedTamilInfo.isAmavasai && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 border border-purple-200 text-[10px] font-bold shadow-2xs">
-                      <span>⭐</span> {selectedTamilInfo.festivalName}
-                    </span>
-                  )}
-                </div>
-
-                {/* Sub-line: திதி | நட்சத்திரம் */}
-                <div className="text-[10px] text-slate-600 font-medium mt-0.5 flex items-center gap-1.5 flex-wrap">
-                  <span>
-                    திதி: <strong className="text-slate-900 font-bold">{selectedTamilInfo.tithiNameTa || selectedTamilInfo.tithiTa}</strong>
-                  </span>
-                  <span className="text-slate-300 font-bold">•</span>
-                  <span>
-                    நட்சத்திரம்: <strong className="text-slate-900 font-bold">{selectedTamilInfo.nakshatraNameTa}</strong>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons Row */}
-            <div className="flex items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={handleShareWhatsApp}
-                className="px-3 py-1.5 bg-[#134e3a] hover:bg-[#0e3b2c] text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition active:scale-95 cursor-pointer"
-              >
-                <Share2 className="w-3.5 h-3.5" />
-                <span>பகிர்</span>
-              </button>
-
-              <Link
-                href={`/app/bookings/new?date=${selectedDate}`}
-                className="px-3 py-1.5 bg-[#fdf6ec] hover:bg-[#faebd7] border border-amber-300/80 text-amber-950 rounded-xl text-xs font-bold flex items-center gap-1.5 transition active:scale-95 shadow-2xs"
-              >
-                <CalendarDays className="w-3.5 h-3.5 text-amber-800" />
-                <span>+ புதிய பதிவு</span>
-              </Link>
-            </div>
-
-            {/* 2. Auspicious Timings Card - Directly Under Calendar Date Info for Instant Live View */}
-            <div className="rounded-2xl border border-emerald-200/90 bg-[#fbfdfc] p-2.5 sm:p-3 space-y-2 shadow-2xs">
-              {/* Header: Title & Full details link */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
-                    <Clock className="w-3 h-3 text-emerald-800" />
-                  </div>
-                  <h4 className="font-extrabold text-xs text-slate-900">
-                    நல்ல நேரங்கள் &amp; காலங்கள்
-                  </h4>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowDayDetailsModal(true)}
-                  className="px-2.5 py-0.5 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-0.5 active:scale-95 transition cursor-pointer"
-                >
-                  <span>முழு விவரம்</span>
-                  <ChevronRight className="w-2.5 h-2.5" />
-                </button>
-              </div>
-
-              {/* LINE 1: நல்ல நேரம் (காலை & மாலை) */}
-              <div className="bg-emerald-50/90 border border-emerald-200/80 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 text-[11px] flex-wrap">
-                <span className="font-bold text-emerald-950 flex items-center gap-1 shrink-0">
-                  <span>☀️</span> நல்ல நேரம்:
-                </span>
-                <div className="flex items-center gap-2 font-black text-emerald-900 text-right shrink-0">
-                  <span>காலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramMorning, true)}</span>
-                  <span className="text-emerald-300">•</span>
-                  <span>மாலை: {formatTimeRangeTo12H(selectedTamilInfo.nallaNeramEvening, true)}</span>
-                </div>
-              </div>
-
-              {/* LINE 2: கௌரி நல்ல நேரம் */}
-              <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl px-2.5 py-1.5 flex items-center justify-between gap-1 text-[11px] flex-wrap">
-                <span className="font-bold text-amber-950 flex items-center gap-1 shrink-0">
-                  <span>🌸</span> கௌரி நல்ல நேரம்:
-                </span>
-                <div className="flex items-center gap-2 font-bold text-amber-900 text-right shrink-0 text-[10.5px]">
-                  <span>காலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramMorning, true)}</span>
-                  <span className="text-amber-300">•</span>
-                  <span>மாலை: {formatTimeRangeTo12H(selectedTamilInfo.gowriNallaNeramEvening, true)}</span>
-                </div>
-              </div>
-
-              {/* LINE 3: ராகு காலம், எமகண்டம், குளிகை */}
-              <div className="grid grid-cols-3 gap-1.5 text-[10px] text-center">
-                <div className="bg-rose-50/80 border border-rose-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-rose-800 block text-[9.5px]">ராகு காலம்</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.rahuKalam, true)}
-                  </span>
-                </div>
-                <div className="bg-indigo-50/80 border border-indigo-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-indigo-900 block text-[9.5px]">எமகண்டம்</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.yamagandam, true)}
-                  </span>
-                </div>
-                <div className="bg-amber-50/80 border border-amber-200/60 rounded-xl py-1 px-1">
-                  <span className="font-bold text-amber-900 block text-[9.5px]">குளிகை</span>
-                  <span className="font-extrabold text-slate-800 block mt-0.5 leading-none">
-                    {formatTimeRangeTo12H(selectedTamilInfo.kuligai, true)}
-                  </span>
-                </div>
-              </div>
-            </div>
+          {/* 1. Daily Panchangam & Auspicious Timings Master Widget */}
+          <DailyPanchangamWidget
+            initialDate={selectedDate}
+            onDateSelect={(d) => setSelectedDate(d)}
+            className="mb-1"
+          />
 
             {/* 3. Day Bookings Card (Dotted Empty State & Diya or Bookings) */}
             <div className="rounded-2xl border border-amber-300/70 bg-[#fffdfa] p-2.5 sm:p-3 space-y-2">
@@ -1330,7 +1179,6 @@ export default function CalendarPage() {
                 </div>
               )}
             </div>
-          </div>
 
           {/* 3. Monthly Important Days & Moon Phases / Fasting Days (2-Column Responsive Layout) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
