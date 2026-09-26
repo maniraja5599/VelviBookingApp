@@ -12,6 +12,7 @@ import {
 } from "@/lib/whatsapp/formatter";
 import { PoojaListShareModal } from "@/components/bookings/PoojaListShareModal";
 import { PoojaSlipModal } from "@/components/bookings/PoojaSlipModal";
+import { RecordPaymentModal } from "@/components/payments/RecordPaymentModal";
 import { getItemIcon } from "@/lib/samagri/icons";
 import Link from "next/link";
 import {
@@ -66,6 +67,28 @@ export default function BookingDetailPage() {
   // Modal states
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState<number>(booking.balanceAmount || 0);
+
+  // Synchronized payment records list for viewing history
+  const paymentRecordsList = React.useMemo(() => {
+    if (booking.paymentRecords && booking.paymentRecords.length > 0) {
+      return booking.paymentRecords;
+    }
+    if ((booking.advanceAmount || 0) > 0) {
+      return [
+        {
+          id: `pay-${booking.id}-init`,
+          bookingId: booking.id,
+          amount: booking.advanceAmount,
+          date: booking.paymentDate || booking.date || "2026-09-26",
+          method: (booking.paymentMethod as any) || "UPI",
+          remark: booking.paymentNotes || "Booking Advance Dakshina",
+          discount: booking.discountAmount || 0,
+          createdAt: booking.createdAt,
+        },
+      ];
+    }
+    return [];
+  }, [booking, booking.paymentRecords, booking.advanceAmount, booking.discountAmount]);
 
   // Cancellation states
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -542,28 +565,85 @@ export default function BookingDetailPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-xs">
+          {/* Financial Metrics Strip (With Discount Support) */}
+          <div className={`grid gap-2 text-xs ${booking.discountAmount && booking.discountAmount > 0 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}`}>
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-slate-500 block">Total Fee</span>
+              <span className="text-[10px] font-bold text-slate-500 block uppercase">Total Fee</span>
               <div className="text-sm font-black text-slate-900 mt-0.5">
                 ₹{booking.totalAmount.toLocaleString("en-IN")}
               </div>
             </div>
 
+            {booking.discountAmount && booking.discountAmount > 0 ? (
+              <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 text-center shadow-2xs">
+                <span className="text-[10px] font-bold text-amber-800 block uppercase">தள்ளுபடி (Discount)</span>
+                <div className="text-sm font-black text-amber-900 mt-0.5">
+                  -₹{booking.discountAmount.toLocaleString("en-IN")}
+                </div>
+              </div>
+            ) : null}
+
             <div className="bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-200 text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-emerald-800 block">Advance Paid</span>
+              <span className="text-[10px] font-bold text-emerald-800 block uppercase">Paid Amount</span>
               <div className="text-sm font-black text-emerald-900 mt-0.5">
                 ₹{booking.advanceAmount.toLocaleString("en-IN")}
               </div>
             </div>
 
             <div className="bg-slate-100 p-2.5 rounded-xl border border-slate-200 text-center shadow-2xs">
-              <span className="text-[10px] font-bold text-slate-600 block">Balance Due</span>
+              <span className="text-[10px] font-bold text-slate-600 block uppercase">Balance Due</span>
               <div className="text-sm font-black text-slate-900 mt-0.5">
                 ₹{booking.balanceAmount.toLocaleString("en-IN")}
               </div>
             </div>
           </div>
+
+          {/* Recorded Payments History List (கட்டண வரவு பதிவுகள்) */}
+          {paymentRecordsList.length > 0 && (
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                  கட்டண வரவு பதிவுகள் ({paymentRecordsList.length}):
+                </span>
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  Payment History &amp; Remarks
+                </span>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-2xs">
+                {paymentRecordsList.map((rec, idx) => (
+                  <div key={rec.id || idx} className="p-2.5 flex items-center justify-between gap-2 hover:bg-slate-50/50 transition">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 font-black text-sm flex items-center justify-center shrink-0 border border-emerald-200">
+                        {rec.method === "CASH" ? "💵" : rec.method === "BANK_TRANSFER" ? "🏛️" : rec.method === "CHEQUE" ? "📑" : "📱"}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-slate-900 text-xs">
+                            +₹{rec.amount.toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 uppercase">
+                            {rec.method}
+                          </span>
+                          {rec.discount && rec.discount > 0 ? (
+                            <span className="text-[9.5px] font-black px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                              -₹{rec.discount} தள்ளுபடி
+                            </span>
+                          ) : null}
+                        </div>
+                        <div className="text-[10.5px] text-slate-500 font-medium flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          <span>📅 {rec.date}</span>
+                          {rec.remark && <span>• 📝 {rec.remark}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 shrink-0">
+                      Received ✓
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {booking.balanceAmount > 0 && booking.status !== "CANCELLED" && (
             <button
@@ -834,45 +914,18 @@ export default function BookingDetailPage() {
         </div>
       )}
 
-      {/* 1. Quick Payment Recording Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-velvi-gold/30">
-            <h3 className="font-bold text-base text-velvi-brownDark">Record Payment</h3>
-            <p className="text-xs text-velvi-brown/70">
-              Enter amount collected from {booking.customerName}.
-            </p>
-
-            <div>
-              <label className="text-xs font-bold text-velvi-brown block mb-1">
-                Payment Amount (₹)
-              </label>
-              <input
-                type="number"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                max={booking.balanceAmount}
-                className="w-full bg-velvi-cream/40 border border-velvi-gold/30 rounded-xl px-3 py-2 text-sm font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => setShowPaymentModal(false)}
-                className="flex-1 py-2 rounded-xl text-xs font-bold text-velvi-brown bg-velvi-cream hover:bg-velvi-creamDark"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRecordPayment}
-                className="flex-1 py-2 rounded-xl text-xs font-bold text-white bg-velvi-brown hover:bg-velvi-brownLight shadow-sm"
-              >
-                Save Payment
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 1. Quick Universal Payment Recording Modal */}
+      <RecordPaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        booking={booking}
+        onSuccess={(updatedBooking) => {
+          Object.assign(booking, updatedBooking);
+          setPaymentAmount(updatedBooking.balanceAmount || 0);
+          router.refresh();
+        }}
+        currentUserName={currentUser?.name || "Priest"}
+      />
 
       {/* 2. Controlled Edit Payment Modal (With Math Integrity) */}
       {showEditPaymentModal && (

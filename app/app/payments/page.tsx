@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { IyerSettlement, Booking } from "@/lib/types";
+import { RecordPaymentModal } from "@/components/payments/RecordPaymentModal";
 import {
   IndianRupee,
   CheckCircle2,
@@ -956,120 +957,20 @@ export default function PaymentsPage() {
         </div>
       )}
 
-      {/* 1. Modal: Record Customer Payment */}
+      {/* 1. Modal: Record Customer Payment (Universal & Uniform) */}
       {paymentBooking && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-1.5">
-                <IndianRupee className="w-4 h-4 text-emerald-700" />
-                <span>Record Payment</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setPaymentBooking(null)}
-                className="p-1 rounded-full hover:bg-slate-100 text-slate-400"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-200 text-xs space-y-1">
-              <div className="font-bold text-slate-900">{paymentBooking.customerName}</div>
-              <div className="text-slate-600">{paymentBooking.poojaEnglishName} • {paymentBooking.bookingNumber}</div>
-              <div className="text-amber-900 font-extrabold pt-1">
-                Total Balance Due: ₹{paymentBooking.balanceAmount?.toLocaleString("en-IN")}
-              </div>
-            </div>
-
-            <form onSubmit={handleConfirmRecordPayment} className="space-y-3.5">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Amount Received (₹) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={paymentBooking.balanceAmount}
-                  value={paymentAmount}
-                  onChange={(e) => setPaymentAmount(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-black text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    Payment Date *
-                  </label>
-                  <div className="flex items-center gap-1 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentDate(todayLocalDateStr)}
-                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
-                        paymentDate === todayLocalDateStr
-                          ? "bg-emerald-800 text-white"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      Today
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const yest = new Date();
-                        yest.setDate(yest.getDate() - 1);
-                        setPaymentDate(yest.toISOString().split("T")[0]);
-                      }}
-                      className="px-1.5 py-0.5 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition"
-                    >
-                      Yesterday
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="date"
-                  required
-                  value={paymentDate}
-                  onChange={(e) => setPaymentDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Payment Method
-                </label>
-                <select
-                  value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                >
-                  <option value="UPI">UPI / Google Pay / PhonePe</option>
-                  <option value="CASH">Cash</option>
-                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setPaymentBooking(null)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-sm transition"
-                >
-                  Record Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <RecordPaymentModal
+          isOpen={!!paymentBooking}
+          onClose={() => setPaymentBooking(null)}
+          booking={paymentBooking}
+          onSuccess={(updatedBooking) => {
+            setBookings(db.getBookings(businessId));
+            setPaymentBooking(null);
+            setPaymentSuccessMsg("கட்டணம் வெற்றிகரமாகப் பதிவு செய்யப்பட்டது!");
+            setTimeout(() => setPaymentSuccessMsg(""), 3500);
+          }}
+          currentUserName={currentUser?.name || "Priest"}
+        />
       )}
 
       {/* Modal: Confirm Reset Payment */}

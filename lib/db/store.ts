@@ -8,6 +8,7 @@ import {
   PoojaItemTemplate,
   Booking,
   BookingAssignment,
+  BookingPaymentRecord,
   IyerSettlement,
   Payment,
   Referral,
@@ -1158,29 +1159,59 @@ export class VelviDatabaseStore {
     amount: number;
     paymentMethod?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER" | string;
     paymentDate?: string;
+    discount?: number;
     recordedBy?: string;
     notes?: string;
   }): { success: boolean; booking?: Booking; error?: string } {
     const booking = this.bookings.find((b) => b.id === params.bookingId);
     if (!booking) return { success: false, error: "Booking not found" };
 
-    if (params.amount <= 0) {
-      return { success: false, error: "Payment amount must be greater than zero." };
+    const payAmount = Math.max(0, params.amount || 0);
+    const discAmount = Math.max(0, params.discount || 0);
+
+    if (payAmount <= 0 && discAmount <= 0) {
+      return { success: false, error: "Payment amount or discount must be greater than zero." };
     }
 
     const previousFinancials = {
       advanceAmount: booking.advanceAmount || 0,
+      discountAmount: booking.discountAmount || 0,
       balanceAmount: booking.balanceAmount,
       paymentStatus: booking.paymentStatus,
     };
 
-    booking.advanceAmount = (booking.advanceAmount || 0) + params.amount;
-    booking.balanceAmount = Math.max(0, booking.totalAmount - booking.advanceAmount);
-    booking.paymentStatus = booking.balanceAmount === 0 ? "PAID" : "PARTIALLY_PAID";
+    if (discAmount > 0) {
+      booking.discountAmount = (booking.discountAmount || 0) + discAmount;
+    }
+    booking.advanceAmount = (booking.advanceAmount || 0) + payAmount;
+
+    const netPayable = Math.max(0, booking.totalAmount - (booking.discountAmount || 0));
+    booking.balanceAmount = Math.max(0, netPayable - booking.advanceAmount);
+    booking.paymentStatus = booking.balanceAmount === 0 ? "PAID" : (booking.advanceAmount > 0 ? "PARTIALLY_PAID" : "PENDING");
     booking.paymentDate = params.paymentDate || new Date().toISOString().split("T")[0];
     if (params.paymentMethod) {
       booking.paymentMethod = params.paymentMethod as any;
     }
+    if (params.notes) {
+      booking.paymentNotes = params.notes;
+    }
+
+    if (!booking.paymentRecords) {
+      booking.paymentRecords = [];
+    }
+
+    const newRecord: BookingPaymentRecord = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      bookingId: booking.id,
+      amount: payAmount,
+      date: params.paymentDate || new Date().toISOString().split("T")[0],
+      method: (params.paymentMethod as any) || "UPI",
+      remark: params.notes || "",
+      discount: discAmount,
+      recordedBy: params.recordedBy || "User",
+      createdAt: new Date().toISOString(),
+    };
+    booking.paymentRecords.push(newRecord);
     booking.updatedAt = new Date().toISOString();
 
     this.auditLogs.push({
@@ -1192,13 +1223,17 @@ export class VelviDatabaseStore {
       targetId: booking.id,
       oldValue: previousFinancials,
       newValue: {
-        collectedAdded: params.amount,
+        collectedAdded: payAmount,
+        discountAdded: discAmount,
         advanceAmount: booking.advanceAmount,
+        discountAmount: booking.discountAmount,
         balanceAmount: booking.balanceAmount,
         paymentStatus: booking.paymentStatus,
         paymentMethod: params.paymentMethod || "CASH",
+        paymentDate: booking.paymentDate,
+        notes: params.notes || "",
       },
-      reason: params.notes || `Payment of ₹${params.amount} collected`,
+      reason: params.notes || `Payment of ₹${payAmount} collected (Discount: ₹${discAmount})`,
       createdAt: new Date().toISOString(),
     });
 
@@ -1219,13 +1254,16 @@ export class VelviDatabaseStore {
 
     const previousFinancials = {
       advanceAmount: booking.advanceAmount || 0,
+      discountAmount: booking.discountAmount || 0,
       balanceAmount: booking.balanceAmount,
       paymentStatus: booking.paymentStatus,
     };
 
     booking.advanceAmount = 0;
+    booking.discountAmount = 0;
     booking.balanceAmount = booking.totalAmount;
     booking.paymentStatus = "PENDING";
+    booking.paymentRecords = [];
     booking.updatedAt = new Date().toISOString();
 
     this.auditLogs.push({
@@ -1238,6 +1276,7 @@ export class VelviDatabaseStore {
       oldValue: previousFinancials,
       newValue: {
         advanceAmount: 0,
+        discountAmount: 0,
         balanceAmount: booking.totalAmount,
         paymentStatus: "PENDING",
       },
@@ -1611,6 +1650,7 @@ export class VelviDatabaseStore {
     durationMinutes?: number;
     location: string;
     totalAmount: number;
+    discountAmount?: number;
     advanceAmount: number;
     balanceAmount: number;
     paymentStatus: PaymentStatus;
@@ -1635,8 +1675,24 @@ export class VelviDatabaseStore {
     }
 
     const bNum = (8248 + this.bookings.length + 1).toString();
+    const newBookingId = `b-${Date.now()}`;
+    const paymentRecords: BookingPaymentRecord[] = [];
+    if (params.advanceAmount > 0) {
+      paymentRecords.push({
+        id: `pay-${Date.now()}-init`,
+        bookingId: newBookingId,
+        amount: params.advanceAmount,
+        date: params.paymentDate || params.date || new Date().toISOString().split("T")[0],
+        method: (params.paymentMethod as any) || "UPI",
+        remark: params.paymentNotes || "Initial Booking Advance",
+        discount: params.discountAmount || 0,
+        recordedBy: params.assignedIyerName || "Priest",
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     const newBooking: Booking = {
-      id: `b-${Date.now()}`,
+      id: newBookingId,
       bookingNumber: `#${bNum}`,
       businessId: params.businessId,
       customerId: params.customerId,
@@ -1654,6 +1710,7 @@ export class VelviDatabaseStore {
       durationMinutes: params.durationMinutes || 120,
       location: params.location || "Namakkal",
       totalAmount: params.totalAmount,
+      discountAmount: params.discountAmount || 0,
       advanceAmount: params.advanceAmount,
       balanceAmount: params.balanceAmount,
       paymentStatus: params.paymentStatus,
@@ -1663,6 +1720,7 @@ export class VelviDatabaseStore {
       priestShareAmount: params.priestShareAmount,
       adminCommissionAmount: params.adminCommissionAmount,
       paymentNotes: params.paymentNotes,
+      paymentRecords,
       status: params.status || "CONFIRMED",
       expenseAmount: params.expenseAmount || 0,
       expenseNotes: params.expenseNotes || "",

@@ -207,6 +207,18 @@ export interface BookingItem {
   sortOrder?: number;
 }
 
+export interface BookingPaymentRecord {
+  id: string;
+  bookingId: string;
+  amount: number;
+  date: string; // YYYY-MM-DD
+  method: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER";
+  remark?: string;
+  discount?: number;
+  recordedBy?: string;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   bookingNumber: string;
@@ -227,6 +239,7 @@ export interface Booking {
   location: string;
   status: BookingStatus;
   totalAmount: number;
+  discountAmount?: number;
   advanceAmount: number;
   balanceAmount: number;
   paymentStatus: PaymentStatus;
@@ -236,6 +249,7 @@ export interface Booking {
   priestShareAmount?: number;
   adminCommissionAmount?: number;
   paymentNotes?: string;
+  paymentRecords?: BookingPaymentRecord[];
   expenseAmount?: number;
   expenseNotes?: string;
   notes?: string;

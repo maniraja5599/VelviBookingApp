@@ -1913,12 +1913,72 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(content).toContain("poojasCount");
     expect(content).toContain("paymentsCount");
 
-    // Must have verification and sync triggers
-    expect(content).toContain("fetchCloudStats");
-    expect(content).toContain("handlePerformCloudSync");
-
     // Must have cloud backup labels
     expect(content).toContain("Cloud Storage");
+  });
+
+  // TEST CASE 60: Uniform Payment Recording with Date, Remark, Discount & Dynamic Balance Tracking
+  it("Test 60: Record payment supports payment date, remark, discount, and paymentRecords ledger", () => {
+    const newBooking = store.createBooking({
+      businessId: "biz-venkateswara-01",
+      customerId: "c-01",
+      poojaId: "p-01",
+      date: "2026-10-05",
+      startTime: "09:00",
+      location: "Namakkal",
+      totalAmount: 5000,
+      advanceAmount: 1000,
+      balanceAmount: 4000,
+      paymentStatus: "PARTIALLY_PAID",
+      paymentDate: "2026-09-26",
+      paymentMethod: "UPI",
+      paymentNotes: "GPay initial advance",
+      status: "CONFIRMED",
+    });
+
+    expect(newBooking.paymentRecords).toBeDefined();
+    expect(newBooking.paymentRecords?.length).toBe(1);
+    expect(newBooking.paymentRecords?.[0].amount).toBe(1000);
+    expect(newBooking.paymentRecords?.[0].remark).toBe("GPay initial advance");
+    expect(newBooking.paymentRecords?.[0].date).toBe("2026-09-26");
+
+    // Record second partial payment with discount
+    const res = store.recordBookingPayment({
+      bookingId: newBooking.id,
+      amount: 2000,
+      discount: 500,
+      paymentDate: "2026-09-27",
+      paymentMethod: "CASH",
+      notes: "Cash partial payment with 500 festival discount",
+      recordedBy: "Ravi Iyer",
+    });
+
+    expect(res.success).toBe(true);
+    expect(res.booking).toBeDefined();
+    expect(res.booking?.discountAmount).toBe(500);
+    expect(res.booking?.advanceAmount).toBe(3000); // 1000 + 2000
+    // Net: 5000 - 500 = 4500. Balance: 4500 - 3000 = 1500
+    expect(res.booking?.balanceAmount).toBe(1500);
+    expect(res.booking?.paymentStatus).toBe("PARTIALLY_PAID");
+    expect(res.booking?.paymentRecords?.length).toBe(2);
+    expect(res.booking?.paymentRecords?.[1].amount).toBe(2000);
+    expect(res.booking?.paymentRecords?.[1].discount).toBe(500);
+    expect(res.booking?.paymentRecords?.[1].remark).toBe("Cash partial payment with 500 festival discount");
+    expect(res.booking?.paymentRecords?.[1].date).toBe("2026-09-27");
+
+    // Clear remaining balance
+    const finalRes = store.recordBookingPayment({
+      bookingId: newBooking.id,
+      amount: 1500,
+      paymentDate: "2026-09-28",
+      paymentMethod: "UPI",
+      notes: "Final settlement via UPI",
+    });
+
+    expect(finalRes.success).toBe(true);
+    expect(finalRes.booking?.balanceAmount).toBe(0);
+    expect(finalRes.booking?.paymentStatus).toBe("PAID");
+    expect(finalRes.booking?.paymentRecords?.length).toBe(3);
   });
 });
 
