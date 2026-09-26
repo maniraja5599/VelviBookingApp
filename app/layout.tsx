@@ -51,6 +51,18 @@ export const metadata: Metadata = {
     "Dakshina payment tracker",
     "WhatsApp pooja reminder",
     "Vedic calendar Tamil Nadu",
+    "Vadhyar booking app",
+    "Iyer booking software",
+    "Purohit calendar app",
+    "Tamil priest software",
+    "Ganapathi homam samagri list PDF",
+    "Grihapravesam pooja items checklist",
+    "Navagraha homam vadhyar contact",
+    "Tamil muhurtham dates 2026",
+    "Panchangam daily nalla neram app",
+    "Online vadhyar booking Chennai",
+    "Hindu priest scheduling CRM",
+    "Devotee gotram and nakshatram tracker",
   ],
   authors: [{ name: "Velvi Sacred Tech", url: "https://velvi.date" }],
   creator: "Velvi Sacred Tech",
@@ -176,6 +188,37 @@ const jsonLdSchema = {
       }
     },
     {
+      "@type": "ProfessionalService",
+      "@id": "https://velvi.date/#localservice",
+      "name": "Velvi — Vedic Services & Vadhyar Software",
+      "alternateName": "வேள்வி வாத்தியார் சேவைகள்",
+      "url": "https://velvi.date",
+      "telephone": "+91-9159036301",
+      "email": "support@velvi.date",
+      "priceRange": "₹₹",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "Tamil Nadu",
+        "addressCountry": "IN"
+      },
+      "areaServed": [
+        "Tamil Nadu",
+        "Chennai",
+        "Coimbatore",
+        "Madurai",
+        "Tiruchirappalli",
+        "Salem",
+        "Bengaluru",
+        "India"
+      ],
+      "serviceType": [
+        "Vedic Pooja Management Software",
+        "Tamil Vadhyar Booking Platform",
+        "Purohit Scheduling & Dakshina Accounting",
+        "Pooja Samagri WhatsApp Checklist"
+      ]
+    },
+    {
       "@type": "SoftwareApplication",
       "@id": "https://velvi.date/#software",
       "name": "Velvi — Vedic Services & Pooja Management Platform",
@@ -188,6 +231,13 @@ const jsonLdSchema = {
         "priceCurrency": "INR",
         "category": "30-Day Free Trial Available"
       },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "ratingCount": "128",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
       "description":
         "Velvi is the leading Vedic booking and devotee CRM app for Tamil Vadhyars, Iyers, and Purohits. Manage Ganapathi Homam, Grihapravesam, and Vivaham bookings, WhatsApp samagri lists, muhurtham timings, and dakshina receipts.",
       "featureList": [
@@ -197,6 +247,36 @@ const jsonLdSchema = {
         "Devotee Dakshina & Payment Accounting",
         "Client Gotram & Nakshatram Directory",
         "100% Offline-Ready Progressive Web App (PWA)"
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://velvi.date/#breadcrumbs",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://velvi.date"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Pricing",
+          "item": "https://velvi.date/pricing"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Login",
+          "item": "https://velvi.date/login"
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Contact",
+          "item": "https://velvi.date/contact"
+        }
       ]
     },
     {

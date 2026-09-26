@@ -1984,7 +1984,7 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
   // ---------------------------------------------------------------------------
   // TEST 61: Zero Duplicate Entries Protection & Deduplication Guarantee
   // ---------------------------------------------------------------------------
-  test("Test 61: Zero duplicate entries guaranteed across bookings, payments, and customers", () => {
+  it("Test 61: Zero duplicate entries guaranteed across bookings, payments, and customers", () => {
     const store = new VelviDatabaseStore();
     const bizId = "biz-dedup-test";
 

@@ -107,6 +107,41 @@ export default function PublicLandingPage() {
             <div className="w-4 h-4 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
             <span>Redirecting to your Velvi workspace...</span>
           </div>
+
+          {/* Hidden Semantic Crawl Content for Search Engines & Accessibility */}
+          <section className="sr-only" aria-label="Velvi Vedic Management Platform Overview">
+            <h2>Velvi — India's Premier Digital Workspace for Vedic Priests and Tamil Vadhyars</h2>
+            <p>
+              Velvi (வேள்வி) is a modern, mobile-friendly application engineered for Vedic Purohits, Tamil Vadhyars, Iyers, and sacred service providers across Tamil Nadu, Chennai, Bengaluru, and worldwide. 
+              The application provides automated pooja bookings, devotee CRM with Gotram and Nakshatram tracking, digital dakshina accounting with PDF and WhatsApp receipts, 
+              and one-click WhatsApp sharing of pre-configured pooja samagri checklists.
+            </p>
+            <h3>Supported Vedic Ceremonies and Pooja Services</h3>
+            <ul>
+              <li>Ganapathi Homam — Complete samagri list, muhurtham timing, and devotee booking.</li>
+              <li>Navagraha Homam &amp; Shanthi Pooja — Planetary remedies and ritual schedules.</li>
+              <li>Grihapravesam — Housewarming ceremony planning, Vastu pooja checklists, and muhurtham dates.</li>
+              <li>Vivaham &amp; Upanayanam — Sacred wedding ceremonies, sacred thread ceremonies, and auspicious lagna timings.</li>
+              <li>Sudarshana Homam, Mrityunjaya Homam &amp; Chandi Homam — Protection rituals and dakshina receipts.</li>
+              <li>Ayush Homam, Shashtiabdapoorthi &amp; Sathabishekam — Milestone birth ceremonies and devotee family registries.</li>
+              <li>Shraddham &amp; Thithi Reminders — Annual ancestral rites scheduling with timely devotee notifications.</li>
+            </ul>
+            <h3>Key Features for Vedic Service Providers</h3>
+            <ul>
+              <li>Sacred Muhurtham Calendar with daily Panchangam, Nalla Neram, and Gowri Nalla Neram timings.</li>
+              <li>Devotee directory saving phone numbers, addresses, Gotram, Nakshatram, and family member details.</li>
+              <li>Real-time payment tracking showing total billed, advance received, and pending dakshina balance dues.</li>
+              <li>Direct WhatsApp integration to send bilingual (Tamil and English) booking confirmations and samagri lists.</li>
+              <li>Works 100% offline as a Progressive Web App (PWA) with instant cloud sync.</li>
+            </ul>
+            <nav aria-label="Velvi Site Links">
+              <Link href="/pricing">Velvi Pricing &amp; Plans (₹499/mo with 30-Day Free Trial)</Link>
+              <Link href="/login">Devotee &amp; Vadhyar Login Portal</Link>
+              <Link href="/contact">Customer Support Desk (+91 9159036301)</Link>
+              <Link href="/terms">Terms of Service</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+            </nav>
+          </section>
         </main>
       </div>
     </>
