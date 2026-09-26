@@ -33,6 +33,7 @@ import {
   Trash2,
   Info,
   Save,
+  Edit3,
 } from "lucide-react";
 import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
@@ -479,7 +480,57 @@ function QuickBookingContent() {
 
   // Preview modal state
   const [showPreviewModal, setShowPreviewModal] = useState<boolean>(false);
-  const [showStep2ChecklistPreview, setShowStep2ChecklistPreview] = useState<boolean>(true);
+  const [showStep2ChecklistPreview, setShowStep2ChecklistPreview] = useState<boolean>(false);
+  const [isEditingPayment, setIsEditingPayment] = useState<boolean>(false);
+
+  // Step 2 Date & Time subtle highlight animations
+  const [isDateHighlighted, setIsDateHighlighted] = useState<boolean>(false);
+  const [isTimeHighlighted, setIsTimeHighlighted] = useState<boolean>(false);
+  const timeBoxRef = useRef<HTMLDivElement | null>(null);
+
+  // 1 sec kalichu date ku light animate 1sec mattum apram venam
+  useEffect(() => {
+    if (twoStepStage === 2) {
+      const startTimer = setTimeout(() => {
+        setIsDateHighlighted(true);
+        const endTimer = setTimeout(() => {
+          setIsDateHighlighted(false);
+        }, 1000);
+        return () => clearTimeout(endTimer);
+      }, 1000);
+      return () => clearTimeout(startTimer);
+    } else {
+      setIsDateHighlighted(false);
+      setIsTimeHighlighted(false);
+    }
+  }, [twoStepStage]);
+
+  // Scroll down panina instant a time la full box light animate
+  useEffect(() => {
+    if (twoStepStage !== 2) return;
+    const el = timeBoxRef.current;
+    if (!el) return;
+
+    let hasAnimated = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !hasAnimated) {
+            hasAnimated = true;
+            setIsTimeHighlighted(true);
+            const t = setTimeout(() => {
+              setIsTimeHighlighted(false);
+            }, 1200);
+            return () => clearTimeout(t);
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [twoStepStage]);
 
   // Tap & Hold (Long-press) extra details state
   const [activeDetailItemId, setActiveDetailItemId] = useState<string | null>(null);
@@ -1037,7 +1088,7 @@ function QuickBookingContent() {
         );
       })()}
 
-      <form onSubmit={handleOpenPreview} className="space-y-4">
+      <form onSubmit={handleOpenPreview} className="space-y-4 pb-28 sm:pb-36">
         {/* 2-Step Segmented Switcher (Clean Home Page Subtab Aesthetic) */}
         <div className="grid grid-cols-2 gap-1 bg-slate-200/90 p-1 rounded-2xl text-xs font-bold shadow-2xs">
           <button
@@ -1923,13 +1974,17 @@ function QuickBookingContent() {
             </span>
           </div>
 
-          {/* Interactive 14-Day Horizontal Date Strip */}
-          <div className="space-y-1.5">
+          {/* Interactive 14-Day Horizontal Date Strip (1s delayed light animation for 1s) */}
+          <div className={`p-2.5 sm:p-3 rounded-2xl border transition-all duration-700 space-y-1.5 ${
+            isDateHighlighted
+              ? "ring-4 ring-amber-400/90 border-amber-400 bg-amber-50/50 shadow-md animate-soft-glow"
+              : "border-slate-100 bg-slate-50/40"
+          }`}>
             <div className="flex items-center justify-between text-[11px] font-bold">
-              <span className="text-slate-400 uppercase tracking-wider text-[10px]">
+              <span className="text-slate-500 uppercase tracking-wider text-[10px] font-black">
                 தேதித் தேர்வு (1-Tap Select Date):
               </span>
-              <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-amber-50 px-2.5 py-1 rounded-xl border border-slate-200 text-amber-900 transition shadow-2xs">
+              <div className="flex items-center gap-1.5 bg-white hover:bg-amber-50 px-2.5 py-1 rounded-xl border border-slate-200 text-amber-900 transition shadow-2xs">
                 <CalendarIcon className="w-3.5 h-3.5 text-amber-700 shrink-0" />
                 <label className="cursor-pointer text-xs font-bold flex items-center gap-1">
                   <span>Choose Other Date</span>
@@ -2039,10 +2094,17 @@ function QuickBookingContent() {
             </div>
           </div>
 
-          {/* Interactive 12-Hour Auspicious Time Selector */}
-          <div className="space-y-2.5 pt-1">
+          {/* Interactive 12-Hour Auspicious Time Selector (Instant scroll light animate) */}
+          <div
+            ref={timeBoxRef}
+            className={`space-y-2.5 pt-2.5 p-3 rounded-2xl border transition-all duration-700 ${
+              isTimeHighlighted
+                ? "ring-4 ring-emerald-500/90 border-emerald-400 bg-emerald-50/50 shadow-md animate-time-glow"
+                : "border-slate-100 bg-slate-50/30"
+            }`}
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
                 Select Time (12-Hour AM/PM):
               </span>
               <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-900 to-emerald-800 text-amber-200 px-3 py-1 rounded-xl text-xs font-black shadow-xs border border-emerald-700/60">
@@ -2150,27 +2212,122 @@ function QuickBookingContent() {
               </div>
               <div>
                 <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                  4. கட்டணம் &amp; தட்சணை (Dakshina &amp; Payment)
+                  3. கட்டணம் &amp; தட்சணை (Dakshina &amp; Payment)
                 </h2>
                 <p className="text-[10px] text-slate-500 font-medium">
                   தட்சணை, முன்பணம், பணம் பெற்ற தேதி &amp; முறை பதிவு
                 </p>
               </div>
             </div>
-            {isPaymentSaved && (
-              <span className="text-[10.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-in fade-in">
-                <Check className="w-3.5 h-3.5 text-emerald-700 stroke-[3]" />
-                <span>Saved ✓</span>
-              </span>
-            )}
+            <div className="flex items-center gap-1.5">
+              {isPaymentSaved && (
+                <span className="text-[10.5px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs animate-in fade-in">
+                  <Check className="w-3.5 h-3.5 text-emerald-700 stroke-[3]" />
+                  <span>Saved ✓</span>
+                </span>
+              )}
+              {isEditingPayment ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPayment(false)}
+                  className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  <span>Done / சரி ✓</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPayment(true)}
+                  className="px-3 py-1.5 bg-white hover:bg-emerald-50 text-emerald-800 border-2 border-emerald-300 hover:border-emerald-500 rounded-xl text-xs font-black transition active:scale-95 flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Edit / மாற்றுக ✏️</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Total Dakshina Amount Customizer */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
-                மொத்த தட்சணைத் தொகை (Total Dakshina):
-              </label>
+          {!isEditingPayment ? (
+            /* COMPACT DAKSHINA OVERVIEW: Shows only how much & status */
+            <div className="bg-gradient-to-r from-emerald-50/90 via-slate-50 to-amber-50/60 rounded-2xl p-4 sm:p-5 border border-emerald-200/90 shadow-2xs space-y-3 animate-in fade-in">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <span className="text-[10.5px] font-black text-slate-500 uppercase tracking-wider block">
+                    மொத்த தட்சணை (Total Dakshina):
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5 flex items-baseline gap-1">
+                    <span className="text-emerald-800 font-extrabold">₹</span>
+                    <span>{amount.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    கட்டண நிலை (Payment Status)
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black border shadow-2xs ${
+                      paymentChoice === "FULL"
+                        ? "bg-emerald-100 text-emerald-950 border-emerald-300"
+                        : paymentChoice === "ADVANCE"
+                        ? "bg-amber-100 text-amber-950 border-amber-300"
+                        : "bg-slate-100 text-slate-800 border-slate-300"
+                    }`}
+                  >
+                    <span>
+                      {paymentChoice === "FULL"
+                        ? "✅ Full Paid"
+                        : paymentChoice === "ADVANCE"
+                        ? `🪙 Advance: ₹${advanceAmount.toLocaleString("en-IN")}`
+                        : "⏳ Pending (நிலுவை)"}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick KPI row */}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200/80 text-center">
+                <div className="p-2 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+                  <div className="text-[9.5px] font-bold text-slate-400 uppercase">Gross</div>
+                  <div className="text-xs sm:text-sm font-black text-slate-900">₹{amount.toLocaleString("en-IN")}</div>
+                </div>
+                <div className="p-2 bg-white rounded-xl border border-rose-200/80 shadow-2xs">
+                  <div className="text-[9.5px] font-bold text-rose-500 uppercase">Expense</div>
+                  <div className="text-xs sm:text-sm font-black text-rose-700">
+                    {expenseAmount > 0 ? `-₹${expenseAmount.toLocaleString("en-IN")}` : "₹0"}
+                  </div>
+                </div>
+                <div className="p-2 bg-emerald-100/90 rounded-xl border border-emerald-300 shadow-2xs">
+                  <div className="text-[9.5px] font-black text-emerald-800 uppercase">Net</div>
+                  <div className="text-xs sm:text-sm font-black text-emerald-950">
+                    ₹{Math.max(0, amount - expenseAmount).toLocaleString("en-IN")}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer action trigger */}
+              <div className="flex items-center justify-between text-[11px] text-slate-600 font-medium pt-1">
+                <span>தொகை அல்லது கட்டண நிலையை மாற்ற:</span>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPayment(true)}
+                  className="text-emerald-800 font-black hover:text-emerald-950 hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <span>Edit Options</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* FULL CUSTOMIZATION FORM WHEN EDIT IS CLICKED */
+            <div className="space-y-3.5 animate-in fade-in">
+              {/* Total Dakshina Amount Customizer */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
+                    மொத்த தட்சணைத் தொகை (Total Dakshina):
+                  </label>
               <div className="flex items-center gap-1">
                 {[1000, 2500, 5000, 10000].map((quickAmt) => (
                   <button
@@ -2896,7 +3053,21 @@ function QuickBookingContent() {
               </div>
             )}
           </div>
+
+          {/* Bottom Done / Collapse button */}
+          <div className="pt-2 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsEditingPayment(false)}
+              className="w-full sm:w-auto px-5 py-2 bg-gradient-to-r from-emerald-800 to-emerald-900 hover:from-emerald-900 hover:to-emerald-950 text-white rounded-xl text-xs font-black shadow-md transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+              <span>Done / உறுதி செய்க ✓</span>
+            </button>
+          </div>
         </div>
+      )}
+    </div>
 
         {/* ================================================================= */}
         {/* SECTION 5: PERFORMING PRIEST & VENUE                              */}
@@ -2913,14 +3084,21 @@ function QuickBookingContent() {
             </div>
           </div>
 
-          {/* Performing Priest: Simple Self vs Other Toggle */}
-          <div className="space-y-2">
-            <label className="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider block">
-              Priest Selection:
-            </label>
+          {/* Performing Priest: Compact Self vs Other Toggle (Kutty a) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                Priest Selection:
+              </label>
+              {priestType === "self" && (
+                <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                  {currentUser?.name || "Ravi Iyer"} (Self)
+                </span>
+              )}
+            </div>
 
-            {/* Clean Segmented Buttons: Self or Other only */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Compact Segmented Buttons: Self or Other only */}
+            <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/90 gap-1 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => {
@@ -2928,10 +3106,10 @@ function QuickBookingContent() {
                   setAssignedIyerId("self");
                   setShowAddPriest(false);
                 }}
-                className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-lg text-xs font-bold text-center transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   priestType === "self"
-                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 border-emerald-800 shadow-xs ring-2 ring-emerald-500/20"
-                    : "bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200 font-bold shadow-2xs"
+                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 shadow-2xs font-black"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>🪔 Self (நான்)</span>
@@ -2949,10 +3127,10 @@ function QuickBookingContent() {
                     }
                   }
                 }}
-                className={`py-2.5 px-4 rounded-xl text-xs font-black text-center transition border active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-lg text-xs font-bold text-center transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
                   priestType === "other"
-                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 border-emerald-800 shadow-xs ring-2 ring-emerald-500/20"
-                    : "bg-white hover:bg-emerald-50/50 text-slate-700 border-slate-200 font-bold shadow-2xs"
+                    ? "bg-gradient-to-r from-emerald-800 to-emerald-700 text-amber-200 shadow-2xs font-black"
+                    : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 <span>👥 Other (வேறு குருக்கள்)</span>
@@ -3204,24 +3382,28 @@ function QuickBookingContent() {
           </div>
 
           {/* Pooja Location / Venue */}
-          <div className="space-y-2.5 pt-1">
+          <div className="space-y-2.5 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between">
-              <label className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-emerald-700" />
-                <span>பூஜை நடைபெறும் இடம் (Location / Venue):</span>
-              </label>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shadow-2xs">
+                  <MapPin className="w-4 h-4 text-emerald-700" />
+                </div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                  பூஜை நடைபெறும் இடம் (Location / Venue)
+                </h3>
+              </div>
               {location && (
-                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 truncate max-w-[150px]">
-                  {location}
+                <span className="text-[10.5px] font-extrabold text-emerald-950 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300 truncate max-w-[150px] shadow-2xs">
+                  📍 {location}
                 </span>
               )}
             </div>
 
-            {/* Modern Venue Selection Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* Compact Venue Selection Chips (Kutty a) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {[
                 {
-                  label: "பக்தர் இல்லம்",
+                  label: "இல்லம்",
                   sub: "Home",
                   icon: "🏠",
                   match: () =>
@@ -3260,30 +3442,23 @@ function QuickBookingContent() {
                 const isSelected = v.match();
                 return (
                   <button
-                    key={v.label}
+                    key={v.sub}
                     type="button"
                     onClick={v.onClick}
-                    className={`py-2 px-2.5 rounded-xl text-left transition active:scale-95 border cursor-pointer flex items-center gap-2 ${
+                    className={`py-1.5 px-2.5 rounded-xl text-left transition active:scale-95 border cursor-pointer flex items-center justify-between gap-1.5 ${
                       isSelected
-                        ? "bg-emerald-50 border-2 border-emerald-600 text-emerald-950 shadow-xs ring-2 ring-emerald-500/20 font-black"
+                        ? "bg-emerald-800 text-white border-emerald-800 shadow-xs ring-1 ring-emerald-600 font-black"
                         : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200 font-bold shadow-2xs"
                     }`}
                   >
-                    <span className="text-base shrink-0">{v.icon}</span>
-                    <div className="min-w-0 flex-1 leading-tight">
-                      <div className="text-xs truncate">{v.label}</div>
-                      <div
-                        className={`text-[9.5px] truncate ${
-                          isSelected ? "text-emerald-700 font-extrabold" : "text-slate-400 font-normal"
-                        }`}
-                      >
-                        {v.sub}
-                      </div>
-                    </div>
+                    <span className="flex items-center gap-1.5 truncate text-xs">
+                      <span className="text-sm shrink-0">{v.icon}</span>
+                      <span className="truncate">{v.sub} ({v.label})</span>
+                    </span>
                     {isSelected && (
-                      <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </div>
+                      <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                        <Check className="w-2 h-2 stroke-[3]" />
+                      </span>
                     )}
                   </button>
                 );
@@ -3310,7 +3485,7 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 1                                      */}
     {/* ================================================================= */}
     {twoStepStage === 1 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3 px-3 sm:px-4 shadow-xl">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3.5 sm:py-4 px-3.5 sm:px-6 shadow-2xl">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="font-black text-xs sm:text-sm truncate flex items-center gap-1.5">
@@ -3332,10 +3507,10 @@ function QuickBookingContent() {
           <button
             type="button"
             onClick={validateAndProceedToStep2}
-            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-5 sm:px-7 py-3 sm:py-3.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <span>Next: Date &amp; Dakshina</span>
-            <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
+            <ArrowRight className="w-4 h-4 text-amber-300" />
           </button>
         </div>
       </div>
@@ -3345,7 +3520,7 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 2                                      */}
     {/* ================================================================= */}
     {twoStepStage === 2 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3 px-3 sm:px-4 shadow-xl">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3.5 sm:py-4 px-3.5 sm:px-6 shadow-2xl">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="font-black text-xs sm:text-sm text-slate-900 truncate">
@@ -3362,9 +3537,9 @@ function QuickBookingContent() {
 
           <button
             type="submit"
-            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-5 sm:px-7 py-3 sm:py-3.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
             <span>Confirm Booking ✨</span>
           </button>
         </div>
