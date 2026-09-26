@@ -115,6 +115,16 @@ async function resolveClientGeo(req: NextRequest) {
     }
   }
 
+  try {
+    city = decodeURIComponent(city);
+  } catch {}
+  try {
+    region = decodeURIComponent(region);
+  } catch {}
+  try {
+    country = decodeURIComponent(country);
+  } catch {}
+
   if (!city) city = ip === "127.0.0.1" ? "Localhost" : "Chennai";
   if (!country) country = "India";
   if (!region) region = "Tamil Nadu";
