@@ -55,6 +55,22 @@ export default function SubscriptionPage() {
     finalAmount: number;
     bonusDays: number;
   } | null>(null);
+  const [couponList, setCouponList] = useState<Coupon[]>(() => [...db.coupons]);
+
+  // Sync coupons from PostgreSQL cloud on mount & listen for live changes
+  React.useEffect(() => {
+    db.syncCouponsFromCloud().then((cl) => {
+      setCouponList([...cl]);
+    }).catch(() => {});
+
+    const onDbChange = () => {
+      setCouponList([...db.coupons]);
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("velvi:db-change", onDbChange);
+      return () => window.removeEventListener("velvi:db-change", onDbChange);
+    }
+  }, []);
 
   // Check Cashfree Gateway status
   React.useEffect(() => {
@@ -785,13 +801,13 @@ export default function SubscriptionPage() {
             )}
 
             {/* Dynamic Available Promo Suggestions from Active Super Admin Coupons */}
-            {db.coupons.filter((c) => c.isActive && c.showInSuggestions !== false && c.usedCount < c.maxUses && (!c.validUntil || new Date(c.validUntil).getTime() > Date.now())).length > 0 && (
+            {couponList.filter((c) => c.isActive && c.showInSuggestions !== false && c.usedCount < c.maxUses && (!c.validUntil || new Date(c.validUntil).getTime() > Date.now())).length > 0 && (
               <div className="pt-2">
                 <span className="text-[10px] font-bold text-velvi-brown/60 uppercase tracking-wide block mb-1.5">
                   Available Offers &amp; Promo Codes:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
-                  {db.coupons
+                  {couponList
                     .filter((c) => c.isActive && c.showInSuggestions !== false && c.usedCount < c.maxUses && (!c.validUntil || new Date(c.validUntil).getTime() > Date.now()))
                     .map((promo) => (
                       <button
