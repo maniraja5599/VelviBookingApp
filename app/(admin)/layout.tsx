@@ -25,6 +25,7 @@ import {
   Eye,
   EyeOff,
   Clock,
+  Globe,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
@@ -492,6 +493,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // ---------------------------------------------------------------------------
   const navItems = [
     { href: "/admin", label: "Dashboard", subLabel: "Executive Overview", icon: LayoutDashboard },
+    { href: "/admin/traffic", label: "Web Traffic & Visitors", subLabel: "Live Geo Telemetry", icon: Globe },
     { href: "/admin/users", label: "Users & Validity", subLabel: "Tenant Accounts", icon: Users },
     { href: "/admin/subscriptions", label: "Subscriptions", subLabel: "Plans & Validity", icon: Sparkles },
     { href: "/admin/payments", label: "Cashfree Payments", subLabel: "Gateway Ledger", icon: CreditCard },

@@ -35,6 +35,9 @@ export const viewport: Viewport = {
   themeColor: "#4A2E18",
 };
 
+import { Suspense } from "react";
+import { VisitorTracker } from "@/components/analytics/VisitorTracker";
+
 export default function RootLayout({
   children,
 }: {
@@ -46,6 +49,9 @@ export default function RootLayout({
         <LanguageProvider>
           <ThemeProvider>
             <AuthProvider>
+              <Suspense fallback={null}>
+                <VisitorTracker />
+              </Suspense>
               {children}
               <FirstTimeInstallPopup />
             </AuthProvider>

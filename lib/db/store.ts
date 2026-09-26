@@ -22,6 +22,7 @@ import {
   SamagriCategory,
   Coupon,
   CouponDiscountType,
+  WebTrafficLog,
 } from "@/lib/types";
 import {
   SEED_USER,
@@ -396,6 +397,135 @@ export class VelviDatabaseStore {
       createdAt: "2026-08-01T08:30:00Z",
     },
   ];
+  public webTrafficLogs: WebTrafficLog[] = [
+    {
+      id: "traffic-01",
+      ip: "157.49.201.44",
+      city: "Chennai",
+      region: "Tamil Nadu",
+      country: "India",
+      countryCode: "IN",
+      referrer: "https://web.whatsapp.com/",
+      trafficSource: "WHATSAPP",
+      sourceName: "WhatsApp Chat Link",
+      pagePath: "/",
+      pageTitle: "Velvi — Sacred Pooja Management",
+      deviceType: "MOBILE",
+      browser: "Chrome Mobile",
+      os: "Android",
+      screenResolution: "390x844",
+      language: "en-IN",
+      visitorSessionId: "sess-wa-01",
+      isLoggedIn: false,
+      createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "traffic-02",
+      ip: "49.37.112.98",
+      city: "Coimbatore",
+      region: "Tamil Nadu",
+      country: "India",
+      countryCode: "IN",
+      referrer: "https://www.google.com/",
+      trafficSource: "GOOGLE",
+      sourceName: "Google Search (Organic)",
+      pagePath: "/pricing",
+      pageTitle: "Pricing & Plans — Velvi",
+      deviceType: "DESKTOP",
+      browser: "Chrome",
+      os: "Windows",
+      screenResolution: "1920x1080",
+      language: "en-US",
+      visitorSessionId: "sess-goog-02",
+      isLoggedIn: false,
+      createdAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "traffic-03",
+      ip: "106.198.88.15",
+      city: "Madurai",
+      region: "Tamil Nadu",
+      country: "India",
+      countryCode: "IN",
+      referrer: "https://www.instagram.com/",
+      trafficSource: "INSTAGRAM",
+      sourceName: "Instagram Bio Link",
+      pagePath: "/login",
+      pageTitle: "Login — Velvi",
+      deviceType: "MOBILE",
+      browser: "Safari Mobile",
+      os: "iOS",
+      screenResolution: "393x852",
+      language: "en-IN",
+      visitorSessionId: "sess-ig-03",
+      isLoggedIn: false,
+      createdAt: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "traffic-04",
+      ip: "182.73.19.122",
+      city: "Bengaluru",
+      region: "Karnataka",
+      country: "India",
+      countryCode: "IN",
+      referrer: "direct",
+      trafficSource: "DIRECT",
+      sourceName: "Direct Website (velvi.date)",
+      pagePath: "/",
+      pageTitle: "Velvi — Sacred Pooja Management",
+      deviceType: "MOBILE",
+      browser: "Chrome Mobile",
+      os: "Android",
+      screenResolution: "412x915",
+      language: "en-IN",
+      visitorSessionId: "sess-dir-04",
+      isLoggedIn: true,
+      userEmail: "manirajankg@gmail.com",
+      createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "traffic-05",
+      ip: "203.194.96.18",
+      city: "Tiruchirappalli",
+      region: "Tamil Nadu",
+      country: "India",
+      countryCode: "IN",
+      referrer: "https://www.facebook.com/",
+      trafficSource: "FACEBOOK",
+      sourceName: "Facebook Community Post",
+      pagePath: "/pricing",
+      pageTitle: "Pricing & Plans — Velvi",
+      deviceType: "MOBILE",
+      browser: "Chrome Mobile",
+      os: "Android",
+      screenResolution: "360x800",
+      language: "ta-IN",
+      visitorSessionId: "sess-fb-05",
+      isLoggedIn: false,
+      createdAt: new Date(Date.now() - 65 * 60 * 1000).toISOString(),
+    },
+    {
+      id: "traffic-06",
+      ip: "103.252.25.10",
+      city: "Salem",
+      region: "Tamil Nadu",
+      country: "India",
+      countryCode: "IN",
+      referrer: "https://t.co/",
+      trafficSource: "TWITTER",
+      sourceName: "X / Twitter Post",
+      pagePath: "/",
+      pageTitle: "Velvi — Sacred Pooja Management",
+      deviceType: "DESKTOP",
+      browser: "Edge",
+      os: "Windows",
+      screenResolution: "1366x768",
+      language: "en-IN",
+      visitorSessionId: "sess-tw-06",
+      isLoggedIn: false,
+      createdAt: new Date(Date.now() - 95 * 60 * 1000).toISOString(),
+    },
+  ];
   public branding: Record<string, BrandingSetting> = {
     "biz-venkateswara-01": {
       id: "brand-01",
@@ -460,6 +590,24 @@ export class VelviDatabaseStore {
     }
     if (typeof window !== "undefined") {
       this.saveToLocalStorage();
+    }
+    this.notifyListeners();
+    return log;
+  }
+
+  public logWebTraffic(entry: Omit<WebTrafficLog, "id" | "createdAt">): WebTrafficLog {
+    const log: WebTrafficLog = {
+      id: `traffic-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: new Date().toISOString(),
+      ...entry,
+    };
+    this.webTrafficLogs.unshift(log);
+    if (this.webTrafficLogs.length > 500) {
+      this.webTrafficLogs = this.webTrafficLogs.slice(0, 500);
+    }
+    if (typeof window !== "undefined") {
+      this.saveToLocalStorage();
+      window.dispatchEvent(new CustomEvent("velvi:traffic-change", { detail: log }));
     }
     this.notifyListeners();
     return log;
@@ -1758,6 +1906,7 @@ export class VelviDatabaseStore {
         referrals: this.referrals,
         referralRewards: this.referralRewards,
         coupons: this.coupons,
+        webTrafficLogs: this.webTrafficLogs,
         samagriCategories: this.samagriCategories,
         recentlyDeleted: this.recentlyDeleted,
       };
@@ -1859,6 +2008,9 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.recentlyDeleted)) this.recentlyDeleted = state.recentlyDeleted;
         if (Array.isArray(state.coupons) && state.coupons.length > 0) {
           this.coupons = state.coupons;
+        }
+        if (Array.isArray(state.webTrafficLogs) && state.webTrafficLogs.length > 0) {
+          this.webTrafficLogs = state.webTrafficLogs;
         }
         if (Array.isArray(state.samagriCategories) && state.samagriCategories.length > 0) {
           this.samagriCategories = state.samagriCategories;

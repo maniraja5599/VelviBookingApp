@@ -351,3 +351,40 @@ export interface UserDirectoryMetric {
   country?: string;
 }
 
+export type TrafficSourceType =
+  | "DIRECT"
+  | "GOOGLE"
+  | "WHATSAPP"
+  | "INSTAGRAM"
+  | "FACEBOOK"
+  | "TWITTER"
+  | "YOUTUBE"
+  | "REFERRAL"
+  | "OTHER";
+
+export interface WebTrafficLog {
+  id: string;
+  ip: string;
+  city: string;
+  region: string;
+  country: string;
+  countryCode?: string;
+  referrer: string;
+  trafficSource: TrafficSourceType;
+  sourceName: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  pagePath: string;
+  pageTitle?: string;
+  deviceType: "MOBILE" | "DESKTOP" | "TABLET" | "BOT";
+  browser: string;
+  os: string;
+  screenResolution?: string;
+  language?: string;
+  visitorSessionId: string;
+  isLoggedIn: boolean;
+  userEmail?: string;
+  createdAt: string;
+}
+
