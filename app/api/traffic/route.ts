@@ -325,16 +325,28 @@ export async function GET(req: NextRequest) {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  const sanitizedLogs = allLogs.map((l) => {
+    let city = l.city || "Chennai";
+    try {
+      if (city.includes("%")) city = decodeURIComponent(city);
+    } catch {}
+    let region = l.region || "Tamil Nadu";
+    try {
+      if (region.includes("%")) region = decodeURIComponent(region);
+    } catch {}
+    return { ...l, city, region };
+  });
+
   // Compute aggregated stats
-  const totalViews = allLogs.length;
-  const uniqueVisitors = new Set(allLogs.map((l) => l.visitorSessionId || l.ip)).size;
+  const totalViews = sanitizedLogs.length;
+  const uniqueVisitors = new Set(sanitizedLogs.map((l) => l.visitorSessionId || l.ip)).size;
 
   const sourcesBreakdown: Record<string, number> = {};
   const topPages: Record<string, number> = {};
   const topCities: Record<string, number> = {};
   const devicesBreakdown: Record<string, number> = { MOBILE: 0, DESKTOP: 0, TABLET: 0, BOT: 0 };
 
-  for (const l of allLogs) {
+  for (const l of sanitizedLogs) {
     const src = l.trafficSource || "DIRECT";
     sourcesBreakdown[src] = (sourcesBreakdown[src] || 0) + 1;
 
@@ -360,7 +372,7 @@ export async function GET(req: NextRequest) {
     topPages,
     topCities,
     devicesBreakdown,
-    logs: allLogs,
+    logs: sanitizedLogs,
     timestamp: new Date().toISOString(),
   });
 }
