@@ -337,6 +337,79 @@ function QuickBookingContent() {
   const [highlightedSection, setHighlightedSection] = useState<
     "devotee" | "pooja" | "priest" | "date" | null
   >(null);
+  const [highlightPulse, setHighlightPulse] = useState<boolean>(false);
+  const poojaHighlightTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Guided step onboarding: As soon as page opens, guide to select devotee with animation then steady light ring
+  useEffect(() => {
+    if (twoStepStage === 1 && !selectedCustomerId) {
+      setHighlightedSection("devotee");
+      setHighlightPulse(true);
+      const t = setTimeout(() => {
+        setHighlightPulse(false);
+      }, 1500);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (poojaHighlightTimerRef.current) {
+        clearTimeout(poojaHighlightTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Handler: When devotee is selected, clear highlight, and 2 seconds later highlight Pooja section
+  const handleSelectCustomer = (customerId: string) => {
+    setSelectedCustomerId(customerId);
+    if (poojaHighlightTimerRef.current) {
+      clearTimeout(poojaHighlightTimerRef.current);
+    }
+    // Clear devotee highlight immediately
+    setHighlightedSection(null);
+    setHighlightPulse(false);
+
+    // After 2 seconds, highlight pooja if not yet selected
+    poojaHighlightTimerRef.current = setTimeout(() => {
+      setSelectedPoojaId((currentPooja) => {
+        if (!currentPooja) {
+          setHighlightedSection("pooja");
+          setHighlightPulse(true);
+          setTimeout(() => setHighlightPulse(false), 1500);
+          const el = document.getElementById("pooja-section");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        }
+        return currentPooja;
+      });
+    }, 2000);
+  };
+
+  // Handler: When devotee is changed / cleared, re-highlight devotee
+  const handleClearCustomer = () => {
+    setSelectedCustomerId("");
+    if (poojaHighlightTimerRef.current) {
+      clearTimeout(poojaHighlightTimerRef.current);
+    }
+    setHighlightedSection("devotee");
+    setHighlightPulse(true);
+    setTimeout(() => setHighlightPulse(false), 1500);
+  };
+
+  // Handler: When pooja is selected, clear pooja highlight
+  const handleSelectPooja = (poojaId: string) => {
+    setSelectedPoojaId(poojaId);
+    if (poojaHighlightTimerRef.current) {
+      clearTimeout(poojaHighlightTimerRef.current);
+    }
+    if (highlightedSection === "pooja") {
+      setHighlightedSection(null);
+      setHighlightPulse(false);
+    }
+  };
 
   const showMissingError = (
     section: "devotee" | "pooja" | "priest" | "date",
@@ -344,6 +417,7 @@ function QuickBookingContent() {
   ) => {
     setFormError(message);
     setHighlightedSection(section);
+    setHighlightPulse(true);
 
     // Instant smooth scroll to the exact missing element
     setTimeout(() => {
@@ -359,6 +433,7 @@ function QuickBookingContent() {
 
     // Auto-clear highlight ring after 3.5 seconds
     setTimeout(() => {
+      setHighlightPulse(false);
       setHighlightedSection(null);
     }, 3500);
   };
@@ -525,7 +600,7 @@ function QuickBookingContent() {
       city: newCustCity.trim() || "Namakkal",
     });
     setCustomers(db.getCustomers(businessId));
-    setSelectedCustomerId(created.id);
+    handleSelectCustomer(created.id);
     setShowAddDevotee(false);
     setNewCustName("");
     setNewCustMobile("");
@@ -986,9 +1061,6 @@ function QuickBookingContent() {
                   முழு அணுகல் • Premium
                 </span>
               </div>
-              <p className="text-[10.5px] text-emerald-800 font-medium">
-                அனைத்து பிரீமியம் வசதிகள் மற்றும் மேகக்கணி தரவு பாதுகாப்புடன் இயங்குகிறது
-              </p>
             </div>
           </div>
           <Link
@@ -1057,16 +1129,18 @@ function QuickBookingContent() {
               id="devotee-section"
               className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
                 highlightedSection === "devotee"
-                  ? "ring-4 ring-rose-500/50 border-rose-500 shadow-lg shadow-rose-500/20 animate-pulse"
+                  ? highlightPulse
+                    ? "ring-4 ring-rose-400/80 border-2 border-rose-500 shadow-xl shadow-rose-500/25 animate-pulse"
+                    : "ring-4 ring-rose-200/80 border-2 border-rose-400 shadow-md shadow-rose-200/30"
                   : "border-slate-200"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs ${
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs transition-colors ${
                       highlightedSection === "devotee"
-                        ? "bg-rose-600 text-white"
+                        ? "bg-rose-500 text-white"
                         : "bg-amber-500 text-white"
                     }`}
                   >
@@ -1076,7 +1150,7 @@ function QuickBookingContent() {
                     1. பக்தர் விவரம் (Devotee)
                   </h2>
                   {highlightedSection === "devotee" && (
-                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-300">
+                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full border border-rose-300 animate-in fade-in">
                       தேர்வு தேவை ⚠️
                     </span>
                   )}
@@ -1103,7 +1177,7 @@ function QuickBookingContent() {
                   onChange={(e) => setDevoteeSearch(e.target.value)}
                   className={`w-full pl-8 pr-8 py-1.5 bg-slate-50 border rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none transition ${
                     highlightedSection === "devotee"
-                      ? "border-rose-400 focus:border-rose-600 ring-1 ring-rose-400"
+                      ? "border-rose-400 focus:border-rose-600 ring-2 ring-rose-200/70"
                       : "border-slate-200 focus:border-amber-500"
                   }`}
                 />
@@ -1172,7 +1246,7 @@ function QuickBookingContent() {
                         <button
                           key={c.id}
                           type="button"
-                          onClick={() => setSelectedCustomerId(c.id)}
+                          onClick={() => handleSelectCustomer(c.id)}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition flex items-center gap-1.5 border shadow-2xs active:scale-95 cursor-pointer ${
                             isSelected
                               ? "bg-amber-600 text-white border-amber-600 shadow-xs"
@@ -1211,7 +1285,7 @@ function QuickBookingContent() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setSelectedCustomerId("")}
+                    onClick={handleClearCustomer}
                     className="text-[10px] font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded-lg transition cursor-pointer"
                     title="Change Devotee"
                   >
@@ -1228,16 +1302,18 @@ function QuickBookingContent() {
               id="pooja-section"
               className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
                 highlightedSection === "pooja"
-                  ? "ring-4 ring-rose-500/50 border-rose-500 shadow-lg shadow-rose-500/20 animate-pulse"
+                  ? highlightPulse
+                    ? "ring-4 ring-rose-400/80 border-2 border-rose-500 shadow-xl shadow-rose-500/25 animate-pulse"
+                    : "ring-4 ring-rose-200/80 border-2 border-rose-400 shadow-md shadow-rose-200/30"
                   : "border-slate-200"
               }`}
             >
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs ${
+                    className={`w-7 h-7 rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs transition-colors ${
                       highlightedSection === "pooja"
-                        ? "bg-rose-600 text-white"
+                        ? "bg-rose-500 text-white"
                         : "bg-emerald-100 text-emerald-900"
                     }`}
                   >
@@ -1247,7 +1323,7 @@ function QuickBookingContent() {
                     2. பூஜை &amp; சாக்கிரிகள் (Pooja &amp; Samagri)
                   </h2>
                   {highlightedSection === "pooja" && (
-                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-300">
+                    <span className="text-[10px] font-black text-rose-700 bg-rose-100 px-2.5 py-0.5 rounded-full border border-rose-300 animate-in fade-in">
                       தேர்வு தேவை ⚠️
                     </span>
                   )}
@@ -1270,7 +1346,7 @@ function QuickBookingContent() {
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => setSelectedPoojaId(p.id)}
+                      onClick={() => handleSelectPooja(p.id)}
                       className={`p-2.5 rounded-2xl border text-left transition flex flex-col justify-between shadow-2xs active:scale-95 cursor-pointer ${
                         isSelected
                           ? "bg-gradient-to-r from-emerald-50 to-emerald-100/90 border-emerald-600 ring-2 ring-emerald-500/25 shadow-xs"
