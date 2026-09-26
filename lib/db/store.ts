@@ -682,6 +682,9 @@ export class VelviDatabaseStore {
             poojaId: existingP.id,
           }));
         }
+        if (!existingP.icon || existingP.icon === "🔥" || existingP.icon === "🏡" || existingP.icon === "💧") {
+          existingP.icon = sp.icon || getPoojaIcon(sp);
+        }
       }
     });
 
@@ -740,6 +743,10 @@ export class VelviDatabaseStore {
                 poojaId: existing.id,
               })),
             };
+            addedOrUpdated = true;
+          }
+          if (!existing.icon || existing.icon === "🔥" || existing.icon === "🏡" || existing.icon === "💧") {
+            existing.icon = sp.icon || getPoojaIcon(sp);
             addedOrUpdated = true;
           }
         }
@@ -2073,8 +2080,20 @@ export class VelviDatabaseStore {
               const existingIdx = this.poojas.findIndex((p) => p.id === sp.id);
               if (existingIdx === -1) {
                 this.poojas.push(structuredClone(sp));
-              } else if (this.poojas[existingIdx].items.length < sp.items.length) {
-                this.poojas[existingIdx].items = structuredClone(sp.items);
+              } else {
+                if (this.poojas[existingIdx].items.length < sp.items.length) {
+                  this.poojas[existingIdx].items = structuredClone(sp.items);
+                }
+                if (!this.poojas[existingIdx].icon || this.poojas[existingIdx].icon === "🔥" || this.poojas[existingIdx].icon === "🏡" || this.poojas[existingIdx].icon === "💧") {
+                  this.poojas[existingIdx].icon = sp.icon || getPoojaIcon(sp);
+                }
+              }
+            });
+
+            // Ensure any existing pooja with generic fire or missing icon gets upgraded to sacred deity icon
+            this.poojas.forEach((p) => {
+              if (!p.icon || p.icon === "🔥" || p.icon === "🏡" || p.icon === "💧") {
+                p.icon = getPoojaIcon(p);
               }
             });
 

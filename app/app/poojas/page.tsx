@@ -497,7 +497,7 @@ const PRESET_POOJA_TEMPLATES = [
     ],
   },
   {
-    icon: "💧",
+    icon: "🥥",
     englishName: "Sudhi Punyahavachanam",
     tamilName: "சுத்தி புண்யாகவாசனம்",
     description: "Sacred Vedic purification ritual performed for sanctifying home, family, or premises after child birth, milestone events, or removing ritual impurities.",
@@ -560,7 +560,7 @@ const PRESET_POOJA_TEMPLATES = [
     ],
   },
   {
-    icon: "🪙",
+    icon: "🌸",
     englishName: "Sri Maha Lakshmi Pooja",
     tamilName: "ஸ்ரீ மகா லட்சுமி பூஜை",
     description: "Divine worship invoking Goddess Lakshmi for financial abundance, business success, family happiness, debt alleviation, and auspiciousness.",

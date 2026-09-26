@@ -296,6 +296,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-ganapathi-01",
     businessId: "biz-venkateswara-01",
+    icon: "🐘",
     englishName: "Maha Ganapathi Homam",
     tamilName: "மகா கணபதி ஹோமம்",
     description: "Invokes Lord Maha Ganapathi to overcome obstacles, grant divine blessings, and ensure auspicious beginnings for all endeavors.",
@@ -370,6 +371,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-vastu-02",
     businessId: "biz-venkateswara-01",
+    icon: "📐",
     englishName: "Vastu Shanthi Homam",
     tamilName: "வாஸ்து சாந்தி ஹோமம்",
     description: "Auspicious Vedic ceremony invoking Vastu Purusha, Dikpalakas, and Bhoomi Devi to harmonize energies and eliminate architectural defects in land or building.",
@@ -449,6 +451,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-ayush-03",
     businessId: "biz-venkateswara-01",
+    icon: "🌿",
     englishName: "Ayushya / Ayur Homam",
     tamilName: "ஆயுஷ் ஹோமம் (ஆயுஷ்ய ஹோமம்)",
     description: "Sacred ritual invoking Ayur Devata, Markandeya, Chiranjeevis, and Agni to bestow longevity, vital health, disease protection, and wellbeing.",
@@ -556,6 +559,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-swayamvara-parvathi-04",
     businessId: "biz-venkateswara-01",
+    icon: "🌺",
     englishName: "Swayamvara Parvathi Homam",
     tamilName: "சுயம்வர பார்வதி ஹோமம்",
     description: "Powerful Vedic homam invoking Goddess Parvathi to dissolve delays/doshas in marriage, find an ideal life partner, and ensure conjugal harmony.",
@@ -627,6 +631,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-kumbabishekam-11",
     businessId: "biz-venkateswara-01",
+    icon: "🛕",
     englishName: "Maha Kumbabishekam & Grihapravesam",
     tamilName: "மகா கும்பாபிஷேகம் மற்றும் கிரகப்பிரவேசம்",
     description: "Complete master ceremony for sacred temple consecration & new house warming, encompassing Gomatha pooja, Vastu Shanthi, Ganapathi & Navagraha Homams.",
@@ -698,6 +703,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-sangu-pooja-06",
     businessId: "biz-venkateswara-01",
+    icon: "🐚",
     englishName: "108 Sangu Pooja (Shankha Pooja)",
     tamilName: "108 சங்கு பூஜை",
     description: "Grand ritual of consecrating 108 sacred conches filled with theertham and herbs, invoking Shiva/Vishnu energies for profound purification, peace, and health.",
@@ -760,6 +766,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-punyaham-07",
     businessId: "biz-venkateswara-01",
+    icon: "🥥",
     englishName: "Sudhi Punyahavachanam",
     tamilName: "சுத்தி புண்யாகவாசனம்",
     description: "Sacred Vedic purification ritual performed for sanctifying home, family, or premises after child birth, milestone events, or removing ritual impurities.",
@@ -828,6 +835,7 @@ export const SEED_POOJAS: Pooja[] = [
   {
     id: "p-lakshmi-08",
     businessId: "biz-venkateswara-01",
+    icon: "🌸",
     englishName: "Sri Maha Lakshmi Pooja",
     tamilName: "ஸ்ரீ மகா லட்சுமி பூஜை",
     description: "Divine worship invoking Goddess Lakshmi for financial abundance, business success, family happiness, debt alleviation, and auspiciousness.",
