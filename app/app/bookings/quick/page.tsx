@@ -204,6 +204,7 @@ function QuickBookingContent() {
   const [expenseAmount, setExpenseAmount] = useState<number>(0);
   const [expenseNotes, setExpenseNotes] = useState<string>("");
   const [showExpenses, setShowExpenses] = useState<boolean>(false);
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState<boolean>(false);
 
   // Amount Customization: 1-Click (±100) & Long-Press (±500) Logic
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -888,7 +889,8 @@ function QuickBookingContent() {
 
   // Final Create Booking Action
   const handleFinalConfirmBooking = () => {
-    if (!selectedCustomer || !currentPooja) return;
+    if (!selectedCustomer || !currentPooja || isSubmittingBooking) return;
+    setIsSubmittingBooking(true);
 
     const effectivePriestId = priestType === "self" ? "self" : assignedIyerId;
     const assignedMember = members.find((m) => m.id === effectivePriestId);
@@ -908,10 +910,12 @@ function QuickBookingContent() {
     const existingBookingsCount = db.getBookings(businessId).length;
     if (isDemoUser && existingBookingsCount >= 20) {
       alert("இலவச மாதிரி வரம்பு நிறைவடைந்தது (அதிகபட்சம் 20 முன்பதிவுகள் மட்டுமே அனுமதிக்கப்படும்). புதிய முன்பதிவுகளை தொடர்ந்து உருவாக்க Velvi Pro திட்டத்திற்கு மேம்படுத்தவும். (Free Demo limit reached: Maximum 20 bookings allowed. Please upgrade to Velvi Pro for unlimited bookings.)");
+      setIsSubmittingBooking(false);
       return;
     }
 
     try {
+      const idempotencyKey = `bk-${businessId}-${selectedCustomer.id}-${currentPooja.id}-${date}-${time.replace(/\s+/g, "")}-${Date.now().toString().slice(0, 8)}`;
       const newBooking = db.createBooking({
         businessId,
         customerId: selectedCustomer.id,
@@ -943,12 +947,15 @@ function QuickBookingContent() {
         expenseNotes: expenseNotes || "",
         notes: notes.trim(),
         items: samagriItems,
-      });
+        idempotencyKey,
+      } as any);
 
       setShowPreviewModal(false);
       setCreatedBooking(newBooking);
     } catch (err: any) {
       alert(err.message || "Failed to create booking");
+    } finally {
+      setIsSubmittingBooking(false);
     }
   };
 
@@ -3655,11 +3662,12 @@ function QuickBookingContent() {
               </button>
               <button
                 type="button"
+                disabled={isSubmittingBooking}
                 onClick={handleFinalConfirmBooking}
-                className="py-2.5 px-3 bg-gradient-to-r from-emerald-800 to-[#0b2b17] hover:from-emerald-700 hover:to-emerald-900 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 text-center"
+                className="py-2.5 px-3 bg-gradient-to-r from-emerald-800 to-[#0b2b17] hover:from-emerald-700 hover:to-emerald-900 disabled:opacity-50 disabled:pointer-events-none text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 text-center"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                <span>Confirm &amp; Book ✨</span>
+                <span>{isSubmittingBooking ? "பதிவாகிறது..." : "Confirm & Book ✨"}</span>
               </button>
             </div>
           </div>

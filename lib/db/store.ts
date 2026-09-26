@@ -630,7 +630,13 @@ export class VelviDatabaseStore {
   }
 
   public getBookings(businessId: string): Booking[] {
-    return this.bookings.filter((b) => b.businessId === businessId);
+    const list = this.bookings.filter((b) => b.businessId === businessId);
+    const seen = new Set<string>();
+    return list.filter((b) => {
+      if (seen.has(b.id)) return false;
+      seen.add(b.id);
+      return true;
+    });
   }
 
   public seedDefaultPoojasForBusiness(businessId: string): Pooja[] {
@@ -1173,6 +1179,19 @@ export class VelviDatabaseStore {
       return { success: false, error: "Payment amount or discount must be greater than zero." };
     }
 
+    // Duplicate payment submission guard (prevents rapid double-tapping within 10 seconds)
+    if (booking.paymentRecords && booking.paymentRecords.length > 0) {
+      const lastRecord = booking.paymentRecords[booking.paymentRecords.length - 1];
+      const isSameAmount = lastRecord.amount === payAmount && (lastRecord.discount || 0) === discAmount;
+      const isSameMethod = lastRecord.method === (params.paymentMethod || "UPI");
+      const isSameDate = lastRecord.date === (params.paymentDate || new Date().toISOString().split("T")[0]);
+      const createdDiff = Date.now() - new Date(lastRecord.createdAt).getTime();
+      if (isSameAmount && isSameMethod && isSameDate && createdDiff < 10000) {
+        console.warn("[Velvi DB] Duplicate payment recording prevented for booking", booking.id);
+        return { success: true, booking };
+      }
+    }
+
     const previousFinancials = {
       advanceAmount: booking.advanceAmount || 0,
       discountAmount: booking.discountAmount || 0,
@@ -1674,8 +1693,17 @@ export class VelviDatabaseStore {
       );
     }
 
+    // Idempotency / Duplicate booking protection
+    if ((params as any).idempotencyKey) {
+      const duplicate = this.bookings.find((b) => (b as any).idempotencyKey === (params as any).idempotencyKey);
+      if (duplicate) {
+        console.warn("[Velvi DB] Duplicate booking creation prevented by idempotencyKey:", duplicate.id);
+        return duplicate;
+      }
+    }
+
     const bNum = (8248 + this.bookings.length + 1).toString();
-    const newBookingId = `b-${Date.now()}`;
+    const newBookingId = `b-${Date.now()}-${this.bookings.length + 1}-${Math.random().toString(36).substring(2, 7)}`;
     const paymentRecords: BookingPaymentRecord[] = [];
     if (params.advanceAmount > 0) {
       paymentRecords.push({
@@ -1726,6 +1754,7 @@ export class VelviDatabaseStore {
       expenseNotes: params.expenseNotes || "",
       items: params.items || [],
       notes: params.notes || "",
+      idempotencyKey: (params as any).idempotencyKey,
       createdBy: params.assignedIyerName || "Priest",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

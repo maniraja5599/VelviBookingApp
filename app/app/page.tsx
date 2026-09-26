@@ -12,6 +12,7 @@ import {
   inspectIndianMobile,
 } from "@/lib/utils/phone";
 import Link from "next/link";
+import { RecordPaymentModal } from "@/components/payments/RecordPaymentModal";
 import {
   CalendarDays,
   CircleDollarSign,
@@ -346,6 +347,13 @@ export default function HomeDashboardPage() {
   const allPendingDueBookings = useMemo(() => {
     return bookings.filter((b) => (b.balanceAmount || 0) > 0);
   }, [bookings]);
+
+  // When switching to Payments tab, if there are pending dues, automatically show pending dues first!
+  useEffect(() => {
+    if (activeSubTab === "payments" && allPendingDueBookings.length > 0) {
+      setPaymentFilter("PENDING");
+    }
+  }, [activeSubTab, allPendingDueBookings.length]);
 
   const overdueDueTotal = useMemo(() => {
     return overdueDueBookings.reduce((sum, b) => sum + (b.balanceAmount || 0), 0);
@@ -762,6 +770,69 @@ export default function HomeDashboardPage() {
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200">
+      {/* 0. Long-term Sacred Daily Panchangam & Nalla Neram Ribbon */}
+      <div className="bg-gradient-to-r from-amber-950 via-[#3a1d08] to-amber-900 text-amber-100 rounded-2xl px-3.5 py-2.5 shadow-xs border border-amber-800/60 flex items-center justify-between gap-2 text-xs">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-500/30">
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-extrabold text-amber-200 truncate">
+                {todayInfo.tamilYear} • {todayInfo.tamilMonth} {todayInfo.tamilDay}
+              </span>
+              <span className="text-[10px] text-amber-400 font-bold">
+                ({todayInfo.dayOfWeekTa})
+              </span>
+            </div>
+            <div className="text-[10.5px] text-amber-200/80 flex items-center gap-1.5 mt-0.5 truncate">
+              <span>நல்ல நேரம்: {todayInfo.nallaNeram || "காலை 09:15 - 10:15"}</span>
+              <span>•</span>
+              <span className="truncate">{todayInfo.tithiNameTa || todayInfo.tithi || "சதுர்தசி"}</span>
+              <span>•</span>
+              <span className="truncate">{todayInfo.nakshatraNameTa || todayInfo.nakshatra || "பூரட்டாதி"}</span>
+            </div>
+          </div>
+        </div>
+        <Link
+          href="/app/calendar"
+          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 rounded-xl text-[10.5px] font-bold shrink-0 transition flex items-center gap-1"
+        >
+          <span>பஞ்சாங்கம்</span>
+          <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      {/* 0.1 High-Impact Pending Dakshina Dues Alert Banner (if pending dues exist) */}
+      {totalDue > 0 && (
+        <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-2xl p-3 border border-rose-700/80 shadow-xs flex items-center justify-between gap-3 text-xs animate-in fade-in">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-rose-500/30 text-rose-200 flex items-center justify-center shrink-0 border border-rose-400/40 animate-pulse">
+              <AlertCircle className="w-4 h-4 text-rose-300" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-black text-white text-xs truncate">
+                ₹{totalDue.toLocaleString("en-IN")} நிலுவைத் தொகை உள்ளது ({allPendingDueBookings.length} பதிவுகள்)
+              </div>
+              <p className="text-[10.5px] text-rose-200/90 truncate">
+                பக்தர்களிடமிருந்து கட்டணங்களை வசூலிக்க உடனடி நினைவூட்டல் அனுப்பவும்
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setActiveSubTab("payments");
+              setPaymentFilter("PENDING");
+            }}
+            className="px-2.5 py-1.5 bg-white text-rose-950 hover:bg-rose-50 rounded-xl text-[11px] font-black shrink-0 transition shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
+          >
+            <span>வசூல் கணக்கு</span>
+            <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {/* 1. Total Collections Box (Pinned at Top of Home Page) */}
       <div className="bg-gradient-to-br from-emerald-950 via-[#0b2b17] to-emerald-900 text-white rounded-3xl p-4 shadow-sm border border-emerald-800/80 space-y-3">
         <div className="flex items-center justify-between">
@@ -810,6 +881,54 @@ export default function HomeDashboardPage() {
         </div>
       </div>
 
+      {/* Quick Action Navigation Grid for Longterm Daily Operations */}
+      <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
+        <Link
+          href="/app/bookings/new"
+          className="p-2 bg-emerald-900/10 hover:bg-emerald-900/20 text-emerald-950 rounded-2xl border border-emerald-900/20 transition flex flex-col items-center justify-center gap-1 shadow-2xs"
+        >
+          <div className="w-6 h-6 rounded-lg bg-emerald-800 text-white flex items-center justify-center">
+            <Plus className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[10px] font-bold">புதிய பதிவு</span>
+        </Link>
+        <Link
+          href="/app/calendar"
+          className="p-2 bg-amber-900/10 hover:bg-amber-900/20 text-amber-950 rounded-2xl border border-amber-900/20 transition flex flex-col items-center justify-center gap-1 shadow-2xs"
+        >
+          <div className="w-6 h-6 rounded-lg bg-amber-700 text-white flex items-center justify-center">
+            <Calendar className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[10px] font-bold">காலெண்டர்</span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab("payments");
+            if (allPendingDueBookings.length > 0) setPaymentFilter("PENDING");
+          }}
+          className="p-2 bg-indigo-900/10 hover:bg-indigo-900/20 text-indigo-950 rounded-2xl border border-indigo-900/20 transition flex flex-col items-center justify-center gap-1 shadow-2xs cursor-pointer"
+        >
+          <div className="w-6 h-6 rounded-lg bg-indigo-700 text-white flex items-center justify-center">
+            <Wallet className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[10px] font-bold">கட்டணங்கள்</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveSubTab("devotees");
+            setShowAddDevoteeModal(true);
+          }}
+          className="p-2 bg-slate-900/10 hover:bg-slate-900/20 text-slate-950 rounded-2xl border border-slate-900/20 transition flex flex-col items-center justify-center gap-1 shadow-2xs cursor-pointer"
+        >
+          <div className="w-6 h-6 rounded-lg bg-slate-800 text-white flex items-center justify-center">
+            <Users className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[10px] font-bold">+ பக்தர்</span>
+        </button>
+      </div>
+
       {/* 2. Main Interactive Sub-Tabs Container */}
       <div className="space-y-3 pt-1">
         {/* Sub-Tab Switcher Bar (3 Tabs: Analytics, Payments, Devotees) */}
@@ -829,7 +948,12 @@ export default function HomeDashboardPage() {
 
           <button
             type="button"
-            onClick={() => setActiveSubTab("payments")}
+            onClick={() => {
+              setActiveSubTab("payments");
+              if (allPendingDueBookings.length > 0) {
+                setPaymentFilter("PENDING");
+              }
+            }}
             className={`py-2 px-1 rounded-xl transition flex items-center justify-center gap-1.5 ${
               activeSubTab === "payments"
                 ? "bg-white text-emerald-950 shadow-xs font-black"
@@ -2785,124 +2909,20 @@ export default function HomeDashboardPage() {
       })()}
 
       {/* ========================================================================= */}
-      {/* MODAL: RECORD PAYMENT                                                     */}
+      {/* UNIFIED MODAL: RECORD PAYMENT                                             */}
       {/* ========================================================================= */}
-      {recordPaymentBooking && (
-        <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white rounded-3xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-1.5">
-                <IndianRupee className="w-4 h-4 text-emerald-700" />
-                <span>Record Payment</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setRecordPaymentBooking(null)}
-                className="p-1 rounded-full hover:bg-slate-100 text-slate-400"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 text-xs space-y-1">
-              <div className="font-bold text-slate-900">👤 {recordPaymentBooking.customerName}</div>
-              <div className="text-slate-600">
-                🪔 {recordPaymentBooking.poojaEnglishName} • {recordPaymentBooking.bookingNumber?.startsWith("#") ? recordPaymentBooking.bookingNumber : `#${recordPaymentBooking.bookingNumber}`}
-              </div>
-              <div className="text-amber-950 font-extrabold pt-1">
-                Total Due Amount: ₹{recordPaymentBooking.balanceAmount?.toLocaleString("en-IN")}
-              </div>
-            </div>
-
-            <form onSubmit={handleConfirmRecordPayment} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Amount Received (₹) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={recordPaymentBooking.balanceAmount}
-                  value={paymentAmountInput}
-                  onChange={(e) => setPaymentAmountInput(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-black text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    Payment Date (கட்டண தேதி) *
-                  </label>
-                  <div className="flex items-center gap-1 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentDateInput(todayLocalDateStr)}
-                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
-                        paymentDateInput === todayLocalDateStr
-                          ? "bg-emerald-800 text-white"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      Today
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const yest = new Date();
-                        yest.setDate(yest.getDate() - 1);
-                        setPaymentDateInput(yest.toISOString().split("T")[0]);
-                      }}
-                      className="px-1.5 py-0.5 rounded font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition"
-                    >
-                      Yesterday
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="date"
-                  required
-                  value={paymentDateInput}
-                  onChange={(e) => setPaymentDateInput(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Payment Method
-                </label>
-                <select
-                  value={paymentMethodInput}
-                  onChange={(e) => setPaymentMethodInput(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600"
-                >
-                  <option value="UPI">UPI / Google Pay / PhonePe</option>
-                  <option value="CASH">Cash in Hand</option>
-                  <option value="BANK_TRANSFER">Bank Transfer</option>
-                </select>
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setRecordPaymentBooking(null)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-2xs transition"
-                >
-                  Confirm Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <RecordPaymentModal
+        isOpen={!!recordPaymentBooking}
+        onClose={() => setRecordPaymentBooking(null)}
+        booking={recordPaymentBooking}
+        currentUserName={currentUser?.name || "Ravi Iyer"}
+        onSuccess={(updatedBooking) => {
+          setBookings([...db.getBookings(businessId)]);
+          setPaymentSuccessMessage(`₹${(updatedBooking.advanceAmount || 0).toLocaleString("en-IN")} கட்டணம் வெற்றிகரமாக பதிவு செய்யப்பட்டது! (${updatedBooking.customerName})`);
+          setRecordPaymentBooking(null);
+          setTimeout(() => setPaymentSuccessMessage(""), 4000);
+        }}
+      />
 
       {/* ========================================================================= */}
       {/* MODAL: RESET / DELETE PAYMENT CONFIRMATION                                */}

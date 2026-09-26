@@ -26,6 +26,18 @@ import {
 } from "lucide-react";
 import { getLocalDateString } from "@/lib/calendar/tamil";
 
+export interface MonthBreakdownData {
+  key: string;
+  month: string;
+  fullMonth: string;
+  billed: number;
+  collected: number;
+  due: number;
+  bookingsCount: number;
+  heightPct: number;
+  bookings: Booking[];
+}
+
 export default function PaymentsPage() {
   const { currentBusiness, currentUser } = useAuth();
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
@@ -41,7 +53,21 @@ export default function PaymentsPage() {
   const [settlements, setSettlements] = useState<IyerSettlement[]>([]);
   const [mounted, setMounted] = useState(false);
 
+  // 2-Second Attention Glow/Pulse Animation for tabs & Monthly breakdown modal
+  const [tabPulseAnimated, setTabPulseAnimated] = useState(false);
+  const [selectedBreakdownMonth, setSelectedBreakdownMonth] = useState<MonthBreakdownData | null>(null);
+
   const todayLocalDateStr = getLocalDateString();
+
+  React.useEffect(() => {
+    // 2 seconds after opening page, gently animate filter tabs
+    const animTimer = setTimeout(() => {
+      setTabPulseAnimated(true);
+      const stopTimer = setTimeout(() => setTabPulseAnimated(false), 3000);
+      return () => clearTimeout(stopTimer);
+    }, 2000);
+    return () => clearTimeout(animTimer);
+  }, []);
 
   React.useEffect(() => {
     setMounted(true);
@@ -112,14 +138,52 @@ export default function PaymentsPage() {
   );
   const collectionRate = totalRevenueExpected > 0 ? Math.round((totalReceived / totalRevenueExpected) * 100) : 100;
 
-  // Monthly Collection Trend for Visual Graph
-  const monthlyCollectionTrend = useMemo(() => {
-    return [
-      { month: "Jul", billed: 45000, collected: 45000, heightPct: 50 },
-      { month: "Aug", billed: 70000, collected: 66000, heightPct: 75 },
-      { month: "Sep", billed: totalRevenueExpected, collected: totalReceived, heightPct: 100 },
-    ];
-  }, [totalRevenueExpected, totalReceived]);
+  // Dynamic Monthly Collection Trend derived from actual bookings
+  const monthlyCollectionTrend: MonthBreakdownData[] = useMemo(() => {
+    const result: MonthBreakdownData[] = [];
+    const now = new Date();
+
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = d.getFullYear();
+      const monthNum = String(d.getMonth() + 1).padStart(2, "0");
+      const key = `${year}-${monthNum}`;
+      const monthShort = d.toLocaleString("en-US", { month: "short" });
+      const monthFull = d.toLocaleString("en-US", { month: "long" }) + " " + year;
+
+      const monthBookings = bookings.filter((b) => b.date && b.date.startsWith(key) && b.status !== "CANCELLED");
+
+      const billed = monthBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+      const collected = monthBookings.reduce((sum, b) => {
+        if (b.paymentStatus === "PAID" || (b.balanceAmount === 0 && (b.totalAmount || 0) > 0)) {
+          return sum + (b.totalAmount || 0);
+        }
+        return sum + (b.advanceAmount || 0);
+      }, 0);
+      const due = monthBookings.reduce((sum, b) => {
+        if (b.paymentStatus === "PAID") return sum;
+        return sum + (b.balanceAmount || 0);
+      }, 0);
+
+      result.push({
+        key,
+        month: monthShort,
+        fullMonth: monthFull,
+        billed,
+        collected,
+        due,
+        bookingsCount: monthBookings.length,
+        heightPct: 50,
+        bookings: monthBookings,
+      });
+    }
+
+    const maxVal = Math.max(...result.map((m) => Math.max(m.billed, m.collected)), 1000);
+    return result.map((m) => ({
+      ...m,
+      heightPct: Math.max(25, Math.min(100, Math.round((m.billed / maxVal) * 100))),
+    }));
+  }, [bookings]);
 
   // Filtered Customer Receipts
   const filteredBookings = useMemo(() => {
@@ -456,35 +520,55 @@ export default function PaymentsPage() {
               </div>
             </div>
 
-            {/* Monthly Trend Mini Graph */}
-            <div className="pt-2 border-t border-slate-100 flex items-end justify-between gap-2 h-14 px-2.5 bg-slate-50/70 rounded-xl">
-              {monthlyCollectionTrend.map((m) => {
-                const colPct = Math.round((m.collected / (m.billed || 1)) * 100);
-                return (
-                  <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
-                    <div className="w-full flex items-end justify-center gap-1 h-8">
-                      <div
-                        className="w-3 bg-slate-300 rounded-t-sm"
-                        style={{ height: `${m.heightPct}%` }}
-                        title={`${m.month} Billed: ₹${m.billed.toLocaleString("en-IN")}`}
-                      />
-                      <div
-                        className="w-3 bg-emerald-600 rounded-t-sm"
-                        style={{ height: `${Math.max(10, Math.round(m.heightPct * (colPct / 100)))}%` }}
-                        title={`${m.month} Collected: ₹${m.collected.toLocaleString("en-IN")}`}
-                      />
-                    </div>
-                    <span className="text-[9.5px] font-extrabold text-slate-600">
-                      {m.month} ({colPct}%)
-                    </span>
-                  </div>
-                );
-              })}
+            {/* Monthly Trend Mini Graph with Clickable Breakdown */}
+            <div className="pt-2 border-t border-slate-100 space-y-1">
+              <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 px-1">
+                <span>மாதாந்திர வசூல் வரைபடம் (Monthly Trend)</span>
+                <span className="text-emerald-700 flex items-center gap-1 font-semibold text-[9.5px]">
+                  👆 கிளிக் செய்து விபரம் காண்க (Click for breakdown)
+                </span>
+              </div>
+              <div className="flex items-end justify-between gap-2 h-16 px-2.5 bg-slate-50/70 hover:bg-slate-100/60 rounded-xl transition">
+                {monthlyCollectionTrend.map((m) => {
+                  const colPct = m.billed > 0 ? Math.round((m.collected / m.billed) * 100) : 100;
+                  return (
+                    <button
+                      key={m.month}
+                      type="button"
+                      onClick={() => setSelectedBreakdownMonth(m)}
+                      className="flex-1 flex flex-col items-center gap-0.5 group cursor-pointer hover:scale-105 active:scale-95 transition-all p-1 rounded-lg"
+                      title={`${m.fullMonth} - கிளிக் செய்து முழு விவரம் பார்க்க`}
+                    >
+                      <div className="w-full flex items-end justify-center gap-1 h-9">
+                        <div
+                          className="w-3 bg-slate-300 rounded-t-sm group-hover:bg-slate-400 transition"
+                          style={{ height: `${m.heightPct}%` }}
+                          title={`${m.month} Billed: ₹${m.billed.toLocaleString("en-IN")}`}
+                        />
+                        <div
+                          className="w-3 bg-emerald-600 rounded-t-sm group-hover:bg-emerald-700 transition"
+                          style={{ height: `${Math.max(10, Math.round(m.heightPct * (colPct / 100)))}%` }}
+                          title={`${m.month} Collected: ₹${m.collected.toLocaleString("en-IN")}`}
+                        />
+                      </div>
+                      <span className="text-[9.5px] font-black text-slate-700 group-hover:text-emerald-900 transition flex items-center gap-0.5">
+                        {m.month} <span className="text-[8.5px] text-slate-400">({colPct}%)</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* 2. Exactly 2 Clean Filters: Pending Dues vs All Payments */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl text-xs font-bold border border-slate-200/80 shadow-2xs">
+          {/* 2. Exactly 2 Clean Filters: Pending Dues vs All Payments (with 2-second entrance pulse) */}
+          <div
+            className={`flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl text-xs font-bold border border-slate-200/80 shadow-2xs transition-all duration-700 ${
+              tabPulseAnimated
+                ? "ring-2 ring-emerald-500/70 shadow-lg shadow-emerald-500/20 scale-[1.01]"
+                : ""
+            }`}
+          >
             <button
               type="button"
               onClick={() => setReceiptFilter("PENDING")}
@@ -492,7 +576,7 @@ export default function PaymentsPage() {
                 receiptFilter === "PENDING"
                   ? "bg-slate-900 text-white shadow-2xs font-black"
                   : "text-slate-600 hover:text-slate-900 font-bold"
-              }`}
+              } ${tabPulseAnimated ? "ring-2 ring-amber-400/80 animate-pulse" : ""}`}
             >
               <span>Pending Dues</span>
               <span
@@ -1093,6 +1177,182 @@ export default function PaymentsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MONTHLY FINANCIAL BREAKDOWN MODAL (மாதாந்திர வருவாய் & வசூல் விவரம்)     */}
+      {/* ========================================================================= */}
+      {selectedBreakdownMonth && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={() => setSelectedBreakdownMonth(null)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200/90 space-y-4 my-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="text-[10px] font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wider">
+                  மாத வசூல் விவரம் • Monthly Breakdown
+                </span>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1">
+                  {selectedBreakdownMonth.fullMonth}
+                </h3>
+                <p className="text-xs text-slate-500 font-semibold">
+                  {selectedBreakdownMonth.bookingsCount} முன்பதிவுகள் • {selectedBreakdownMonth.billed > 0 ? Math.round((selectedBreakdownMonth.collected / selectedBreakdownMonth.billed) * 100) : 100}% வசூலாகியுள்ளது
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBreakdownMonth(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-sm font-bold transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 4 Financial Tiles */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
+                <span className="text-[9.5px] text-slate-500 font-bold block">Total Billed</span>
+                <span className="font-black text-slate-900 text-sm block mt-0.5">
+                  ₹{selectedBreakdownMonth.billed.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-emerald-50 p-2.5 rounded-2xl border border-emerald-200">
+                <span className="text-[9.5px] text-emerald-800 font-bold block">Collected</span>
+                <span className="font-black text-emerald-900 text-sm block mt-0.5">
+                  ₹{selectedBreakdownMonth.collected.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-rose-50 p-2.5 rounded-2xl border border-rose-200">
+                <span className="text-[9.5px] text-rose-800 font-bold block">Pending Due</span>
+                <span className="font-black text-rose-950 text-sm block mt-0.5">
+                  ₹{selectedBreakdownMonth.due.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-amber-50 p-2.5 rounded-2xl border border-amber-200">
+                <span className="text-[9.5px] text-amber-800 font-bold block">Realization</span>
+                <span className="font-black text-amber-950 text-sm block mt-0.5">
+                  {selectedBreakdownMonth.billed > 0 ? Math.round((selectedBreakdownMonth.collected / selectedBreakdownMonth.billed) * 100) : 100}%
+                </span>
+              </div>
+            </div>
+
+            {/* Visual Progress Bar */}
+            <div className="space-y-1">
+              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                <div
+                  className="bg-emerald-600 h-full transition-all duration-500 rounded-l-full"
+                  style={{ width: `${Math.min(100, selectedBreakdownMonth.billed > 0 ? Math.round((selectedBreakdownMonth.collected / selectedBreakdownMonth.billed) * 100) : 100)}%` }}
+                />
+                <div
+                  className="bg-rose-500 h-full transition-all duration-500 rounded-r-full"
+                  style={{ width: `${Math.min(100, selectedBreakdownMonth.billed > 0 ? Math.round((selectedBreakdownMonth.due / selectedBreakdownMonth.billed) * 100) : 0)}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[9.5px] font-bold text-slate-500">
+                <span className="text-emerald-800">வசூலிக்கப்பட்டது: ₹{selectedBreakdownMonth.collected.toLocaleString("en-IN")}</span>
+                <span className="text-rose-800">நிலுவை: ₹{selectedBreakdownMonth.due.toLocaleString("en-IN")}</span>
+              </div>
+            </div>
+
+            {/* List of Contributing Bookings */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black text-slate-900">
+                  இம்மாத பூஜைகள் &amp; கட்டண விவரம் ({selectedBreakdownMonth.bookings.length})
+                </h4>
+              </div>
+
+              {selectedBreakdownMonth.bookings.length === 0 ? (
+                <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl text-xs font-semibold border border-dashed border-slate-200">
+                  இம்மாதத்தில் முன்பதிவுகள் எதுவும் இல்லை / No bookings in this month
+                </div>
+              ) : (
+                <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
+                  {selectedBreakdownMonth.bookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-2xl border border-slate-200/80 transition flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-black text-slate-900 truncate">
+                            {b.customerName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-bold">
+                            #{b.bookingNumber?.replace(/^#+/, "")}
+                          </span>
+                          <span
+                            className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-md ${
+                              b.paymentStatus === "PAID"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                : (b.balanceAmount || 0) > 0
+                                ? "bg-rose-100 text-rose-800 border border-rose-300"
+                                : "bg-slate-100 text-slate-700 border border-slate-300"
+                            }`}
+                          >
+                            {b.paymentStatus === "PAID" ? "முழுதும் செலுத்தப்பட்டது ✅" : `நிலுவை ₹${b.balanceAmount}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 truncate mt-0.5">
+                          🪔 {b.poojaEnglishName} {b.poojaTamilName ? `(${b.poojaTamilName})` : ""} • 📅 {b.date} ({b.startTime})
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0 space-y-1">
+                        <div>
+                          <span className="font-black text-slate-900 block text-xs">
+                            ₹{b.totalAmount.toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[9.5px] text-slate-500 font-bold block">
+                            செலுத்தியது: ₹{(b.advanceAmount || 0).toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 justify-end">
+                          {(b.balanceAmount || 0) > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedBreakdownMonth(null);
+                                handleOpenRecordPayment(b);
+                              }}
+                              className="px-2 py-1 bg-emerald-800 hover:bg-emerald-900 text-white rounded-lg text-[10px] font-black transition cursor-pointer shadow-2xs"
+                            >
+                              வசூலிக்க
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleShareReceiptWhatsApp(b)}
+                            className="p-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg transition cursor-pointer"
+                            title="WhatsApp-ல் ரசீது / நிலுவை பகிர்க"
+                          >
+                            <Share2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedBreakdownMonth(null)}
+                className="w-full sm:w-auto px-5 py-2 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                மூடுக (Close)
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1980,6 +1980,90 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(finalRes.booking?.paymentStatus).toBe("PAID");
     expect(finalRes.booking?.paymentRecords?.length).toBe(3);
   });
+
+  // ---------------------------------------------------------------------------
+  // TEST 61: Zero Duplicate Entries Protection & Deduplication Guarantee
+  // ---------------------------------------------------------------------------
+  test("Test 61: Zero duplicate entries guaranteed across bookings, payments, and customers", () => {
+    const store = new VelviDatabaseStore();
+    const bizId = "biz-dedup-test";
+
+    // 1. Customer deduplication by normalized mobile
+    const c1 = store.createCustomer({
+      businessId: bizId,
+      name: "Senthil Kumar",
+      mobile: "98765 43210",
+      city: "Namakkal",
+    });
+
+    const c2 = store.createCustomer({
+      businessId: bizId,
+      name: "Senthil Kumar (Duplicate Attempt)",
+      mobile: "+91 98765-43210", // exact same mobile normalized
+      city: "Namakkal Main",
+    });
+
+    // Both should point to the exact same customer ID, never creating a duplicate
+    expect(c1.id).toBe(c2.id);
+    expect(store.getCustomers(bizId).filter((c) => c.mobile === "+919876543210").length).toBe(1);
+
+    // 2. Booking deduplication with idempotency key
+    const idemKey = `idem-${Date.now()}-abc`;
+    const b1 = store.createBooking({
+      businessId: bizId,
+      customerId: c1.id,
+      poojaId: "p-ganapathi-01",
+      date: "2026-10-15",
+      startTime: "09:30 AM",
+      location: "Namakkal",
+      totalAmount: 4000,
+      advanceAmount: 1000,
+      balanceAmount: 3000,
+      paymentStatus: "PARTIALLY_PAID",
+      status: "CONFIRMED",
+      idempotencyKey: idemKey,
+    } as any);
+
+    const b2 = store.createBooking({
+      businessId: bizId,
+      customerId: c1.id,
+      poojaId: "p-ganapathi-01",
+      date: "2026-10-15",
+      startTime: "09:30 AM",
+      location: "Namakkal",
+      totalAmount: 4000,
+      advanceAmount: 1000,
+      balanceAmount: 3000,
+      paymentStatus: "PARTIALLY_PAID",
+      status: "CONFIRMED",
+      idempotencyKey: idemKey, // duplicate rapid submit
+    } as any);
+
+    expect(b1.id).toBe(b2.id);
+
+    // 3. Payment deduplication on rapid double-tap
+    const pay1 = store.recordBookingPayment({
+      bookingId: b1.id,
+      amount: 1000,
+      paymentMethod: "UPI",
+      notes: "Part payment",
+    });
+    expect(pay1.success).toBe(true);
+
+    const payCountBefore = b1.paymentRecords?.length || 0;
+
+    // Immediate duplicate payment with identical parameters
+    const pay2 = store.recordBookingPayment({
+      bookingId: b1.id,
+      amount: 1000,
+      paymentMethod: "UPI",
+      notes: "Part payment",
+    });
+    expect(pay2.success).toBe(true);
+
+    // Length should not have duplicated
+    expect(b1.paymentRecords?.length).toBe(payCountBefore);
+  });
 });
 
 

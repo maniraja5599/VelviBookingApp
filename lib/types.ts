@@ -260,6 +260,7 @@ export interface Booking {
   refundDecision?: "REFUNDED" | "RETAINED" | "NO_PAYMENT";
   refundAmount?: number;
   retainedAmount?: number;
+  idempotencyKey?: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
