@@ -25,6 +25,7 @@ import {
   Filter,
 } from "lucide-react";
 import Link from "next/link";
+import { cleanCityName, formatCleanLocation } from "@/lib/utils/location";
 
 export default function AdminTrafficPage() {
   const [trafficLogs, setTrafficLogs] = useState<WebTrafficLog[]>(db.webTrafficLogs || []);
@@ -102,11 +103,11 @@ export default function AdminTrafficPage() {
   // City counts
   const cityCounts: Record<string, number> = {};
   trafficLogs.forEach((l) => {
-    const loc = `${l.city || "Chennai"}, ${l.countryCode || "IN"}`;
+    const loc = formatCleanLocation(l.city, l.countryCode || l.country || "IN");
     cityCounts[loc] = (cityCounts[loc] || 0) + 1;
   });
   const topCityEntry = Object.entries(cityCounts).sort((a, b) => b[1] - a[1])[0];
-  const topCityName = topCityEntry ? topCityEntry[0] : "Chennai, IN";
+  const topCityName = topCityEntry ? topCityEntry[0] : "Namakkal, India";
 
   // Filtered list
   const filtered = trafficLogs.filter((log) => {
@@ -437,7 +438,7 @@ export default function AdminTrafficPage() {
               <div className="flex items-center justify-between text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
                 <span className="text-slate-300 flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-sky-400" />
-                  {log.city}, {log.country}
+                  {formatCleanLocation(log.city, log.country)}
                 </span>
                 <span className="font-mono text-amber-300 font-bold">{log.pagePath}</span>
               </div>
@@ -492,8 +493,7 @@ export default function AdminTrafficPage() {
                     <div className="flex items-center gap-1.5 font-medium text-white">
                       <span className="text-sm">📍</span>
                       <span>
-                        {log.city}, {log.region ? `${log.region}, ` : ""}
-                        {log.country}
+                        {formatCleanLocation(log.city, log.country, log.region)}
                       </span>
                     </div>
                   </td>
@@ -567,7 +567,7 @@ export default function AdminTrafficPage() {
                 <div>
                   <span className="text-[10px] text-slate-400 block uppercase">Geographic Location</span>
                   <span className="font-bold text-white">
-                    {selectedLog.city}, {selectedLog.region}, {selectedLog.country}
+                    {formatCleanLocation(selectedLog.city, selectedLog.country, selectedLog.region)}
                   </span>
                 </div>
                 <div>

@@ -105,10 +105,32 @@ function getInitialAuthState(): {
       db.saveToLocalStorage();
     }
 
-    let sub = db.subscriptions.find((s) => s.businessId === biz?.id) || null;
+    if (user && (user.name?.includes("Super Admin") || user.email?.toLowerCase() === "manirajankg@gmail.com")) {
+      user.name = "Mani Raja";
+    }
+
+    let sub: Subscription | null = biz ? (db.getSubscription(biz.id) || null) : null;
     if (!sub && biz) {
       if (user.id === "u-ravi-iyer-01") {
         sub = db.subscriptions[0] || null;
+      } else if (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01" || s.businessId === "biz-super-admin-01") || {
+          id: `sub-${biz.id}`,
+          businessId: biz.id,
+          planName: "Velvi Lifetime Pro",
+          planCode: "VELVI_PRO",
+          status: "ACTIVE",
+          trialStart: "2026-01-01T00:00:00Z",
+          trialEnd: "2035-12-31T23:59:59Z",
+          currentPeriodStart: "2026-01-01T00:00:00Z",
+          currentPeriodEnd: "2035-12-31T23:59:59Z",
+          billingCycle: "YEARLY",
+          autoRenew: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        db.subscriptions.push(sub);
+        db.saveToLocalStorage();
       } else {
         const now = new Date();
         const end = new Date(Date.now() + 30 * 86400000);
@@ -205,21 +227,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setCurrentBusiness(biz ? { ...biz } : null);
 
-    let sub = biz ? db.subscriptions.find((s) => s.businessId === biz.id) : null;
+    if (user && (user.name?.includes("Super Admin") || user.email?.toLowerCase() === "manirajankg@gmail.com")) {
+      user.name = "Mani Raja";
+    }
+
+    let sub = biz ? db.getSubscription(biz.id) : null;
     if (!sub && biz) {
       if (user.id === "u-ravi-iyer-01") {
         sub = db.subscriptions[0];
       } else if (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
-        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01") || {
+        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01" || s.businessId === "biz-super-admin-01") || {
           id: `sub-${biz.id}`,
           businessId: biz.id,
           planName: "Velvi Lifetime Pro",
           planCode: "VELVI_PRO",
           status: "ACTIVE",
-          trialStart: new Date().toISOString(),
-          trialEnd: new Date(Date.now() + 365 * 10 * 86400000).toISOString(),
-          currentPeriodStart: new Date().toISOString(),
-          currentPeriodEnd: new Date(Date.now() + 365 * 10 * 86400000).toISOString(),
+          trialStart: "2026-01-01T00:00:00Z",
+          trialEnd: "2035-12-31T23:59:59Z",
+          currentPeriodStart: "2026-01-01T00:00:00Z",
+          currentPeriodEnd: "2035-12-31T23:59:59Z",
           billingCycle: "YEARLY",
           autoRenew: true,
           createdAt: new Date().toISOString(),
@@ -521,7 +547,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const targetName =
         name ||
         (isSuperAdminEmail
-          ? "Maniraja (Super Admin)"
+          ? "Mani Raja"
           : targetEmail
           ? targetEmail
               .split("@")[0]

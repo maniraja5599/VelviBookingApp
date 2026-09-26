@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cleanCityName, cleanCountryName } from "@/lib/utils/location";
 
 export async function GET(req: NextRequest) {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -63,8 +64,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Clean and sanitize city and country names
+  city = cleanCityName(city);
+  country = cleanCountryName(country);
+
   // Defaults if still empty
-  if (!city) city = ip === "127.0.0.1" ? "Localhost" : "Tamil Nadu";
+  if (!city) city = ip === "127.0.0.1" ? "Localhost" : "Namakkal";
   if (!country) country = "India";
   if (!region) region = "Tamil Nadu";
 

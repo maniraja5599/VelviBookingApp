@@ -8,12 +8,14 @@ import { DeveloperCredit } from "./DeveloperCredit";
 interface ComplianceFooterProps {
   hideDeveloperCredit?: boolean;
   supportEmail?: string;
+  supportPhone?: string;
   className?: string;
 }
 
 export function ComplianceFooter({
   hideDeveloperCredit = false,
-  supportEmail = "support@velvi.date",
+  supportEmail = "manirajankg@gmail.com",
+  supportPhone = "+91 8300030123",
   className = "",
 }: ComplianceFooterProps = {}) {
   return (
@@ -79,8 +81,8 @@ export function ComplianceFooter({
             {supportEmail}
           </a>{" "}
           &bull;{" "}
-          <a href="tel:+919159036301" className="underline hover:text-amber-900">
-            +91 9159036301
+          <a href={`tel:${supportPhone.replace(/\s+/g, "")}`} className="underline hover:text-amber-900">
+            {supportPhone}
           </a>
         </p>
       </div>

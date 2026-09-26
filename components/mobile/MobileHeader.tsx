@@ -308,16 +308,27 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isProfileMenuOpen]);
 
-  // Determine display name - honor user's actual Google name
+  // Determine display name - honor user's actual Google name and strictly strip any role suffixes
+  const cleanDisplayName = (name: string): string => {
+    if (!name) return "Mani Raja";
+    return name
+      .replace(/\s*\(\s*super\s*admin\s*\)/gi, "")
+      .replace(/\s*-\s*super\s*admin/gi, "")
+      .replace(/\s*super\s*admin/gi, "")
+      .replace(/\s*\(superadmin\)/gi, "")
+      .trim() || "Mani Raja";
+  };
+
   const rawName =
     (currentUser?.name && currentUser.name.trim()) ||
     (currentBusiness?.iyerName && currentBusiness.iyerName.trim()) ||
     (currentBusiness?.name && currentBusiness.name.trim()) ||
     "";
-  const displayName =
+  const displayName = cleanDisplayName(
     currentUser?.email?.toLowerCase() === "manirajankg@gmail.com"
-      ? (currentUser?.name?.trim() || "Maniraja")
-      : (rawName || "Maniraja");
+      ? (currentUser?.name?.trim() || "Mani Raja")
+      : (rawName || "Mani Raja")
+  );
   const initial = displayName ? displayName[0].toUpperCase() : "M";
 
   const handleLogout = async () => {

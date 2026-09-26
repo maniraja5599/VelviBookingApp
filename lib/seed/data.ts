@@ -23,7 +23,7 @@ export const SEED_SUPER_ADMIN: User = {
   id: "u-super-admin-01",
   googleId: "google-admin-9999",
   email: "manirajankg@gmail.com",
-  name: "Maniraja (Super Admin)",
+  name: "Mani Raja",
   avatarUrl: "",
   mobile: "+918300030123",
   mobileVerified: true,

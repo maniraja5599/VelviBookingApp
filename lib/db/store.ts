@@ -38,6 +38,7 @@ import {
   SEED_BOOKINGS,
 } from "@/lib/seed/data";
 import { calculateNewExpiryDate, validateReferralReward } from "@/lib/referrals/engine";
+import { cleanCityName, cleanCountryName } from "@/lib/utils/location";
 import {
   pushBookingToCloud,
   pushCustomerToCloud,
@@ -768,7 +769,17 @@ export class VelviDatabaseStore {
   }
 
   public getSubscription(businessId: string): Subscription | undefined {
-    return this.subscriptions.find((s) => s.businessId === businessId);
+    let sub = this.subscriptions.find((s) => s.businessId === businessId);
+    if (!sub && businessId) {
+      const biz = this.businesses.find((b) => b.id === businessId);
+      if (biz && biz.ownerId) {
+        const siblingBizIds = this.businesses
+          .filter((b) => b.ownerId === biz.ownerId)
+          .map((b) => b.id);
+        sub = this.subscriptions.find((s) => siblingBizIds.includes(s.businessId));
+      }
+    }
+    return sub;
   }
 
 
@@ -1398,6 +1409,31 @@ export class VelviDatabaseStore {
       reason: params.reason,
       createdAt: new Date().toISOString(),
     });
+
+    // Ensure all sibling businesses of the same owner share this updated validity
+    const biz = this.businesses.find((b) => b.id === sub.businessId);
+    if (biz && biz.ownerId) {
+      const siblingBizList = this.businesses.filter((b) => b.ownerId === biz.ownerId);
+      siblingBizList.forEach((sb) => {
+        if (sb.id !== sub.businessId) {
+          let sSub = this.subscriptions.find((s) => s.businessId === sb.id);
+          if (sSub) {
+            sSub.currentPeriodEnd = sub.currentPeriodEnd;
+            sSub.status = sub.status;
+            sSub.planCode = sub.planCode;
+            sSub.updatedAt = new Date().toISOString();
+          } else {
+            sSub = {
+              ...sub,
+              id: `sub-${sb.id}`,
+              businessId: sb.id,
+            };
+            this.subscriptions.push(sSub);
+          }
+          pushSubscriptionToCloud(sSub).catch(() => {});
+        }
+      });
+    }
 
     this.saveToLocalStorage();
     pushSubscriptionToCloud(sub).catch(() => {});
@@ -2037,12 +2073,31 @@ export class VelviDatabaseStore {
           if (!this.users.some((u) => u.email.toLowerCase() === SEED_SUPER_ADMIN.email.toLowerCase())) {
             this.users.push(SEED_SUPER_ADMIN);
           }
+          this.users.forEach((u: User) => {
+            if (u.name?.includes("Super Admin") || u.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
+              u.name = "Mani Raja";
+            }
+            if (u.lastLoginCity) u.lastLoginCity = cleanCityName(u.lastLoginCity);
+            if (u.registrationCity) u.registrationCity = cleanCityName(u.registrationCity);
+          });
         }
         if (Array.isArray(state.businesses) && state.businesses.length > 0) {
           this.businesses = state.businesses;
         }
         if (Array.isArray(state.subscriptions) && state.subscriptions.length > 0) {
           this.subscriptions = state.subscriptions;
+        }
+        // Pin Super Admin Lifetime Pro subscription so validity is always rock-solid
+        const saSub = this.subscriptions.find((s) => s.businessId === "biz-super-admin-01" || s.id === "sub-super-admin-01");
+        if (saSub) {
+          saSub.status = "ACTIVE";
+          saSub.planCode = "VELVI_PRO";
+          saSub.planName = "Velvi Lifetime Pro";
+          if (!saSub.currentPeriodEnd || new Date(saSub.currentPeriodEnd).getFullYear() < 2030) {
+            saSub.currentPeriodEnd = "2035-12-31T23:59:59Z";
+          }
+        } else {
+          this.subscriptions.push(structuredClone(SEED_SUPER_ADMIN_SUBSCRIPTION));
         }
         if (Array.isArray(state.customers)) this.customers = state.customers;
         if (Array.isArray(state.bookings)) this.bookings = state.bookings;
@@ -2573,15 +2628,15 @@ export class VelviDatabaseStore {
           (isSuperAdmin ? this.businesses.find((b) => b.id === "biz-super-admin-01" || b.ownerId === user.id) : undefined);
 
       // Sub resolution with multi-fallback and payment linkage
-      let sub = biz
-        ? this.subscriptions.find((s) => s.businessId === biz.id) ||
-          (isDemo ? this.subscriptions.find((s) => s.businessId === "biz-venkateswara-01") : undefined)
-        : undefined;
+      let sub = biz ? this.getSubscription(biz.id) : undefined;
 
       if (!sub) {
-        sub = this.subscriptions.find(
-          (s) => s.businessId === user.id || s.businessId === `biz-${user.id}`
-        );
+        const allUserBizIds = this.businesses
+          .filter((b) => b.ownerId === user.id)
+          .map((b) => b.id);
+        if (isSuperAdmin) allUserBizIds.push("biz-super-admin-01");
+        allUserBizIds.push(user.id, `biz-${user.id}`, `biz-u-${user.id}`);
+        sub = this.subscriptions.find((s) => allUserBizIds.includes(s.businessId));
       }
 
       // Check payments ledger for any verified successful payments for this user or business
@@ -2648,8 +2703,8 @@ export class VelviDatabaseStore {
 
       // Comprehensive IP resolution with audit fallback
       let ipAddress = user.lastLoginIp || user.registrationIp;
-      let city = user.lastLoginCity || user.registrationCity;
-      let country = user.lastLoginCountry || user.registrationCountry;
+      let city = cleanCityName(user.lastLoginCity || user.registrationCity);
+      let country = cleanCountryName(user.lastLoginCountry || user.registrationCountry);
 
       if (!ipAddress) {
         const auditMatch = this.auditLogs.find(
@@ -2657,15 +2712,15 @@ export class VelviDatabaseStore {
         );
         if (auditMatch) {
           ipAddress = auditMatch.ipAddress;
-          city = city || auditMatch.city;
-          country = country || auditMatch.country;
+          city = city || cleanCityName(auditMatch.city);
+          country = country || cleanCountryName(auditMatch.country);
         }
       }
 
       if (isSuperAdmin) {
         ipAddress = ipAddress || "61.0.51.92";
-        city = city || "Namakkal";
-        country = country || "India";
+        city = "Namakkal";
+        country = "India";
       }
 
       return {
@@ -3111,7 +3166,7 @@ export class VelviDatabaseStore {
     this.auditLogs.unshift({
       id: `log-del-${Date.now()}`,
       actorId: "u-super-admin-01",
-      actorName: "Maniraja (Super Admin)",
+      actorName: "Mani Raja",
       action: "DELETE_USER",
       targetType: "USER",
       targetId: userId,

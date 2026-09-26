@@ -272,7 +272,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     try {
       await loginWithGoogle(
         "manirajankg@gmail.com",
-        googleVerifiedProfile?.name || "Maniraja (Super Admin)",
+        googleVerifiedProfile?.name || "Mani Raja",
         googleVerifiedProfile?.picture
       );
       sessionStorage.setItem("velvi_super_admin_verified", "true");
@@ -393,13 +393,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                   <span>Security PIN</span>
                 </label>
-                <span className="text-[10px] text-amber-400 font-mono font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                  Default: 5599
-                </span>
               </div>
               <div className="relative">
                 <input
-                  type={showPin ? "text" : "password"}
+                  type="password"
                   required
                   maxLength={4}
                   inputMode="numeric"
@@ -411,16 +408,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setLoginError("");
                   }}
                   placeholder="••••"
-                  className="w-full pl-3.5 pr-10 py-2.5 bg-[#060a14] border border-slate-700/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl text-white font-mono text-center text-lg tracking-[0.3em] font-bold focus:outline-none transition shadow-inner"
+                  className="w-full px-3.5 py-2.5 bg-[#060a14] border border-slate-700/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl text-white font-mono text-center text-lg tracking-[0.3em] font-bold focus:outline-none transition shadow-inner"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPin(!showPin)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white transition cursor-pointer"
-                  title={showPin ? "Hide PIN" : "Show PIN"}
-                >
-                  {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
             </div>
 

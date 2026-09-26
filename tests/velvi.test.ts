@@ -2064,6 +2064,35 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     // Length should not have duplicated
     expect(b1.paymentRecords?.length).toBe(payCountBefore);
   });
+
+  // TEST CASE 62: Location & City Sanitizer (Namakkal encoding & unicode normalization)
+  it("Test 62: Cleans URL-encoded and unicode diacritic city names like N%C4%81makkal and Nāmakkal to pure Namakkal", async () => {
+    const { cleanCityName, cleanCountryName, formatCleanLocation } = await import(
+      "../lib/utils/location"
+    );
+
+    // 1. URL encoded Vercel/Cloudflare headers
+    expect(cleanCityName("N%C4%81makkal")).toBe("Namakkal");
+
+    // 2. Unicode with macron or diacritic
+    expect(cleanCityName("Nāmakkal")).toBe("Namakkal");
+    expect(cleanCityName("Námakkal")).toBe("Namakkal");
+
+    // 3. Corrupted or mojibake strings
+    expect(cleanCityName("N\uFFFDmakkal")).toBe("Namakkal");
+
+    // 4. Other key cities
+    expect(cleanCityName("chennai")).toBe("Chennai");
+    expect(cleanCityName("Madras")).toBe("Chennai");
+    expect(cleanCityName("Kovai")).toBe("Coimbatore");
+    expect(cleanCityName("Tiruch")).toBe("Tiruchirappalli");
+
+    // 5. Country and combined location
+    expect(cleanCountryName("IN")).toBe("India");
+    expect(cleanCountryName("India")).toBe("India");
+    expect(formatCleanLocation("N%C4%81makkal", "India")).toBe("Namakkal, India");
+    expect(formatCleanLocation("Nāmakkal", "IN")).toBe("Namakkal, India");
+  });
 });
 
 

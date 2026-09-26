@@ -60,6 +60,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { cleanCityName, cleanCountryName, formatCleanLocation } from "@/lib/utils/location";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import {
   retryCloudSync,
@@ -140,14 +141,18 @@ export default function SuperAdminDashboardPage() {
           );
           if (superAdmin) {
             superAdmin.lastLoginIp = data.ip;
-            superAdmin.registrationIp = superAdmin.registrationIp || data.ip;
+            if (superAdmin.name?.includes("Super Admin")) {
+              superAdmin.name = "Mani Raja";
+            }
             if (data.city) {
-              superAdmin.lastLoginCity = data.city;
-              superAdmin.registrationCity = superAdmin.registrationCity || data.city;
+              const c = cleanCityName(data.city);
+              superAdmin.lastLoginCity = c;
+              superAdmin.registrationCity = superAdmin.registrationCity ? cleanCityName(superAdmin.registrationCity) : c;
             }
             if (data.country) {
-              superAdmin.lastLoginCountry = data.country;
-              superAdmin.registrationCountry = superAdmin.registrationCountry || data.country;
+              const co = cleanCountryName(data.country);
+              superAdmin.lastLoginCountry = co;
+              superAdmin.registrationCountry = superAdmin.registrationCountry ? cleanCountryName(superAdmin.registrationCountry) : co;
             }
             updated = true;
           }
@@ -309,7 +314,7 @@ export default function SuperAdminDashboardPage() {
     const res = db.promoteUserToAdmin({
       email: inviteAdminEmail.trim(),
       promotedBy: currentUser?.id || "u-super-admin-01",
-      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      adminName: currentUser?.name?.replace(/\s*\(\s*super\s*admin\s*\)/gi, "") || "Mani Raja",
       reason: inviteAdminReason.trim() || "Promoted to Editor Admin by Super Admin",
     });
     if (res.success && res.user) {
@@ -328,7 +333,7 @@ export default function SuperAdminDashboardPage() {
     const res = db.promoteUserToAdmin({
       userId,
       promotedBy: currentUser?.id || "u-super-admin-01",
-      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      adminName: currentUser?.name?.replace(/\s*\(\s*super\s*admin\s*\)/gi, "") || "Mani Raja",
       reason: `Promoted ${userName} to Editor Admin`,
     });
     if (res.success) {
@@ -346,7 +351,7 @@ export default function SuperAdminDashboardPage() {
     const res = db.removeUserAdminAccess({
       userId,
       removedBy: currentUser?.id || "u-super-admin-01",
-      adminName: currentUser?.name || "Maniraja (Super Admin)",
+      adminName: currentUser?.name?.replace(/\s*\(\s*super\s*admin\s*\)/gi, "") || "Mani Raja",
       reason: `Revoked admin privileges from ${userName}`,
     });
     if (res.success) {
@@ -500,7 +505,7 @@ export default function SuperAdminDashboardPage() {
     const res = db.adjustSubscriptionValidity({
       businessId: selectedBizForModal.bizId,
       adminUserId: "u-super-admin-01",
-      adminName: "Maniraja (Super Admin)",
+      adminName: "Mani Raja",
       adjustmentType: modalAdjustmentType,
       days: modalDays,
       reason: modalReason.trim() || `Manual adjustment by Super Admin`,
@@ -886,17 +891,6 @@ export default function SuperAdminDashboardPage() {
             <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleResetToRealData}
-            disabled={isResetting}
-            className="px-3.5 py-2.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50"
-            title="Reset demo data and refresh directory"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>{isResetting ? "Resetting..." : "Reset Collections"}</span>
-          </button>
-
           <Link
             href="/app"
             className="px-3.5 py-2.5 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-2 active:scale-95"
@@ -1251,7 +1245,7 @@ export default function SuperAdminDashboardPage() {
                   const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
                   const displayIp = log.ipAddress || "Local / Direct";
                   const displayLocation = log.city
-                    ? `${log.city}${log.country ? `, ${log.country}` : ""}`
+                    ? formatCleanLocation(log.city, log.country)
                     : "Location pending";
                   const visitSource =
                     log.newValue?.source ||
@@ -1390,11 +1384,11 @@ export default function SuperAdminDashboardPage() {
 
             const cCounts: Record<string, number> = {};
             trafficLogs.forEach((l) => {
-              const loc = `${l.city || "Chennai"}, ${l.countryCode || "IN"}`;
+              const loc = formatCleanLocation(l.city, l.countryCode || l.country || "IN");
               cCounts[loc] = (cCounts[loc] || 0) + 1;
             });
             const topCityEntry = Object.entries(cCounts).sort((a, b) => b[1] - a[1])[0];
-            const topCityStr = topCityEntry ? topCityEntry[0] : "Chennai, IN";
+            const topCityStr = topCityEntry ? topCityEntry[0] : "Namakkal, India";
 
             return (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1543,7 +1537,7 @@ export default function SuperAdminDashboardPage() {
                 {(() => {
                   const cCounts: Record<string, number> = {};
                   trafficLogs.forEach((l) => {
-                    const loc = `${l.city || "Chennai"}, ${l.countryCode || "IN"}`;
+                    const loc = formatCleanLocation(l.city, l.countryCode || l.country || "IN");
                     cCounts[loc] = (cCounts[loc] || 0) + 1;
                   });
 
@@ -1698,7 +1692,7 @@ export default function SuperAdminDashboardPage() {
                         <div className="flex items-center justify-between text-[11px] bg-[#060a14] p-2.5 rounded-xl border border-slate-800/80">
                           <span className="text-slate-300 flex items-center gap-1">
                             <MapPin className="w-3 h-3 text-sky-400" />
-                            {log.city}, {log.country}
+                            {formatCleanLocation(log.city, log.country)}
                           </span>
                           <span className="font-mono text-amber-300 font-bold">{log.pagePath}</span>
                         </div>
@@ -1758,8 +1752,7 @@ export default function SuperAdminDashboardPage() {
                               <div className="flex items-center gap-1.5 font-medium text-white">
                                 <span className="text-sm">📍</span>
                                 <span>
-                                  {log.city}, {log.region ? `${log.region}, ` : ""}
-                                  {log.country}
+                                  {formatCleanLocation(log.city, log.country, log.region)}
                                 </span>
                               </div>
                             </td>
@@ -2195,7 +2188,7 @@ export default function SuperAdminDashboardPage() {
                         </span>
                         <span className="flex items-center gap-1 text-slate-300 font-sans">
                           <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                          <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "Location Pending"}</span>
+                          <span>{item.city ? formatCleanLocation(item.city, item.country) : "Location Pending"}</span>
                         </span>
                       </div>
                     </div>
@@ -2373,7 +2366,7 @@ export default function SuperAdminDashboardPage() {
                               </div>
                               <div className="flex items-center gap-1 text-[10px] text-slate-400 pl-0.5">
                                 <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-                                <span>{item.city ? `${item.city}${item.country ? `, ${item.country}` : ""}` : "—"}</span>
+                                <span>{item.city ? formatCleanLocation(item.city, item.country) : "—"}</span>
                               </div>
                             </div>
                           </td>
@@ -3681,8 +3674,8 @@ export default function SuperAdminDashboardPage() {
                   <span className="font-bold text-white">1-Tap WhatsApp Receipts &amp; Dakshina Slips</span>
                 </li>
                 <li className="flex items-center justify-between">
-                  <span className="text-slate-400">Factory Reset:</span>
-                  <span className="font-bold text-emerald-400">Clean Slate Reset with Safety Confirmation</span>
+                  <span className="text-slate-400">Cloud Sync & Security:</span>
+                  <span className="font-bold text-emerald-400">Offline-First &amp; Realtime Cloud Replication</span>
                 </li>
               </ul>
             </div>
@@ -4046,7 +4039,7 @@ export default function SuperAdminDashboardPage() {
                 <span className="text-slate-400 font-medium">Location:</span>
                 <span className="text-slate-300">
                   {selectedSessionLog.city
-                    ? `${selectedSessionLog.city}${selectedSessionLog.country ? `, ${selectedSessionLog.country}` : ""}`
+                    ? formatCleanLocation(selectedSessionLog.city, selectedSessionLog.country)
                     : "Pending Location"}
                 </span>
               </div>

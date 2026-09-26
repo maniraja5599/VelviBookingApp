@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "pg";
 import { TrafficSourceType, WebTrafficLog } from "@/lib/types";
+import { cleanCityName, cleanCountryName } from "@/lib/utils/location";
 
 export const dynamic = "force-dynamic";
 
@@ -115,15 +116,8 @@ async function resolveClientGeo(req: NextRequest) {
     }
   }
 
-  try {
-    city = decodeURIComponent(city);
-  } catch {}
-  try {
-    region = decodeURIComponent(region);
-  } catch {}
-  try {
-    country = decodeURIComponent(country);
-  } catch {}
+  city = cleanCityName(city);
+  country = cleanCountryName(country);
 
   if (!city) city = ip === "127.0.0.1" ? "Localhost" : "Chennai";
   if (!country) country = "India";

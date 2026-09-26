@@ -561,8 +561,25 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Direct Support Contact Badge */}
+            <div className="pt-2.5 pb-1 text-center border-t border-slate-100 flex items-center justify-center flex-wrap gap-2 text-[11px] text-slate-500 font-semibold select-none relative z-10">
+              <span className="flex items-center gap-1 text-slate-700 font-bold">
+                <Mail className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <a href="mailto:manirajankg@gmail.com" className="hover:text-amber-800 underline decoration-amber-300">
+                  manirajankg@gmail.com
+                </a>
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="flex items-center gap-1 text-slate-700 font-bold">
+                <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <a href="tel:+918300030123" className="hover:text-emerald-800 underline decoration-emerald-300">
+                  +91 8300030123
+                </a>
+              </span>
+            </div>
+
             {/* Sacred Devotion Branding Badge */}
-            <div className="pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 font-medium select-none relative z-10">
+            <div className="pt-1.5 text-center flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 font-medium select-none relative z-10">
               <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
               <span>
                 Crafted with devotion for Vedic Traditions • <span className="font-extrabold text-slate-800">Velvi Sacred Tech</span>
@@ -703,7 +720,11 @@ export default function LoginPage() {
         )}
 
         {/* Compliance Footer for Cashfree & Legal Policies */}
-        <ComplianceFooter hideDeveloperCredit supportEmail="support@velvi.date" />
+        <ComplianceFooter
+          hideDeveloperCredit
+          supportEmail="manirajankg@gmail.com"
+          supportPhone="+91 8300030123"
+        />
       </div>
     </div>
   );

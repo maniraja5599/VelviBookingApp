@@ -318,7 +318,24 @@ export async function pullSubscriptionFromCloud(businessId: string): Promise<boo
       };
       const idx = db.subscriptions.findIndex((s) => s.businessId === businessId);
       if (idx >= 0) {
-        db.subscriptions[idx] = { ...db.subscriptions[idx], ...mapped };
+        const existingSub = db.subscriptions[idx];
+        const existingTime = existingSub.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
+        const cloudTime = mapped.currentPeriodEnd ? new Date(mapped.currentPeriodEnd).getTime() : 0;
+        const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
+          ? new Date(Math.max(existingTime, cloudTime)).toISOString()
+          : (mapped.currentPeriodEnd || existingSub.currentPeriodEnd);
+        const bestStatus = (Math.max(existingTime, cloudTime) > Date.now() || existingSub.status === "ACTIVE" || mapped.status === "ACTIVE")
+          ? "ACTIVE"
+          : mapped.status;
+        db.subscriptions[idx] = {
+          ...existingSub,
+          ...mapped,
+          currentPeriodEnd: bestPeriodEnd,
+          status: bestStatus,
+        };
+        if (existingTime > cloudTime) {
+          pushSubscriptionToCloud(db.subscriptions[idx]).catch(() => {});
+        }
       } else {
         db.subscriptions.push(mapped);
       }
@@ -1219,7 +1236,24 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
               };
               const subIdx = db.subscriptions.findIndex((s) => s.businessId === mappedSub.businessId);
               if (subIdx >= 0) {
-                db.subscriptions[subIdx] = { ...db.subscriptions[subIdx], ...mappedSub };
+                const existingSub = db.subscriptions[subIdx];
+                const existingTime = existingSub.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
+                const cloudTime = mappedSub.currentPeriodEnd ? new Date(mappedSub.currentPeriodEnd).getTime() : 0;
+                const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
+                  ? new Date(Math.max(existingTime, cloudTime)).toISOString()
+                  : (mappedSub.currentPeriodEnd || existingSub.currentPeriodEnd);
+                const bestStatus = (Math.max(existingTime, cloudTime) > Date.now() || existingSub.status === "ACTIVE" || mappedSub.status === "ACTIVE")
+                  ? "ACTIVE"
+                  : mappedSub.status;
+                db.subscriptions[subIdx] = {
+                  ...existingSub,
+                  ...mappedSub,
+                  currentPeriodEnd: bestPeriodEnd,
+                  status: bestStatus,
+                };
+                if (existingTime > cloudTime) {
+                  pushSubscriptionToCloud(db.subscriptions[subIdx]).catch(() => {});
+                }
               } else {
                 db.subscriptions.push(mappedSub);
               }
@@ -1400,7 +1434,24 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
         };
         const subIdx = db.subscriptions.findIndex((s) => s.businessId === mappedSub.businessId);
         if (subIdx >= 0) {
-          db.subscriptions[subIdx] = { ...db.subscriptions[subIdx], ...mappedSub };
+          const existingSub = db.subscriptions[subIdx];
+          const existingTime = existingSub.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
+          const cloudTime = mappedSub.currentPeriodEnd ? new Date(mappedSub.currentPeriodEnd).getTime() : 0;
+          const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
+            ? new Date(Math.max(existingTime, cloudTime)).toISOString()
+            : (mappedSub.currentPeriodEnd || existingSub.currentPeriodEnd);
+          const bestStatus = (Math.max(existingTime, cloudTime) > Date.now() || existingSub.status === "ACTIVE" || mappedSub.status === "ACTIVE")
+            ? "ACTIVE"
+            : mappedSub.status;
+          db.subscriptions[subIdx] = {
+            ...existingSub,
+            ...mappedSub,
+            currentPeriodEnd: bestPeriodEnd,
+            status: bestStatus,
+          };
+          if (existingTime > cloudTime) {
+            pushSubscriptionToCloud(db.subscriptions[subIdx]).catch(() => {});
+          }
         } else {
           db.subscriptions.push(mappedSub);
         }

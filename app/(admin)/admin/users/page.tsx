@@ -204,16 +204,6 @@ export default function AdminUsersPage() {
             <span>{isCloudSyncing ? "Syncing..." : "Sync Cloud"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleResetCollections}
-            disabled={isResetting}
-            className="px-3 py-2 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95 cursor-pointer disabled:opacity-50"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-            <span>{isResetting ? "Resetting..." : "Purge Sandbox"}</span>
-          </button>
-
           <Link
             href="/admin"
             className="px-3 py-2 bg-gradient-to-r from-amber-500/20 to-amber-500/10 hover:from-amber-500/30 hover:to-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 active:scale-95"
