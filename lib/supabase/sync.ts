@@ -1,6 +1,6 @@
 import { getSupabaseClient, isSupabaseConfigured } from "./client";
 import { db, isLegacyObsoletePooja } from "@/lib/db/store";
-import { Booking, Customer, Pooja, Business, User, Subscription } from "@/lib/types";
+import { Booking, Customer, Pooja, Business, User, Subscription, Coupon } from "@/lib/types";
 
 let isSyncing = false;
 let realtimeSubscription: any = null;
@@ -1650,5 +1650,87 @@ export function initSuperAdminRealtimeSync(onUpdate?: () => void) {
     return () => {};
   }
 }
+
+/**
+ * Push a new coupon to cloud database via /api/admin/coupons
+ */
+export async function pushCouponToCloud(coupon: Coupon): Promise<boolean> {
+  if (!coupon || typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/admin/coupons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coupon),
+    });
+    if (!res.ok) {
+      const putRes = await fetch("/api/admin/coupons", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(coupon),
+      });
+      return putRes.ok;
+    }
+    return true;
+  } catch (err) {
+    console.warn("[CloudSync] pushCouponToCloud error:", err);
+    return false;
+  }
+}
+
+/**
+ * Update an existing coupon in cloud database
+ */
+export async function updateCouponInCloud(coupon: Partial<Coupon> & { id: string }): Promise<boolean> {
+  if (!coupon || !coupon.id || typeof window === "undefined") return false;
+  try {
+    const res = await fetch("/api/admin/coupons", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coupon),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("[CloudSync] updateCouponInCloud error:", err);
+    return false;
+  }
+}
+
+/**
+ * Delete a coupon from cloud database
+ */
+export async function deleteCouponFromCloud(couponId: string): Promise<boolean> {
+  if (!couponId || typeof window === "undefined") return false;
+  try {
+    const res = await fetch(`/api/admin/coupons?id=${encodeURIComponent(couponId)}`, {
+      method: "DELETE",
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn("[CloudSync] deleteCouponFromCloud error:", err);
+    return false;
+  }
+}
+
+/**
+ * Fetch all coupons from cloud database
+ */
+export async function fetchCouponsFromCloud(): Promise<Coupon[] | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/admin/coupons", {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.success && Array.isArray(data.coupons)) {
+      return data.coupons;
+    }
+    return null;
+  } catch (err) {
+    console.warn("[CloudSync] fetchCouponsFromCloud error:", err);
+    return null;
+  }
+}
+
 
 

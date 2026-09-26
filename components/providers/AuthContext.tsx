@@ -653,6 +653,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         if (isSuperAdminEmail) {
           user.role = "SUPER_ADMIN";
+          user.mobile = user.mobile || "+918300030123";
+          user.mobileVerified = true;
         }
         if (avatarUrl) {
           user.avatarUrl = avatarUrl;

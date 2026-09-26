@@ -115,19 +115,25 @@ export default function SuperAdminDashboardPage() {
       showToast("Live update received from Cloud!");
     });
 
+    db.syncCouponsFromCloud().then((c) => setCoupons([...c])).catch(() => {});
+
     const handleDbChange = () => {
       setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
+      setCoupons([...db.coupons]);
     };
     if (typeof window !== "undefined") {
       window.addEventListener("velvi:db-change", handleDbChange);
     }
 
-    // Auto-poll cloud directory every 15s to guarantee fresh cross-device updates
+    // Auto-poll cloud directory and coupons every 15s to guarantee fresh cross-device updates
     const pollTimer = setInterval(() => {
       syncSuperAdminDirectoryFromCloud()
         .then(() => {
           setDirectoryMetrics(db.getAllUsersDirectoryMetrics());
         })
+        .catch(() => {});
+      db.syncCouponsFromCloud()
+        .then((c) => setCoupons([...c]))
         .catch(() => {});
     }, 15000);
 

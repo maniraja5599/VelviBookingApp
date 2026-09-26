@@ -2117,7 +2117,69 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(formatCleanLocation("N%C4%81makkal", "India")).toBe("Namakkal, India");
     expect(formatCleanLocation("Nāmakkal", "IN")).toBe("Namakkal, India");
   });
+
+  // TEST CASE 63: Coupon Lifecycle, Validation, Redemption, and Deletion
+  it("Test 63: Coupon creation, live validation, redemption, and permanent deletion", () => {
+    // 1. Create Coupon
+    const createRes = store.createCoupon({
+      code: "TESTPROMO100",
+      description: "Test Special 100% Free Pass",
+      discountType: "FREE_VALIDITY",
+      discountValue: 100,
+      validityDaysBonus: 30,
+      maxUses: 10,
+      validUntil: "2030-12-31T23:59:59Z",
+      isActive: true,
+      showInSuggestions: true,
+    });
+    expect(createRes.success).toBe(true);
+    expect(createRes.coupon).toBeDefined();
+    expect(store.coupons.some((c) => c.code === "TESTPROMO100")).toBe(true);
+
+    // 2. Validate Coupon
+    const valMonthly = store.validateCoupon("TESTPROMO100", "MONTHLY");
+    expect(valMonthly.valid).toBe(true);
+    expect(valMonthly.finalAmount).toBe(0);
+    expect(valMonthly.bonusDays).toBe(30);
+
+    // 3. Update Coupon
+    const updateRes = store.updateCoupon({
+      id: createRes.coupon!.id,
+      code: "TESTPROMO100",
+      description: "Updated Promo 45 Days Bonus",
+      discountType: "FREE_VALIDITY",
+      discountValue: 100,
+      validityDaysBonus: 45,
+      maxUses: 20,
+      validUntil: "2030-12-31T23:59:59Z",
+      isActive: true,
+      showInSuggestions: true,
+    });
+    expect(updateRes.success).toBe(true);
+    expect(updateRes.coupon?.validityDaysBonus).toBe(45);
+
+    // 4. Redeem Coupon
+    const redeemRes = store.redeemCoupon({
+      code: "TESTPROMO100",
+      businessId: "biz-venkateswara-01",
+      cycle: "MONTHLY",
+    });
+    expect(redeemRes.success).toBe(true);
+    expect(redeemRes.daysAdded).toBe(75); // 30 base + 45 bonus
+    expect(redeemRes.finalAmount).toBe(0);
+    expect(redeemRes.coupon?.usedCount).toBe(1);
+
+    // 5. Delete Coupon
+    const deleteSuccess = store.deleteCoupon(createRes.coupon!.id);
+    expect(deleteSuccess).toBe(true);
+    expect(store.coupons.some((c) => c.code === "TESTPROMO100")).toBe(false);
+
+    // 6. Validate Deleted Coupon fails
+    const valAfterDelete = store.validateCoupon("TESTPROMO100", "MONTHLY");
+    expect(valAfterDelete.valid).toBe(false);
+  });
 });
+
 
 
 

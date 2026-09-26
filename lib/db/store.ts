@@ -47,6 +47,10 @@ import {
   deletePoojaFromCloud,
   clearCloudBusinessData,
   pushSubscriptionToCloud,
+  pushCouponToCloud,
+  updateCouponInCloud,
+  deleteCouponFromCloud,
+  fetchCouponsFromCloud,
 } from "@/lib/supabase/sync";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
 import { getPoojaIcon } from "@/lib/poojas/icons";
@@ -544,6 +548,7 @@ export class VelviDatabaseStore {
   constructor() {
     if (typeof window !== "undefined") {
       this.loadFromLocalStorage();
+      this.syncCouponsFromCloud().catch(() => {});
     }
   }
 
@@ -2044,6 +2049,7 @@ export class VelviDatabaseStore {
         recentlyDeleted: this.recentlyDeleted,
       };
       localStorage.setItem("velvi_db_state_v2", JSON.stringify(state));
+      localStorage.setItem("velvi_coupons_v2", JSON.stringify(this.coupons));
     } catch (e) {
       console.error("Failed to save state to localStorage", e);
     }
@@ -2170,9 +2176,17 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.referrals)) this.referrals = state.referrals;
         if (Array.isArray(state.referralRewards)) this.referralRewards = state.referralRewards;
         if (Array.isArray(state.recentlyDeleted)) this.recentlyDeleted = state.recentlyDeleted;
-        if (Array.isArray(state.coupons) && state.coupons.length > 0) {
-          this.coupons = state.coupons;
-        }
+        try {
+          const rawCoupons = localStorage.getItem("velvi_coupons_v2");
+          if (rawCoupons) {
+            const parsedCoupons = JSON.parse(rawCoupons);
+            if (Array.isArray(parsedCoupons)) {
+              this.coupons = parsedCoupons;
+            }
+          } else if (Array.isArray(state.coupons)) {
+            this.coupons = state.coupons;
+          }
+        } catch {}
         if (Array.isArray(state.webTrafficLogs) && state.webTrafficLogs.length > 0) {
           this.webTrafficLogs = state.webTrafficLogs;
         }
@@ -2791,6 +2805,21 @@ export class VelviDatabaseStore {
   // -------------------------------------------------------------
   // SUPER ADMIN: COUPON MANAGEMENT ENGINE
   // -------------------------------------------------------------
+  public async syncCouponsFromCloud(): Promise<Coupon[]> {
+    if (typeof window === "undefined") return this.coupons;
+    try {
+      const cloudCoupons = await fetchCouponsFromCloud();
+      if (cloudCoupons && Array.isArray(cloudCoupons)) {
+        this.coupons = cloudCoupons;
+        this.saveToLocalStorage();
+        this.notifyListeners();
+      }
+    } catch (e) {
+      console.warn("[VelviStore] syncCouponsFromCloud error:", e);
+    }
+    return this.coupons;
+  }
+
   public createCoupon(params: {
     code: string;
     description: string;
@@ -2826,6 +2855,7 @@ export class VelviDatabaseStore {
     this.coupons.unshift(newCoupon);
     this.saveToLocalStorage();
     this.notifyListeners();
+    pushCouponToCloud(newCoupon).catch(() => {});
 
     return { success: true, coupon: newCoupon };
   }
@@ -2863,6 +2893,7 @@ export class VelviDatabaseStore {
 
     this.saveToLocalStorage();
     this.notifyListeners();
+    updateCouponInCloud(coup).catch(() => {});
 
     return { success: true, coupon: coup };
   }
@@ -2873,6 +2904,7 @@ export class VelviDatabaseStore {
     coup.isActive = !coup.isActive;
     this.saveToLocalStorage();
     this.notifyListeners();
+    updateCouponInCloud(coup).catch(() => {});
     return true;
   }
 
@@ -2882,6 +2914,7 @@ export class VelviDatabaseStore {
     coup.showInSuggestions = coup.showInSuggestions === false ? true : false;
     this.saveToLocalStorage();
     this.notifyListeners();
+    updateCouponInCloud(coup).catch(() => {});
     return true;
   }
 
@@ -2891,6 +2924,7 @@ export class VelviDatabaseStore {
     this.coupons.splice(idx, 1);
     this.saveToLocalStorage();
     this.notifyListeners();
+    deleteCouponFromCloud(couponId).catch(() => {});
     return true;
   }
 
@@ -3006,6 +3040,7 @@ export class VelviDatabaseStore {
 
     const coup = validation.coupon;
     coup.usedCount += 1;
+    updateCouponInCloud(coup).catch(() => {});
 
     const baseCycleDays = params.cycle === "MONTHLY" ? 30 : 365;
     const totalDaysToAdd = baseCycleDays + (coup.validityDaysBonus || 0);

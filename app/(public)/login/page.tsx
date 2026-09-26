@@ -30,10 +30,25 @@ import { loadGoogleIdentityScript, parseGoogleJwt, GoogleUserPayload } from "@/l
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginWithGoogle, loginDemo, updateUser, updateBusiness, logout } = useAuth();
+  const { currentUser, loginWithGoogle, loginDemo, updateUser, updateBusiness, logout } = useAuth();
 
   const [step, setStep] = useState<"login" | "mobile_setup">("login");
   const [googleUser, setGoogleUser] = useState<GoogleUserPayload | null>(null);
+
+  // If user is already authenticated (especially manirajankg@gmail.com / Super Admin), redirect directly into /app
+  useEffect(() => {
+    if (currentUser) {
+      const email = (currentUser.email || "").trim().toLowerCase();
+      if (email === "manirajankg@gmail.com" || currentUser.role === "SUPER_ADMIN") {
+        router.push("/app");
+        return;
+      }
+      if (currentUser.mobile && currentUser.mobile.length >= 10 && currentUser.mobileVerified) {
+        router.push("/app/calendar");
+        return;
+      }
+    }
+  }, [currentUser, router]);
 
   // Profile setup state
   const [fullName, setFullName] = useState("");
@@ -156,6 +171,22 @@ export default function LoginPage() {
     const user = await loginWithGoogle(userPayload.email, userPayload.name, userPayload.picture);
     setGoogleUser(userPayload);
     setFullName(user.name || userPayload.name || userPayload.email.split("@")[0]);
+
+    const targetEmail = (userPayload.email || "").trim().toLowerCase();
+    const isSuperAdmin =
+      targetEmail === "manirajankg@gmail.com" ||
+      targetEmail === "admin@velvi.app" ||
+      user.role === "SUPER_ADMIN";
+
+    // Direct entry into /app for Super Admin / manirajankg@gmail.com
+    if (isSuperAdmin) {
+      if (typeof window !== "undefined") {
+        window.location.href = "/app";
+      } else {
+        router.push("/app");
+      }
+      return;
+    }
 
     // If account already has a registered mobile number, enter the app directly without asking again
     if (user.mobile && user.mobile.length >= 10 && user.mobileVerified) {
