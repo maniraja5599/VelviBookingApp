@@ -261,6 +261,20 @@ export const DEFAULT_COUPONS: Coupon[] = [
     showInSuggestions: true,
     createdAt: "2026-09-01T00:00:00Z",
   },
+  {
+    id: "coup-05",
+    code: "BONUS15",
+    description: "+15 Days Free Bonus Validity on Full Payment (Zero Price Discount)",
+    discountType: "BONUS_DAYS_ONLY",
+    discountValue: 0,
+    validityDaysBonus: 15,
+    maxUses: 1000,
+    usedCount: 0,
+    validUntil: "2030-12-31T23:59:59Z",
+    isActive: true,
+    showInSuggestions: true,
+    createdAt: "2026-09-26T00:00:00Z",
+  },
 ];
 
 export interface UserDirectoryMetric {
@@ -3005,6 +3019,8 @@ export class VelviDatabaseStore {
       discountAmount = Math.round((baseAmount * coup.discountValue) / 100);
     } else if (coup.discountType === "FLAT") {
       discountAmount = Math.min(baseAmount, coup.discountValue);
+    } else if (coup.discountType === "BONUS_DAYS_ONLY") {
+      discountAmount = 0; // 0% discount, full plan price paid, only extra validity days added
     }
 
     const finalAmount = Math.max(0, baseAmount - discountAmount);
@@ -3073,13 +3089,14 @@ export class VelviDatabaseStore {
       paymentMethod:
         validation.finalAmount === 0
           ? "Coupon 100% Free"
+          : coup.discountType === "BONUS_DAYS_ONLY"
+          ? `Coupon ${coup.code} (+${coup.validityDaysBonus}d Bonus)`
           : `Coupon ${coup.code} Discounted`,
       createdAt: new Date().toISOString(),
     });
 
     this.saveToLocalStorage();
     this.notifyListeners();
-
     return {
       success: true,
       subscription: adjustResult.subscription,
@@ -3087,6 +3104,53 @@ export class VelviDatabaseStore {
       finalAmount: validation.finalAmount,
       coupon: coup,
     };
+  }
+
+  public getCouponRedemptions(code: string): Array<{
+    id: string;
+    orderId: string;
+    couponCode: string;
+    businessId: string;
+    businessName: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    amount: number;
+    billingCycle: string;
+    paymentMethod?: string;
+    bonusDaysAdded: number;
+    createdAt: string;
+  }> {
+    const cleanCode = (code || "").trim().toUpperCase();
+    const coup = this.coupons.find((c) => c.code.toUpperCase() === cleanCode);
+    const bonusDays = coup?.validityDaysBonus || 0;
+
+    const matchingPayments = this.payments.filter(
+      (p) =>
+        (p.paymentMethod && p.paymentMethod.toUpperCase().includes(cleanCode)) ||
+        (p.orderId && p.orderId.toUpperCase().includes(cleanCode)) ||
+        (p.gatewayPaymentId && p.gatewayPaymentId.toUpperCase().includes(cleanCode))
+    );
+
+    return matchingPayments.map((p) => {
+      const user = this.users.find((u) => u.id === p.userId);
+      const biz = this.businesses.find((b) => b.id === p.businessId);
+      return {
+        id: p.id,
+        orderId: p.orderId,
+        couponCode: cleanCode,
+        businessId: p.businessId,
+        businessName: biz?.name || biz?.serviceName || "Velvi Vadhyar",
+        userId: p.userId,
+        userName: user?.name || "Devotee/Priest",
+        userEmail: user?.email || "user@velvi.date",
+        amount: p.amount,
+        billingCycle: p.billingCycle || "MONTHLY",
+        paymentMethod: p.paymentMethod,
+        bonusDaysAdded: bonusDays,
+        createdAt: p.createdAt,
+      };
+    });
   }
 
   // -------------------------------------------------------------

@@ -734,14 +734,16 @@ export default function SubscriptionPage() {
             <div className="pt-2 border-t border-emerald-200/60 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
               <div>
                 <span className="text-gray-500 block">Original Price:</span>
-                <span className="font-bold line-through text-gray-400">
+                <span className={`font-bold ${appliedCoupon.discountType === "BONUS_DAYS_ONLY" ? "text-slate-800" : "line-through text-gray-400"}`}>
                   ₹{couponDiscountInfo?.originalAmount}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500 block">Discount:</span>
                 <span className="font-bold text-emerald-700">
-                  -₹{couponDiscountInfo?.discountAmount}
+                  {appliedCoupon.discountType === "BONUS_DAYS_ONLY"
+                    ? "₹0 (Bonus Days Offer)"
+                    : `-₹${couponDiscountInfo?.discountAmount}`}
                   {appliedCoupon.discountType === "FREE_VALIDITY" && " (100% Free)"}
                 </span>
               </div>
@@ -816,6 +818,8 @@ export default function SubscriptionPage() {
                             ? "FREE"
                             : promo.discountType === "PERCENTAGE"
                             ? `${promo.discountValue}% OFF`
+                            : promo.discountType === "BONUS_DAYS_ONLY"
+                            ? `+${promo.validityDaysBonus}d BONUS`
                             : `₹${promo.discountValue} OFF`}
                         </span>
                       </button>

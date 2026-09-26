@@ -333,7 +333,7 @@ export interface AuditLog {
   createdAt: string;
 }
 
-export type CouponDiscountType = "FREE_VALIDITY" | "PERCENTAGE" | "FLAT";
+export type CouponDiscountType = "FREE_VALIDITY" | "PERCENTAGE" | "FLAT" | "BONUS_DAYS_ONLY";
 
 export interface Coupon {
   id: string;

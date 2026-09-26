@@ -547,6 +547,7 @@ export default function SuperAdminDashboardPage() {
   const [newCouponValidUntil, setNewCouponValidUntil] = useState<string>("2028-12-31");
   const [newCouponShowInSuggestions, setNewCouponShowInSuggestions] = useState<boolean>(true);
   const [copiedCoupon, setCopiedCoupon] = useState<string>("");
+  const [selectedCouponForAudit, setSelectedCouponForAudit] = useState<Coupon | null>(null);
 
   const refreshCoupons = () => {
     setCoupons([...db.coupons]);
@@ -2615,12 +2616,18 @@ export default function SuperAdminDashboardPage() {
                   <label className="text-slate-300 font-bold block mb-1">Discount Type</label>
                   <select
                     value={newCouponDiscountType}
-                    onChange={(e) =>
-                      setNewCouponDiscountType(e.target.value as CouponDiscountType)
-                    }
+                    onChange={(e) => {
+                      const val = e.target.value as CouponDiscountType;
+                      setNewCouponDiscountType(val);
+                      if (val === "BONUS_DAYS_ONLY") {
+                        setNewCouponDiscountVal(0);
+                        if (!newCouponBonusDays) setNewCouponBonusDays(15);
+                      }
+                    }}
                     className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="FREE_VALIDITY">100% Free Pass (FREE_VALIDITY)</option>
+                    <option value="BONUS_DAYS_ONLY">Bonus Validity Only (+Days, No Price Discount)</option>
                     <option value="PERCENTAGE">Percentage Off % (PERCENTAGE)</option>
                     <option value="FLAT">Flat ₹ Deduction (FLAT)</option>
                   </select>
@@ -2633,10 +2640,16 @@ export default function SuperAdminDashboardPage() {
                   <input
                     type="number"
                     min={0}
-                    value={newCouponDiscountVal}
+                    disabled={newCouponDiscountType === "BONUS_DAYS_ONLY"}
+                    value={newCouponDiscountType === "BONUS_DAYS_ONLY" ? 0 : newCouponDiscountVal}
                     onChange={(e) => setNewCouponDiscountVal(Number(e.target.value))}
-                    className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[#080c14] border border-zinc-800 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 disabled:opacity-50 disabled:bg-zinc-900"
                   />
+                  {newCouponDiscountType === "BONUS_DAYS_ONLY" && (
+                    <span className="text-[10px] text-amber-400 block mt-1">
+                      Full plan price paid by user (0% discount, ₹0 off)
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -2785,9 +2798,25 @@ export default function SuperAdminDashboardPage() {
                     <p className="text-[11px] text-slate-300 font-medium">{c.description}</p>
 
                     <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-zinc-800">
-                      <span>Discount: <strong className="text-emerald-400">{c.discountType === "FREE_VALIDITY" ? "100% Free" : c.discountValue}</strong></span>
+                      <span>Discount: <strong className="text-emerald-400">
+                        {c.discountType === "FREE_VALIDITY"
+                          ? "100% Free"
+                          : c.discountType === "BONUS_DAYS_ONLY"
+                          ? "0% (Bonus Only)"
+                          : c.discountType === "PERCENTAGE"
+                          ? `${c.discountValue}%`
+                          : `₹${c.discountValue}`}
+                      </strong></span>
                       <span>Bonus: <strong className="text-amber-300">+{c.validityDaysBonus} days</strong></span>
-                      <span>Uses: <strong className="text-white">{c.usedCount}/{c.maxUses}</strong></span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCouponForAudit(c)}
+                        className="hover:underline text-sky-400 font-bold flex items-center gap-1 cursor-pointer"
+                        title="View redemptions"
+                      >
+                        <span>Uses: <strong className="text-white">{c.usedCount}/{c.maxUses}</strong></span>
+                        <ExternalLink className="w-2.5 h-2.5 text-sky-400" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -2846,6 +2875,8 @@ export default function SuperAdminDashboardPage() {
                           <span className="font-bold text-emerald-400">
                             {c.discountType === "FREE_VALIDITY"
                               ? "100% Free Pass"
+                              : c.discountType === "BONUS_DAYS_ONLY"
+                              ? "Bonus Days Only (0% OFF)"
                               : c.discountType === "PERCENTAGE"
                               ? `${c.discountValue}% OFF`
                               : `₹${c.discountValue} OFF`}
@@ -2861,7 +2892,15 @@ export default function SuperAdminDashboardPage() {
                         <td className="p-4">
                           <div className="space-y-1 min-w-[100px]">
                             <div className="flex justify-between text-[10px] font-mono">
-                              <span className="text-white font-bold">{c.usedCount} redeemed</span>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCouponForAudit(c)}
+                                className="text-white hover:text-amber-300 font-bold flex items-center gap-1 cursor-pointer hover:underline"
+                                title="Click to view redemption audit"
+                              >
+                                <span>{c.usedCount} redeemed</span>
+                                <ExternalLink className="w-2.5 h-2.5 text-amber-400/80" />
+                              </button>
                               <span className="text-slate-400">/ {c.maxUses}</span>
                             </div>
                             <div className="w-full bg-[#080c14] rounded-full h-1.5 overflow-hidden border border-zinc-800">
@@ -2905,6 +2944,14 @@ export default function SuperAdminDashboardPage() {
                         <td className="p-4 text-right">
                           {isSuperAdmin ? (
                             <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCouponForAudit(c)}
+                                className="p-1.5 text-sky-400 hover:text-sky-300 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
+                                title="View Redemption Audit"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditCoupon(c)}
@@ -4518,10 +4565,18 @@ export default function SuperAdminDashboardPage() {
                   <label className="text-slate-300 font-bold block mb-1">Discount Type</label>
                   <select
                     value={editCouponDiscountType}
-                    onChange={(e) => setEditCouponDiscountType(e.target.value as CouponDiscountType)}
+                    onChange={(e) => {
+                      const val = e.target.value as CouponDiscountType;
+                      setEditCouponDiscountType(val);
+                      if (val === "BONUS_DAYS_ONLY") {
+                        setEditCouponDiscountVal(0);
+                        if (!editCouponBonusDays) setEditCouponBonusDays(15);
+                      }
+                    }}
                     className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                   >
                     <option value="FREE_VALIDITY">100% Free Pass (FREE_VALIDITY)</option>
+                    <option value="BONUS_DAYS_ONLY">Bonus Validity Only (+Days, No Price Discount)</option>
                     <option value="PERCENTAGE">Percentage Off % (PERCENTAGE)</option>
                     <option value="FLAT">Flat ₹ Deduction (FLAT)</option>
                   </select>
@@ -4545,10 +4600,16 @@ export default function SuperAdminDashboardPage() {
                   <input
                     type="number"
                     min={0}
-                    value={editCouponDiscountVal}
+                    disabled={editCouponDiscountType === "BONUS_DAYS_ONLY"}
+                    value={editCouponDiscountType === "BONUS_DAYS_ONLY" ? 0 : editCouponDiscountVal}
                     onChange={(e) => setEditCouponDiscountVal(Number(e.target.value))}
-                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500 disabled:opacity-50 disabled:bg-zinc-900"
                   />
+                  {editCouponDiscountType === "BONUS_DAYS_ONLY" && (
+                    <span className="text-[10px] text-amber-400 block mt-1">
+                      Full plan price paid by user (0% discount, ₹0 off)
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -4627,6 +4688,143 @@ export default function SuperAdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: COUPON REDEMPTION AUDIT & HISTORY                                 */}
+      {/* ========================================================================= */}
+      {selectedCouponForAudit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-[#0f172a] border border-zinc-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            {/* Header */}
+            <div className="p-4 sm:p-5 border-b border-zinc-800 flex items-center justify-between bg-[#0b1120]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-black text-white text-base tracking-wider">
+                      {selectedCouponForAudit.code}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400/10 text-amber-300 border border-amber-400/20">
+                      {selectedCouponForAudit.discountType === "FREE_VALIDITY"
+                        ? "100% Free Pass"
+                        : selectedCouponForAudit.discountType === "BONUS_DAYS_ONLY"
+                        ? "Bonus Validity Only"
+                        : `${selectedCouponForAudit.discountValue}% OFF`}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 truncate mt-0.5">
+                    {selectedCouponForAudit.description}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCouponForAudit(null)}
+                className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-slate-300 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-3 gap-2 p-4 bg-[#080c14] border-b border-zinc-800/80 text-center">
+              <div className="bg-zinc-900/80 p-2.5 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">Total Redemptions</span>
+                <span className="text-base font-black text-white block mt-0.5">
+                  {selectedCouponForAudit.usedCount} <span className="text-xs text-slate-500 font-normal">/ {selectedCouponForAudit.maxUses}</span>
+                </span>
+              </div>
+              <div className="bg-zinc-900/80 p-2.5 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-amber-400 font-bold block uppercase tracking-wider">Bonus Days</span>
+                <span className="text-base font-black text-amber-300 block mt-0.5">
+                  +{selectedCouponForAudit.validityDaysBonus} Days
+                </span>
+              </div>
+              <div className="bg-zinc-900/80 p-2.5 rounded-2xl border border-zinc-800">
+                <span className="text-[10px] text-emerald-400 font-bold block uppercase tracking-wider">Status</span>
+                <span className="text-base font-black text-emerald-300 block mt-0.5">
+                  {selectedCouponForAudit.isActive ? "Active" : "Disabled"}
+                </span>
+              </div>
+            </div>
+
+            {/* Redemptions List */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Redemption Audit History</span>
+                </h4>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {db.getCouponRedemptions(selectedCouponForAudit.code).length} User Orders
+                </span>
+              </div>
+
+              {(() => {
+                const redemptions = db.getCouponRedemptions(selectedCouponForAudit.code);
+                if (redemptions.length === 0) {
+                  return (
+                    <div className="p-8 text-center bg-zinc-900/40 rounded-2xl border border-dashed border-zinc-800 text-slate-400 space-y-2">
+                      <Clock className="w-8 h-8 text-slate-500 mx-auto" />
+                      <p className="text-xs font-bold text-slate-300">No redemptions logged yet</p>
+                      <p className="text-[11px] text-slate-500">
+                        When users or priests apply this promo code during checkout, their transaction audit will appear here.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-2">
+                    {redemptions.map((r) => (
+                      <div
+                        key={r.id}
+                        className="p-3 bg-zinc-900/90 rounded-2xl border border-zinc-800/80 flex items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-white truncate">{r.userName}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">({r.userEmail})</span>
+                          </div>
+                          <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5 truncate">
+                            <span className="text-slate-300 font-semibold">{r.businessName}</span>
+                            <span>•</span>
+                            <span>{new Date(r.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
+                            <span>•</span>
+                            <span className="text-amber-400 font-bold">+{r.bonusDaysAdded}d Added</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <span className="font-mono font-black text-sm text-emerald-400 block">
+                            ₹{r.amount.toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-semibold">
+                            {r.billingCycle} • {r.paymentMethod || "Direct"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-zinc-800 bg-[#0b1120] flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedCouponForAudit(null)}
+                className="px-5 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Close Audit View
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -2178,7 +2178,54 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     const valAfterDelete = store.validateCoupon("TESTPROMO100", "MONTHLY");
     expect(valAfterDelete.valid).toBe(false);
   });
+
+  // TEST CASE 64: Bonus Validity Only (0% discount, +15 days bonus) & Redemption Audit
+  it("Test 64: BONUS_DAYS_ONLY coupons apply 0% discount with bonus days and track redemption audits", () => {
+    // 1. Create a BONUS_DAYS_ONLY coupon
+    const bonusCouponRes = store.createCoupon({
+      code: "BONUS15TEST",
+      description: "15 Days Extra Bonus Validity (0% OFF)",
+      discountType: "BONUS_DAYS_ONLY",
+      discountValue: 0,
+      validityDaysBonus: 15,
+      maxUses: 10,
+      validUntil: "2030-12-31T23:59:59Z",
+      isActive: true,
+      showInSuggestions: true,
+    });
+    expect(bonusCouponRes.success).toBe(true);
+    expect(bonusCouponRes.coupon?.discountType).toBe("BONUS_DAYS_ONLY");
+
+    // 2. Validate Coupon: should have ₹0 discount, full amount payable, and +15 bonus days
+    const validation = store.validateCoupon("BONUS15TEST", "MONTHLY");
+    expect(validation.valid).toBe(true);
+    expect(validation.discountAmount).toBe(0);
+    expect(validation.finalAmount).toBe(499);
+    expect(validation.bonusDays).toBe(15);
+
+    // 3. Redeem Coupon
+    const redeemRes = store.redeemCoupon({
+      code: "BONUS15TEST",
+      businessId: "biz-venkateswara-01",
+      cycle: "MONTHLY",
+    });
+    expect(redeemRes.success).toBe(true);
+    expect(redeemRes.daysAdded).toBe(45); // 30 base + 15 bonus
+    expect(redeemRes.finalAmount).toBe(499);
+
+    // 4. Check Redemption Audit
+    const redemptions = store.getCouponRedemptions("BONUS15TEST");
+    expect(redemptions.length).toBeGreaterThanOrEqual(1);
+    const audit = redemptions[0];
+    expect(audit.couponCode).toBe("BONUS15TEST");
+    expect(audit.bonusDaysAdded).toBe(15);
+    expect(audit.amount).toBe(499);
+
+    // Clean up
+    store.deleteCoupon(bonusCouponRes.coupon!.id);
+  });
 });
+
 
 
 

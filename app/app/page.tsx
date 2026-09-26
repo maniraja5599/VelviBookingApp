@@ -43,6 +43,7 @@ import {
   ArrowRight,
   ArrowUpDown,
   Trash2,
+  Eye,
 } from "lucide-react";
 
 export default function HomeDashboardPage() {
@@ -581,6 +582,7 @@ export default function HomeDashboardPage() {
   interface MonthlyAnalyticsItem {
     id: string;
     month: string;
+    monthKey?: string;
     fullYear: string;
     year: string;
     billed: number;
@@ -591,11 +593,13 @@ export default function HomeDashboardPage() {
     status: string;
     isCurrent?: boolean;
     cumulative: number;
+    bookings?: Booking[];
   }
 
   const [selectedAnalyticsYear, setSelectedAnalyticsYear] = useState<"2026" | "2025" | "2024" | "ALL">("2026");
   const [selectedAnalyticsMonth, setSelectedAnalyticsMonth] = useState<string>("Sep");
   const [analyticsHoverIndex, setAnalyticsHoverIndex] = useState<number | null>(null);
+  const [selectedMonthModal, setSelectedMonthModal] = useState<MonthlyAnalyticsItem | null>(null);
 
   const monthsMeta = useMemo(
     () => [
@@ -652,6 +656,7 @@ export default function HomeDashboardPage() {
         return {
           id: `${year}-${m.key}`,
           month: m.name,
+          monthKey: m.key,
           fullYear: `${m.name} ${year}${isCurrent ? " (Current)" : ""}`,
           year,
           billed,
@@ -662,6 +667,7 @@ export default function HomeDashboardPage() {
           status: billed > 0 ? `${rate}% Realized` : "0% Realized",
           isCurrent,
           cumulative: running,
+          bookings: mBookings,
         };
       });
     },
@@ -738,12 +744,135 @@ export default function HomeDashboardPage() {
     return { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels };
   }, [activeYearMonthlyData]);
 
+  // All Years SVG Bezier Chart Data for continuous trend line across 2024 - 2026
+  const allYearsChartConfig = useMemo(() => {
+    const yr2024 = allYearsSummary.find((y) => y.year === "2024")?.collected || 0;
+    const yr2025 = allYearsSummary.find((y) => y.year === "2025")?.collected || 0;
+    const yr2026 = allYearsSummary.find((y) => y.year === "2026")?.collected || 0;
+
+    const dataPoints = [
+      { id: "2024", label: "2024", fullYear: "2024 Full Year", collected: yr2024, cumulative: yr2024, count: allYearsSummary.find((y) => y.year === "2024")?.count || 0 },
+      { id: "2025", label: "2025", fullYear: "2025 Full Year", collected: yr2025, cumulative: yr2024 + yr2025, count: allYearsSummary.find((y) => y.year === "2025")?.count || 0 },
+      { id: "2026", label: "2026 (YTD)", fullYear: "2026 YTD", collected: yr2026, cumulative: yr2024 + yr2025 + yr2026, count: allYearsSummary.find((y) => y.year === "2026")?.count || 0 },
+    ];
+
+    const maxCumul = dataPoints[dataPoints.length - 1].cumulative || 1000000;
+    const roundedMax = Math.ceil(maxCumul / 100000) * 100000 || 1000000;
+    const svgWidth = 480;
+    const svgHeight = 150;
+    const padLeft = 48;
+    const padRight = 30;
+    const padTop = 20;
+    const padBottom = 25;
+    const plotW = svgWidth - padLeft - padRight;
+    const plotH = svgHeight - padTop - padBottom;
+
+    const points = dataPoints.map((pt, idx) => {
+      const x = padLeft + (idx / Math.max(1, dataPoints.length - 1)) * plotW;
+      const y = padTop + plotH - (pt.cumulative / roundedMax) * plotH;
+      return { ...pt, x, y };
+    });
+
+    const pathD = points.reduce((acc, pt, idx, arr) => {
+      if (idx === 0) return `M ${pt.x},${pt.y}`;
+      const prev = arr[idx - 1];
+      const cp1x = prev.x + (pt.x - prev.x) / 2;
+      const cp1y = prev.y;
+      const cp2x = prev.x + (pt.x - prev.x) / 2;
+      const cp2y = pt.y;
+      return `${acc} C ${cp1x},${cp1y} ${cp2x},${cp2y} ${pt.x},${pt.y}`;
+    }, "");
+
+    const areaD =
+      points.length > 0
+        ? `${pathD} L ${points[points.length - 1].x},${padTop + plotH} L ${points[0].x},${padTop + plotH} Z`
+        : "";
+
+    const gridLevels = [
+      { pct: 1.0, val: roundedMax },
+      { pct: 0.66, val: Math.round(roundedMax * 0.66) },
+      { pct: 0.33, val: Math.round(roundedMax * 0.33) },
+      { pct: 0.0, val: 0 },
+    ];
+
+    return { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels };
+  }, [allYearsSummary]);
 
   // Selected Month Object in current active year
   const activeMonthDetail = useMemo(() => {
     const found = activeYearMonthlyData.find((m) => m.month === selectedAnalyticsMonth);
     return found || activeYearMonthlyData[activeYearMonthlyData.length - 1];
   }, [activeYearMonthlyData, selectedAnalyticsMonth]);
+
+  // Month-over-Month (MoM) and Year-over-Year (YoY) metrics for activeMonthDetail
+  const monthComparison = useMemo(() => {
+    if (!activeMonthDetail) return null;
+    const currentIdx = activeYearMonthlyData.findIndex((m) => m.month === activeMonthDetail.month);
+    const prevMonth = currentIdx > 0 ? activeYearMonthlyData[currentIdx - 1] : null;
+
+    let momPercent: number | null = null;
+    if (prevMonth && prevMonth.collected > 0) {
+      momPercent = Math.round(((activeMonthDetail.collected - prevMonth.collected) / prevMonth.collected) * 100);
+    } else if (prevMonth && prevMonth.collected === 0 && activeMonthDetail.collected > 0) {
+      momPercent = 100;
+    }
+
+    // YoY comparison: compare against same month in previous year
+    let yoyPercent: number | null = null;
+    const prevYearData = activeMonthDetail.year === "2026" ? data2025 : activeMonthDetail.year === "2025" ? data2024 : null;
+    if (prevYearData) {
+      const sameMonthLastYear = prevYearData.find((m) => m.month === activeMonthDetail.month);
+      if (sameMonthLastYear && sameMonthLastYear.collected > 0) {
+        yoyPercent = Math.round(((activeMonthDetail.collected - sameMonthLastYear.collected) / sameMonthLastYear.collected) * 100);
+      } else if (sameMonthLastYear && sameMonthLastYear.collected === 0 && activeMonthDetail.collected > 0) {
+        yoyPercent = 100;
+      }
+    }
+
+    return { momPercent, yoyPercent, prevMonthName: prevMonth?.month };
+  }, [activeMonthDetail, activeYearMonthlyData, data2025, data2024]);
+
+  // Helper for Monthly Highlights & Top Performers
+  interface MonthTopPerformers {
+    topPooja: { name: string; count: number; amount: number } | null;
+    topDevotee: { name: string; count: number; amount: number } | null;
+    highestDakshinaBooking: Booking | null;
+  }
+
+  const getMonthTopPerformers = (mBookings: Booking[]): MonthTopPerformers | null => {
+    if (!mBookings || mBookings.length === 0) return null;
+
+    // 1. Most Booked Pooja
+    const poojaMap = new Map<string, { name: string; count: number; amount: number }>();
+    mBookings.forEach((b) => {
+      const name = b.poojaEnglishName || "Special Ceremony";
+      const cur = poojaMap.get(name) || { name, count: 0, amount: 0 };
+      cur.count += 1;
+      cur.amount += b.totalAmount || 0;
+      poojaMap.set(name, cur);
+    });
+    const topPooja = Array.from(poojaMap.values()).sort((a, b) => b.count - a.count || b.amount - a.amount)[0] || null;
+
+    // 2. Top Devotee
+    const devoteeMap = new Map<string, { name: string; count: number; amount: number }>();
+    mBookings.forEach((b) => {
+      const name = b.customerName || "Devotee";
+      const cur = devoteeMap.get(name) || { name, count: 0, amount: 0 };
+      cur.count += 1;
+      cur.amount += b.totalAmount || 0;
+      devoteeMap.set(name, cur);
+    });
+    const topDevotee = Array.from(devoteeMap.values()).sort((a, b) => b.amount - a.amount || b.count - a.count)[0] || null;
+
+    // 3. Highest Dakshina Booking & Priest
+    const highestDakshinaBooking = [...mBookings].sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0))[0] || null;
+
+    return {
+      topPooja,
+      topDevotee,
+      highestDakshinaBooking,
+    };
+  };
 
   const topPoojas = useMemo(() => {
     const map = new Map<string, { name: string; count: number; amount: number }>();
@@ -781,46 +910,7 @@ export default function HomeDashboardPage() {
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200">
-      {/* 0. Long-term Sacred Daily Panchangam & Nalla Neram Ribbon (Minimal & Smart) */}
-      <div className="bg-[#1c130c]/90 hover:bg-[#1c130c] text-amber-100 rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 shadow-2xs border border-amber-900/40 backdrop-blur-xs flex items-center justify-between gap-2.5 text-xs transition">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
-            <Sparkles className="w-3.5 h-3.5" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-bold text-amber-100 text-xs sm:text-[13px] truncate">
-                {todayInfo.tamilYear} • {todayInfo.tamilMonth} {todayInfo.tamilDay}
-              </span>
-              <span className="text-[10px] text-amber-400/90 font-semibold">
-                ({todayInfo.dayOfWeekTa})
-              </span>
-              {todayInfo.nallaNeram && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-300 text-[10px] font-medium border border-amber-500/20">
-                  நல்ல நேரம்: {todayInfo.nallaNeram}
-                </span>
-              )}
-            </div>
-            <div className="text-[10.5px] text-stone-400 flex items-center gap-1.5 mt-0.5 truncate">
-              <span className="text-stone-300 font-medium truncate">{todayInfo.tithiNameTa || todayInfo.tithi || "சதுர்தசி"}</span>
-              <span>•</span>
-              <span className="text-stone-300 font-medium truncate">{todayInfo.nakshatraNameTa || todayInfo.nakshatra || "பூரட்டாதி"}</span>
-              {todayInfo.isPournami && <span className="text-amber-300 font-bold">• பௌர்ணமி</span>}
-              {todayInfo.isAmavasai && <span className="text-purple-300 font-bold">• அமாவாசை</span>}
-              {todayInfo.isPradosham && <span className="text-emerald-300 font-bold">• பிரதோஷம்</span>}
-            </div>
-          </div>
-        </div>
-        <Link
-          href="/app/calendar"
-          className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-semibold shrink-0 transition flex items-center gap-1 active:scale-95"
-        >
-          <span>Panchangam</span>
-          <ChevronRight className="w-3 h-3" />
-        </Link>
-      </div>
-
-      {/* 0.1 High-Impact Pending Dakshina Dues Alert Banner (Only for overdue ceremony dates or completed bookings) */}
+      {/* 0. High-Impact Pending Dakshina Dues Alert Banner (Only for overdue ceremony dates or completed bookings) */}
       {overdueDueTotal > 0 && overdueDueBookings.length > 0 && (
         <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-2xl p-3 border border-rose-700/80 shadow-xs flex items-center justify-between gap-3 text-xs animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -899,7 +989,46 @@ export default function HomeDashboardPage() {
         </div>
       </div>
 
-      {/* Quick Action Navigation Grid for Longterm Daily Operations */}
+      {/* 2. Sacred Daily Panchangam & Nalla Neram Ribbon (Relocated Below Collections • Light Elegant Sacred Gold Theme) */}
+      <div className="bg-gradient-to-r from-amber-50/95 via-orange-50/90 to-amber-100/90 text-amber-950 rounded-2xl px-3.5 py-2.5 shadow-2xs border border-amber-200/90 flex items-center justify-between gap-2.5 text-xs transition">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-800 flex items-center justify-center shrink-0 border border-amber-400/40 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-extrabold text-amber-950 text-xs sm:text-[13px] truncate">
+                {todayInfo.tamilYear} • {todayInfo.tamilMonth} {todayInfo.tamilDay}
+              </span>
+              <span className="text-[10.5px] text-amber-800 font-bold">
+                ({todayInfo.dayOfWeekTa})
+              </span>
+              {todayInfo.nallaNeram && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-200/80 text-amber-950 text-[10px] font-black border border-amber-300">
+                  நல்ல நேரம்: {formatTime12H(todayInfo.nallaNeram)}
+                </span>
+              )}
+            </div>
+            <div className="text-[11px] text-amber-900/80 flex items-center gap-1.5 mt-0.5 truncate font-medium">
+              <span className="font-bold truncate">{todayInfo.tithiNameTa || todayInfo.tithi || "சதுர்தசி"}</span>
+              <span>•</span>
+              <span className="font-bold truncate">{todayInfo.nakshatraNameTa || todayInfo.nakshatra || "பூரட்டாதி"}</span>
+              {todayInfo.isPournami && <span className="text-amber-800 font-black">• பௌர்ணமி</span>}
+              {todayInfo.isAmavasai && <span className="text-purple-800 font-black">• அமாவாசை</span>}
+              {todayInfo.isPradosham && <span className="text-emerald-800 font-black">• பிரதோஷம்</span>}
+            </div>
+          </div>
+        </div>
+        <Link
+          href="/app/calendar"
+          className="px-2.5 py-1.5 bg-amber-600/15 hover:bg-amber-600/25 text-amber-900 border border-amber-300/80 rounded-xl text-[11px] font-extrabold shrink-0 transition flex items-center gap-1 active:scale-95 shadow-2xs"
+        >
+          <span>Panchangam</span>
+          <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+
+      {/* 3. Quick Action Navigation Grid for Longterm Daily Operations (Clean English) */}
       <div className="grid grid-cols-4 gap-1.5 text-center text-xs">
         <Link
           href="/app/bookings/new"
@@ -908,7 +1037,7 @@ export default function HomeDashboardPage() {
           <div className="w-6 h-6 rounded-lg bg-emerald-800 text-white flex items-center justify-center">
             <Plus className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[10px] font-bold">புதிய பதிவு</span>
+          <span className="text-[10px] font-bold">New Booking</span>
         </Link>
         <Link
           href="/app/calendar"
@@ -917,7 +1046,7 @@ export default function HomeDashboardPage() {
           <div className="w-6 h-6 rounded-lg bg-amber-700 text-white flex items-center justify-center">
             <Calendar className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[10px] font-bold">காலெண்டர்</span>
+          <span className="text-[10px] font-bold">Calendar</span>
         </Link>
         <button
           type="button"
@@ -930,7 +1059,7 @@ export default function HomeDashboardPage() {
           <div className="w-6 h-6 rounded-lg bg-indigo-700 text-white flex items-center justify-center">
             <Wallet className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[10px] font-bold">கட்டணங்கள்</span>
+          <span className="text-[10px] font-bold">Payments</span>
         </button>
         <button
           type="button"
@@ -943,7 +1072,7 @@ export default function HomeDashboardPage() {
           <div className="w-6 h-6 rounded-lg bg-slate-800 text-white flex items-center justify-center">
             <Users className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[10px] font-bold">+ பக்தர்</span>
+          <span className="text-[10px] font-bold">+ Devotee</span>
         </button>
       </div>
 
@@ -2152,7 +2281,7 @@ export default function HomeDashboardPage() {
                   })()}
                 </div>
 
-                {/* 2. MONTHLY BREAKDOWN: DUAL BAR CHART */}
+                {/* 2. MONTHLY BREAKDOWN: DUAL BAR CHART (Billed ₹ vs Bookings Count) */}
                 <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -2163,15 +2292,15 @@ export default function HomeDashboardPage() {
                         </h4>
                       </div>
                       <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
-                        Billed vs Collected Amount per month
+                        Billed Amount (₹) vs Bookings Count (Qty) per month
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-[9.5px] font-bold">
                       <span className="flex items-center gap-1 text-slate-500">
-                        <span className="w-2 h-2 rounded-xs bg-slate-300 inline-block" /> Billed
+                        <span className="w-2 h-2 rounded-xs bg-slate-300 inline-block" /> Billed (₹)
                       </span>
-                      <span className="flex items-center gap-1 text-emerald-800">
-                        <span className="w-2 h-2 rounded-xs bg-emerald-600 inline-block" /> Collected
+                      <span className="flex items-center gap-1 text-indigo-800">
+                        <span className="w-2 h-2 rounded-xs bg-indigo-600 inline-block" /> Bookings Count
                       </span>
                     </div>
                   </div>
@@ -2182,9 +2311,10 @@ export default function HomeDashboardPage() {
                   }`}>
                     {activeYearMonthlyData.map((m, idx) => {
                       const isSelected = selectedAnalyticsMonth === m.month;
-                      const maxBarVal = Math.max(...activeYearMonthlyData.map((item) => Math.max(item.billed, item.collected)), 1000);
-                      const billedHeightPct = Math.min(100, Math.round((m.billed / maxBarVal) * 100));
-                      const collectedHeightPct = Math.min(100, Math.round((m.collected / maxBarVal) * 100));
+                      const maxBilledVal = Math.max(...activeYearMonthlyData.map((item) => item.billed), 1000);
+                      const maxBookingsVal = Math.max(...activeYearMonthlyData.map((item) => item.bookingsCount), 1);
+                      const billedHeightPct = Math.min(100, Math.round((m.billed / maxBilledVal) * 100));
+                      const bookingsHeightPct = Math.min(100, Math.round((m.bookingsCount / maxBookingsVal) * 100));
 
                       return (
                         <button
@@ -2193,6 +2323,7 @@ export default function HomeDashboardPage() {
                           onClick={() => {
                             setSelectedAnalyticsMonth(m.month);
                             setAnalyticsHoverIndex(idx);
+                            setSelectedMonthModal(m);
                           }}
                           className={`flex flex-col items-center gap-1 p-1 rounded-2xl transition group cursor-pointer ${
                             isSelected
@@ -2203,11 +2334,11 @@ export default function HomeDashboardPage() {
                           <span
                             className={`text-[7.5px] font-black px-1 py-0.2 rounded-md ${
                               isSelected
-                                ? "bg-emerald-700 text-white"
+                                ? "bg-indigo-700 text-white"
                                 : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
                             }`}
                           >
-                            {m.rate}%
+                            {m.bookingsCount} Qty
                           </span>
 
                           <div className="w-full h-20 flex items-end justify-center gap-0.5 sm:gap-1 pt-1 pb-0.5">
@@ -2218,10 +2349,10 @@ export default function HomeDashboardPage() {
                             />
                             <div
                               className={`w-2 sm:w-2.5 rounded-t-md transition-all duration-500 ${
-                                isSelected ? "bg-emerald-700" : "bg-emerald-600 group-hover:bg-emerald-500"
+                                isSelected ? "bg-indigo-700" : "bg-indigo-600 group-hover:bg-indigo-500"
                               }`}
-                              style={{ height: `${Math.max(10, collectedHeightPct)}%` }}
-                              title={`${m.month} Collected: ₹${m.collected.toLocaleString("en-IN")}`}
+                              style={{ height: `${Math.max(10, bookingsHeightPct)}%` }}
+                              title={`${m.month} Bookings: ${m.bookingsCount}`}
                             />
                           </div>
 
@@ -2241,14 +2372,39 @@ export default function HomeDashboardPage() {
 
                   {/* 3. Selected Month Detailed Drilldown Card */}
                   {activeMonthDetail && (
-                    <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/90 space-y-2">
+                    <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/90 space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
                           <span className="font-extrabold text-xs text-emerald-950">
                             {activeMonthDetail.fullYear} Details
                           </span>
+
+                          {/* MoM & YoY Badges */}
+                          {monthComparison && (
+                            <div className="flex items-center gap-1">
+                              {monthComparison.momPercent !== null && (
+                                <span className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full border ${
+                                  monthComparison.momPercent >= 0
+                                    ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                    : "bg-rose-100 text-rose-800 border-rose-300"
+                                }`}>
+                                  {monthComparison.momPercent >= 0 ? `▲ +${monthComparison.momPercent}% MoM` : `▼ ${monthComparison.momPercent}% MoM`}
+                                </span>
+                              )}
+                              {monthComparison.yoyPercent !== null && (
+                                <span className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full border ${
+                                  monthComparison.yoyPercent >= 0
+                                    ? "bg-amber-100 text-amber-900 border-amber-300"
+                                    : "bg-slate-100 text-slate-700 border-slate-300"
+                                }`}>
+                                  {monthComparison.yoyPercent >= 0 ? `★ +${monthComparison.yoyPercent}% YoY` : `★ ${monthComparison.yoyPercent}% YoY`}
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
+
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-white text-emerald-900 border border-emerald-300 shadow-2xs">
                           {activeMonthDetail.status}
                         </span>
@@ -2268,6 +2424,12 @@ export default function HomeDashboardPage() {
                           </span>
                         </div>
                         <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
+                          <span className="text-[9px] text-slate-500 font-bold block">Bookings Count</span>
+                          <span className="font-black text-indigo-900 text-xs block mt-0.5">
+                            {activeMonthDetail.bookingsCount} {activeMonthDetail.bookingsCount === 1 ? "Pooja" : "Poojas"}
+                          </span>
+                        </div>
+                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
                           <span className="text-[9px] text-slate-500 font-bold block">Remaining Due</span>
                           <span className="font-black text-amber-900 text-xs block mt-0.5">
                             {activeMonthDetail.due > 0
@@ -2275,13 +2437,17 @@ export default function HomeDashboardPage() {
                               : "₹0 (Fully Paid)"}
                           </span>
                         </div>
-                        <div className="bg-white p-2 rounded-xl border border-emerald-100 shadow-2xs">
-                          <span className="text-[9px] text-slate-500 font-bold block">Cumulative to Date</span>
-                          <span className="font-black text-emerald-950 text-xs block mt-0.5">
-                            ₹{activeMonthDetail.cumulative.toLocaleString("en-IN")}
-                          </span>
-                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMonthModal(activeMonthDetail)}
+                        className="w-full py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-98"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>View Month Report &amp; Top Performers</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2302,7 +2468,10 @@ export default function HomeDashboardPage() {
                     {activeYearMonthlyData.map((m) => (
                       <div
                         key={m.id}
-                        onClick={() => setSelectedAnalyticsMonth(m.month)}
+                        onClick={() => {
+                          setSelectedAnalyticsMonth(m.month);
+                          setSelectedMonthModal(m);
+                        }}
                         className={`p-2.5 rounded-2xl border transition flex items-center justify-between text-xs cursor-pointer ${
                           selectedAnalyticsMonth === m.month
                             ? "bg-emerald-50/50 border-emerald-300 ring-1 ring-emerald-200"
@@ -2323,7 +2492,7 @@ export default function HomeDashboardPage() {
                               )}
                             </div>
                             <div className="text-[10.5px] text-slate-500 font-semibold mt-0.5">
-                              {m.bookingsCount} Poojas • Billed: ₹{m.billed.toLocaleString("en-IN")} • Cumul: ₹{m.cumulative.toLocaleString("en-IN")}
+                              {m.bookingsCount} {m.bookingsCount === 1 ? "Pooja" : "Poojas"} • Billed: ₹{m.billed.toLocaleString("en-IN")} • Cumul: ₹{m.cumulative.toLocaleString("en-IN")}
                             </div>
                           </div>
                         </div>
@@ -2333,7 +2502,7 @@ export default function HomeDashboardPage() {
                             ₹{m.collected.toLocaleString("en-IN")}
                           </span>
                           <span
-                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded inline-block mt-0.5 ${
+                            className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded inline-flex items-center gap-1 mt-0.5 ${
                               m.rate === 100
                                 ? "bg-emerald-100 text-emerald-800"
                                 : m.rate >= 90
@@ -2341,7 +2510,8 @@ export default function HomeDashboardPage() {
                                 : "bg-amber-50 text-amber-800"
                             }`}
                           >
-                            {m.rate}% Realized
+                            <span>{m.rate}% Realized</span>
+                            <Eye className="w-2.5 h-2.5 opacity-70" />
                           </span>
                         </div>
                       </div>
@@ -2397,6 +2567,142 @@ export default function HomeDashboardPage() {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* 1. ALL YEARS CUMULATIVE COLLECTION TREND LINE CHART */}
+                <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-700" />
+                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900">
+                          Multi-Year Cumulative Trend (2024 - 2026)
+                        </h4>
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                        Continuous cumulative progression across all recorded years
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[9.5px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" />
+                      <span>All-Time Curve</span>
+                    </div>
+                  </div>
+
+                  {/* SVG Bezier Cumulative Line Chart for All Years */}
+                  {(() => {
+                    const { svgWidth, svgHeight, padLeft, padRight, padTop, plotH, points, pathD, areaD, gridLevels } = allYearsChartConfig;
+
+                    return (
+                      <div className="relative w-full overflow-hidden">
+                        <svg
+                          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                          className="w-full h-auto overflow-visible select-none"
+                        >
+                          <defs>
+                            <linearGradient id="cumulAllYearsGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#059669" stopOpacity="0.35" />
+                              <stop offset="100%" stopColor="#059669" stopOpacity="0.02" />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Horizontal Grid lines */}
+                          {gridLevels.map((g, i) => {
+                            const yPos = padTop + plotH * (1 - g.pct);
+                            const label =
+                              g.val >= 100000
+                                ? `₹${(g.val / 100000).toFixed(1)}L`
+                                : `₹${Math.round(g.val / 1000)}k`;
+
+                            return (
+                              <g key={i}>
+                                <line
+                                  x1={padLeft}
+                                  y1={yPos}
+                                  x2={svgWidth - padRight}
+                                  y2={yPos}
+                                  stroke="#e2e8f0"
+                                  strokeDasharray="3 3"
+                                  strokeWidth="1"
+                                />
+                                <text
+                                  x={padLeft - 6}
+                                  y={yPos + 3}
+                                  textAnchor="end"
+                                  fontSize="9"
+                                  fontWeight="700"
+                                  fill="#94a3b8"
+                                >
+                                  {label}
+                                </text>
+                              </g>
+                            );
+                          })}
+
+                          {/* Gradient Fill under curve */}
+                          {areaD && <path d={areaD} fill="url(#cumulAllYearsGrad)" />}
+
+                          {/* Main Bezier Line */}
+                          {pathD && (
+                            <path
+                              d={pathD}
+                              fill="none"
+                              stroke="#047857"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          )}
+
+                          {/* Interactive Points */}
+                          {points.map((pt) => {
+                            return (
+                              <g
+                                key={pt.id}
+                                className="cursor-pointer group"
+                                onClick={() => {
+                                  setSelectedAnalyticsYear(pt.id as any);
+                                  if (pt.id === "2026") setSelectedAnalyticsMonth("Sep");
+                                  else setSelectedAnalyticsMonth("Dec");
+                                }}
+                              >
+                                <circle
+                                  cx={pt.x}
+                                  cy={pt.y}
+                                  r="5"
+                                  fill="#ffffff"
+                                  stroke="#047857"
+                                  strokeWidth="2.5"
+                                  className="transition-all duration-150 group-hover:scale-125"
+                                />
+                                <text
+                                  x={pt.x}
+                                  y={pt.y - 8}
+                                  textAnchor="middle"
+                                  fontSize="8.5"
+                                  fontWeight="800"
+                                  fill="#047857"
+                                >
+                                  ₹{pt.cumulative >= 100000 ? `${(pt.cumulative / 100000).toFixed(1)}L` : `${Math.round(pt.cumulative / 1000)}k`}
+                                </text>
+                                <text
+                                  x={pt.x}
+                                  y={svgHeight - 6}
+                                  textAnchor="middle"
+                                  fontSize="9"
+                                  fontWeight="800"
+                                  fill="#334155"
+                                >
+                                  {pt.label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </svg>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Year-by-Year Comparison Cards with drilldown actions */}
@@ -2977,6 +3283,194 @@ export default function HomeDashboardPage() {
                 className="flex-1 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold shadow-2xs transition cursor-pointer"
               >
                 ஆம், நீக்கு (Delete)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: ENHANCED MONTHLY BREAKDOWN & TOP PERFORMERS                       */}
+      {/* ========================================================================= */}
+      {selectedMonthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col border border-slate-200">
+            {/* Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center justify-center font-black text-sm shrink-0">
+                  {selectedMonthModal.month}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-slate-900 truncate">
+                      {selectedMonthModal.fullYear}
+                    </h3>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      {selectedMonthModal.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                    {selectedMonthModal.bookingsCount} {selectedMonthModal.bookingsCount === 1 ? "Booking" : "Bookings"} • Monthly Performance Breakdown
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedMonthModal(null)}
+                className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* 4 Financial Tiles */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 sm:p-4 bg-slate-50/50 border-b border-slate-100 text-center text-xs">
+              <div className="bg-white p-2.5 rounded-2xl border border-slate-200 shadow-2xs">
+                <span className="text-[9.5px] text-slate-500 font-bold block">Total Billed</span>
+                <span className="font-black text-slate-900 text-sm block mt-0.5">
+                  ₹{selectedMonthModal.billed.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-emerald-50/80 p-2.5 rounded-2xl border border-emerald-200 shadow-2xs">
+                <span className="text-[9.5px] text-emerald-800 font-bold block">Collected</span>
+                <span className="font-black text-emerald-950 text-sm block mt-0.5">
+                  ₹{selectedMonthModal.collected.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-amber-50/80 p-2.5 rounded-2xl border border-amber-200 shadow-2xs">
+                <span className="text-[9.5px] text-amber-800 font-bold block">Pending Due</span>
+                <span className="font-black text-amber-950 text-sm block mt-0.5">
+                  ₹{selectedMonthModal.due.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="bg-indigo-50/80 p-2.5 rounded-2xl border border-indigo-200 shadow-2xs">
+                <span className="text-[9.5px] text-indigo-800 font-bold block">Bookings Qty</span>
+                <span className="font-black text-indigo-950 text-sm block mt-0.5">
+                  {selectedMonthModal.bookingsCount} Poojas
+                </span>
+              </div>
+            </div>
+
+            {/* Top Performers & Highlights Card */}
+            {(() => {
+              const topData = getMonthTopPerformers(selectedMonthModal.bookings || []);
+              if (!topData) return null;
+
+              return (
+                <div className="p-3 sm:p-4 bg-amber-50/40 border-b border-amber-100 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-amber-950">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Monthly Highlights &amp; Top Performers</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    {/* Top Booked Pooja */}
+                    <div className="p-2.5 bg-white rounded-2xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        👑 Top Booked Pooja
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.topPooja?.name || "None"}
+                      </strong>
+                      <span className="text-[10.5px] text-emerald-700 font-bold">
+                        {topData.topPooja ? `${topData.topPooja.count} Bookings • ₹${topData.topPooja.amount.toLocaleString("en-IN")}` : "0"}
+                      </span>
+                    </div>
+
+                    {/* Top Devotee */}
+                    <div className="p-2.5 bg-white rounded-2xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        ⭐ Top Devotee
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.topDevotee?.name || "None"}
+                      </strong>
+                      <span className="text-[10.5px] text-emerald-700 font-bold">
+                        {topData.topDevotee ? `${topData.topDevotee.count} Poojas • ₹${topData.topDevotee.amount.toLocaleString("en-IN")}` : "0"}
+                      </span>
+                    </div>
+
+                    {/* Highest Single Dakshina Booking */}
+                    <div className="p-2.5 bg-white rounded-2xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        💎 Highest Dakshina
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.highestDakshinaBooking?.poojaEnglishName || "None"}
+                      </strong>
+                      <span className="text-[10.5px] text-emerald-700 font-bold">
+                        {topData.highestDakshinaBooking ? `₹${topData.highestDakshinaBooking.totalAmount.toLocaleString("en-IN")} • ${topData.highestDakshinaBooking.assignedIyerName || "Chief Priest"}` : "₹0"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Contributing Poojas List */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-2">
+              <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                Contributing Poojas ({selectedMonthModal.bookings?.length || 0})
+              </h4>
+
+              {(!selectedMonthModal.bookings || selectedMonthModal.bookings.length === 0) ? (
+                <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-xs font-semibold">
+                  No poojas recorded in {selectedMonthModal.fullYear}.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {selectedMonthModal.bookings.map((b) => (
+                    <div
+                      key={b.id}
+                      className="p-3 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200 transition flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-extrabold text-slate-900 truncate">
+                            {b.customerName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            #{b.bookingNumber?.replace(/^#+/, "")}
+                          </span>
+                          <span className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-md ${
+                            b.paymentStatus === "PAID"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : (b.balanceAmount || 0) > 0
+                              ? "bg-rose-100 text-rose-800 border border-rose-300"
+                              : "bg-slate-100 text-slate-700"
+                          }`}>
+                            {b.paymentStatus === "PAID" ? "PAID" : `Due ₹${b.balanceAmount}`}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 truncate mt-0.5">
+                          🪔 {b.poojaEnglishName} • 📅 {b.date} ({b.startTime})
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="font-black text-slate-900 block text-xs">
+                          ₹{b.totalAmount.toLocaleString("en-IN")}
+                        </span>
+                        <span className="text-[9.5px] text-slate-500 font-bold block">
+                          Paid: ₹{(b.advanceAmount || 0).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/80 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedMonthModal(null)}
+                className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Close Report
               </button>
             </div>
           </div>

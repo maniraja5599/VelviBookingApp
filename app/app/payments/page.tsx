@@ -38,6 +38,37 @@ export interface MonthBreakdownData {
   bookings: Booking[];
 }
 
+function getMonthTopPerformers(monthBookings: Booking[]) {
+  if (!monthBookings || monthBookings.length === 0) return null;
+
+  // 1. Top Booked Pooja
+  const poojaMap = new Map<string, { name: string; count: number; amount: number }>();
+  monthBookings.forEach((b) => {
+    const key = b.poojaEnglishName || b.poojaTamilName || "Pooja";
+    const existing = poojaMap.get(key) || { name: key, count: 0, amount: 0 };
+    existing.count += 1;
+    existing.amount += b.totalAmount || 0;
+    poojaMap.set(key, existing);
+  });
+  const topPooja = Array.from(poojaMap.values()).sort((a, b) => b.count - a.count || b.amount - a.amount)[0];
+
+  // 2. Top Devotee
+  const devoteeMap = new Map<string, { name: string; count: number; amount: number }>();
+  monthBookings.forEach((b) => {
+    const key = b.customerName || "Devotee";
+    const existing = devoteeMap.get(key) || { name: key, count: 0, amount: 0 };
+    existing.count += 1;
+    existing.amount += b.totalAmount || 0;
+    devoteeMap.set(key, existing);
+  });
+  const topDevotee = Array.from(devoteeMap.values()).sort((a, b) => b.amount - a.amount || b.count - a.count)[0];
+
+  // 3. Highest Dakshina Single Booking
+  const highestDakshinaBooking = [...monthBookings].sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0))[0];
+
+  return { topPooja, topDevotee, highestDakshinaBooking };
+}
+
 export default function PaymentsPage() {
   const { currentBusiness, currentUser } = useAuth();
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
@@ -1260,6 +1291,62 @@ export default function PaymentsPage() {
                 <span className="text-rose-800">நிலுவை: ₹{selectedBreakdownMonth.due.toLocaleString("en-IN")}</span>
               </div>
             </div>
+
+            {/* Top Performers & Highlights Card */}
+            {(() => {
+              const topData = getMonthTopPerformers(selectedBreakdownMonth.bookings || []);
+              if (!topData) return null;
+
+              return (
+                <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-200/90 space-y-2">
+                  <div className="flex items-center gap-1.5 text-xs font-black text-amber-950">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    <span>மாத சாதனைகள் &amp; சிறப்பம்சங்கள் (Monthly Highlights)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    {/* Top Booked Pooja */}
+                    <div className="p-2.5 bg-white rounded-xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        👑 அதிகம் பதிவு செய்த பூஜை
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.topPooja?.name || "None"}
+                      </strong>
+                      <span className="text-[10px] text-emerald-700 font-bold">
+                        {topData.topPooja ? `${topData.topPooja.count} பதிவுகள் • ₹${topData.topPooja.amount.toLocaleString("en-IN")}` : "0"}
+                      </span>
+                    </div>
+
+                    {/* Top Devotee */}
+                    <div className="p-2.5 bg-white rounded-xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        ⭐ முக்கிய பக்தர் (Top Devotee)
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.topDevotee?.name || "None"}
+                      </strong>
+                      <span className="text-[10px] text-emerald-700 font-bold">
+                        {topData.topDevotee ? `${topData.topDevotee.count} பூஜைகள் • ₹${topData.topDevotee.amount.toLocaleString("en-IN")}` : "0"}
+                      </span>
+                    </div>
+
+                    {/* Highest Single Dakshina Booking */}
+                    <div className="p-2.5 bg-white rounded-xl border border-amber-200/80 shadow-2xs">
+                      <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-800 block">
+                        💎 அதிக தக்ஷிணை பதிவு
+                      </span>
+                      <strong className="text-slate-900 text-xs block truncate mt-0.5">
+                        {topData.highestDakshinaBooking?.poojaEnglishName || "None"}
+                      </strong>
+                      <span className="text-[10px] text-emerald-700 font-bold">
+                        {topData.highestDakshinaBooking ? `₹${topData.highestDakshinaBooking.totalAmount.toLocaleString("en-IN")} (${topData.highestDakshinaBooking.customerName})` : "₹0"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* List of Contributing Bookings */}
             <div className="space-y-2">
