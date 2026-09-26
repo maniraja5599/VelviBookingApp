@@ -969,26 +969,27 @@ function QuickBookingContent() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-44 animate-in fade-in duration-200">
-      {/* Top Header & Mode Toggle Switch */}
+      {/* Top Header & Navigation */}
       <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Link
             href="/app/bookings"
-            className="p-1.5 hover:bg-slate-100 rounded-full text-slate-600 transition"
+            className="w-8 h-8 rounded-full bg-white hover:bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200 shadow-2xs transition active:scale-95"
+            title="Back to Bookings"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
                 New Booking
               </h1>
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-slate-900 text-amber-300 rounded-full border border-slate-700/60 shadow-2xs tracking-wide">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-0.5 bg-slate-900 text-amber-300 rounded-full border border-slate-700/60 shadow-2xs tracking-wide">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                2-Step Quick
+                2-Step Quick Booking
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
               Step 1: Devotee &amp; Pooja • Step 2: Date &amp; Dakshina
             </p>
           </div>
@@ -996,7 +997,7 @@ function QuickBookingContent() {
 
         <Link
           href="/app/bookings"
-          className="text-xs font-bold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 transition active:scale-95 shadow-2xs"
+          className="text-xs font-bold text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition active:scale-95 shadow-2xs"
         >
           Cancel
         </Link>
@@ -1036,9 +1037,9 @@ function QuickBookingContent() {
         );
       })()}
 
-      <form onSubmit={handleOpenPreview} className="space-y-3.5">
-        {/* 2-Step Interactive Segmented Switcher */}
-        <div className="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-2xl text-xs font-bold shadow-2xs">
+      <form onSubmit={handleOpenPreview} className="space-y-4">
+        {/* 2-Step Segmented Switcher (Clean Home Page Subtab Aesthetic) */}
+        <div className="grid grid-cols-2 gap-1 bg-slate-200/90 p-1 rounded-2xl text-xs font-bold shadow-2xs">
           <button
             type="button"
             onClick={() => {
@@ -1091,12 +1092,12 @@ function QuickBookingContent() {
             {/* SECTION 1: DEVOTEE SELECTION */}
             <div
               id="devotee-section"
-              className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
+              className={`animate-section-1 bg-white rounded-3xl p-4 sm:p-5 border shadow-2xs space-y-3.5 transition-all duration-300 ${
                 highlightedSection === "devotee"
                   ? highlightPulse
                     ? "ring-4 ring-rose-400/80 border-2 border-rose-500 shadow-xl shadow-rose-500/25 animate-pulse"
                     : "ring-4 ring-rose-200/80 border-2 border-rose-400 shadow-md shadow-rose-200/30"
-                  : "border-slate-200"
+                  : "border-slate-200/90"
               }`}
             >
               <div className="flex items-center justify-between">
@@ -1264,12 +1265,12 @@ function QuickBookingContent() {
             {/* ================================================================= */}
             <div
               id="pooja-section"
-              className={`bg-white rounded-3xl p-4 sm:p-5 border shadow-xs space-y-3 transition-all duration-300 ${
+              className={`animate-section-2 bg-white rounded-3xl p-4 sm:p-5 border shadow-2xs space-y-3.5 transition-all duration-300 ${
                 highlightedSection === "pooja"
                   ? highlightPulse
                     ? "ring-4 ring-rose-400/80 border-2 border-rose-500 shadow-xl shadow-rose-500/25 animate-pulse"
                     : "ring-4 ring-rose-200/80 border-2 border-rose-400 shadow-md shadow-rose-200/30"
-                  : "border-slate-200"
+                  : "border-slate-200/90"
               }`}
             >
               <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1797,9 +1798,9 @@ function QuickBookingContent() {
     {/* STEP 2 CONTAINER: DATE, PANCHANGAM & DAKSHINA                     */}
     {/* ================================================================= */}
     {twoStepStage === 2 && (
-      <div className="space-y-3.5 animate-in fade-in duration-150">
-        {/* Step 2 Back & Devotee Summary Card (Responsive, No Overflow) */}
-        <div className="bg-white rounded-3xl p-3.5 sm:p-4 border border-slate-200 shadow-xs space-y-2.5">
+      <div className="space-y-4">
+        {/* SECTION 1: DEVOTEE & POOJA SUMMARY CARD WITH OPTIONAL SAMAGRI PREVIEW */}
+        <div className="animate-section-1 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
@@ -1807,43 +1808,43 @@ function QuickBookingContent() {
                 setFormError("");
                 setTwoStepStage(1);
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95 shadow-2xs"
             >
               <ArrowLeft className="w-3.5 h-3.5 text-slate-600" />
               <span>Back to Step 1</span>
             </button>
-            <span className="text-[11px] font-extrabold text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200">
-              Step 2 of 2
+            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-300 shadow-2xs">
+              Step 2 of 2: Date &amp; Dakshina
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-100 text-xs">
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/70 min-w-0">
-              <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-2xl border border-slate-200/80 min-w-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-black text-xs shrink-0 border border-amber-300">
                 👤
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] text-slate-400 font-bold uppercase">Devotee</div>
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Devotee</div>
                 <div className="font-extrabold text-slate-900 truncate">{selectedCustomer?.name || "Devotee"}</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/70 min-w-0">
-              <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
-                🔥
+            <div className="flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-2xl border border-slate-200/80 min-w-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-900 flex items-center justify-center font-black text-sm shrink-0 border border-emerald-300">
+                {currentPooja ? getPoojaIcon(currentPooja) : "🪔"}
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] text-slate-400 font-bold uppercase">Pooja</div>
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pooja</div>
                 <div className="font-extrabold text-slate-900 truncate">{currentPooja?.englishName || "Pooja"}</div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/70 min-w-0">
-              <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="flex items-center gap-2.5 bg-slate-50/80 p-2.5 rounded-2xl border border-slate-200/80 min-w-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-900 flex items-center justify-center font-black text-sm shrink-0 border border-indigo-300">
                 ₹
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] text-slate-400 font-bold uppercase">Dakshina</div>
+                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Dakshina</div>
                 <div className="font-extrabold text-slate-900 truncate">₹{amount.toLocaleString("en-IN")}</div>
               </div>
             </div>
@@ -1857,60 +1858,67 @@ function QuickBookingContent() {
                   <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
                   <span>சாமக்கிரி பொருட்கள் ({samagriItems.filter((i) => i.isChecked !== false).length})</span>
                 </span>
-                <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  {samagriItems.filter((i) => i.isChecked !== false).length} பொருட்கள் உறுதி
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowStep2ChecklistPreview(!showStep2ChecklistPreview)}
+                  className="text-[10.5px] font-bold text-emerald-900 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-200 transition cursor-pointer flex items-center gap-1"
+                >
+                  <span>{showStep2ChecklistPreview ? "Hide Items" : `Show Items (${samagriItems.filter((i) => i.isChecked !== false).length})`}</span>
+                  {showStep2ChecklistPreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
               </div>
 
-              {/* Full preview in one line each, clean and clear */}
-              <div className="bg-slate-50/70 rounded-2xl p-2 sm:p-2.5 border border-slate-200/90 divide-y divide-slate-100 space-y-0.5">
-                {samagriItems.filter((i) => i.isChecked !== false).map((it, idx) => (
-                  <div
-                    key={it.id || idx}
-                    className="flex items-center justify-between text-xs py-1.5 px-1.5 hover:bg-white rounded-lg transition"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black shrink-0 border border-emerald-300">
-                        ✓
-                      </span>
-                      <span className="font-extrabold text-slate-800 truncate">
-                        {idx + 1}. {it.itemTamilName || it.itemEnglishName}
-                      </span>
-                      {it.itemEnglishName && it.itemTamilName && it.itemEnglishName !== it.itemTamilName && (
-                        <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:inline">
-                          ({it.itemEnglishName})
+              {/* Collapsible preview in one line each, clean and clear */}
+              {showStep2ChecklistPreview && (
+                <div className="bg-slate-50/70 rounded-2xl p-2 sm:p-2.5 border border-slate-200/90 divide-y divide-slate-100 space-y-0.5 animate-in fade-in duration-150">
+                  {samagriItems.filter((i) => i.isChecked !== false).map((it, idx) => (
+                    <div
+                      key={it.id || idx}
+                      className="flex items-center justify-between text-xs py-1.5 px-1.5 hover:bg-white rounded-lg transition"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[9px] font-black shrink-0 border border-emerald-300">
+                          ✓
                         </span>
-                      )}
-                      {it.isCustom && (
-                        <span className="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200 shrink-0">
-                          புதியது
+                        <span className="font-extrabold text-slate-800 truncate">
+                          {idx + 1}. {it.itemTamilName || it.itemEnglishName}
                         </span>
-                      )}
+                        {it.itemEnglishName && it.itemTamilName && it.itemEnglishName !== it.itemTamilName && (
+                          <span className="text-[10px] text-slate-400 font-medium truncate hidden sm:inline">
+                            ({it.itemEnglishName})
+                          </span>
+                        )}
+                        {it.isCustom && (
+                          <span className="text-[9px] font-black text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded border border-amber-200 shrink-0">
+                            புதியது
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-bold text-emerald-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px] shrink-0 ml-2 shadow-2xs">
+                        {it.quantity} {formatUnitShort(it.unit)}
+                      </span>
                     </div>
-                    <span className="font-bold text-emerald-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 text-[11px] shrink-0 ml-2 shadow-2xs">
-                      {it.quantity} {formatUnitShort(it.unit)}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* ================================================================= */}
-        {/* SECTION 3: DATE, PANCHANGAM & TIME                                */}
+        {/* SECTION 2: DATE, PANCHANGAM & TIME                                */}
         {/* ================================================================= */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3">
+        <div className="animate-section-2 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
                 <CalendarIcon className="w-4 h-4 text-emerald-700" />
               </div>
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                3. நாள் &amp; சுப நேரம் (Date &amp; Auspicious Time)
+                2. நாள் &amp; சுப நேரம் (Date &amp; Auspicious Time)
               </h2>
             </div>
-            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300">
+            <span className="text-[11px] font-black text-emerald-950 bg-emerald-100/90 px-2.5 py-0.5 rounded-full border border-emerald-300 shadow-2xs">
               {tamilInfo.formattedDualDate}
             </span>
           </div>
@@ -1980,20 +1988,20 @@ function QuickBookingContent() {
             </div>
           </div>
 
-          {/* Selected Date Panchangam Details Card */}
-          <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-3.5 rounded-2xl border border-amber-200/80 space-y-2 text-xs">
+          {/* Selected Date Sacred Panchangam Details Card (Home Page Gold Theme) */}
+          <div className="bg-gradient-to-r from-amber-50/95 via-orange-50/90 to-amber-100/90 text-amber-950 p-3.5 rounded-2xl border border-amber-200/90 space-y-2.5 text-xs shadow-2xs">
             <div className="flex items-center justify-between flex-wrap gap-1.5">
-              <div className="font-extrabold text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
+              <div className="font-extrabold text-amber-950 flex items-center gap-1.5 text-xs sm:text-sm">
                 <span>📅 {tamilInfo.formattedFullDay || tamilInfo.formattedDualDate}</span>
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 {tamilInfo.tithiTa && (
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-lg border border-amber-200">
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-amber-950 bg-amber-200/80 px-2 py-0.5 rounded-md border border-amber-300">
                     🌕 {tamilInfo.tithiTa}
                   </span>
                 )}
                 {tamilInfo.nakshatraNameTa && (
-                  <span className="text-[10px] sm:text-[10.5px] font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">
+                  <span className="text-[10px] sm:text-[10.5px] font-bold text-amber-950 bg-amber-200/80 px-2 py-0.5 rounded-md border border-amber-300">
                     ⭐ {tamilInfo.nakshatraNameTa}
                   </span>
                 )}
@@ -2001,31 +2009,31 @@ function QuickBookingContent() {
             </div>
 
             {/* Nalla Neram / Gowri / Rahu kalam formatted in 12-Hour (AM/PM) */}
-            <div className="pt-1.5 border-t border-amber-200/60 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-              <div className="bg-white/85 p-2 rounded-xl border border-emerald-200/80 flex flex-col justify-between">
+            <div className="pt-2 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+              <div className="bg-white/90 p-2.5 rounded-xl border border-emerald-200 shadow-2xs flex flex-col justify-between">
                 <span className="text-[10px] font-black uppercase text-emerald-800 tracking-wider">
                   🪔 நல்ல நேரம்
                 </span>
                 <span className="text-[11px] font-bold text-emerald-950 mt-0.5 leading-snug">
-                  {formatRangeTo12Hr(tamilInfo.nallaNeram)}
+                  {formatTime12H(tamilInfo.nallaNeram)}
                 </span>
               </div>
 
-              <div className="bg-white/85 p-2 rounded-xl border border-amber-200/80 flex flex-col justify-between">
-                <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">
+              <div className="bg-white/90 p-2.5 rounded-xl border border-amber-300 shadow-2xs flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase text-amber-900 tracking-wider">
                   ✨ கௌரி நல்ல நேரம்
                 </span>
                 <span className="text-[11px] font-bold text-amber-950 mt-0.5 leading-snug">
-                  {formatRangeTo12Hr(tamilInfo.gowriNallaNeram)}
+                  {formatTime12H(tamilInfo.gowriNallaNeram)}
                 </span>
               </div>
 
-              <div className="bg-white/85 p-2 rounded-xl border border-rose-200/80 flex flex-col justify-between">
+              <div className="bg-white/90 p-2.5 rounded-xl border border-rose-200 shadow-2xs flex flex-col justify-between">
                 <span className="text-[10px] font-black uppercase text-rose-800 tracking-wider">
                   ⛔ ராகு காலம்
                 </span>
                 <span className="text-[11px] font-bold text-rose-950 mt-0.5 leading-snug">
-                  {formatRangeTo12Hr(tamilInfo.rahuKalam)}
+                  {formatTime12H(tamilInfo.rahuKalam)}
                 </span>
               </div>
             </div>
@@ -2134,7 +2142,7 @@ function QuickBookingContent() {
         {/* ================================================================= */}
         {/* SECTION 4: DAKSHINA & PAYMENT                                     */}
         {/* ================================================================= */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3.5">
+        <div className="animate-section-3 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
@@ -2893,7 +2901,7 @@ function QuickBookingContent() {
         {/* ================================================================= */}
         {/* SECTION 5: PERFORMING PRIEST & VENUE                              */}
         {/* ================================================================= */}
-        <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-3.5">
+        <div className="animate-section-4 bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs shrink-0">
@@ -3302,12 +3310,12 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 1                                      */}
     {/* ================================================================= */}
     {twoStepStage === 1 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2.5 px-3 sm:px-4 shadow-2xl">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3 px-3 sm:px-4 shadow-xl">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="font-black text-xs sm:text-sm truncate flex items-center gap-1.5">
               <span>👤</span>
-              <span className={selectedCustomer ? "text-slate-900 font-extrabold" : "text-amber-700 font-bold"}>
+              <span className={selectedCustomer ? "text-slate-900 font-extrabold" : "text-amber-800 font-bold"}>
                 {selectedCustomer ? selectedCustomer.name : "பக்தரைத் தேர்ந்தெடுக்கவும்"}
               </span>
             </div>
@@ -3324,7 +3332,7 @@ function QuickBookingContent() {
           <button
             type="button"
             onClick={validateAndProceedToStep2}
-            className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <span>Next: Date &amp; Dakshina</span>
             <ArrowRight className="w-3.5 h-3.5 text-amber-300" />
@@ -3337,8 +3345,8 @@ function QuickBookingContent() {
     {/* STICKY BOTTOM BAR FOR STEP 2                                      */}
     {/* ================================================================= */}
     {twoStepStage === 2 && (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 py-2.5 px-3 sm:px-4 shadow-2xl">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3 px-3 sm:px-4 shadow-xl">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="font-black text-xs sm:text-sm text-slate-900 truncate">
               👤 {selectedCustomer?.name || "Devotee"} • 🪔 {currentPooja?.englishName || "Pooja"}
@@ -3354,7 +3362,7 @@ function QuickBookingContent() {
 
           <button
             type="submit"
-            className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-[#0b2b17] via-emerald-800 to-[#0b2b17] hover:from-emerald-900 hover:to-emerald-950 text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-900/20 transition active:scale-95 cursor-pointer shrink-0"
+            className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
             <span>Confirm Booking ✨</span>

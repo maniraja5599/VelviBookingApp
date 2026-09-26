@@ -67,3 +67,36 @@ body {
     display: none !important;
   }
 }
+
+/* Staggered Section Entrance Animations for New Booking & Multi-step Forms */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-section-1 {
+  animation: slideUpFade 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-section-2 {
+  animation: slideUpFade 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+.animate-section-3 {
+  animation: slideUpFade 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+
+.animate-section-4 {
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+
+.animate-section-5 {
+  animation: slideUpFade 0.56s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both;
+}
+
