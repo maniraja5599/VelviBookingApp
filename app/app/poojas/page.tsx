@@ -33,11 +33,13 @@ import {
   Crown,
   TrendingUp,
   BarChart3,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { SamagriCategory } from "@/lib/types";
 import { CategoryManagerModal } from "@/components/categories/CategoryManagerModal";
 import { getItemIcon } from "@/lib/samagri/icons";
+import { getPoojaIcon, POOJA_ICON_OPTIONS } from "@/lib/poojas/icons";
 
 const SAMAGRI_UNITS: Array<{
   unit: PoojaItemTemplate["unit"];
@@ -646,6 +648,7 @@ function PoojasCatalogueContent() {
   const [formTamilName, setFormTamilName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formBasePrice, setFormBasePrice] = useState<number | string>("");
+  const [formIcon, setFormIcon] = useState<string>("🐘");
   const [formItems, setFormItems] = useState<PoojaItemTemplate[]>([]);
   const [formError, setFormError] = useState("");
 
@@ -945,6 +948,7 @@ function PoojasCatalogueContent() {
     setFormTamilName(preset.tamilName);
     setFormDescription(preset.description);
     setFormBasePrice(preset.basePrice);
+    setFormIcon(preset.icon || getPoojaIcon({ englishName: preset.englishName, tamilName: preset.tamilName }));
     setFormItems(
       preset.items.map((item, idx) => ({
         id: `item-${Date.now()}-${idx + 1}`,
@@ -971,6 +975,7 @@ function PoojasCatalogueContent() {
     setFormTamilName("");
     setFormDescription("");
     setFormBasePrice("");
+    setFormIcon("🐘");
     setFormItems([]);
     setFormError("");
     setNewItemEnglish("");
@@ -1002,6 +1007,7 @@ function PoojasCatalogueContent() {
     setFormTamilName(p.tamilName || "");
     setFormDescription(p.description || "");
     setFormBasePrice(p.basePrice || 0);
+    setFormIcon(p.icon || getPoojaIcon(p));
     const existing = p.items ? [...p.items] : [];
     setFormItems(existing);
     setModalItemTab(existing.length > 0 ? "selected" : "browse");
@@ -1181,6 +1187,7 @@ function PoojasCatalogueContent() {
         tamilName: finalTa,
         description: formDescription.trim(),
         basePrice: Number(formBasePrice) || 0,
+        icon: formIcon.trim() || getPoojaIcon({ englishName: finalEn, tamilName: finalTa }),
         items: formItems,
       });
 
@@ -1200,6 +1207,7 @@ function PoojasCatalogueContent() {
         tamilName: finalTa,
         description: formDescription.trim(),
         basePrice: Number(formBasePrice) || 0,
+        icon: formIcon.trim() || getPoojaIcon({ englishName: finalEn, tamilName: finalTa }),
         items: formItems,
       });
 
@@ -1332,7 +1340,7 @@ function PoojasCatalogueContent() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shrink-0 shadow-md border border-amber-400">
-                  <Flame className="w-6 h-6 text-amber-100" />
+                  <span className="text-2xl select-none">{getPoojaIcon(selectedPooja)}</span>
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1921,11 +1929,11 @@ function PoojasCatalogueContent() {
             </div>
           </div>
 
-          {/* Kutty Smart Summary Strip (Replaced bulky top performed box) */}
+          {/* Kutty Smart Summary Strip */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
-              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span>🪔</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <Flame className="w-3.5 h-3.5 text-amber-600" />
                 <span>பூஜைகள்</span>
               </div>
               <span className="text-xs sm:text-sm font-black text-slate-900 leading-tight mt-0.5">
@@ -1934,8 +1942,8 @@ function PoojasCatalogueContent() {
             </div>
 
             <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
-              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span>📊</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <Calendar className="w-3.5 h-3.5 text-emerald-600" />
                 <span>முன்பதிவுகள்</span>
               </div>
               <span className="text-xs sm:text-sm font-black text-emerald-800 leading-tight mt-0.5">
@@ -1944,8 +1952,8 @@ function PoojasCatalogueContent() {
             </div>
 
             <div className="bg-white p-2 sm:p-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center">
-              <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
-                <span>🪙</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-slate-500">
+                <IndianRupee className="w-3.5 h-3.5 text-amber-700" />
                 <span>மொத்த தட்சணை</span>
               </div>
               <span className="text-xs sm:text-sm font-black text-amber-900 leading-tight mt-0.5">
@@ -2000,21 +2008,23 @@ function PoojasCatalogueContent() {
                         : "border-slate-200/90 hover:border-emerald-300"
                     }`}
                   >
-                    {/* Cute Smart Top Performer Badge on Top Right Corner */}
+                    {/* Smart Compact Top Performer Badge */}
                     {isTop && (
-                      <span className="absolute -top-2.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 text-white font-black text-[9px] shadow-sm border border-white tracking-wide z-10 animate-in fade-in">
-                        <Sparkles className="w-2.5 h-2.5 text-yellow-200 shrink-0" />
-                        <span>Top Performer ⭐</span>
+                      <span className="absolute -top-2 right-3.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 text-amber-300 font-extrabold text-[8.5px] border border-slate-700/60 shadow-2xs tracking-wide z-10 animate-in fade-in">
+                        <TrendingUp className="w-2.5 h-2.5 text-amber-400" />
+                        <span>Top Booked</span>
                       </span>
                     )}
-                    {/* Left: Flame Avatar + Names + Kutty Smart Metrics */}
+                    {/* Left: Pooja Icon Avatar + Names + Kutty Smart Metrics */}
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-50 to-amber-100/80 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/70 shadow-2xs group-hover:scale-105 transition-transform">
-                        <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-600" />
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/60 to-orange-50 text-slate-800 flex items-center justify-center shrink-0 border border-amber-200/80 shadow-2xs group-hover:scale-105 transition-all">
+                        <span className="text-lg sm:text-xl select-none leading-none">
+                          {getPoojaIcon(p)}
+                        </span>
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        {/* Title Row: English Name + Tamil Name + Top Performed Pill */}
+                        {/* Title Row: English Name + Tamil Name */}
                         <div className="flex items-center gap-1.5 flex-wrap leading-tight">
                           <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
                             {p.englishName}
@@ -2022,11 +2032,6 @@ function PoojasCatalogueContent() {
                           {p.tamilName && p.tamilName !== p.englishName && (
                             <span className="text-[10px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/80 truncate">
                               {p.tamilName}
-                            </span>
-                          )}
-                          {isTop && (
-                            <span className="text-[9px] font-black text-amber-950 bg-amber-200 px-1.5 py-0.2 rounded-full border border-amber-300 shrink-0 inline-flex items-center gap-0.5 shadow-2xs">
-                              👑 Top
                             </span>
                           )}
                         </div>
@@ -2257,6 +2262,43 @@ function PoojasCatalogueContent() {
                               ₹{tpl.basePrice.toLocaleString()}
                             </span>
                             {isSelected && <Check className="w-3 h-3 text-amber-800" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Pooja Icon Picker */}
+                  <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Pooja Icon (பூஜை சின்னம் தேர்வு):</span>
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-slate-500 font-bold">Selected:</span>
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center text-lg shadow-2xs font-bold text-slate-800">
+                          {formIcon}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-1.5 pt-0.5">
+                      {POOJA_ICON_OPTIONS.map((opt) => {
+                        const isSelected = formIcon === opt.icon;
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            onClick={() => setFormIcon(opt.icon)}
+                            title={`${opt.labelEn} • ${opt.labelTa}`}
+                            className={`h-9 rounded-xl flex items-center justify-center text-lg transition active:scale-95 cursor-pointer border shadow-2xs ${
+                              isSelected
+                                ? "bg-amber-100 border-amber-500 ring-2 ring-amber-400/80 scale-105"
+                                : "bg-slate-50/80 hover:bg-amber-50 border-slate-200"
+                            }`}
+                          >
+                            <span>{opt.icon}</span>
                           </button>
                         );
                       })}

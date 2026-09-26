@@ -48,6 +48,7 @@ import {
   pushSubscriptionToCloud,
 } from "@/lib/supabase/sync";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
+import { getPoojaIcon } from "@/lib/poojas/icons";
 
 export interface PlatformSettings {
   appName: string;
@@ -1792,6 +1793,7 @@ export class VelviDatabaseStore {
     durationMinutes?: number;
     basePrice?: number;
     procedure?: string;
+    icon?: string;
     items?: PoojaItemTemplate[];
   }): Pooja {
     const finalEn = (params.englishName?.trim() || params.tamilName?.trim() || "Pooja");
@@ -1806,6 +1808,7 @@ export class VelviDatabaseStore {
       durationMinutes: Number(params.durationMinutes) || 120,
       basePrice: Number(params.basePrice) || 0,
       procedure: params.procedure?.trim() || "",
+      icon: params.icon?.trim() || getPoojaIcon({ englishName: finalEn, tamilName: finalTa }),
       active: true,
       isCustom: true,
       items: params.items || [],

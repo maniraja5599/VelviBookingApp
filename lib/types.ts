@@ -184,6 +184,7 @@ export interface Pooja {
   procedure?: string;
   active: boolean;
   imageUrl?: string;
+  icon?: string;
   items: PoojaItemTemplate[];
   isCustom?: boolean;
   isSample?: boolean;
