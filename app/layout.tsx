@@ -111,6 +111,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "V0kvApttcPvkHuLlHw8pZBJj2_fWp5fSgZ6jKZYEqCI",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
@@ -252,6 +255,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta
+          name="google-site-verification"
+          content="V0kvApttcPvkHuLlHw8pZBJj2_fWp5fSgZ6jKZYEqCI"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
