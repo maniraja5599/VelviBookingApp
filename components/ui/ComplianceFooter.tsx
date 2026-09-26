@@ -5,9 +5,19 @@ import Link from "next/link";
 import { ShieldCheck, Lock } from "lucide-react";
 import { DeveloperCredit } from "./DeveloperCredit";
 
-export function ComplianceFooter() {
+interface ComplianceFooterProps {
+  hideDeveloperCredit?: boolean;
+  supportEmail?: string;
+  className?: string;
+}
+
+export function ComplianceFooter({
+  hideDeveloperCredit = false,
+  supportEmail = "support@velvi.date",
+  className = "",
+}: ComplianceFooterProps = {}) {
   return (
-    <footer className="w-full pt-6 pb-8 border-t border-amber-200/50 mt-8 space-y-4 text-center">
+    <footer className={`w-full pt-6 pb-8 border-t border-amber-200/50 mt-8 space-y-4 text-center ${className}`}>
       {/* Policy Navigation Links */}
       <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-600">
         <Link
@@ -64,9 +74,9 @@ export function ComplianceFooter() {
       {/* Merchant Legal Information for Payment Gateway Compliance */}
       <div className="text-[11px] text-slate-500 max-w-xl mx-auto leading-relaxed pt-1 px-4">
         <p>
-          <strong className="text-slate-700">Legal Entity:</strong> NACHIMUTHU MANIRAJA &bull; <strong className="text-slate-700">Brand:</strong> Velvi &bull; <strong className="text-slate-700">Support:</strong>{" "}
-          <a href="mailto:manirajankg@gmail.com" className="underline hover:text-amber-900">
-            manirajankg@gmail.com
+          <strong className="text-slate-700">Brand:</strong> Velvi &bull; <strong className="text-slate-700">Support:</strong>{" "}
+          <a href={`mailto:${supportEmail}`} className="underline hover:text-amber-900">
+            {supportEmail}
           </a>{" "}
           &bull;{" "}
           <a href="tel:+919159036301" className="underline hover:text-amber-900">
@@ -76,11 +86,13 @@ export function ComplianceFooter() {
       </div>
 
       {/* Developer and Copyright */}
-      <div className="pt-1">
-        <DeveloperCredit />
-      </div>
+      {!hideDeveloperCredit && (
+        <div className="pt-1">
+          <DeveloperCredit />
+        </div>
+      )}
       <p className="text-[10px] text-slate-400">
-        &copy; {new Date().getFullYear()} Velvi SaaS Platform (NACHIMUTHU MANIRAJA). All rights reserved.
+        &copy; {new Date().getFullYear()} Velvi SaaS Platform. All rights reserved.
       </p>
     </footer>
   );

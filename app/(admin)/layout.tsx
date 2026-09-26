@@ -216,7 +216,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 const email = info.email.trim().toLowerCase();
                 if (email !== "manirajankg@gmail.com") {
                   setLoginError(
-                    `Access Denied: (${info.email}) is not authorized. Only manirajankg@gmail.com is authorized as Super Admin.`
+                    `Access Denied: (${info.email}) is not authorized as Super Administrator.`
                   );
                   setIsSigningIn(false);
                   return;
@@ -258,7 +258,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     if (targetEmail !== "manirajankg@gmail.com") {
       setLoginError(
-        "Access Denied: Only manirajankg@gmail.com is authorized as the Super Administrator."
+        "Access Denied: You are not authorized as the Super Administrator."
       );
       return;
     }
@@ -370,7 +370,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <Mail className="w-3.5 h-3.5 text-amber-400" />
                   <span>Administrator Email</span>
                 </span>
-                <span className="text-[10px] text-amber-400/80 font-mono lowercase">manirajankg@gmail.com</span>
+                <span className="text-[10px] text-amber-400/80 font-mono lowercase">super-admin</span>
               </label>
               <div className="relative">
                 <input
@@ -381,7 +381,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     setAdminEmailInput(e.target.value);
                     setLoginError("");
                   }}
-                  placeholder="manirajankg@gmail.com"
+                  placeholder="admin@velvi.date"
                   className="w-full px-3.5 py-2.5 bg-[#060a14] border border-slate-700/80 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 rounded-xl text-white text-xs font-mono focus:outline-none transition shadow-inner"
                 />
               </div>

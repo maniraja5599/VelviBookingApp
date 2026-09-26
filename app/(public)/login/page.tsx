@@ -25,7 +25,6 @@ import {
   X,
 } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
-import { DeveloperCredit } from "@/components/ui/DeveloperCredit";
 import { ComplianceFooter } from "@/components/ui/ComplianceFooter";
 import { loadGoogleIdentityScript, parseGoogleJwt, GoogleUserPayload } from "@/lib/auth/google";
 
@@ -42,7 +41,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDemoLoading, setIsDemoLoading] = useState(false);
-  const [showDevContact, setShowDevContact] = useState(false);
   const [showTestLogin, setShowTestLogin] = useState(false);
   const [testUsername, setTestUsername] = useState("9876543210");
   const [testPassword, setTestPassword] = useState("123456");
@@ -563,95 +561,13 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Interactive Developer Attribution on Login Card */}
+            {/* Sacred Devotion Branding Badge */}
             <div className="pt-2 text-center border-t border-slate-100 flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 font-medium select-none relative z-10">
               <Sparkles className="w-3 h-3 text-amber-500 shrink-0" />
               <span>
-                Crafted with devotion by{" "}
-                <button
-                  type="button"
-                  onClick={() => setShowDevContact(true)}
-                  className="font-extrabold text-slate-900 hover:text-emerald-700 underline decoration-amber-400 decoration-2 underline-offset-2 hover:scale-105 transition-all cursor-pointer inline-flex items-center gap-0.5"
-                  title="Click to view Maniraja's mobile number"
-                >
-                  <span>Maniraja</span>
-                  <Phone className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                </button>{" "}
-                • Velvi Tech
+                Crafted with devotion for Vedic Traditions • <span className="font-extrabold text-slate-800">Velvi Sacred Tech</span>
               </span>
             </div>
-
-            {/* Developer Contact Modal */}
-            {showDevContact && (
-              <div
-                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
-                onClick={() => setShowDevContact(false)}
-              >
-                <div
-                  className="bg-white rounded-3xl p-5 sm:p-6 max-w-xs w-full space-y-4 shadow-2xl border-2 border-amber-300 text-left animate-in zoom-in-95 duration-150"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
-                        <Flame className="w-5 h-5 text-amber-700 fill-amber-500/20" />
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-sm text-slate-900 leading-tight">
-                          Maniraja
-                        </h4>
-                        <p className="text-[10.5px] text-emerald-700 font-bold mt-0.5">
-                          App Developer &amp; Creator
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowDevContact(false)}
-                      className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center cursor-pointer transition"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200/80 text-center space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Direct Mobile Number
-                    </span>
-                    <a
-                      href="tel:+918300030123"
-                      className="text-base font-black text-slate-900 hover:text-emerald-700 tracking-wider block"
-                    >
-                      +91 83000 30123
-                    </a>
-                    <span className="text-[10px] text-emerald-800 font-semibold block">
-                      Tap to call or message directly
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    <a
-                      href="tel:+918300030123"
-                      className="py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
-                    >
-                      <Phone className="w-3.5 h-3.5" />
-                      <span>Call Now</span>
-                    </a>
-
-                    <a
-                      href="https://wa.me/918300030123?text=Vanakkam%20Mani%20Raja,%20inquiring%20about%20Velvi%20App"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="py-2.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>WhatsApp</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
           </div>
         )}
 
@@ -787,7 +703,7 @@ export default function LoginPage() {
         )}
 
         {/* Compliance Footer for Cashfree & Legal Policies */}
-        <ComplianceFooter />
+        <ComplianceFooter hideDeveloperCredit supportEmail="support@velvi.date" />
       </div>
     </div>
   );
