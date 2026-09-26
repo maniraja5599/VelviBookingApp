@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.5.3";
+export const APP_VERSION = "2.5.4";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "23 Sep 2026, 03:10 AM IST";
+export const BUILD_DATE = "26 Sep 2026, 03:38 PM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.4",
+    releaseDate: "26 Sep 2026",
+    releaseTime: "03:38 PM IST",
+    title: "Minimal Smart Daily Panchangam Ribbon, Overdue Dues Filter, and Super Admin Coupon Management",
+    summary:
+      "Delivered a smart minimal Panchangam ribbon with streamlined typography and English action button, upgraded the pending dues alert banner to strictly target completed/overdue ceremonies in simple English, and enabled full Super Admin coupon editing with mobile-optimized console navigation.",
+    isCurrent: true,
+    tag: "Enhancement",
+    changes: [
+      {
+        category: "UI/UX",
+        description: "Streamlined Sacred Daily Panchangam ribbon with compact obsidian styling, inline good timing badge, and English 'Panchangam' navigation button.",
+      },
+      {
+        category: "Feature",
+        description: "Targeted pending dues alert banner to strictly filter for ceremonies whose dates have passed or are marked completed, presented in concise English with 'Collect Dues' action.",
+      },
+      {
+        category: "Feature",
+        description: "Added comprehensive coupon editing modal and backend update method in Super Admin Console, allowing modifications of code, discount rules, validity bonus days, and active status.",
+      },
+      {
+        category: "UI/UX",
+        description: "Mobile UX optimization across Super Admin Console with responsive sub-tabs, compact header controls, and touch-friendly layouts.",
+      },
+    ],
+  },
   {
     version: "2.5.3",
     releaseDate: "23 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "8 Authentic Vedic Pooja Ritual Catalogs from Iyyer Documents with Complete Item Checklists",
     summary:
       "Replaced all generic/dummy pooja templates with the 8 authentic rituals from traditional priest documents (Iyyer Documents): Maha Ganapathi Homam, Vastu Shanthi Homam, Ayushya / Ayur Homam, Swayamvara Parvathi Homam, Maha Kumbabishekam & Grihapravesam, 108 Sangu Pooja, Sudhi Punyahavachanam, and Sri Maha Lakshmi Pooja. Every pooja comes with its exact handwritten & printed items, authentic quantities, and standardized category assignments.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Feature",
     changes: [
       {

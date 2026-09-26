@@ -596,13 +596,13 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
       "../lib/version/history"
     );
 
-    expect(APP_VERSION).toBe("2.5.3");
+    expect(APP_VERSION).toBe("2.5.4");
     expect(RELEASE_CHANNEL).toContain("Stable");
     expect(VERSION_HISTORY.length).toBeGreaterThanOrEqual(5);
 
     // Latest version check
     const latest = VERSION_HISTORY[0];
-    expect(latest.version).toBe("2.5.3");
+    expect(latest.version).toBe("2.5.4");
     expect(latest.isCurrent).toBe(true);
     expect(latest.changes.length).toBeGreaterThan(0);
     expect(latest.changes.some((c) => c.category === "UI/UX" || c.category === "Feature")).toBe(true);
@@ -1291,8 +1291,8 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     expect(itemNamesTa).toContain("தவிடு");
     expect(itemNamesTa).toContain("பூர்ணாகுதி சாமான்கள்");
 
-    // Verify version is 2.5.3
-    expect(APP_VERSION).toBe("2.5.3");
+    // Verify version is 2.5.4
+    expect(APP_VERSION).toBe("2.5.4");
   });
 
   // TEST CASE 45: Authentic 8 Poojas Catalog from Iyyer Documents with Items & Categories

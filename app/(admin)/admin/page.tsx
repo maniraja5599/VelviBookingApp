@@ -1011,7 +1011,7 @@ export default function SuperAdminDashboardPage() {
           },
           { id: "subscriptions", label: "Subscriptions & Ledger", shortLabel: "Ledger", icon: CreditCard },
           { id: "branding", label: "Platform Branding", shortLabel: "Branding", icon: Palette },
-          { id: "dev-info", label: "Developer Specs", shortLabel: "Specs", icon: Terminal, badge: "v2.5.3" },
+          { id: "dev-info", label: "Developer Specs", shortLabel: "Specs", icon: Terminal, badge: "v2.5.4" },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -3684,7 +3684,7 @@ export default function SuperAdminDashboardPage() {
                 </li>
                 <li className="flex items-center justify-between">
                   <span className="text-slate-400">Application Version:</span>
-                  <span className="font-bold text-amber-400 font-mono">v2.5.3 Enterprise Pro</span>
+                  <span className="font-bold text-amber-400 font-mono">v2.5.4 Enterprise Pro</span>
                 </li>
               </ul>
             </div>

@@ -333,14 +333,25 @@ export default function HomeDashboardPage() {
   const [paymentMethodInput, setPaymentMethodInput] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
   const [paymentSuccessMessage, setPaymentSuccessMessage] = useState<string>("");
 
-  // Overdue Dues: Pooja date has passed or is today (<= today) and balanceAmount > 0
+  // Overdue / Completed Dues: Pooja date has passed or is today (<= today) OR booking is COMPLETED, with balanceAmount > 0
   const overdueDueBookings = useMemo(() => {
-    return bookings.filter((b) => (b.balanceAmount || 0) > 0 && b.date <= todayInfo.dateStr);
+    return bookings.filter(
+      (b) =>
+        b.status !== "CANCELLED" &&
+        (b.balanceAmount || 0) > 0 &&
+        (b.date <= todayInfo.dateStr || b.status === "COMPLETED")
+    );
   }, [bookings, todayInfo.dateStr]);
 
-  // Upcoming Booking Dues: Pooja date is in the future (> today) and balanceAmount > 0
+  // Upcoming Booking Dues: Pooja date is in the future (> today) AND NOT completed, with balanceAmount > 0
   const upcomingDueBookings = useMemo(() => {
-    return bookings.filter((b) => (b.balanceAmount || 0) > 0 && b.date > todayInfo.dateStr);
+    return bookings.filter(
+      (b) =>
+        b.status !== "CANCELLED" &&
+        b.status !== "COMPLETED" &&
+        (b.balanceAmount || 0) > 0 &&
+        b.date > todayInfo.dateStr
+    );
   }, [bookings, todayInfo.dateStr]);
 
   // All Pending Dues
@@ -770,52 +781,58 @@ export default function HomeDashboardPage() {
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200">
-      {/* 0. Long-term Sacred Daily Panchangam & Nalla Neram Ribbon */}
-      <div className="bg-gradient-to-r from-amber-950 via-[#3a1d08] to-amber-900 text-amber-100 rounded-2xl px-3.5 py-2.5 shadow-xs border border-amber-800/60 flex items-center justify-between gap-2 text-xs">
+      {/* 0. Long-term Sacred Daily Panchangam & Nalla Neram Ribbon (Minimal & Smart) */}
+      <div className="bg-[#1c130c]/90 hover:bg-[#1c130c] text-amber-100 rounded-2xl px-3 py-2 sm:px-3.5 sm:py-2.5 shadow-2xs border border-amber-900/40 backdrop-blur-xs flex items-center justify-between gap-2.5 text-xs transition">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-500/30">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <div className="w-6 h-6 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/25">
+            <Sparkles className="w-3.5 h-3.5" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="font-extrabold text-amber-200 truncate">
+              <span className="font-bold text-amber-100 text-xs sm:text-[13px] truncate">
                 {todayInfo.tamilYear} • {todayInfo.tamilMonth} {todayInfo.tamilDay}
               </span>
-              <span className="text-[10px] text-amber-400 font-bold">
+              <span className="text-[10px] text-amber-400/90 font-semibold">
                 ({todayInfo.dayOfWeekTa})
               </span>
+              {todayInfo.nallaNeram && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-amber-500/15 text-amber-300 text-[10px] font-medium border border-amber-500/20">
+                  நல்ல நேரம்: {todayInfo.nallaNeram}
+                </span>
+              )}
             </div>
-            <div className="text-[10.5px] text-amber-200/80 flex items-center gap-1.5 mt-0.5 truncate">
-              <span>நல்ல நேரம்: {todayInfo.nallaNeram || "காலை 09:15 - 10:15"}</span>
+            <div className="text-[10.5px] text-stone-400 flex items-center gap-1.5 mt-0.5 truncate">
+              <span className="text-stone-300 font-medium truncate">{todayInfo.tithiNameTa || todayInfo.tithi || "சதுர்தசி"}</span>
               <span>•</span>
-              <span className="truncate">{todayInfo.tithiNameTa || todayInfo.tithi || "சதுர்தசி"}</span>
-              <span>•</span>
-              <span className="truncate">{todayInfo.nakshatraNameTa || todayInfo.nakshatra || "பூரட்டாதி"}</span>
+              <span className="text-stone-300 font-medium truncate">{todayInfo.nakshatraNameTa || todayInfo.nakshatra || "பூரட்டாதி"}</span>
+              {todayInfo.isPournami && <span className="text-amber-300 font-bold">• பௌர்ணமி</span>}
+              {todayInfo.isAmavasai && <span className="text-purple-300 font-bold">• அமாவாசை</span>}
+              {todayInfo.isPradosham && <span className="text-emerald-300 font-bold">• பிரதோஷம்</span>}
             </div>
           </div>
         </div>
         <Link
           href="/app/calendar"
-          className="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 rounded-xl text-[10.5px] font-bold shrink-0 transition flex items-center gap-1"
+          className="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-xl text-[11px] font-semibold shrink-0 transition flex items-center gap-1 active:scale-95"
         >
-          <span>பஞ்சாங்கம்</span>
+          <span>Panchangam</span>
           <ChevronRight className="w-3 h-3" />
         </Link>
       </div>
 
-      {/* 0.1 High-Impact Pending Dakshina Dues Alert Banner (if pending dues exist) */}
-      {totalDue > 0 && (
+      {/* 0.1 High-Impact Pending Dakshina Dues Alert Banner (Only for overdue ceremony dates or completed bookings) */}
+      {overdueDueTotal > 0 && overdueDueBookings.length > 0 && (
         <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-2xl p-3 border border-rose-700/80 shadow-xs flex items-center justify-between gap-3 text-xs animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-rose-500/30 text-rose-200 flex items-center justify-center shrink-0 border border-rose-400/40 animate-pulse">
               <AlertCircle className="w-4 h-4 text-rose-300" />
             </div>
             <div className="min-w-0">
-              <div className="font-black text-white text-xs truncate">
-                ₹{totalDue.toLocaleString("en-IN")} நிலுவைத் தொகை உள்ளது ({allPendingDueBookings.length} பதிவுகள்)
+              <div className="font-black text-white text-xs sm:text-[13px] truncate">
+                ₹{overdueDueTotal.toLocaleString("en-IN")} Pending Dues ({overdueDueBookings.length} {overdueDueBookings.length === 1 ? "Booking" : "Bookings"})
               </div>
-              <p className="text-[10.5px] text-rose-200/90 truncate">
-                பக்தர்களிடமிருந்து கட்டணங்களை வசூலிக்க உடனடி நினைவூட்டல் அனுப்பவும்
+              <p className="text-[10.5px] sm:text-[11px] text-rose-200/90 truncate">
+                Payment pending for completed poojas. Follow up to collect.
               </p>
             </div>
           </div>
@@ -824,10 +841,11 @@ export default function HomeDashboardPage() {
             onClick={() => {
               setActiveSubTab("payments");
               setPaymentFilter("PENDING");
+              setPendingDueSubTab("OVERDUE");
             }}
             className="px-2.5 py-1.5 bg-white text-rose-950 hover:bg-rose-50 rounded-xl text-[11px] font-black shrink-0 transition shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
           >
-            <span>வசூல் கணக்கு</span>
+            <span>Collect Dues</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
