@@ -132,6 +132,7 @@ export const viewport: Viewport = {
 
 import { Suspense } from "react";
 import { VisitorTracker } from "@/components/analytics/VisitorTracker";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 const jsonLdSchema = {
   "@context": "https://schema.org",
@@ -265,6 +266,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen bg-velvi-cream text-velvi-brownDark" suppressHydrationWarning>
+        <GoogleAnalytics />
         <LanguageProvider>
           <ThemeProvider>
             <AuthProvider>
