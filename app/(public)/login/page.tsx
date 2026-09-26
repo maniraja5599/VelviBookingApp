@@ -184,10 +184,57 @@ export default function LoginPage() {
     }
   }, []);
 
-  // Direct Google Sign-In button -> triggers full Google OAuth 2.0 redirect
+  // Direct Google Sign-In button -> triggers official Google Identity Services popup
   const handleGoogleButtonClick = () => {
     setError("");
     setIsLoading(true);
+
+    const google = typeof window !== "undefined" ? (window as any).google : null;
+
+    // 1. Preferred Modern Flow: Google Identity Services OAuth 2.0 Token Client (Popup)
+    if (google?.accounts?.oauth2) {
+      try {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "email profile openid",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              console.error("Google Token error:", tokenResponse);
+              setError(`Google Sign-In: ${tokenResponse.error_description || tokenResponse.error}`);
+              setIsLoading(false);
+              return;
+            }
+            if (tokenResponse.access_token) {
+              try {
+                const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                  headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                if (!res.ok) throw new Error("Failed to fetch Google profile.");
+                const info = await res.json();
+                await processGoogleUser({
+                  sub: info.sub || `google-${Date.now()}`,
+                  email: info.email,
+                  name: info.name || info.email.split("@")[0],
+                  picture: info.picture,
+                  email_verified: info.email_verified,
+                });
+              } catch (err: any) {
+                console.error("Google userinfo fetch error:", err);
+                setError(err?.message || "Google profile fetch failed.");
+              } finally {
+                setIsLoading(false);
+              }
+            }
+          },
+        });
+        client.requestAccessToken({ prompt: "select_account" });
+        return;
+      } catch (err: any) {
+        console.warn("GIS token client failed, falling back:", err);
+      }
+    }
+
+    // 2. Fallback: Full redirect flow
     const redirectUri = `${window.location.origin}/login`;
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
       googleClientId
