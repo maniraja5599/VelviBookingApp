@@ -58,6 +58,7 @@ import {
   UserX,
   ShieldAlert,
   RefreshCw,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import { cleanCityName, cleanCountryName, formatCleanLocation } from "@/lib/utils/location";
@@ -620,6 +621,61 @@ export default function SuperAdminDashboardPage() {
     setTimeout(() => setCopiedCoupon(""), 2000);
   };
 
+  // Edit Coupon State & Handlers
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+  const [editCouponCode, setEditCouponCode] = useState("");
+  const [editCouponDesc, setEditCouponDesc] = useState("");
+  const [editCouponDiscountType, setEditCouponDiscountType] = useState<CouponDiscountType>("FREE_VALIDITY");
+  const [editCouponDiscountVal, setEditCouponDiscountVal] = useState<number>(100);
+  const [editCouponBonusDays, setEditCouponBonusDays] = useState<number>(30);
+  const [editCouponMaxUses, setEditCouponMaxUses] = useState<number>(500);
+  const [editCouponValidUntil, setEditCouponValidUntil] = useState<string>("2028-12-31");
+  const [editCouponShowInSuggestions, setEditCouponShowInSuggestions] = useState<boolean>(true);
+  const [editCouponIsActive, setEditCouponIsActive] = useState<boolean>(true);
+
+  const handleOpenEditCoupon = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setEditCouponCode(coupon.code);
+    setEditCouponDesc(coupon.description);
+    setEditCouponDiscountType(coupon.discountType);
+    setEditCouponDiscountVal(coupon.discountValue);
+    setEditCouponBonusDays(coupon.validityDaysBonus || 0);
+    setEditCouponMaxUses(coupon.maxUses || 100);
+    const validDate = coupon.validUntil ? coupon.validUntil.split("T")[0] : "2028-12-31";
+    setEditCouponValidUntil(validDate);
+    setEditCouponShowInSuggestions(coupon.showInSuggestions !== false);
+    setEditCouponIsActive(coupon.isActive !== false);
+  };
+
+  const handleSaveEditCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingCoupon) return;
+
+    const res = db.updateCoupon({
+      id: editingCoupon.id,
+      code: editCouponCode,
+      description: editCouponDesc,
+      discountType: editCouponDiscountType,
+      discountValue: Number(editCouponDiscountVal) || 0,
+      validityDaysBonus: Number(editCouponBonusDays) || 0,
+      maxUses: Number(editCouponMaxUses) || 100,
+      validUntil: editCouponValidUntil ? `${editCouponValidUntil}T23:59:59Z` : "2030-12-31T23:59:59Z",
+      showInSuggestions: editCouponShowInSuggestions,
+      isActive: editCouponIsActive,
+    });
+
+    if (res.success && res.coupon) {
+      showToast(`Coupon '${res.coupon.code}' updated successfully!`);
+      setEditingCoupon(null);
+      refreshCoupons();
+      try {
+        await retryCloudSync("biz-super-admin-01");
+      } catch {}
+    } else {
+      showToast(res.error || "Failed to update coupon", true);
+    }
+  };
+
   // ---------------------------------------------------------------------------
   // 3. PLATFORM BRANDING & SETTINGS STATE
   // ---------------------------------------------------------------------------
@@ -935,25 +991,27 @@ export default function SuperAdminDashboardPage() {
       )}
 
       {/* Responsive Sub-Tabs Bar (Luxury Segmented Control in Pure English) */}
-      <div className="bg-[#080d19]/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-1.5 flex overflow-x-auto no-scrollbar gap-1.5 shadow-xl">
+      <div className="bg-[#080d19]/90 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-1 sm:p-1.5 flex overflow-x-auto no-scrollbar gap-1 sm:gap-1.5 shadow-xl scroll-smooth">
         {[
-          { id: "overview", label: "Overview", icon: LayoutDashboard },
-          { id: "traffic", label: "Web Traffic & Visitors", icon: Globe, badge: "Live" },
+          { id: "overview", label: "Overview", shortLabel: "Overview", icon: LayoutDashboard },
+          { id: "traffic", label: "Web Traffic & Visitors", shortLabel: "Traffic", icon: Globe, badge: "Live" },
           {
             id: "directory",
             label: "User Directory",
+            shortLabel: "Directory",
             icon: Users,
             badge: totalUsersCount,
           },
           {
             id: "coupons",
             label: "Coupons & Promos",
+            shortLabel: "Coupons",
             icon: Tag,
             badge: coupons.length,
           },
-          { id: "subscriptions", label: "Subscriptions & Ledger", icon: CreditCard },
-          { id: "branding", label: "Platform Branding", icon: Palette },
-          { id: "dev-info", label: "Developer Specs", icon: Terminal, badge: "v2.5.3" },
+          { id: "subscriptions", label: "Subscriptions & Ledger", shortLabel: "Ledger", icon: CreditCard },
+          { id: "branding", label: "Platform Branding", shortLabel: "Branding", icon: Palette },
+          { id: "dev-info", label: "Developer Specs", shortLabel: "Specs", icon: Terminal, badge: "v2.5.3" },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -962,17 +1020,18 @@ export default function SuperAdminDashboardPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition cursor-pointer whitespace-nowrap shrink-0 active:scale-95 ${
                 isActive
                   ? "bg-gradient-to-r from-amber-500/25 via-amber-500/15 to-amber-500/5 text-amber-300 border border-amber-500/40 shadow-sm"
                   : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               }`}
             >
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
-              <span className="font-bold text-xs">{tab.label}</span>
+              <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
+              <span className="font-bold text-xs sm:hidden">{tab.shortLabel}</span>
+              <span className="font-bold text-xs hidden sm:inline">{tab.label}</span>
               {tab.badge !== undefined && (
                 <span
-                  className={`text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ml-1 ${
+                  className={`text-[8.5px] sm:text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold ml-0.5 sm:ml-1 ${
                     isActive
                       ? "bg-amber-500/25 text-amber-200 border border-amber-500/30"
                       : "bg-slate-800 text-slate-400"
@@ -2697,8 +2756,18 @@ export default function SuperAdminDashboardPage() {
                         {isSuperAdmin && (
                           <button
                             type="button"
+                            onClick={() => handleOpenEditCoupon(c)}
+                            className="p-1 text-amber-400 hover:text-amber-300 rounded hover:bg-zinc-800 transition cursor-pointer"
+                            title="Edit Coupon"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button
+                            type="button"
                             onClick={() => requestDeleteCoupon(c.id, c.code)}
-                            className="p-1 text-slate-400 hover:text-rose-400"
+                            className="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-zinc-800 transition cursor-pointer"
                             title="Delete Coupon"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2829,14 +2898,24 @@ export default function SuperAdminDashboardPage() {
 
                         <td className="p-4 text-right">
                           {isSuperAdmin ? (
-                            <button
-                              type="button"
-                              onClick={() => requestDeleteCoupon(c.id, c.code)}
-                              className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
-                              title="Delete Coupon"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditCoupon(c)}
+                                className="p-1.5 text-amber-400 hover:text-amber-300 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
+                                title="Edit Coupon"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => requestDeleteCoupon(c.id, c.code)}
+                                className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition cursor-pointer"
+                                title="Delete Coupon"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           ) : (
                             <span className="text-[10px] text-slate-500">—</span>
                           )}
@@ -4387,6 +4466,161 @@ export default function SuperAdminDashboardPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL: EDIT COUPON                                                     */}
+      {/* ===================================================================== */}
+      {editingCoupon && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-[#0c1424] border border-amber-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                  <Pencil className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base text-white">Edit Coupon Code</h3>
+                  <p className="text-[10.5px] text-slate-400 font-mono">ID: {editingCoupon.id}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingCoupon(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditCoupon} className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Coupon Code *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editCouponCode}
+                    onChange={(e) => setEditCouponCode(e.target.value.toUpperCase())}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Discount Type</label>
+                  <select
+                    value={editCouponDiscountType}
+                    onChange={(e) => setEditCouponDiscountType(e.target.value as CouponDiscountType)}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="FREE_VALIDITY">100% Free Pass (FREE_VALIDITY)</option>
+                    <option value="PERCENTAGE">Percentage Off % (PERCENTAGE)</option>
+                    <option value="FLAT">Flat ₹ Deduction (FLAT)</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-slate-300 font-bold block mb-1">Description &amp; Offer Details *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editCouponDesc}
+                    onChange={(e) => setEditCouponDesc(e.target.value)}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">
+                    Discount Value ({editCouponDiscountType === "PERCENTAGE" ? "%" : "₹"})
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editCouponDiscountVal}
+                    onChange={(e) => setEditCouponDiscountVal(Number(e.target.value))}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Bonus Validity (+Days)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={editCouponBonusDays}
+                    onChange={(e) => setEditCouponBonusDays(Number(e.target.value))}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Max Redemptions</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editCouponMaxUses}
+                    onChange={(e) => setEditCouponMaxUses(Number(e.target.value))}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Expiry Date (Valid Until)</label>
+                  <input
+                    type="date"
+                    value={editCouponValidUntil}
+                    onChange={(e) => setEditCouponValidUntil(e.target.value)}
+                    className="w-full bg-[#080c14] border border-zinc-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 py-1">
+                  <input
+                    type="checkbox"
+                    id="editCouponShowInSuggestions"
+                    checked={editCouponShowInSuggestions}
+                    onChange={(e) => setEditCouponShowInSuggestions(e.target.checked)}
+                    className="w-4 h-4 rounded border-zinc-700 text-amber-500 focus:ring-amber-400 bg-zinc-900 cursor-pointer"
+                  />
+                  <label htmlFor="editCouponShowInSuggestions" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
+                    Show in checkout suggestions
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2 py-1">
+                  <input
+                    type="checkbox"
+                    id="editCouponIsActive"
+                    checked={editCouponIsActive}
+                    onChange={(e) => setEditCouponIsActive(e.target.checked)}
+                    className="w-4 h-4 rounded border-zinc-700 text-emerald-500 focus:ring-emerald-400 bg-zinc-900 cursor-pointer"
+                  />
+                  <label htmlFor="editCouponIsActive" className="text-xs text-slate-300 font-semibold cursor-pointer select-none">
+                    Coupon is active and redeemable
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 pt-3 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setEditingCoupon(null)}
+                  className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-slate-200 rounded-xl font-bold text-xs transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs shadow-lg shadow-amber-500/25 transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5 text-black" />
+                  <span>Save Coupon Changes</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

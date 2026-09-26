@@ -2830,6 +2830,43 @@ export class VelviDatabaseStore {
     return { success: true, coupon: newCoupon };
   }
 
+  public updateCoupon(params: {
+    id: string;
+    code: string;
+    description: string;
+    discountType: CouponDiscountType;
+    discountValue: number;
+    validityDaysBonus: number;
+    maxUses: number;
+    validUntil: string;
+    isActive?: boolean;
+    showInSuggestions?: boolean;
+  }): { success: boolean; coupon?: Coupon; error?: string } {
+    const coup = this.coupons.find((c) => c.id === params.id);
+    if (!coup) return { success: false, error: "Coupon not found" };
+
+    const cleanCode = params.code.trim().toUpperCase();
+    if (!cleanCode) return { success: false, error: "Coupon code is required" };
+
+    const duplicate = this.coupons.find((c) => c.code === cleanCode && c.id !== params.id);
+    if (duplicate) return { success: false, error: "Another coupon with this code already exists" };
+
+    coup.code = cleanCode;
+    coup.description = params.description.trim();
+    coup.discountType = params.discountType;
+    coup.discountValue = Number(params.discountValue) || 0;
+    coup.validityDaysBonus = Number(params.validityDaysBonus) || 0;
+    coup.maxUses = Number(params.maxUses) || 100;
+    coup.validUntil = params.validUntil;
+    if (params.isActive !== undefined) coup.isActive = params.isActive;
+    if (params.showInSuggestions !== undefined) coup.showInSuggestions = params.showInSuggestions;
+
+    this.saveToLocalStorage();
+    this.notifyListeners();
+
+    return { success: true, coupon: coup };
+  }
+
   public toggleCouponStatus(couponId: string): boolean {
     const coup = this.coupons.find((c) => c.id === couponId);
     if (!coup) return false;

@@ -38,7 +38,6 @@ export default function AdminUsersPage() {
   const [reason, setReason] = useState<string>("Admin compensation adjustment");
   const [successMsg, setSuccessMsg] = useState("");
   const [isCloudSyncing, setIsCloudSyncing] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
   const [, setForceTick] = useState(0);
 
   const handleCloudSync = useCallback(async () => {
@@ -56,39 +55,6 @@ export default function AdminUsersPage() {
       setForceTick((t) => t + 1);
     }
   }, []);
-
-  const handleResetCollections = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete all non-super-admin users and reset all collections in Supabase Cloud and LocalStorage?"
-      )
-    ) {
-      return;
-    }
-
-    setIsResetting(true);
-    try {
-      const res = await fetch("/api/admin/reset-collections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ adminEmail: "manirajankg@gmail.com" }),
-      });
-      const data = await res.json();
-      db.purgeLegacyDummyData();
-      await syncSuperAdminDirectoryFromCloud();
-      setSuccessMsg(
-        data.success
-          ? "All collections and non-super-admin users deleted!"
-          : data.error || "Reset failed"
-      );
-      setTimeout(() => setSuccessMsg(""), 4000);
-    } catch (e: any) {
-      setSuccessMsg(e?.message || "Reset failed");
-    } finally {
-      setIsResetting(false);
-      setForceTick((t) => t + 1);
-    }
-  };
 
   useEffect(() => {
     db.purgeLegacyDummyData();

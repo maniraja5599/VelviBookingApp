@@ -1678,6 +1678,30 @@ describe("VELVI SAAS — CORE ARCHITECTURE & BUSINESS RULES VERIFICATION", () =>
     // Re-activate
     store.toggleCouponStatus(createRes.coupon!.id);
     expect(store.validateCoupon("TEST50", "MONTHLY").valid).toBe(true);
+
+    // 6. Test Edit / Update Coupon
+    const updateRes = store.updateCoupon({
+      id: createRes.coupon!.id,
+      code: "TEST60",
+      description: "60% Updated Discount",
+      discountType: "PERCENTAGE",
+      discountValue: 60,
+      validityDaysBonus: 20,
+      maxUses: 5,
+      validUntil: "2031-12-31T23:59:59Z",
+      showInSuggestions: true,
+      isActive: true,
+    });
+    expect(updateRes.success).toBe(true);
+    expect(updateRes.coupon?.code).toBe("TEST60");
+    expect(updateRes.coupon?.discountValue).toBe(60);
+    expect(updateRes.coupon?.validityDaysBonus).toBe(20);
+
+    const valUpdated = store.validateCoupon("TEST60", "MONTHLY");
+    expect(valUpdated.valid).toBe(true);
+    expect(valUpdated.discountAmount).toBe(299); // Math.round(499 * 0.6)
+    expect(valUpdated.finalAmount).toBe(200);
+    expect(valUpdated.bonusDays).toBe(20);
   });
 
   // TEST CASE 53: Coupon Redemption in Subscription Flow
