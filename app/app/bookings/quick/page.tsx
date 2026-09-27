@@ -870,14 +870,12 @@ function QuickBookingContent() {
                           {getPoojaIcon(p)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span
-                              className={`text-xs font-black truncate ${
-                                isSelected ? "text-white" : "text-slate-900"
-                              }`}
-                            >
-                              {p.tamilName || p.englishName}
-                            </span>
+                          <div
+                            className={`text-xs font-black truncate ${
+                              isSelected ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {p.tamilName || p.englishName}
                           </div>
                           {p.tamilName && p.englishName && (
                             <div
@@ -891,25 +889,7 @@ function QuickBookingContent() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        {/* View Items Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewPoojaForItems(p);
-                          }}
-                          className={`p-1 px-1.5 rounded-lg border text-[10px] font-bold flex items-center gap-1 transition active:scale-95 cursor-pointer ${
-                            isSelected
-                              ? "bg-emerald-900/80 text-emerald-100 border-emerald-700 hover:bg-emerald-900"
-                              : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 hover:text-slate-900"
-                          }`}
-                          title="பொருட்கள் பட்டியலைக் காண்க (View Items Checklist)"
-                        >
-                          <Eye className="w-3 h-3" />
-                          <span>View</span>
-                        </button>
-
+                      <div className="flex items-center gap-2 shrink-0 ml-1">
                         <div className="text-right">
                           <span
                             className={`text-xs font-black block ${
@@ -919,6 +899,24 @@ function QuickBookingContent() {
                             ₹{(p.basePrice || 0).toLocaleString("en-IN")}
                           </span>
                         </div>
+
+                        {/* View Items Checklist Eye Button on Far Right */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewPoojaForItems(p);
+                          }}
+                          className={`p-1.5 rounded-lg border transition cursor-pointer active:scale-90 ${
+                            isSelected
+                              ? "bg-emerald-900/80 text-emerald-100 border-emerald-700 hover:bg-emerald-900"
+                              : "bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-500 hover:text-slate-800"
+                          }`}
+                          title="சாமக்கிரி பொருட்கள் பட்டியல் விவரம் (View items list)"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+
                         {isSelected && <Check className="w-4 h-4 text-amber-300 stroke-[3]" />}
                       </div>
                     </button>
@@ -1036,40 +1034,53 @@ function QuickBookingContent() {
                 </div>
               </div>
 
-              {/* Compact Sacred Panchangam Nalla Neram Ribbon */}
-              <div className="bg-amber-50/70 px-2.5 py-1.5 rounded-xl border border-amber-200/80 text-xs flex items-center justify-between flex-wrap gap-1.5 shadow-2xs">
-                <div className="flex items-center gap-1.5 flex-wrap text-[11px] font-bold text-amber-950">
-                  <span className="text-[10.5px] font-black text-amber-900 tracking-wider">
-                    நல்ல நேரம்:
-                  </span>
-                  {tamilInfo.nallaNeramMorning ? (
-                    <span className="inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg border border-amber-200">
-                      <span className="text-[9px] font-black text-amber-800 uppercase">காலை</span>
-                      <span className="font-extrabold">{formatTime12H(tamilInfo.nallaNeramMorning)}</span>
+              {/* Sacred Panchangam Auspicious Timings Card with Straight Clean Alignment */}
+              <div className="bg-amber-50/75 rounded-2xl p-2.5 sm:p-3 border border-amber-200/90 shadow-2xs space-y-2">
+                {/* Row 1: நல்ல நேரம் (Straight Aligned) */}
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-xs font-black text-amber-950">
+                      நல்ல நேரம்:
                     </span>
-                  ) : null}
-                  {tamilInfo.nallaNeramEvening ? (
-                    <span className="inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg border border-amber-200">
-                      <span className="text-[9px] font-black text-amber-800 uppercase">மாலை</span>
-                      <span className="font-extrabold">{formatTime12H(tamilInfo.nallaNeramEvening)}</span>
-                    </span>
-                  ) : null}
-                  {!tamilInfo.nallaNeramMorning && !tamilInfo.nallaNeramEvening && (
-                    <span className="font-black text-emerald-950">{formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}</span>
-                  )}
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-slate-800 text-[11px] sm:text-xs text-right">
+                    {tamilInfo.nallaNeramMorning && (
+                      <span className="inline-flex items-center gap-1 bg-white/95 px-2 py-0.5 rounded-lg border border-amber-200/80 shadow-2xs">
+                        <span className="text-[10px] font-black text-amber-800">காலை</span>
+                        <span>{formatTime12H(tamilInfo.nallaNeramMorning)}</span>
+                      </span>
+                    )}
+                    {tamilInfo.nallaNeramEvening && (
+                      <span className="inline-flex items-center gap-1 bg-white/95 px-2 py-0.5 rounded-lg border border-amber-200/80 shadow-2xs">
+                        <span className="text-[10px] font-black text-amber-800">மாலை</span>
+                        <span>{formatTime12H(tamilInfo.nallaNeramEvening)}</span>
+                      </span>
+                    )}
+                    {!tamilInfo.nallaNeramMorning && !tamilInfo.nallaNeramEvening && (
+                      <span className="bg-white/95 px-2 py-0.5 rounded-lg border border-amber-200/80 font-black text-emerald-900">
+                        {formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[10px]">
-                  {tamilInfo.gowriNallaNeram && (
-                    <span className="bg-white/80 text-slate-700 px-2 py-0.5 rounded-lg border border-amber-200 font-bold">
-                      கௌரி: {formatTime12H(tamilInfo.gowriNallaNeramMorning || tamilInfo.gowriNallaNeram)}
+                {/* Row 2: கௌரி நல்ல நேரம் (Straight Aligned) */}
+                <div className="flex items-center justify-between gap-2 text-xs pt-1.5 border-t border-amber-200/60">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-xs font-black text-amber-950">
+                      கௌரி நல்ல நேரம்:
                     </span>
-                  )}
-                  {tamilInfo.isMuhurtham && (
-                    <span className="font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-lg border border-amber-300">
-                      Muhurtham ✨
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 font-bold text-slate-800 text-[11px] sm:text-xs text-right">
+                    <span className="bg-white/95 px-2 py-0.5 rounded-lg border border-amber-200/80 shadow-2xs">
+                      {formatTime12H(tamilInfo.gowriNallaNeramMorning || tamilInfo.gowriNallaNeram || "10:45 AM - 11:45 AM")}
                     </span>
-                  )}
+                    {tamilInfo.isMuhurtham && (
+                      <span className="font-black text-amber-950 bg-amber-200/90 px-2 py-0.5 rounded-lg border border-amber-300 text-[10px]">
+                        சுப முகூர்த்தம் ✨
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1825,87 +1836,84 @@ function QuickBookingContent() {
       )}
 
       {/* ============================================================== */}
-      {/* SAMAGRI CHECKLIST PREVIEW MODAL                                */}
+      {/* SAMAGRI CHECKLIST PREVIEW MODAL (FULL FIT & UI SETTING)       */}
       {/* ============================================================== */}
       {previewPoojaForItems && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl border border-slate-200 animate-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl border border-emerald-300 overflow-hidden animate-in zoom-in-95">
+            {/* Emerald Gradient Header with Deity Icon */}
+            <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 text-white flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 flex items-center justify-center text-lg">
-                  {getPoojaIcon(previewPoojaForItems)}
-                </div>
+                <span className="text-2xl">{getPoojaIcon(previewPoojaForItems)}</span>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">
+                  <h3 className="font-black text-sm sm:text-base leading-tight">
                     {previewPoojaForItems.tamilName || previewPoojaForItems.englishName}
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-bold">
-                    {previewPoojaForItems.englishName} • ₹{(previewPoojaForItems.basePrice || 0).toLocaleString("en-IN")}
-                  </p>
+                  <span className="text-[11px] text-amber-300 font-bold block">
+                    சாமக்கிரி பொருட்கள் பட்டியல் ({previewPoojaForItems.items?.length || 0} பொருட்கள்)
+                  </span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setPreviewPoojaForItems(null)}
-                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold cursor-pointer"
+                className="w-7 h-7 rounded-full text-white/70 hover:text-white hover:bg-white/10 flex items-center justify-center font-bold text-xs cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-black text-slate-800">
-                  பொருட்கள் பட்டியல் (Samagri Checklist):
-                </span>
-                <span className="text-[11px] font-bold text-slate-500">
-                  {previewPoojaForItems.items?.length || 0} items
-                </span>
-              </div>
+            {/* Scrollable Numbered Items List */}
+            <div className="p-4 flex-1 overflow-y-auto space-y-1.5 text-xs">
               {previewPoojaForItems.items && previewPoojaForItems.items.length > 0 ? (
-                <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
-                  {previewPoojaForItems.items.map((it, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
-                    >
-                      <span className="font-semibold text-slate-800">
-                        {(it as any).itemTamilName || (it as any).itemEnglishName || (it as any).nameTamil || (it as any).nameEnglish}
+                previewPoojaForItems.items.map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center shrink-0">
+                        {idx + 1}
                       </span>
-                      <span className="font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200 text-[11px]">
-                        {it.quantity} {formatUnitShort(it.unit)}
+                      <span className="font-semibold text-slate-800 truncate">
+                        {(item as any).itemTamilName || (item as any).itemEnglishName || (item as any).nameTamil || (item as any).nameEnglish}
                       </span>
                     </div>
-                  ))}
-                </div>
+                    <span className="font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200 text-[11px] shrink-0 ml-2">
+                      {item.quantity} {formatUnitShort(item.unit)}
+                    </span>
+                  </div>
+                ))
               ) : (
-                <div className="p-4 text-center text-xs text-slate-400 font-medium">
+                <div className="p-6 text-center text-slate-400">
                   இந்தப் பூஜைக்கு பொருட்கள் பட்டியல் சேர்க்கப்படவில்லை.
                 </div>
               )}
             </div>
 
-            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 font-medium">
+            {/* Reassuring Tip Footer */}
+            <div className="p-3 bg-amber-50/70 border-t border-amber-200/60 text-[11px] text-amber-900 font-medium">
               💡 இந்தப் பொருட்களை முன்பதிவு செய்த பிறகும் Booking Edit பக்கத்தில் எப்போது வேண்டுமானாலும் மாற்றிக்கொள்ளலாம்.
             </div>
 
-            <div className="flex gap-2 pt-1">
+            {/* Action Buttons */}
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPreviewPoojaForItems(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                Close
+              </button>
               <button
                 type="button"
                 onClick={() => {
                   handleSelectPooja(previewPoojaForItems.id);
                   setPreviewPoojaForItems(null);
                 }}
-                className="flex-1 py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black transition cursor-pointer"
+                className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-xs active:scale-95 cursor-pointer"
               >
-                Select this Pooja ✓
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreviewPoojaForItems(null)}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition cursor-pointer"
-              >
-                Close
+                இந்த பூஜையைத் தேர்வு செய் ✓
               </button>
             </div>
           </div>
