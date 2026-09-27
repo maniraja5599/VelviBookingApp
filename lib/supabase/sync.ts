@@ -528,6 +528,7 @@ export async function pushBookingToCloud(booking: Booking): Promise<boolean> {
       status: validStatus,
       items: booking.items || [],
       notes: booking.notes || null,
+      payment_records: booking.paymentRecords || [],
       cancellation_reason: booking.cancellationReason || null,
       cancelled_at: booking.cancelledAt || null,
       created_by: booking.createdBy || booking.assignedIyerName || "Priest",
@@ -693,6 +694,7 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
           status: validStatus,
           items: b.items || [],
           notes: b.notes || null,
+          payment_records: b.paymentRecords || [],
           cancellation_reason: b.cancellationReason || null,
           cancelled_at: b.cancelledAt || null,
           created_by: b.createdBy || b.assignedIyerName || "Priest",
@@ -805,11 +807,21 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
       });
     }
 
-    // 3. Fetch Bookings
+    // 3. Fetch Bookings (covering all sibling businesses for this owner)
+    const targetBizIds = [businessId];
+    const curBiz = db.businesses.find((b) => b.id === businessId);
+    if (curBiz?.ownerId) {
+      db.businesses
+        .filter((b) => b.ownerId === curBiz.ownerId)
+        .forEach((b) => {
+          if (!targetBizIds.includes(b.id)) targetBizIds.push(b.id);
+        });
+    }
+
     const { data: cloudBookings, error: bErr } = await supabase
       .from("bookings")
       .select("*")
-      .eq("business_id", businessId);
+      .in("business_id", targetBizIds);
 
     if (bErr) {
       console.warn("[CloudSync] Bookings fetch notice:", bErr.message);
@@ -839,6 +851,9 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
         status: b.status,
         items: b.items || [],
         notes: b.notes,
+        paymentRecords: Array.isArray(b.payment_records)
+          ? b.payment_records
+          : (b.payment_records ? (typeof b.payment_records === "string" ? JSON.parse(b.payment_records) : b.payment_records) : []),
         cancellationReason: b.cancellation_reason,
         cancelledAt: b.cancelled_at,
         createdBy: b.created_by || b.assigned_iyer_name || "Priest",
@@ -850,7 +865,13 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
       mapped.forEach((cb) => {
         const idx = db.bookings.findIndex((b) => b.id === cb.id);
         if (idx >= 0) {
-          db.bookings[idx] = { ...db.bookings[idx], ...cb };
+          db.bookings[idx] = {
+            ...db.bookings[idx],
+            ...cb,
+            paymentRecords: (cb.paymentRecords && cb.paymentRecords.length > 0)
+              ? cb.paymentRecords
+              : (db.bookings[idx].paymentRecords || []),
+          };
         } else {
           db.bookings.push(cb);
         }
@@ -1078,6 +1099,9 @@ function handleCloudBookingChange(payload: any) {
       status: b.status,
       items: b.items || [],
       notes: b.notes,
+      paymentRecords: Array.isArray(b.payment_records)
+        ? b.payment_records
+        : (b.payment_records ? (typeof b.payment_records === "string" ? JSON.parse(b.payment_records) : b.payment_records) : []),
       cancellationReason: b.cancellation_reason,
       cancelledAt: b.cancelled_at,
       createdBy: b.created_by || b.assigned_iyer_name || "Priest",
@@ -1086,7 +1110,13 @@ function handleCloudBookingChange(payload: any) {
     };
 
     if (existingIndex >= 0) {
-      db.bookings[existingIndex] = updated;
+      db.bookings[existingIndex] = {
+        ...db.bookings[existingIndex],
+        ...updated,
+        paymentRecords: (updated.paymentRecords && updated.paymentRecords.length > 0)
+          ? updated.paymentRecords
+          : (db.bookings[existingIndex].paymentRecords || []),
+      };
     } else {
       db.bookings.unshift(updated);
     }

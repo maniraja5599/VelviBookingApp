@@ -611,11 +611,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               user.id = cloudUser.id; // Align ID with Cloud
             }
 
-            // Find matching business in cloud
+            // Find matching business in cloud (latest active business first)
             const { data: cloudBizList } = await supabase
               .from("businesses")
               .select("*")
               .eq("owner_id", cloudUser.id)
+              .order("updated_at", { ascending: false })
               .limit(1);
 
             if (cloudBizList && cloudBizList.length > 0) {
@@ -686,16 +687,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         newValue: { ip: clientIp, city: clientCity, country: clientCountry, email: targetEmail },
       });
 
-      // Ensure business profile exists for this user (Super Admin gets isolated real business, never demo business)
-      let biz = isSuperAdminEmail
-        ? db.businesses.find((b) => b.id === "biz-super-admin-01") ||
-          db.businesses.find((b) => b.ownerId === user.id && b.id !== "biz-venkateswara-01")
-        : (cloudBizId ? db.businesses.find((b) => b.id === cloudBizId) : null) ||
-          db.businesses.find((b) => b.ownerId === user.id);
+      // Ensure business profile exists for this user (Super Admin and users share active primary business across devices)
+      let biz = (cloudBizId ? db.businesses.find((b) => b.id === cloudBizId) : null) ||
+        db.businesses.find((b) => b.ownerId === user.id && b.id !== "biz-venkateswara-01") ||
+        (isSuperAdminEmail ? db.businesses.find((b) => b.id === "biz-u-1789968083730" || b.id === "biz-super-admin-01") : null);
 
-      const targetBizId = isSuperAdminEmail
-        ? "biz-super-admin-01"
-        : cloudBizId || (biz ? biz.id : `biz-${user.id}`);
+      const targetBizId = cloudBizId || (biz ? biz.id : (isSuperAdminEmail ? "biz-u-1789968083730" : `biz-${user.id}`));
 
       if (!biz) {
         biz = {
