@@ -37,6 +37,18 @@ import { formatBookingConfirmationWhatsAppMessage, formatUnitShort } from "@/lib
 import { getPoojaIcon } from "@/lib/poojas/icons";
 import { normalizeIndianMobile } from "@/lib/utils/phone";
 
+function convert12HTo24H(time12H: string): string {
+  if (!time12H) return "07:45";
+  const match = time12H.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!match) return "07:45";
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  const ampm = (match[3] || "").toUpperCase();
+  if (ampm === "PM" && h < 12) h += 12;
+  if (ampm === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${m}`;
+}
+
 function QuickBookingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -773,8 +785,8 @@ function QuickBookingContent() {
                 </span>
               </div>
 
-              {/* 1-Tap Date Buttons */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* 1-Tap Date Buttons & Date Picker */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setDate(todayStr)}
@@ -825,46 +837,146 @@ function QuickBookingContent() {
                     {nextMuhurthamDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
                   </span>
                 </button>
-              </div>
 
-              {/* Sacred Panchangam Nalla Neram Box */}
-              <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/90 text-xs flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🪔</span>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 block">
-                      நல்ல நேரம் (Auspicious Time):
+                {/* Custom Date Picker Card */}
+                <div className="relative group">
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => {
+                      if (e.target.value) setDate(e.target.value);
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    title="தேதியை மாற்ற கிளிக் செய்யவும் (Pick Custom Date)"
+                  />
+                  <div
+                    className={`p-2.5 rounded-2xl border text-center transition flex flex-col justify-center items-center h-full ${
+                      date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr
+                        ? "bg-emerald-800 text-white border-emerald-800 shadow-sm"
+                        : "bg-white group-hover:bg-slate-50 text-slate-700 border-slate-200"
+                    }`}
+                  >
+                    <span className="text-[10px] font-extrabold uppercase flex items-center justify-center gap-1 opacity-80">
+                      <CalendarIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>{date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr ? "தேர்வு தேதி" : "தேதி பிக்கர்"}</span>
                     </span>
-                    <span className="text-xs font-black text-emerald-950">
-                      {formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}
+                    <span className="text-xs font-black block mt-0.5 truncate">
+                      {date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr
+                        ? new Date(date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                        : "தேர்ந்தெடு 📅"}
                     </span>
                   </div>
                 </div>
-
-                <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-300">
-                  காலை (Morning) ✓
-                </span>
               </div>
 
-              {/* Time Selector Pills */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-                {["06:00 AM", "07:30 AM", "07:45 AM", "09:00 AM", "10:30 AM", "05:30 PM", "06:00 PM"].map((t) => {
-                  const isSel = time === t;
-                  return (
+              {/* Sacred Panchangam Nalla Neram Box */}
+              <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/90 text-xs flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base shrink-0">🪔</span>
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 block">
+                      சுப நல்ல நேரம் (Auspicious Time):
+                    </span>
+                    <div className="text-xs font-black text-emerald-950 flex items-center gap-2 flex-wrap mt-0.5">
+                      {tamilInfo.nallaNeramMorning ? (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200">
+                            காலை
+                          </span>
+                          <span>{formatTime12H(tamilInfo.nallaNeramMorning)}</span>
+                        </span>
+                      ) : null}
+                      {tamilInfo.nallaNeramEvening ? (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200">
+                            மாலை
+                          </span>
+                          <span>{formatTime12H(tamilInfo.nallaNeramEvening)}</span>
+                        </span>
+                      ) : null}
+                      {!tamilInfo.nallaNeramMorning && !tamilInfo.nallaNeramEvening && (
+                        <span>{formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[10.5px]">
+                  {tamilInfo.gowriNallaNeram && (
+                    <div className="text-right">
+                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 block">
+                        கௌரி நேரம்
+                      </span>
+                      <span className="text-slate-700 font-extrabold">
+                        {formatTime12H(tamilInfo.gowriNallaNeramMorning || tamilInfo.gowriNallaNeram)}
+                      </span>
+                    </div>
+                  )}
+                  {tamilInfo.isMuhurtham && (
+                    <span className="text-[10px] font-black text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded-lg border border-amber-300">
+                      சுப முகூர்த்தம் ✨
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Time Selection: Quick Picks + Manual Selection */}
+              <div className="space-y-2 pt-0.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                    <Clock className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>பூஜை நேரம் (Pooja Time):</span>
+                  </div>
+
+                  {/* Manual Time Picker Input */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10.5px] font-semibold text-slate-500">
+                      நேரத்தை மாற்ற (Custom):
+                    </span>
+                    <input
+                      type="time"
+                      value={convert12HTo24H(time)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setTime(formatTime12H(e.target.value));
+                        }
+                      }}
+                      className="bg-white hover:bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs font-black text-slate-900 cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 transition shadow-2xs"
+                      title="மேனுவலாக நேரத்தை மாற்ற (Select custom time)"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick Time Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+                  {!["06:00 AM", "07:30 AM", "07:45 AM", "09:00 AM", "10:30 AM", "05:30 PM", "06:00 PM"].includes(time) && (
                     <button
-                      key={t}
                       type="button"
-                      onClick={() => setTime(t)}
-                      className={`px-3 py-1.5 rounded-xl font-bold shrink-0 transition border cursor-pointer active:scale-95 ${
-                        isSel
-                          ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs font-black"
-                          : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
-                      }`}
+                      className="px-3 py-1.5 rounded-xl font-black shrink-0 transition border cursor-pointer bg-emerald-800 text-white border-emerald-800 shadow-2xs flex items-center gap-1"
                     >
-                      {t}
+                      <Clock className="w-3 h-3 text-amber-300" />
+                      <span>{time} (Custom)</span>
                     </button>
-                  );
-                })}
+                  )}
+
+                  {["06:00 AM", "07:30 AM", "07:45 AM", "09:00 AM", "10:30 AM", "05:30 PM", "06:00 PM"].map((t) => {
+                    const isSel = time === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTime(t)}
+                        className={`px-3 py-1.5 rounded-xl font-bold shrink-0 transition border cursor-pointer active:scale-95 ${
+                          isSel
+                            ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs font-black"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
