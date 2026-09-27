@@ -28,6 +28,7 @@ import {
   Share2,
 } from "lucide-react";
 import { Coupon } from "@/lib/types";
+import { pullSubscriptionFromCloud, pushSubscriptionToCloud } from "@/lib/supabase/sync";
 
 export default function SubscriptionPage() {
   const { currentBusiness, currentUser, subscription, refreshSubscription } = useAuth();
@@ -56,20 +57,44 @@ export default function SubscriptionPage() {
   } | null>(null);
   const [couponList, setCouponList] = useState<Coupon[]>(() => [...db.coupons]);
 
-  // Sync coupons from PostgreSQL cloud on mount & listen for live changes
+  const businessId =
+    currentBusiness?.id ||
+    (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "biz-default");
+
+  // Sync coupons & authoritative subscription from PostgreSQL cloud on mount & listen for live changes
   React.useEffect(() => {
     db.syncCouponsFromCloud().then((cl) => {
       setCouponList([...cl]);
     }).catch(() => {});
 
+    if (businessId) {
+      pullSubscriptionFromCloud(businessId, currentUser?.email).then((updated) => {
+        if (updated) refreshSubscription();
+      }).catch(() => {});
+    }
+
     const onDbChange = () => {
       setCouponList([...db.coupons]);
+      refreshSubscription();
     };
+
+    const onFocus = () => {
+      if (businessId) {
+        pullSubscriptionFromCloud(businessId, currentUser?.email).then((updated) => {
+          if (updated) refreshSubscription();
+        }).catch(() => {});
+      }
+    };
+
     if (typeof window !== "undefined") {
       window.addEventListener("velvi:db-change", onDbChange);
-      return () => window.removeEventListener("velvi:db-change", onDbChange);
+      window.addEventListener("focus", onFocus);
+      return () => {
+        window.removeEventListener("velvi:db-change", onDbChange);
+        window.removeEventListener("focus", onFocus);
+      };
     }
-  }, []);
+  }, [businessId, currentUser?.email, refreshSubscription]);
 
   // Check Cashfree Gateway status
   React.useEffect(() => {
@@ -108,10 +133,6 @@ export default function SubscriptionPage() {
     month: "short",
     year: "numeric",
   });
-
-  const businessId =
-    currentBusiness?.id ||
-    (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "biz-default");
 
   const startDate = subscription?.currentPeriodStart
     ? new Date(subscription.currentPeriodStart)

@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Business, Subscription, UserRole } from "@/lib/types";
 import { db } from "@/lib/db/store";
 import { normalizeIndianMobile, maskEmail } from "@/lib/utils/phone";
-import { initCloudSync, syncAll, pushBusinessToCloud, pushUserToCloud } from "@/lib/supabase/sync";
+import { initCloudSync, syncAll, pushBusinessToCloud, pushUserToCloud, pullSubscriptionFromCloud, pushSubscriptionToCloud } from "@/lib/supabase/sync";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 interface AuthContextType {
@@ -311,6 +311,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (currentBusiness?.id) {
       initCloudSync(currentBusiness.id).catch(() => {});
+      pullSubscriptionFromCloud(currentBusiness.id, currentUser?.email).then((updated) => {
+        if (updated) {
+          const freshSub = db.subscriptions.find((s) => s.businessId === currentBusiness.id) || db.getSubscription(currentBusiness.id);
+          if (freshSub) {
+            setSubscription({ ...freshSub });
+          }
+        }
+      }).catch(() => {});
     }
     if (currentUser) {
       pushUserToCloud(currentUser).catch(() => {});
@@ -318,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pushBusinessToCloud(currentBusiness).catch(() => {});
       }
     }
-  }, [currentBusiness?.id, currentUser?.id]);
+  }, [currentBusiness?.id, currentUser?.id, currentUser?.email]);
 
   const loginWithCredentials = React.useCallback(
     async (name: string, mobile: string): Promise<User> => {
@@ -836,6 +844,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshSubscription = React.useCallback((updatedSub?: Subscription) => {
     if (updatedSub) {
       setSubscription({ ...updatedSub });
+      pushSubscriptionToCloud(updatedSub, currentUser?.email).catch(() => {});
       return;
     }
     const activeUserId =
@@ -847,7 +856,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (currentUser?.role === "SUPER_ADMIN" ? db.businesses.find((b) => b.id === "biz-super-admin-01") : null);
     if (biz) {
       const sub = db.subscriptions.find((s) => s.businessId === biz.id) || db.getSubscription(biz.id);
-      if (sub) setSubscription({ ...sub });
+      if (sub) {
+        setSubscription({ ...sub });
+        pushSubscriptionToCloud(sub, currentUser?.email).catch(() => {});
+      }
     }
   }, [currentBusiness, currentUser]);
 

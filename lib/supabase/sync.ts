@@ -239,11 +239,46 @@ export async function deletePoojaFromCloud(poojaId: string): Promise<boolean> {
 }
 
 /**
- * Pushes a subscription record up to Supabase.
+ * Pushes a subscription record up to Cloud (PostgreSQL via API & Supabase).
  */
-export async function pushSubscriptionToCloud(subscription: Subscription): Promise<boolean> {
+export async function pushSubscriptionToCloud(subscription: Subscription, userEmail?: string): Promise<boolean> {
+  if (!subscription) return false;
+
+  let resolvedEmail = userEmail;
+  if (!resolvedEmail && subscription.businessId) {
+    const biz = db.businesses.find((b) => b.id === subscription.businessId);
+    if (biz?.ownerId) {
+      const owner = db.users.find((u) => u.id === biz.ownerId);
+      if (owner?.email) resolvedEmail = owner.email;
+    }
+  }
+  if (!resolvedEmail && typeof window !== "undefined") {
+    try {
+      const activeUserId = localStorage.getItem("velvi_active_user_id");
+      if (activeUserId) {
+        const activeUser = db.users.find((u) => u.id === activeUserId);
+        if (activeUser?.email) resolvedEmail = activeUser.email;
+      }
+    } catch (_) {}
+  }
+
+  // 1. Post to same-origin server API (direct PostgreSQL connection, bypasses client constraints & RLS)
+  if (typeof window !== "undefined") {
+    try {
+      fetch("/api/auth/sync-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscription,
+          email: resolvedEmail,
+          businessId: subscription.businessId,
+        }),
+      }).catch(() => {});
+    } catch (_) {}
+  }
+
   const supabase = getSupabaseClient();
-  if (!supabase || !subscription) return false;
+  if (!supabase) return true;
 
   try {
     if (subscription.businessId) {
@@ -281,73 +316,146 @@ export async function pushSubscriptionToCloud(subscription: Subscription): Promi
 }
 
 /**
- * Pulls subscription from Supabase for a business.
+ * Pulls authoritative subscription from Cloud (Server PostgreSQL & Supabase) for a business/user.
  */
-export async function pullSubscriptionFromCloud(businessId: string): Promise<boolean> {
-  const supabase = getSupabaseClient();
-  if (!supabase || !businessId) return false;
+export async function pullSubscriptionFromCloud(businessId: string, userEmail?: string): Promise<boolean> {
+  if (!businessId) return false;
 
-  try {
-    const { data: cloudSubs, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("business_id", businessId)
-      .limit(1);
-
-    if (error) {
-      console.warn("[CloudSync] Subscription pull warning:", error.message);
-      return false;
+  let resolvedEmail = userEmail;
+  if (!resolvedEmail) {
+    const biz = db.businesses.find((b) => b.id === businessId);
+    if (biz?.ownerId) {
+      const owner = db.users.find((u) => u.id === biz.ownerId);
+      if (owner?.email) resolvedEmail = owner.email;
     }
-
-    if (Array.isArray(cloudSubs) && cloudSubs.length > 0) {
-      const cs = cloudSubs[0];
-      const mapped: Subscription = {
-        id: cs.id,
-        businessId: cs.business_id,
-        planName: cs.plan_name || "Velvi Pro",
-        planCode: cs.plan_code || "VELVI_PRO",
-        status: cs.status || "ACTIVE",
-        trialStart: cs.trial_start,
-        trialEnd: cs.trial_end,
-        currentPeriodStart: cs.current_period_start,
-        currentPeriodEnd: cs.current_period_end,
-        billingCycle: cs.billing_cycle || "MONTHLY",
-        autoRenew: Boolean(cs.auto_renew),
-        createdAt: cs.created_at || cs.current_period_start,
-        updatedAt: cs.updated_at || new Date().toISOString(),
-      };
-      const idx = db.subscriptions.findIndex((s) => s.businessId === businessId);
-      if (idx >= 0) {
-        const existingSub = db.subscriptions[idx];
-        const existingTime = existingSub.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
-        const cloudTime = mapped.currentPeriodEnd ? new Date(mapped.currentPeriodEnd).getTime() : 0;
-        const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
-          ? new Date(Math.max(existingTime, cloudTime)).toISOString()
-          : (mapped.currentPeriodEnd || existingSub.currentPeriodEnd);
-        const bestStatus = (Math.max(existingTime, cloudTime) > Date.now() || existingSub.status === "ACTIVE" || mapped.status === "ACTIVE")
-          ? "ACTIVE"
-          : mapped.status;
-        db.subscriptions[idx] = {
-          ...existingSub,
-          ...mapped,
-          currentPeriodEnd: bestPeriodEnd,
-          status: bestStatus,
-        };
-        if (existingTime > cloudTime) {
-          pushSubscriptionToCloud(db.subscriptions[idx]).catch(() => {});
-        }
-      } else {
-        db.subscriptions.push(mapped);
-      }
-      db.saveToLocalStorage();
-      db.notifyListeners();
-      return true;
-    }
-    return false;
-  } catch (err) {
-    console.warn("[CloudSync] Pull subscription exception:", err);
-    return false;
   }
+  if (!resolvedEmail && typeof window !== "undefined") {
+    try {
+      const activeUserId = localStorage.getItem("velvi_active_user_id");
+      if (activeUserId) {
+        const activeUser = db.users.find((u) => u.id === activeUserId);
+        if (activeUser?.email) resolvedEmail = activeUser.email;
+      }
+    } catch (_) {}
+  }
+
+  let cloudSub: Subscription | null = null;
+
+  // 1. Try server same-origin endpoint first (authoritative PostgreSQL master)
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch(
+        `/api/auth/sync-user?businessId=${encodeURIComponent(businessId)}&email=${encodeURIComponent(resolvedEmail || "")}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.subscription) {
+          cloudSub = data.subscription;
+        }
+      }
+    } catch (_) {}
+  }
+
+  // 2. Fallback to Supabase client if server route didn't return
+  if (!cloudSub) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data: cloudSubs, error } = await supabase
+          .from("subscriptions")
+          .select("*")
+          .eq("business_id", businessId)
+          .limit(1);
+
+        if (!error && Array.isArray(cloudSubs) && cloudSubs.length > 0) {
+          const cs = cloudSubs[0];
+          cloudSub = {
+            id: cs.id,
+            businessId: cs.business_id,
+            planName: cs.plan_name || "Velvi Pro",
+            planCode: cs.plan_code || "VELVI_PRO",
+            status: cs.status || "ACTIVE",
+            trialStart: cs.trial_start,
+            trialEnd: cs.trial_end,
+            currentPeriodStart: cs.current_period_start,
+            currentPeriodEnd: cs.current_period_end,
+            billingCycle: cs.billing_cycle || "MONTHLY",
+            autoRenew: Boolean(cs.auto_renew),
+            createdAt: cs.created_at || cs.current_period_start,
+            updatedAt: cs.updated_at || new Date().toISOString(),
+          };
+        }
+      } catch (err) {
+        console.warn("[CloudSync] Supabase subscription fallback notice:", err);
+      }
+    }
+  }
+
+  // 3. Merge cloud subscription into local store with maximum validity retention
+  if (cloudSub) {
+    const mapped = cloudSub;
+    const idx = db.subscriptions.findIndex((s) => s.businessId === businessId);
+    const existingSub = idx >= 0 ? db.subscriptions[idx] : null;
+    const existingTime = existingSub?.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
+    const cloudTime = mapped.currentPeriodEnd ? new Date(mapped.currentPeriodEnd).getTime() : 0;
+
+    const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
+      ? new Date(Math.max(existingTime, cloudTime)).toISOString()
+      : (mapped.currentPeriodEnd || existingSub?.currentPeriodEnd || new Date().toISOString());
+
+    const isFuture = Math.max(existingTime, cloudTime) > Date.now();
+    const bestStatus = (isFuture || existingSub?.status === "ACTIVE" || mapped.status === "ACTIVE")
+      ? "ACTIVE"
+      : mapped.status;
+
+    const mergedSub: Subscription = {
+      ...(existingSub || {}),
+      ...mapped,
+      id: existingSub?.id || mapped.id,
+      businessId,
+      currentPeriodEnd: bestPeriodEnd,
+      status: bestStatus,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (idx >= 0) {
+      db.subscriptions[idx] = mergedSub;
+    } else {
+      db.subscriptions.push(mergedSub);
+    }
+
+    // Also update all sibling businesses belonging to the same owner
+    const biz = db.businesses.find((b) => b.id === businessId);
+    if (biz?.ownerId) {
+      const siblingBizList = db.businesses.filter((b) => b.ownerId === biz.ownerId);
+      siblingBizList.forEach((sb) => {
+        const sIdx = db.subscriptions.findIndex((s) => s.businessId === sb.id);
+        if (sIdx >= 0) {
+          db.subscriptions[sIdx].currentPeriodEnd = bestPeriodEnd;
+          db.subscriptions[sIdx].status = bestStatus;
+          db.subscriptions[sIdx].updatedAt = new Date().toISOString();
+        } else {
+          db.subscriptions.push({
+            ...mergedSub,
+            id: `sub-${sb.id}`,
+            businessId: sb.id,
+          });
+        }
+      });
+    }
+
+    db.saveToLocalStorage();
+    db.notifyListeners();
+
+    // If local had a later expiry than cloud, push back to cloud
+    if (existingTime > cloudTime) {
+      pushSubscriptionToCloud(mergedSub, resolvedEmail).catch(() => {});
+    }
+
+    return true;
+  }
+
+  return false;
 }
 
 /**
