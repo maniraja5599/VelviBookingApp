@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-tamil: 'Noto Sans Tamil', 'Plus Jakarta Sans', -apple-system, sans-serif;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-tamil: 'Mukta Malar', 'Latha', 'Tiro Tamil', system-ui, sans-serif;
 
   --velvi-cream-rgb: 250 247 242;
   --velvi-cream-light-rgb: 255 253 249;
@@ -36,7 +36,7 @@ html, body {
 body {
   background-color: var(--velvi-cream, #FAF7F2);
   color: var(--velvi-brown-dark, #2C1810);
-  font-family: 'Plus Jakarta Sans', 'Noto Sans Tamil', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }

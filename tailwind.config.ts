@@ -27,20 +27,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: [
-          "'Plus Jakarta Sans'",
-          "'Noto Sans Tamil'",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "system-ui",
-          "sans-serif",
-        ],
-        tamil: [
-          "'Noto Sans Tamil'",
-          "'Plus Jakarta Sans'",
-          "-apple-system",
-          "sans-serif",
-        ],
+        sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "'Segoe UI'", "Roboto", "sans-serif"],
+        tamil: ["'Mukta Malar'", "'Latha'", "'Tiro Tamil'", "system-ui", "sans-serif"],
       },
       boxShadow: {
         sacred: "0 4px 20px -2px rgba(74, 46, 24, 0.08)",
