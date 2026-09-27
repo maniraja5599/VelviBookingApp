@@ -874,16 +874,15 @@ export default function CalendarPage() {
       {/* ========================================================= */}
       {activeTab === "calendar" && (
         <div className="space-y-2.5 animate-in fade-in duration-200">
-          {/* Cute & Charming Press & Hold Tip Banner */}
-          <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-gradient-to-r from-amber-50/95 via-emerald-50/90 to-amber-50/95 rounded-2xl border border-amber-200/80 text-[10.5px] sm:text-[11px] shadow-2xs">
+          {/* Clean Tip Banner */}
+          <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-slate-50 rounded-2xl border border-slate-200/80 text-[10.5px] sm:text-[11px] shadow-2xs">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs shrink-0 animate-bounce">👆</span>
-              <p className="font-bold text-slate-800 leading-tight">
-                <span className="text-amber-800 font-extrabold">டிப்ஸ்: </span>
-                இருமுறை கிளிக்: <span className="text-emerald-950 font-black">புதிய பதிவு</span> • அழுத்திப் பிடித்தால்: <span className="text-amber-950 font-black">நாள் விவரங்கள்</span>!
+              <span className="text-xs shrink-0 text-amber-600">💡</span>
+              <p className="font-medium text-slate-700 leading-tight">
+                <span className="text-slate-900 font-bold">டிப்ஸ்:</span> இருமுறை கிளிக்: <span className="text-emerald-900 font-bold">புதிய பதிவு</span> • அழுத்திப் பிடித்தால்: <span className="text-slate-900 font-bold">நாள் விவரங்கள்</span>
               </p>
             </div>
-            <span className="shrink-0 text-[9px] sm:text-[9.5px] font-black text-emerald-900 bg-emerald-100/90 px-1.5 py-0.5 rounded-md border border-emerald-300/80 shadow-2xs">
+            <span className="shrink-0 text-[9px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
               2x Click / Hold
             </span>
           </div>
@@ -1182,7 +1181,7 @@ export default function CalendarPage() {
             {/* Left Card: முக்கிய நாட்கள் */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-xl bg-emerald-700 text-white flex items-center justify-center shadow-2xs">
                       <CalendarDays className="w-4 h-4" />
@@ -1191,12 +1190,12 @@ export default function CalendarPage() {
                       முக்கிய நாட்கள்
                     </h4>
                   </div>
-                  <span className="text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                     {monthImportantEventsList.length} விசேஷங்கள்
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-50 max-h-64 overflow-y-auto pr-1 space-y-0.5 mt-1.5 scrollbar-thin">
+                <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1 space-y-1 mt-1.5 scrollbar-thin">
                   {monthImportantEventsList.length === 0 ? (
                     <div className="py-6 text-center text-xs text-slate-400 font-medium">
                       இம்மாதத்தில் சிறப்பு நாட்கள் ஏதுமில்லை
@@ -1207,22 +1206,23 @@ export default function CalendarPage() {
                         key={`${item.dateStr}-${idx}`}
                         type="button"
                         onClick={() => setSelectedDate(item.dateStr)}
-                        className={`w-full flex items-center gap-2 py-1.5 px-1.5 rounded-lg text-left transition group ${
+                        className={`w-full flex items-center justify-between gap-2 py-2 px-2 rounded-xl text-left transition group cursor-pointer ${
                           selectedDate === item.dateStr
-                            ? "bg-amber-50/90 text-slate-950 font-bold"
+                            ? "bg-amber-50/90 text-slate-950 font-bold border border-amber-200/80 shadow-2xs"
                             : "hover:bg-slate-50 text-slate-800"
                         }`}
                       >
-                        <span className="font-black text-red-600 text-xs w-6 shrink-0 tracking-tight">
-                          {String(item.day).padStart(2, "0")}
-                        </span>
-                        <span className="text-slate-300 font-bold">-</span>
-                        <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-900 flex items-center gap-1.5 truncate">
-                          <span className="truncate">{item.name}</span>
-                          {item.icon && <span className="shrink-0">{item.icon}</span>}
-                        </span>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-6 h-6 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/80 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                            {String(item.day).padStart(2, "0")}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-950 flex items-center gap-1.5 truncate">
+                            <span className="truncate">{item.name}</span>
+                            {item.icon && <span className="shrink-0 text-xs">{item.icon}</span>}
+                          </span>
+                        </div>
                         {item.isGovtHoliday && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 shrink-0 ml-auto">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 shrink-0">
                             🏖️ விடுமுறை
                           </span>
                         )}
@@ -1236,7 +1236,7 @@ export default function CalendarPage() {
             {/* Right Card: சந்திர நிலைகள் & விரத தினங்கள் */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5 flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="text-base leading-none">🌙</span>
                     <h4 className="font-extrabold text-sm text-slate-900">
@@ -1248,29 +1248,31 @@ export default function CalendarPage() {
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-50 space-y-0.5 mt-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                <div className="divide-y divide-slate-100 space-y-1 mt-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
                   {moonAndFastingList.map((item) => (
                     <div
                       key={item.title}
-                      className="flex items-center justify-between py-1.5 px-1.5 text-xs rounded-lg hover:bg-slate-50 transition"
+                      className="flex items-center justify-between py-2 px-2 text-xs rounded-xl hover:bg-slate-50 transition"
                     >
-                      <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                        <span className="text-sm leading-none">{item.icon}</span>
-                        <span>{item.title}</span>
+                      <div className="flex items-center gap-2 text-slate-800 font-semibold min-w-0">
+                        <span className="text-sm leading-none shrink-0">{item.icon}</span>
+                        <span className="truncate">{item.title}</span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-slate-900 font-extrabold text-xs">
-                        {item.dates.map((dObj, dIdx) => (
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        {item.dates.map((dObj) => (
                           <button
                             key={dObj.dateStr}
                             type="button"
                             onClick={() => setSelectedDate(dObj.dateStr)}
-                            className={`hover:text-emerald-700 transition px-1 py-0.5 rounded hover:bg-emerald-50 ${
-                              selectedDate === dObj.dateStr ? "text-emerald-800 underline decoration-2 font-black" : ""
+                            className={`px-2 py-0.5 rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer ${
+                              selectedDate === dObj.dateStr
+                                ? "bg-emerald-800 text-white shadow-2xs font-black"
+                                : "bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200/80"
                             }`}
                             title={`தேதி: ${dObj.dayNum}`}
                           >
-                            {dObj.dayNum}{dIdx < item.dates.length - 1 ? "," : ""}
+                            {dObj.dayNum}
                           </button>
                         ))}
                       </div>
@@ -1316,12 +1318,12 @@ export default function CalendarPage() {
                       முக்கிய நாட்கள்
                     </h4>
                   </div>
-                  <span className="text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                  <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                     {monthImportantEventsList.length} விசேஷங்கள்
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-50 max-h-[520px] overflow-y-auto pr-1 space-y-0.5 mt-1.5 scrollbar-thin">
+                <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto pr-1 space-y-1 mt-1.5 scrollbar-thin">
                   {monthImportantEventsList.length === 0 ? (
                     <div className="py-8 text-center text-xs text-slate-400 font-medium">
                       இம்மாதத்தில் சிறப்பு நாட்கள் ஏதுமில்லை
@@ -1338,21 +1340,20 @@ export default function CalendarPage() {
                             window.scrollTo({ top: 360, behavior: "smooth" });
                           }
                         }}
-                        className={`w-full flex items-center justify-between py-2 px-1.5 rounded-lg text-left transition group cursor-pointer ${
+                        className={`w-full flex items-center justify-between py-2 px-2 rounded-xl text-left transition group cursor-pointer ${
                           selectedDate === item.dateStr
-                            ? "bg-emerald-50/90 text-slate-950 font-bold"
+                            ? "bg-amber-50/90 text-slate-950 font-bold border border-amber-200/80 shadow-2xs"
                             : "hover:bg-slate-50 text-slate-800"
                         }`}
                         title="காலண்டரில் பார்க்க தொடுக்கவும்"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-black text-red-600 text-xs sm:text-sm w-6 shrink-0 tracking-tight">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-6 h-6 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/80 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
                             {String(item.day).padStart(2, "0")}
                           </span>
-                          <span className="text-slate-300 font-bold">-</span>
-                          <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-900 flex items-center gap-1.5 truncate">
+                          <span className="text-xs font-semibold text-slate-800 group-hover:text-emerald-950 flex items-center gap-1.5 truncate">
                             <span className="truncate">{item.name}</span>
-                            {item.icon && <span className="shrink-0">{item.icon}</span>}
+                            {item.icon && <span className="shrink-0 text-xs">{item.icon}</span>}
                           </span>
                         </div>
 
@@ -1378,7 +1379,7 @@ export default function CalendarPage() {
             {/* Right Card: சந்திர நிலைகள் & விரத தினங்கள் */}
             <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs space-y-2.5">
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                   <div className="flex items-center gap-2">
                     <span className="text-base leading-none">🌙</span>
                     <h4 className="font-extrabold text-sm text-slate-900">
@@ -1390,19 +1391,19 @@ export default function CalendarPage() {
                   </span>
                 </div>
 
-                <div className="divide-y divide-gray-50 space-y-0.5 mt-1.5 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
+                <div className="divide-y divide-slate-100 space-y-1 mt-1.5 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
                   {moonAndFastingList.map((item) => (
                     <div
                       key={item.title}
-                      className="flex items-center justify-between py-2 px-1.5 text-xs rounded-lg hover:bg-slate-50 transition"
+                      className="flex items-center justify-between py-2 px-2 text-xs rounded-xl hover:bg-slate-50 transition"
                     >
-                      <div className="flex items-center gap-2 text-slate-800 font-semibold">
-                        <span className="text-sm leading-none">{item.icon}</span>
-                        <span>{item.title}</span>
+                      <div className="flex items-center gap-2 text-slate-800 font-semibold min-w-0">
+                        <span className="text-sm leading-none shrink-0">{item.icon}</span>
+                        <span className="truncate">{item.title}</span>
                       </div>
 
-                      <div className="flex items-center gap-1 text-slate-900 font-extrabold text-xs">
-                        {item.dates.map((dObj, dIdx) => (
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        {item.dates.map((dObj) => (
                           <button
                             key={dObj.dateStr}
                             type="button"
@@ -1413,12 +1414,14 @@ export default function CalendarPage() {
                                 window.scrollTo({ top: 360, behavior: "smooth" });
                               }
                             }}
-                            className={`hover:text-emerald-700 transition px-1 py-0.5 rounded hover:bg-emerald-50 cursor-pointer ${
-                              selectedDate === dObj.dateStr ? "text-emerald-800 underline decoration-2 font-black" : ""
+                            className={`px-2 py-0.5 rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer ${
+                              selectedDate === dObj.dateStr
+                                ? "bg-emerald-800 text-white shadow-2xs font-black"
+                                : "bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200/80"
                             }`}
                             title={`தேதி: ${dObj.dayNum} (காலண்டரில் பார்க்க)`}
                           >
-                            {dObj.dayNum}{dIdx < item.dates.length - 1 ? "," : ""}
+                            {dObj.dayNum}
                           </button>
                         ))}
                       </div>

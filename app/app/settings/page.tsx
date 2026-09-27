@@ -352,8 +352,8 @@ export default function SettingsHubPage() {
       {/* Header & Page Title */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-velvi-brownDark">{t("settings")}</h2>
-          <p className="text-xs text-velvi-brown/60">Manage your business profile, rituals & preferences</p>
+          <h2 className="text-base sm:text-lg font-black text-slate-900">{t("settings")}</h2>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">Manage your business profile, rituals & preferences</p>
         </div>
       </div>
 
@@ -361,10 +361,10 @@ export default function SettingsHubPage() {
       {/* 1. HERO NAME & BRANDING CARD (Perfect Centered Logo, Pro Status & Metrics) */}
       {/* ========================================================================= */}
       <div
-        className={`p-4 sm:p-5 rounded-3xl relative overflow-hidden transition-all shadow-xs ${
+        className={`p-4 sm:p-5 rounded-3xl relative overflow-hidden transition-all shadow-2xs ${
           isPro
-            ? "bg-gradient-to-br from-amber-50/95 via-white to-emerald-50/50 border border-emerald-400/80 ring-1 ring-emerald-400/20"
-            : "bg-gradient-to-br from-amber-50/95 via-white to-amber-100/50 border border-amber-300/80"
+            ? "bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/40 border border-emerald-300/80 ring-1 ring-emerald-200/50"
+            : "bg-gradient-to-br from-[#fffdfa] via-white to-amber-50/50 border border-amber-200/90"
         }`}
       >
         {/* Subtle decorative background watermarks */}
@@ -375,7 +375,7 @@ export default function SettingsHubPage() {
           <div className="flex items-center gap-3.5 min-w-0 flex-1">
             {/* Perfectly Centered Avatar / Logo Container */}
             <div className="relative shrink-0">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-amber-300/80 ring-2 ring-amber-400/30 shadow-xs flex items-center justify-center p-1.5 overflow-hidden transition-transform">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-amber-300/80 ring-2 ring-amber-400/20 shadow-2xs flex items-center justify-center p-1.5 overflow-hidden transition-transform">
                 {currentUser?.avatarUrl ? (
                   <img
                     src={currentUser.avatarUrl}
@@ -461,12 +461,12 @@ export default function SettingsHubPage() {
         </div>
 
         {/* Live Metrics Row inside Hero Card */}
-        <div className="mt-3 pt-2.5 border-t border-amber-200/60 grid grid-cols-3 gap-2">
+        <div className="mt-3 pt-2.5 border-t border-slate-200/70 grid grid-cols-3 gap-2">
           <Link
             href="/app/bookings"
-            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+            className="bg-white hover:bg-slate-50 rounded-2xl p-2.5 border border-slate-200/90 text-center transition group active:scale-95 shadow-2xs"
           >
-            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+            <div className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
               {counts.bookings}
             </div>
             <div className="text-[10px] font-bold text-slate-500">Bookings</div>
@@ -474,9 +474,9 @@ export default function SettingsHubPage() {
 
           <Link
             href="/app/customers"
-            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+            className="bg-white hover:bg-slate-50 rounded-2xl p-2.5 border border-slate-200/90 text-center transition group active:scale-95 shadow-2xs"
           >
-            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+            <div className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
               {counts.customers}
             </div>
             <div className="text-[10px] font-bold text-slate-500">Devotees</div>
@@ -484,9 +484,9 @@ export default function SettingsHubPage() {
 
           <Link
             href="/app/poojas"
-            className="bg-white/80 hover:bg-white rounded-xl p-2 border border-amber-200/70 text-center transition group active:scale-95 shadow-2xs"
+            className="bg-white hover:bg-slate-50 rounded-2xl p-2.5 border border-slate-200/90 text-center transition group active:scale-95 shadow-2xs"
           >
-            <div className="text-xs font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
+            <div className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-emerald-800 transition-colors">
               {counts.poojas}
             </div>
             <div className="text-[10px] font-bold text-slate-500">Poojas</div>
@@ -494,7 +494,7 @@ export default function SettingsHubPage() {
         </div>
 
         {/* Bottom Validity Details & Edit Profile Link */}
-        <div className="mt-2.5 pt-2 border-t border-amber-200/50 flex items-center justify-between text-[11px] text-slate-600 flex-wrap gap-2">
+        <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-600 flex-wrap gap-2">
           <div className="flex items-center gap-1.5 text-slate-700 font-medium">
             <Calendar className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span>
@@ -504,7 +504,7 @@ export default function SettingsHubPage() {
 
           <Link
             href="/app/settings/branding"
-            className="text-[11px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-amber-300/80 shadow-2xs transition group active:scale-95"
+            className="text-[11px] font-bold text-emerald-900 hover:text-emerald-950 flex items-center gap-1 bg-white px-2.5 py-1 rounded-xl border border-slate-200/90 shadow-2xs transition group active:scale-95"
           >
             <span>Edit Profile</span>
             <ArrowUpRight className="w-3 h-3 text-emerald-800 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

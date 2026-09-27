@@ -2008,14 +2008,7 @@ function PoojasCatalogueContent() {
                         : "border-slate-200/90 hover:border-emerald-300"
                     }`}
                   >
-                    {/* Smart Compact Top Performer Badge */}
-                    {isTop && (
-                      <span className="absolute -top-2 right-3.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 text-amber-300 font-extrabold text-[8.5px] border border-slate-700/60 shadow-2xs tracking-wide z-10 animate-in fade-in">
-                        <TrendingUp className="w-2.5 h-2.5 text-amber-400" />
-                        <span>Top Booked</span>
-                      </span>
-                    )}
-                    {/* Left: Pooja Icon Avatar + Names + Kutty Smart Metrics */}
+                    {/* Left: Pooja Icon Avatar + Names + Clean Simple Metrics */}
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/60 to-orange-50 text-slate-800 flex items-center justify-center shrink-0 border border-amber-200/80 shadow-2xs group-hover:scale-105 transition-all">
                         <span className="text-lg sm:text-xl select-none leading-none">
@@ -2024,7 +2017,7 @@ function PoojasCatalogueContent() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        {/* Title Row: English Name + Tamil Name */}
+                        {/* Title Row: English Name + Tamil Name + Simple Top Badge */}
                         <div className="flex items-center gap-1.5 flex-wrap leading-tight">
                           <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
                             {p.englishName}
@@ -2034,37 +2027,27 @@ function PoojasCatalogueContent() {
                               {p.tamilName}
                             </span>
                           )}
+                          {isTop && (
+                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-900 border border-amber-300/80 shrink-0 inline-flex items-center gap-0.5">
+                              ★ Top Booked
+                            </span>
+                          )}
                         </div>
 
-                        {/* Metrics Row: Evlo Booking + Total Amount + Items */}
-                        <div className="flex items-center gap-1.5 text-[10.5px] font-bold mt-1 flex-wrap">
-                          {/* Booking Count Pill */}
+                        {/* Clean Simple Metrics: Booking Count + Items Count */}
+                        <div className="flex items-center gap-2 text-[10.5px] font-medium text-slate-500 mt-1">
                           {stats.count > 0 ? (
-                            <span className="text-[10px] font-black text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0 inline-flex items-center gap-1">
-                              🔥 {stats.count} {stats.count === 1 ? "Booking" : "Bookings"}
+                            <span className="text-[9.5px] font-extrabold text-emerald-900 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/80 shrink-0">
+                              {stats.count} {stats.count === 1 ? "Booking" : "Bookings"}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                            <span className="text-[9.5px] text-slate-400">
                               0 Bookings
                             </span>
                           )}
-
-                          {/* Total Amount Generated (மொத்த தொகை) */}
-                          {stats.count > 0 ? (
-                            <span className="text-[10px] font-black text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80 shrink-0 inline-flex items-center gap-0.5">
-                              மொத்தம்: ₹{stats.totalDakshina.toLocaleString("en-IN")}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-medium text-slate-400">
-                              மொத்தம் ₹0
-                            </span>
-                          )}
-
-                          <span className="text-slate-300">•</span>
-
-                          {/* Checklist Items Count */}
-                          <span className="text-slate-500 text-[10px] font-medium truncate">
-                            📦 {itemCount} பொருட்கள்
+                          <span>•</span>
+                          <span className="truncate">
+                            📦 {itemCount} {itemCount === 1 ? "Item" : "Items"}
                           </span>
                         </div>
                       </div>

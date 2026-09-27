@@ -384,7 +384,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
             isCompleted
               ? "bg-emerald-50/40 border-emerald-300"
               : isOverdue
-              ? "bg-gradient-to-r from-rose-50/80 via-amber-50/40 to-white border-rose-300 shadow-2xs hover:border-rose-400 ring-1 ring-rose-200/80"
+              ? "bg-[#fffdfa] border-amber-300/90 shadow-2xs hover:border-amber-400 ring-1 ring-amber-200/60"
               : "bg-white border-slate-200/90 hover:border-amber-300 shadow-2xs"
           }`}
         >
@@ -413,8 +413,8 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
                 </span>
               )}
               {isOverdue && (
-                <span className="text-[9px] font-black bg-rose-100 text-rose-900 border border-rose-300 px-1.5 py-0.2 rounded-full leading-none flex items-center gap-0.5 shadow-2xs shrink-0">
-                  <AlertTriangle className="w-2.5 h-2.5 text-rose-600 shrink-0" />
+                <span className="text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-300/80 px-1.5 py-0.2 rounded-full leading-none flex items-center gap-0.5 shadow-2xs shrink-0">
+                  <Clock className="w-2.5 h-2.5 text-amber-700 shrink-0" />
                   <span>{diffDays}d Overdue</span>
                 </span>
               )}
@@ -433,7 +433,7 @@ const SwipeableTimelineCard: React.FC<SwipeableTimelineCardProps> = ({
                   className={`text-[9.5px] font-bold ml-1.5 ${
                     b.paymentStatus === "PAID"
                       ? "text-emerald-700"
-                      : "text-rose-700"
+                      : "text-amber-800"
                   }`}
                 >
                   {b.paymentStatus === "PAID" ? "Paid ✅" : `Due ₹${b.balanceAmount}`}
@@ -1060,34 +1060,6 @@ export default function BookingsListPage() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* View Mode Switcher */}
-          <div className="bg-white rounded-xl border border-slate-200 p-0.5 flex items-center shadow-2xs">
-            <button
-              onClick={() => setViewMode("timeline")}
-              title="Month Timeline View"
-              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold cursor-pointer ${
-                viewMode === "timeline"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <GitCommitVertical className="w-3.5 h-3.5" />
-              <span>Timeline</span>
-            </button>
-            <button
-              onClick={() => setViewMode("list")}
-              title="Line-by-Line List View"
-              className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 text-xs font-bold cursor-pointer ${
-                viewMode === "list"
-                  ? "bg-slate-900 text-white shadow-2xs"
-                  : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <List className="w-3.5 h-3.5" />
-              <span>List</span>
-            </button>
-          </div>
-
           {/* Recent Button */}
           <button
             type="button"
@@ -1142,7 +1114,7 @@ export default function BookingsListPage() {
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
-            className={`px-3 py-1 rounded-xl whitespace-nowrap transition shrink-0 flex items-center gap-1.5 ${
+            className={`px-3 py-1 rounded-xl whitespace-nowrap transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
               filter === tab.id
                 ? "bg-slate-900 text-white shadow-2xs"
                 : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
@@ -1150,7 +1122,13 @@ export default function BookingsListPage() {
           >
             <span>{tab.label} ({tab.count})</span>
             {tab.id === "PENDING" && overdueCount > 0 && (
-              <span className="text-[9px] bg-rose-500 text-white font-black px-1.5 py-0.2 rounded-full shadow-2xs">
+              <span
+                className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full shadow-2xs ${
+                  filter === "PENDING"
+                    ? "bg-amber-400 text-slate-950"
+                    : "bg-amber-100 text-amber-900 border border-amber-300"
+                }`}
+              >
                 {overdueCount} overdue
               </span>
             )}
