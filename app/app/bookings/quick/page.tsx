@@ -67,11 +67,13 @@ function QuickBookingContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [poojas, setPoojas] = useState<Pooja[]>([]);
   const [members, setAllMembers] = useState<BusinessMember[]>([]);
+  const [existingBookings, setExistingBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
     setCustomers(db.getCustomers(businessId));
     setPoojas(db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p)));
     setAllMembers(db.getMembers(businessId));
+    setExistingBookings(db.getBookings(businessId));
   }, [businessId]);
 
   // ---------------------------------------------------------------------------
@@ -166,13 +168,47 @@ function QuickBookingContent() {
   };
 
   // ---------------------------------------------------------------------------
-  // 2. Pooja & Samagri State
+  // 2. Pooja & Samagri State (Sorted by Recent Booking at Top)
   // ---------------------------------------------------------------------------
   const [selectedPoojaId, setSelectedPoojaId] = useState<string>(
     searchParams.get("poojaId") || ""
   );
   const [samagriItems, setSamagriItems] = useState<BookingItem[]>([]);
-  const [inspectPoojaForModal, setInspectPoojaForModal] = useState<Pooja | null>(null);
+
+  // Calculate recently booked poojas and sort them to the top
+  const { sortedPoojas, recentPoojaIds } = useMemo(() => {
+    const recentBookingTimeMap = new Map<string, number>();
+    const bookingCountMap = new Map<string, number>();
+
+    existingBookings.forEach((b) => {
+      if (!b.poojaId) return;
+      const t = new Date(b.date || (b as any).createdAt || 0).getTime();
+      const prevT = recentBookingTimeMap.get(b.poojaId) || 0;
+      if (t > prevT) recentBookingTimeMap.set(b.poojaId, t);
+      bookingCountMap.set(b.poojaId, (bookingCountMap.get(b.poojaId) || 0) + 1);
+    });
+
+    const sorted = [...poojas].sort((a, b) => {
+      const timeA = recentBookingTimeMap.get(a.id) || 0;
+      const timeB = recentBookingTimeMap.get(b.id) || 0;
+      if (timeA !== timeB) return timeB - timeA; // Most recently booked first
+
+      const countA = bookingCountMap.get(a.id) || 0;
+      const countB = bookingCountMap.get(b.id) || 0;
+      if (countA !== countB) return countB - countA;
+
+      return (a.tamilName || a.englishName).localeCompare(b.tamilName || b.englishName);
+    });
+
+    const recentIds = new Set(
+      Array.from(recentBookingTimeMap.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([id]) => id)
+    );
+
+    return { sortedPoojas: sorted, recentPoojaIds: recentIds };
+  }, [poojas, existingBookings]);
 
   const currentPooja = useMemo(
     () => poojas.find((p) => p.id === selectedPoojaId) || null,
@@ -200,29 +236,6 @@ function QuickBookingContent() {
   const handleSelectPooja = (poojaId: string) => {
     setSelectedPoojaId(poojaId);
     setFormError("");
-  };
-
-  // Long-press detection on Pooja Card to view items
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressActiveRef = useRef<boolean>(false);
-
-  const handlePoojaTouchStart = (pooja: Pooja) => {
-    isLongPressActiveRef.current = false;
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressTimerRef.current = setTimeout(() => {
-      isLongPressActiveRef.current = true;
-      if (typeof window !== "undefined" && navigator.vibrate) {
-        navigator.vibrate(40);
-      }
-      setInspectPoojaForModal(pooja);
-    }, 450);
-  };
-
-  const handlePoojaTouchEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
   };
 
   // ---------------------------------------------------------------------------
@@ -294,11 +307,13 @@ function QuickBookingContent() {
   // Performing Priest State
   const [priestType, setPriestType] = useState<"self" | "other">("self");
   const [assignedIyerId, setAssignedIyerId] = useState<string>("self");
+  const [customPriestName, setCustomPriestName] = useState<string>("");
 
-  // Expenses State
+  // Expenses & Notes State
   const [expenseAmount, setExpenseAmount] = useState<number>(0);
   const [expenseNotes, setExpenseNotes] = useState<string>("");
   const [showExpenses, setShowExpenses] = useState<boolean>(false);
+  const [bookingNotes, setBookingNotes] = useState<string>("");
 
   const [isSubmittingBooking, setIsSubmittingBooking] = useState<boolean>(false);
   const [createdBooking, setCreatedBooking] = useState<Booking | null>(null);
@@ -338,29 +353,63 @@ function QuickBookingContent() {
     if (e) e.preventDefault();
 
     if (!selectedCustomer) {
-      setFormError("பக்தர் விவரம் தேர்வு செய்யப்படவில்லை");
+      setFormError("பக்தர் விவரம் தேர்வு செய்யப்படவில்லை (Devotee not selected)");
       setTwoStepStage(1);
       return;
     }
     if (!currentPooja) {
-      setFormError("பூஜை சேவை தேர்வு செய்யப்படவில்லை");
+      setFormError("பூஜை சேவை தேர்வு செய்யப்படவில்லை (Ceremony not selected)");
       setTwoStepStage(1);
       return;
     }
 
     setIsSubmittingBooking(true);
 
-    const effectivePriestId = priestType === "self" ? "self" : assignedIyerId;
-    const assignedMember = members.find((m) => m.id === effectivePriestId);
-    const performingName =
-      priestType === "self"
-        ? currentUser?.name || "Ravi Iyer"
-        : assignedMember?.name || "Assigned Priest";
+    let effectivePriestId = assignedIyerId;
+    let performingName = "Assigned Priest";
 
-    const paymentStatus: PaymentStatus =
+    if (priestType === "self") {
+      effectivePriestId = "m-owner-01";
+      performingName = currentUser?.name || "Ravi Iyer";
+    } else {
+      if (customPriestName.trim()) {
+        performingName = customPriestName.trim();
+        const found = members.find(
+          (m) => m.name.toLowerCase() === customPriestName.trim().toLowerCase()
+        );
+        if (found) {
+          effectivePriestId = found.id;
+        } else {
+          try {
+            const newMem = db.createMember({
+              businessId,
+              name: customPriestName.trim(),
+              role: "IYER",
+            });
+            effectivePriestId = newMem.id;
+            setAllMembers(db.getMembers(businessId));
+          } catch {
+            effectivePriestId = `m-${Date.now()}`;
+          }
+        }
+      } else {
+        const assignedMember = members.find((m) => m.id === assignedIyerId);
+        performingName = assignedMember?.name || "Other Priest";
+      }
+    }
+
+    // Accurate calculation of advance and balance
+    const effectiveAdvance =
       paymentChoice === "FULL"
-        ? "PAID"
+        ? amount
         : paymentChoice === "ADVANCE"
+        ? Math.min(amount, Math.max(0, advanceAmount))
+        : 0;
+    const effectiveBalance = Math.max(0, amount - effectiveAdvance);
+    const effectivePaymentStatus: PaymentStatus =
+      paymentChoice === "FULL" || (effectiveBalance === 0 && amount > 0)
+        ? "PAID"
+        : effectiveAdvance > 0
         ? "PARTIALLY_PAID"
         : "PENDING";
 
@@ -390,26 +439,28 @@ function QuickBookingContent() {
         endTime: formatTime12H(time),
         durationMinutes: currentPooja.durationMinutes || 120,
         totalAmount: amount,
-        advanceAmount: paymentChoice === "UNPAID" ? 0 : advanceAmount,
-        balanceAmount: Math.max(0, amount - (paymentChoice === "UNPAID" ? 0 : advanceAmount)),
-        paymentStatus,
-        paymentDate: paymentChoice !== "UNPAID" ? paymentDate : undefined,
-        paymentMethod: paymentChoice !== "UNPAID" ? paymentMethod : undefined,
-        paymentRecipient: paymentChoice !== "UNPAID" ? paymentRecipient : undefined,
-        priestShareAmount: paymentChoice !== "UNPAID" && priestShareAmount > 0 ? priestShareAmount : undefined,
-        adminCommissionAmount: paymentChoice !== "UNPAID" && adminCommissionAmount > 0 ? adminCommissionAmount : undefined,
-        paymentNotes: paymentChoice !== "UNPAID" && paymentNotes.trim() ? paymentNotes.trim() : undefined,
+        advanceAmount: effectiveAdvance,
+        balanceAmount: effectiveBalance,
+        paymentStatus: effectivePaymentStatus,
+        paymentDate: effectiveAdvance > 0 ? (paymentDate || todayStr) : undefined,
+        paymentMethod: effectiveAdvance > 0 ? paymentMethod : undefined,
+        paymentRecipient: effectiveAdvance > 0 ? paymentRecipient : undefined,
+        priestShareAmount: effectiveAdvance > 0 && priestShareAmount > 0 ? priestShareAmount : undefined,
+        adminCommissionAmount: effectiveAdvance > 0 && adminCommissionAmount > 0 ? adminCommissionAmount : undefined,
+        paymentNotes: bookingNotes.trim() || (effectiveAdvance > 0 && paymentNotes.trim()) ? (bookingNotes.trim() || paymentNotes.trim()) : undefined,
+        notes: bookingNotes.trim() || undefined,
         status: "CONFIRMED",
         assignedIyerId: effectivePriestId === "self" ? "m-owner-01" : effectivePriestId,
         assignedIyerName: performingName,
         location: location || selectedCustomer.city || "Namakkal",
         expenseAmount: expenseAmount || 0,
-        expenseNotes: expenseNotes || "",
+        expenseNotes: expenseNotes.trim() || "",
         items: samagriItems,
         idempotencyKey,
       } as any);
 
       setCreatedBooking(newBooking);
+      setExistingBookings(db.getBookings(businessId));
     } catch (err: any) {
       alert(err.message || "Failed to create booking");
     } finally {
@@ -686,35 +737,27 @@ function QuickBookingContent() {
                   </h2>
                 </div>
 
-                <div className="text-[10.5px] text-slate-500 font-bold">
-                  <span>1-Tap Select • </span>
-                  <span className="text-amber-800">
-                    (அழுத்திப் பிடித்தால் பொருட்கள் பட்டியல்)
-                  </span>
+                <div className="text-[11px] text-slate-500 font-bold">
+                  <span>Need a new ceremony? </span>
+                  <Link
+                    href="/app/poojas?returnTo=new-booking"
+                    className="text-amber-800 hover:text-amber-950 font-black underline inline-flex items-center gap-0.5 ml-1"
+                  >
+                    <span>+ Add Pooja in Catalog →</span>
+                  </Link>
                 </div>
               </div>
 
-              {/* Deity Cards Grid */}
+              {/* Deity Cards Grid (Sorted by Recent on Top) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {poojas.map((p) => {
+                {sortedPoojas.map((p) => {
                   const isSelected = selectedPoojaId === p.id;
+                  const isRecent = recentPoojaIds.has(p.id);
                   return (
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => {
-                        if (isLongPressActiveRef.current) {
-                          isLongPressActiveRef.current = false;
-                          return;
-                        }
-                        handleSelectPooja(p.id);
-                      }}
-                      onTouchStart={() => handlePoojaTouchStart(p)}
-                      onTouchEnd={handlePoojaTouchEnd}
-                      onTouchCancel={handlePoojaTouchEnd}
-                      onMouseDown={() => handlePoojaTouchStart(p)}
-                      onMouseUp={handlePoojaTouchEnd}
-                      onMouseLeave={handlePoojaTouchEnd}
+                      onClick={() => handleSelectPooja(p.id)}
                       className={`p-3 rounded-2xl border text-left transition flex items-center justify-between gap-2.5 shadow-2xs active:scale-95 cursor-pointer relative select-none ${
                         isSelected
                           ? "bg-emerald-800 text-white border-emerald-800 shadow-md ring-2 ring-emerald-500/30"
@@ -732,12 +775,25 @@ function QuickBookingContent() {
                           {getPoojaIcon(p)}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div
-                            className={`text-xs font-black truncate ${
-                              isSelected ? "text-white" : "text-slate-900"
-                            }`}
-                          >
-                            {p.tamilName || p.englishName}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-xs font-black truncate ${
+                                isSelected ? "text-white" : "text-slate-900"
+                              }`}
+                            >
+                              {p.tamilName || p.englishName}
+                            </span>
+                            {isRecent && (
+                              <span
+                                className={`text-[9px] font-black px-1.5 py-0.2 rounded border shadow-2xs ${
+                                  isSelected
+                                    ? "bg-amber-300 text-amber-950 border-amber-400"
+                                    : "bg-amber-100 text-amber-900 border-amber-300"
+                                }`}
+                              >
+                                Recent
+                              </span>
+                            )}
                           </div>
                           {p.tamilName && p.englishName && (
                             <div
@@ -751,7 +807,7 @@ function QuickBookingContent() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <div className="text-right">
                           <span
                             className={`text-xs font-black block ${
@@ -761,23 +817,7 @@ function QuickBookingContent() {
                             ₹{(p.basePrice || 0).toLocaleString("en-IN")}
                           </span>
                         </div>
-
-                        {/* Info/Items eye button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setInspectPoojaForModal(p);
-                          }}
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center transition cursor-pointer ${
-                            isSelected
-                              ? "text-emerald-200 hover:text-white hover:bg-emerald-700"
-                              : "text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                          }`}
-                          title="பொருட்கள் பட்டியலைக் காண்க (View Items)"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        {isSelected && <Check className="w-4 h-4 text-amber-300 stroke-[3]" />}
                       </div>
                     </button>
                   );
@@ -785,7 +825,7 @@ function QuickBookingContent() {
               </div>
             </div>
 
-            {/* 3. Date & Auspicious Time */}
+            {/* 3. DATE & TIME */}
             <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -793,16 +833,38 @@ function QuickBookingContent() {
                     <CalendarIcon className="w-4 h-4 text-emerald-700" />
                   </div>
                   <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900">
-                    3. நாள் &amp; சுப நேரம் (Date &amp; Time)
+                    3. DATE &amp; TIME
                   </h2>
                 </div>
 
-                <span className="text-[10.5px] font-black text-amber-950 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
-                  {tamilInfo.tamilMonth} {tamilInfo.tamilDay}
-                </span>
+                {/* Tamil Month Badge + Quick Date Picker Icon Button */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10.5px] font-black text-amber-950 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                    {tamilInfo.tamilMonth} {tamilInfo.tamilDay}
+                  </span>
+
+                  <div className="relative group shrink-0">
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(e) => {
+                        if (e.target.value) setDate(e.target.value);
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      title="Pick Custom Date"
+                    />
+                    <button
+                      type="button"
+                      className="w-7 h-7 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center transition shadow-2xs cursor-pointer active:scale-95"
+                      title="Select Custom Date 📅"
+                    >
+                      <CalendarIcon className="w-3.5 h-3.5 text-amber-700" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Compact Horizontally Scrollable Date Strip + Date Picker */}
+              {/* Compact Horizontally Scrollable Date Strip + Date Picker Pill */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
                 {upcomingDates.map((item) => {
                   const isSel = date === item.dateStr;
@@ -824,7 +886,7 @@ function QuickBookingContent() {
                             isSel ? "bg-emerald-900 text-emerald-200" : "bg-slate-100 text-slate-500"
                           }`}
                         >
-                          இன்று
+                          Today
                         </span>
                       )}
                       {item.isTomorrow && (
@@ -833,7 +895,7 @@ function QuickBookingContent() {
                             isSel ? "bg-emerald-900 text-emerald-200" : "bg-slate-100 text-slate-500"
                           }`}
                         >
-                          நாளை
+                          Tmrw
                         </span>
                       )}
                       {item.isMuhurtham && <span className="text-[10px]">✨</span>}
@@ -850,7 +912,7 @@ function QuickBookingContent() {
                       if (e.target.value) setDate(e.target.value);
                     }}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    title="தேதியை மாற்ற கிளிக் செய்யவும் (Pick Custom Date)"
+                    title="Pick Custom Date"
                   />
                   <div
                     className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer ${
@@ -872,70 +934,59 @@ function QuickBookingContent() {
                 </div>
               </div>
 
-              {/* Sacred Panchangam Nalla Neram Box */}
-              <div className="bg-amber-50/70 p-3 rounded-2xl border border-amber-200/90 text-xs flex items-center justify-between flex-wrap gap-2.5">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-base shrink-0">🪔</span>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-950 block">
-                      சுப நல்ல நேரம் (Auspicious Time):
+              {/* Compact Sacred Panchangam Nalla Neram Ribbon */}
+              <div className="bg-amber-50/70 px-3 py-2 rounded-2xl border border-amber-200/80 text-xs flex items-center justify-between flex-wrap gap-2 shadow-2xs">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm shrink-0">🪔</span>
+                  <div className="flex items-center gap-2 flex-wrap text-[11px] font-bold text-amber-950">
+                    <span className="text-[10px] font-black uppercase text-amber-900 tracking-wider">
+                      Nalla Neram:
                     </span>
-                    <div className="text-xs font-black text-emerald-950 flex items-center gap-2 flex-wrap mt-0.5">
-                      {tamilInfo.nallaNeramMorning ? (
-                        <span className="inline-flex items-center gap-1">
-                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200">
-                            காலை
-                          </span>
-                          <span>{formatTime12H(tamilInfo.nallaNeramMorning)}</span>
-                        </span>
-                      ) : null}
-                      {tamilInfo.nallaNeramEvening ? (
-                        <span className="inline-flex items-center gap-1">
-                          <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200">
-                            மாலை
-                          </span>
-                          <span>{formatTime12H(tamilInfo.nallaNeramEvening)}</span>
-                        </span>
-                      ) : null}
-                      {!tamilInfo.nallaNeramMorning && !tamilInfo.nallaNeramEvening && (
-                        <span>{formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}</span>
-                      )}
-                    </div>
+                    {tamilInfo.nallaNeramMorning ? (
+                      <span className="inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg border border-amber-200">
+                        <span className="text-[9px] font-black text-amber-800 uppercase">காலை</span>
+                        <span className="font-extrabold">{formatTime12H(tamilInfo.nallaNeramMorning)}</span>
+                      </span>
+                    ) : null}
+                    {tamilInfo.nallaNeramEvening ? (
+                      <span className="inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg border border-amber-200">
+                        <span className="text-[9px] font-black text-amber-800 uppercase">மாலை</span>
+                        <span className="font-extrabold">{formatTime12H(tamilInfo.nallaNeramEvening)}</span>
+                      </span>
+                    ) : null}
+                    {!tamilInfo.nallaNeramMorning && !tamilInfo.nallaNeramEvening && (
+                      <span className="font-black text-emerald-950">{formatTime12H(tamilInfo.nallaNeram) || "07:45 AM - 08:45 AM"}</span>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-[10.5px]">
+                <div className="flex items-center gap-1.5 text-[10px]">
                   {tamilInfo.gowriNallaNeram && (
-                    <div className="text-right">
-                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 block">
-                        கௌரி நேரம்
-                      </span>
-                      <span className="text-slate-700 font-extrabold">
-                        {formatTime12H(tamilInfo.gowriNallaNeramMorning || tamilInfo.gowriNallaNeram)}
-                      </span>
-                    </div>
+                    <span className="bg-white/80 text-slate-700 px-2 py-0.5 rounded-lg border border-amber-200 font-bold">
+                      Gowri: {formatTime12H(tamilInfo.gowriNallaNeramMorning || tamilInfo.gowriNallaNeram)}
+                    </span>
                   )}
                   {tamilInfo.isMuhurtham && (
-                    <span className="text-[10px] font-black text-amber-900 bg-amber-200/70 px-2 py-0.5 rounded-lg border border-amber-300">
-                      சுப முகூர்த்தம் ✨
+                    <span className="font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-lg border border-amber-300">
+                      Muhurtham ✨
                     </span>
                   )}
                 </div>
               </div>
 
-              {/* Time Selection: Quick Picks + Manual Selection */}
+              {/* Time Selection: English Only with Edit Icon */}
               <div className="space-y-2 pt-0.5">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-700 font-bold">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-800 font-bold">
                     <Clock className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>பூஜை நேரம் (Pooja Time):</span>
+                    <span>Pooja Time:</span>
+                    <span className="font-black text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 text-xs">
+                      {time}
+                    </span>
                   </div>
 
-                  {/* Manual Time Picker Input */}
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10.5px] font-semibold text-slate-500">
-                      நேரத்தை மாற்ற (Custom):
-                    </span>
+                  {/* Manual Time Picker Icon Button */}
+                  <div className="relative group shrink-0">
                     <input
                       type="time"
                       value={convert12HTo24H(time)}
@@ -944,9 +995,17 @@ function QuickBookingContent() {
                           setTime(formatTime12H(e.target.value));
                         }
                       }}
-                      className="bg-white hover:bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1 text-xs font-black text-slate-900 cursor-pointer focus:outline-none focus:ring-1 focus:ring-emerald-500 transition shadow-2xs"
-                      title="மேனுவலாக நேரத்தை மாற்ற (Select custom time)"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      title="Edit Custom Time"
                     />
+                    <button
+                      type="button"
+                      className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition shadow-2xs cursor-pointer active:scale-95"
+                      title="Edit Custom Time"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                      <span className="text-[11px]">Edit Time</span>
+                    </button>
                   </div>
                 </div>
 
@@ -1275,6 +1334,89 @@ function QuickBookingContent() {
               )}
             </div>
 
+            {/* Expense & Remarks Card */}
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center font-bold text-xs shadow-2xs">
+                    📝
+                  </div>
+                  <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900">
+                    Expense &amp; Remarks (செலவு &amp; குறிப்புகள்)
+                  </h2>
+                </div>
+                {!showExpenses ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowExpenses(true)}
+                    className="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Add Expense</span>
+                  </button>
+                ) : null}
+              </div>
+
+              {showExpenses && (
+                <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/70 space-y-2.5 text-xs animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-amber-950">பூஜை செலவு (Expense Amount):</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExpenses(false);
+                        setExpenseAmount(0);
+                        setExpenseNotes("");
+                      }}
+                      className="text-[10px] text-slate-400 hover:text-rose-600 font-bold cursor-pointer"
+                    >
+                      Remove ✕
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <div className="relative w-full sm:w-36">
+                      <span className="absolute left-2.5 top-1.5 text-xs font-black text-amber-800">₹</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={expenseAmount || ""}
+                        onChange={(e) => setExpenseAmount(Math.max(0, Number(e.target.value) || 0))}
+                        placeholder="0"
+                        className="w-full bg-white border border-amber-300 rounded-xl pl-6 pr-2 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-600 shadow-2xs"
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      value={expenseNotes}
+                      onChange={(e) => setExpenseNotes(e.target.value)}
+                      placeholder="செலவு விவரம் (e.g. Flowers, Samagri)..."
+                      className="flex-1 w-full bg-white border border-amber-300 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-600 shadow-2xs"
+                    />
+                  </div>
+                  {expenseAmount > 0 && (
+                    <div className="text-[11px] font-bold text-emerald-800 flex justify-between pt-1 border-t border-amber-200/60">
+                      <span>நிகர தட்சணை (Net Income):</span>
+                      <span className="font-black">₹{Math.max(0, amount - expenseAmount).toLocaleString("en-IN")}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Notes / Remarks Input */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                  <span>குறிப்புகள் / Remarks (Optional):</span>
+                </div>
+                <input
+                  type="text"
+                  value={bookingNotes}
+                  onChange={(e) => setBookingNotes(e.target.value)}
+                  placeholder="கோத்திரம், நட்சத்திரம், அல்லது சிறப்பு வழிகாட்டல்கள் (Gothram, Star, special notes)..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
+              </div>
+            </div>
+
             {/* Performing Priest (Self vs Other) */}
             <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
@@ -1322,27 +1464,55 @@ function QuickBookingContent() {
                 </button>
               </div>
 
-              {/* If other priest, show quick pick */}
+              {/* If other priest, show quick pick + Instant Add Input */}
               {priestType === "other" && (
-                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 animate-in fade-in">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Select Performing Priest:
-                  </span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {members.map((m) => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setAssignedIyerId(m.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
-                          assignedIyerId === m.id
-                            ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
-                            : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
-                        }`}
-                      >
-                        {m.name}
-                      </button>
-                    ))}
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in">
+                  {members.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Select Existing Priest:
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {members.map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setAssignedIyerId(m.id);
+                              setCustomPriestName("");
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
+                              assignedIyerId === m.id && !customPriestName.trim()
+                                ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
+                                : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                            }`}
+                          >
+                            {m.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Instant Priest Name Input */}
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      வேறு குருக்கள் பெயர் உள்ளிடவும் (Type Priest Name Instantly):
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="குருக்கள் பெயர் (e.g. Anandha Sharma)..."
+                        value={customPriestName}
+                        onChange={(e) => setCustomPriestName(e.target.value)}
+                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                      />
+                      {customPriestName.trim() && (
+                        <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-1.5 rounded-xl border border-emerald-300 shrink-0">
+                          Assigned ✓
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1351,7 +1521,7 @@ function QuickBookingContent() {
         )}
 
         {/* ============================================================== */}
-        {/* STICKY BOTTOM CONFIRMATION BAR                                 */}
+        {/* STICKY BOTTOM CONFIRMATION BAR (ENGLISH ONLY)                  */}
         {/* ============================================================== */}
         {twoStepStage === 1 ? (
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-3.5 sm:py-4 px-3.5 sm:px-6 shadow-2xl">
@@ -1378,7 +1548,7 @@ function QuickBookingContent() {
                 onClick={validateAndProceedToStep2}
                 className="px-5 sm:px-7 py-3 sm:py-3.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0"
               >
-                <span>அடுத்தது: கட்டணம் (Next: Payment)</span>
+                <span>Next: Payment</span>
                 <ArrowRight className="w-4 h-4 text-amber-300" />
               </button>
             </div>
@@ -1406,7 +1576,7 @@ function QuickBookingContent() {
                 className="px-5 sm:px-7 py-3 sm:py-3.5 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 hover:from-emerald-950 hover:to-black text-white rounded-2xl text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg shadow-emerald-950/20 transition active:scale-95 cursor-pointer shrink-0 disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
-                <span>{isSubmittingBooking ? "பதிவாகிறது..." : "முன்பதிவை உறுதி செய்க ✨ (Confirm Booking)"}</span>
+                <span>{isSubmittingBooking ? "Confirming..." : "Confirm Booking ✨"}</span>
               </button>
             </div>
           </div>
@@ -1414,88 +1584,7 @@ function QuickBookingContent() {
       </form>
 
       {/* ============================================================== */}
-      {/* POOJA SAMAGRI CHECKLIST PREVIEW MODAL (ON LONG-PRESS OR EYE)   */}
-      {/* ============================================================== */}
-      {inspectPoojaForModal && (
-        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl border border-emerald-300 overflow-hidden animate-in zoom-in-95">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-emerald-900 via-[#0b2b17] to-emerald-950 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">{getPoojaIcon(inspectPoojaForModal)}</span>
-                <div>
-                  <h3 className="font-black text-sm sm:text-base leading-tight">
-                    {inspectPoojaForModal.tamilName || inspectPoojaForModal.englishName}
-                  </h3>
-                  <span className="text-[11px] text-amber-300 font-bold block">
-                    சாமக்கிரி பொருட்கள் பட்டியல் ({inspectPoojaForModal.items?.length || 0} பொருட்கள்)
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setInspectPoojaForModal(null)}
-                className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* List */}
-            <div className="p-4 flex-1 overflow-y-auto space-y-1.5 text-xs">
-              {inspectPoojaForModal.items && inspectPoojaForModal.items.length > 0 ? (
-                inspectPoojaForModal.items.map((item, idx) => (
-                  <div
-                    key={item.id || idx}
-                    className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-200/80"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center shrink-0">
-                        {idx + 1}
-                      </span>
-                      <span className="font-bold text-slate-800 truncate">
-                        {item.itemTamilName || item.itemEnglishName}
-                      </span>
-                    </div>
-                    <span className="text-[11px] font-black text-emerald-900 bg-white px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
-                      {item.quantity} {formatUnitShort(item.unit)}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <div className="py-6 text-center text-slate-400 font-bold">
-                  இந்தப் பூஜைக்கு பொருட்கள் பட்டியல் இணைக்கப்படவில்லை.
-                </div>
-              )}
-            </div>
-
-            {/* Footer with note */}
-            <div className="p-3 bg-amber-50 border-t border-amber-200 text-[11px] font-semibold text-amber-950 flex flex-col gap-2">
-              <div className="flex items-start gap-1.5">
-                <Info className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
-                <span>
-                  இந்தப் பொருட்களை முன்பதிவு செய்த பிறகும் Booking Edit பக்கத்தில் எப்போது வேண்டுமானாலும் மாற்றிக்கொள்ளலாம்.
-                </span>
-              </div>
-              <div className="flex items-center justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelectPooja(inspectPoojaForModal.id);
-                    setInspectPoojaForModal(null);
-                  }}
-                  className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-black shadow-xs active:scale-95 cursor-pointer"
-                >
-                  இந்த பூஜையைத் தேர்வு செய் ✓
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================== */}
-      {/* CELEBRATORY SUCCESS MODAL WITH 1-TAP WHATSAPP SHARE            */}
+      {/* CELEBRATORY SUCCESS MODAL WITH DIRECT BOOKINGS LINK            */}
       {/* ============================================================== */}
       {createdBooking && (
         <div className="fixed inset-0 z-[60] bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
@@ -1505,32 +1594,50 @@ function QuickBookingContent() {
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-emerald-800 block">
-                முன்பதிவு உறுதியானது ✨
+                Booking Confirmed ✨
               </span>
               <h3 className="text-lg font-black text-slate-900 mt-1">
-                பூஜை வெற்றிகரமாகப் பதிவானது!
+                Ceremony Booked Successfully!
               </h3>
               <div className="inline-block mt-1.5 px-2.5 py-0.5 bg-emerald-50 border border-emerald-300 rounded-full font-mono text-xs font-bold text-emerald-900">
-                #{createdBooking.bookingNumber}
+                #{createdBooking.bookingNumber.replace(/^#+/, "")}
               </div>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-2xl text-xs space-y-1 text-slate-700 text-left border border-slate-200">
+            <div className="p-3 bg-slate-50 rounded-2xl text-xs space-y-1.5 text-slate-700 text-left border border-slate-200">
               <div className="flex justify-between font-bold">
-                <span>பக்தர்:</span>
-                <span>{createdBooking.customerName}</span>
+                <span className="text-slate-500">Devotee:</span>
+                <span className="text-slate-900">{createdBooking.customerName}</span>
               </div>
               <div className="flex justify-between font-bold">
-                <span>பூஜை:</span>
-                <span>{createdBooking.poojaTamilName || createdBooking.poojaEnglishName}</span>
+                <span className="text-slate-500">Ceremony:</span>
+                <span className="text-slate-900">{createdBooking.poojaTamilName || createdBooking.poojaEnglishName}</span>
               </div>
               <div className="flex justify-between font-bold">
-                <span>தேதி:</span>
-                <span>{createdBooking.date} ({createdBooking.startTime})</span>
+                <span className="text-slate-500">Date &amp; Time:</span>
+                <span className="text-slate-900">{createdBooking.date} ({createdBooking.startTime})</span>
               </div>
               <div className="flex justify-between font-bold">
-                <span>தட்சணை:</span>
-                <span className="text-emerald-900">₹{createdBooking.totalAmount?.toLocaleString("en-IN")}</span>
+                <span className="text-slate-500">Dakshina:</span>
+                <span className="text-emerald-900 font-black">₹{createdBooking.totalAmount?.toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between font-bold pt-1 border-t border-slate-200">
+                <span className="text-slate-500">Payment Status:</span>
+                <span
+                  className={`px-2 py-0.5 rounded-md text-[10.5px] font-black ${
+                    createdBooking.paymentStatus === "PAID"
+                      ? "bg-emerald-100 text-emerald-900"
+                      : createdBooking.paymentStatus === "PARTIALLY_PAID"
+                      ? "bg-amber-100 text-amber-900"
+                      : "bg-rose-100 text-rose-900"
+                  }`}
+                >
+                  {createdBooking.paymentStatus === "PAID"
+                    ? "Full Paid ✅"
+                    : createdBooking.paymentStatus === "PARTIALLY_PAID"
+                    ? `Advance Paid (Due ₹${createdBooking.balanceAmount})`
+                    : "Pending Payment ⏳"}
+                </span>
               </div>
             </div>
 
@@ -1541,29 +1648,46 @@ function QuickBookingContent() {
                 className="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-95 cursor-pointer"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>WhatsApp-ல் உறுதிப்படுத்தல் பகிர்க</span>
+                <span>Share Confirmation via WhatsApp</span>
               </button>
 
               <div className="grid grid-cols-2 gap-2">
                 <Link
-                  href={`/app/bookings/${createdBooking.id}`}
-                  className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition cursor-pointer text-center"
+                  href="/app/bookings"
+                  className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
                 >
-                  விவரம் / Edit
+                  <CalendarIcon className="w-3.5 h-3.5 text-slate-600" />
+                  <span>All Bookings</span>
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCreatedBooking(null);
-                    setSelectedCustomerId("");
-                    setSelectedPoojaId("");
-                    setTwoStepStage(1);
-                  }}
-                  className="py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold text-xs transition cursor-pointer text-center"
+
+                <Link
+                  href={`/app/bookings/${createdBooking.id}`}
+                  className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
                 >
-                  புதிய பதிவு
-                </button>
+                  <Edit3 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Details / Edit</span>
+                </Link>
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCreatedBooking(null);
+                  setSelectedCustomerId("");
+                  setSelectedPoojaId("");
+                  setAmount(5000);
+                  setAdvanceAmount(0);
+                  setPaymentChoice("UNPAID");
+                  setExpenseAmount(0);
+                  setExpenseNotes("");
+                  setBookingNotes("");
+                  setTwoStepStage(1);
+                }}
+                className="w-full py-2.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl font-bold text-xs transition cursor-pointer text-center flex items-center justify-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Create Another Booking</span>
+              </button>
             </div>
           </div>
         </div>
