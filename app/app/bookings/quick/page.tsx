@@ -243,6 +243,23 @@ function QuickBookingContent() {
 
   const tamilInfo = useMemo(() => getTamilDate(date), [date]);
 
+  const upcomingDates = useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + i);
+      const dateStr = getLocalDateString(d);
+      const dayName = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      const isToday = i === 0;
+      const isTomorrow = i === 1;
+      const tInfo = getTamilDate(dateStr);
+      const isMuhurtham = tInfo.isMuhurtham;
+      list.push({ dateStr, dayName, isToday, isTomorrow, isMuhurtham });
+    }
+    return list;
+  }, []);
+
   // ---------------------------------------------------------------------------
   // 4. Venue / Location State
   // ---------------------------------------------------------------------------
@@ -785,61 +802,47 @@ function QuickBookingContent() {
                 </span>
               </div>
 
-              {/* 1-Tap Date Buttons & Date Picker */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDate(todayStr)}
-                  className={`p-2.5 rounded-2xl border text-center transition active:scale-95 cursor-pointer ${
-                    date === todayStr
-                      ? "bg-emerald-800 text-white border-emerald-800 shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  <span className="text-[10px] font-extrabold uppercase block opacity-80">
-                    இன்று (Today)
-                  </span>
-                  <span className="text-xs font-black block mt-0.5">
-                    {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </span>
-                </button>
+              {/* Compact Horizontally Scrollable Date Strip + Date Picker */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
+                {upcomingDates.map((item) => {
+                  const isSel = date === item.dateStr;
+                  return (
+                    <button
+                      key={item.dateStr}
+                      type="button"
+                      onClick={() => setDate(item.dateStr)}
+                      className={`px-3 py-1.5 rounded-xl font-bold shrink-0 transition border cursor-pointer active:scale-95 flex items-center gap-1 shadow-2xs ${
+                        isSel
+                          ? "bg-emerald-800 text-white border-emerald-800 shadow-xs font-black"
+                          : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                      }`}
+                    >
+                      <span>{item.dayName}</span>
+                      {item.isToday && (
+                        <span
+                          className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
+                            isSel ? "bg-emerald-900 text-emerald-200" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          இன்று
+                        </span>
+                      )}
+                      {item.isTomorrow && (
+                        <span
+                          className={`text-[9px] px-1 py-0.2 rounded font-semibold ${
+                            isSel ? "bg-emerald-900 text-emerald-200" : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          நாளை
+                        </span>
+                      )}
+                      {item.isMuhurtham && <span className="text-[10px]">✨</span>}
+                    </button>
+                  );
+                })}
 
-                <button
-                  type="button"
-                  onClick={() => setDate(tomorrowStr)}
-                  className={`p-2.5 rounded-2xl border text-center transition active:scale-95 cursor-pointer ${
-                    date === tomorrowStr
-                      ? "bg-emerald-800 text-white border-emerald-800 shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  <span className="text-[10px] font-extrabold uppercase block opacity-80">
-                    நாளை (Tmrw)
-                  </span>
-                  <span className="text-xs font-black block mt-0.5">
-                    {tomorrowDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDate(nextMuhurthamStr)}
-                  className={`p-2.5 rounded-2xl border text-center transition active:scale-95 cursor-pointer ${
-                    date === nextMuhurthamStr
-                      ? "bg-emerald-800 text-white border-emerald-800 shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                  }`}
-                >
-                  <span className="text-[10px] font-extrabold uppercase block text-amber-600">
-                    முகூர்த்தம் ✨
-                  </span>
-                  <span className="text-xs font-black block mt-0.5">
-                    {nextMuhurthamDate.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                  </span>
-                </button>
-
-                {/* Custom Date Picker Card */}
-                <div className="relative group">
+                {/* Compact Date Picker Pill */}
+                <div className="relative shrink-0 group">
                   <input
                     type="date"
                     value={date}
@@ -850,20 +853,20 @@ function QuickBookingContent() {
                     title="தேதியை மாற்ற கிளிக் செய்யவும் (Pick Custom Date)"
                   />
                   <div
-                    className={`p-2.5 rounded-2xl border text-center transition flex flex-col justify-center items-center h-full ${
-                      date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr
-                        ? "bg-emerald-800 text-white border-emerald-800 shadow-sm"
-                        : "bg-white group-hover:bg-slate-50 text-slate-700 border-slate-200"
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer ${
+                      !upcomingDates.some((d) => d.dateStr === date)
+                        ? "bg-emerald-800 text-white border-emerald-800 shadow-xs font-black"
+                        : "bg-slate-100 group-hover:bg-slate-200 text-slate-700 border-slate-300"
                     }`}
                   >
-                    <span className="text-[10px] font-extrabold uppercase flex items-center justify-center gap-1 opacity-80">
-                      <CalendarIcon className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span>{date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr ? "தேர்வு தேதி" : "தேதி பிக்கர்"}</span>
-                    </span>
-                    <span className="text-xs font-black block mt-0.5 truncate">
-                      {date !== todayStr && date !== tomorrowStr && date !== nextMuhurthamStr
-                        ? new Date(date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" })
-                        : "தேர்ந்தெடு 📅"}
+                    <CalendarIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span>
+                      {!upcomingDates.some((d) => d.dateStr === date)
+                        ? new Date(date + "T00:00:00").toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                          })
+                        : "Date 📅"}
                     </span>
                   </div>
                 </div>
@@ -1069,8 +1072,8 @@ function QuickBookingContent() {
               </button>
             </div>
 
-            {/* Total Dakshina Amount */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
+            {/* Total Dakshina Amount (Manual Edit + Steppers) */}
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold text-xs shadow-2xs">
@@ -1080,19 +1083,33 @@ function QuickBookingContent() {
                     மொத்த தட்சணை (Total Dakshina)
                   </h2>
                 </div>
+                <span className="text-[10px] font-bold text-slate-400">
+                  (நேரடியாக மாற்றலாம்)
+                </span>
               </div>
 
-              {/* Large Amount Counter with Steppers */}
-              <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl font-black text-emerald-800">₹</span>
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                    {amount.toLocaleString("en-IN")}
-                  </span>
+              {/* Direct Manual Input with Steppers */}
+              <div className="bg-slate-50/80 p-3 sm:p-4 rounded-2xl border border-slate-200 flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-1.5 flex-1 min-w-[150px]">
+                  <span className="text-2xl font-black text-emerald-800">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={amount || ""}
+                    onChange={(e) => {
+                      const val = Math.max(0, Number(e.target.value) || 0);
+                      setAmount(val);
+                      if (paymentChoice === "FULL") setAdvanceAmount(val);
+                    }}
+                    className="w-full max-w-[200px] text-2xl sm:text-3xl font-black text-slate-900 bg-transparent border-b-2 border-slate-300 focus:border-emerald-600 focus:outline-none transition py-0.5 tracking-tight"
+                    placeholder="0"
+                    title="தட்சணை தொகையை டைப் செய்து மாற்றவும்"
+                  />
                 </div>
 
-                {/* Steppers */}
-                <div className="flex items-center gap-1.5">
+                {/* Quick Steppers: -500, -100, 100, 500 */}
+                <div className="flex items-center gap-1 shrink-0">
                   {[-500, -100, 100, 500].map((delta) => (
                     <button
                       key={delta}
@@ -1101,7 +1118,7 @@ function QuickBookingContent() {
                       className={`px-2.5 py-1.5 rounded-xl text-xs font-black border transition active:scale-95 cursor-pointer ${
                         delta > 0
                           ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100"
-                          : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
                       }`}
                     >
                       {delta > 0 ? `+${delta}` : delta}
@@ -1109,62 +1126,16 @@ function QuickBookingContent() {
                   ))}
                 </div>
               </div>
-
-              {/* Common Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Presets:
-                </span>
-                {[2500, 5000, 7500, 10000].map((presetAmt) => (
-                  <button
-                    key={presetAmt}
-                    type="button"
-                    onClick={() => {
-                      setAmount(presetAmt);
-                      if (paymentChoice === "FULL") setAdvanceAmount(presetAmt);
-                    }}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold border transition active:scale-95 cursor-pointer ${
-                      amount === presetAmt
-                        ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs font-black"
-                        : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
-                    }`}
-                  >
-                    ₹{presetAmt.toLocaleString("en-IN")}
-                  </button>
-                ))}
-              </div>
-
-              {/* KPI Chips */}
-              <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 text-center text-xs">
-                <div className="p-2 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="text-[9.5px] font-bold text-slate-400 uppercase">Gross</div>
-                  <div className="text-xs sm:text-sm font-black text-slate-900">
-                    ₹{amount.toLocaleString("en-IN")}
-                  </div>
-                </div>
-                <div className="p-2 bg-rose-50/60 rounded-xl border border-rose-200">
-                  <div className="text-[9.5px] font-bold text-rose-600 uppercase">Expense</div>
-                  <div className="text-xs sm:text-sm font-black text-rose-700">
-                    {expenseAmount > 0 ? `-₹${expenseAmount.toLocaleString("en-IN")}` : "₹0"}
-                  </div>
-                </div>
-                <div className="p-2 bg-emerald-50/80 rounded-xl border border-emerald-200">
-                  <div className="text-[9.5px] font-black text-emerald-800 uppercase">Net</div>
-                  <div className="text-xs sm:text-sm font-black text-emerald-950">
-                    ₹{Math.max(0, amount - expenseAmount).toLocaleString("en-IN")}
-                  </div>
-                </div>
-              </div>
             </div>
 
-            {/* Payment Status (3 Clear Buttons) */}
-            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
+            {/* Payment Status & Record Payment (Clean & Compact) */}
+            <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
                   <span>💳</span>
                   <span>கட்டண நிலை (Payment Status)</span>
                 </h2>
-                <span className="text-[10.5px] font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
+                <span className="text-[10.5px] font-extrabold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
                   {paymentChoice === "FULL"
                     ? "Paid in Full ✓"
                     : paymentChoice === "ADVANCE"
@@ -1173,23 +1144,22 @@ function QuickBookingContent() {
                 </span>
               </div>
 
-              {/* 3 Status Buttons */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* 3 Status Buttons - Compact Segmented Control */}
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl">
                 <button
                   type="button"
                   onClick={() => {
                     setPaymentChoice("UNPAID");
                     setAdvanceAmount(0);
                   }}
-                  className={`py-2.5 px-2 rounded-2xl border text-center transition active:scale-95 cursor-pointer flex flex-col items-center gap-0.5 ${
+                  className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     paymentChoice === "UNPAID"
-                      ? "bg-amber-600 text-white border-amber-600 font-black shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                      ? "bg-amber-600 text-white font-black shadow-xs"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-200/60"
                   }`}
                 >
-                  <span className="text-sm">⏳</span>
-                  <span className="text-xs font-black">நிலுவை</span>
-                  <span className="text-[9.5px] opacity-80">Later / Unpaid</span>
+                  <span>⏳</span>
+                  <span>நிலுவை</span>
                 </button>
 
                 <button
@@ -1198,15 +1168,14 @@ function QuickBookingContent() {
                     setPaymentChoice("ADVANCE");
                     if (advanceAmount === 0) setAdvanceAmount(Math.round(amount / 2));
                   }}
-                  className={`py-2.5 px-2 rounded-2xl border text-center transition active:scale-95 cursor-pointer flex flex-col items-center gap-0.5 ${
+                  className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     paymentChoice === "ADVANCE"
-                      ? "bg-amber-800 text-white border-amber-800 font-black shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                      ? "bg-amber-800 text-white font-black shadow-xs"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-200/60"
                   }`}
                 >
-                  <span className="text-sm">🪙</span>
-                  <span className="text-xs font-black">முன்பணம்</span>
-                  <span className="text-[9.5px] opacity-80">Advance</span>
+                  <span>🪙</span>
+                  <span>முன்பணம்</span>
                 </button>
 
                 <button
@@ -1215,36 +1184,93 @@ function QuickBookingContent() {
                     setPaymentChoice("FULL");
                     setAdvanceAmount(amount);
                   }}
-                  className={`py-2.5 px-2 rounded-2xl border text-center transition active:scale-95 cursor-pointer flex flex-col items-center gap-0.5 ${
+                  className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     paymentChoice === "FULL"
-                      ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-sm"
-                      : "bg-white hover:bg-slate-50 text-slate-700 border-slate-200"
+                      ? "bg-emerald-800 text-white font-black shadow-xs"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-200/60"
                   }`}
                 >
-                  <span className="text-sm">✅</span>
-                  <span className="text-xs font-black">Full Paid</span>
-                  <span className="text-[9.5px] opacity-80">முழுத் தொகை</span>
+                  <span>✅</span>
+                  <span>Full Paid</span>
                 </button>
               </div>
 
-              {/* Advance Input when Advance is chosen */}
+              {/* Advance Input & Payment Method when Advance is chosen */}
               {paymentChoice === "ADVANCE" && (
-                <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 space-y-1.5 animate-in fade-in">
-                  <div className="flex items-center justify-between text-xs font-bold text-amber-950">
-                    <span>பெறப்பட்ட முன்பணம் (Advance Amount):</span>
-                    <span>மீதி நிலுவை: ₹{(amount - advanceAmount).toLocaleString("en-IN")}</span>
+                <div className="p-3 bg-amber-50/70 rounded-2xl border border-amber-200/80 space-y-2.5 text-xs animate-in fade-in">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-bold text-amber-950">பெற்ற முன்பணம்:</span>
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-28">
+                        <span className="absolute left-2.5 top-1.5 text-xs font-black text-amber-800">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={amount}
+                          value={advanceAmount || ""}
+                          onChange={(e) => setAdvanceAmount(Number(e.target.value) || 0)}
+                          className="w-full bg-white border border-amber-300 rounded-lg pl-6 pr-2 py-1 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-600 shadow-2xs"
+                          placeholder="0"
+                        />
+                      </div>
+                      <span className="text-[11px] font-bold text-slate-600 shrink-0">
+                        (மீதி: ₹{Math.max(0, amount - advanceAmount).toLocaleString("en-IN")})
+                      </span>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2 text-xs font-black text-amber-800">₹</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max={amount}
-                      value={advanceAmount || ""}
-                      onChange={(e) => setAdvanceAmount(Number(e.target.value) || 0)}
-                      className="w-full bg-white border border-amber-300 rounded-xl pl-7 pr-3 py-1.5 text-xs font-black text-slate-900 focus:outline-none focus:border-amber-600 shadow-2xs"
-                    />
+
+                  <div className="flex items-center justify-between gap-2 pt-2 border-t border-amber-200/60 text-[11px] flex-wrap">
+                    <span className="font-medium text-slate-600">பணம் செலுத்தும் முறை:</span>
+                    <div className="flex items-center gap-1">
+                      {(["UPI", "CASH", "BANK_TRANSFER"] as const).map((method) => (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => setPaymentMethod(method)}
+                          className={`px-2.5 py-1 rounded-lg font-bold border transition cursor-pointer text-xs ${
+                            paymentMethod === method
+                              ? "bg-amber-800 text-white border-amber-800 shadow-2xs"
+                              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          {method === "UPI" ? "📱 UPI" : method === "CASH" ? "💵 Cash" : "🏦 Bank"}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+                </div>
+              )}
+
+              {/* Full Paid Confirmation & Payment Method */}
+              {paymentChoice === "FULL" && (
+                <div className="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 flex items-center justify-between gap-2 text-xs flex-wrap animate-in fade-in">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                    <span>முழுத் தொகை பெற்றது:</span>
+                    <span className="font-black text-emerald-800 text-sm">₹{amount.toLocaleString("en-IN")}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs">
+                    {(["UPI", "CASH", "BANK_TRANSFER"] as const).map((method) => (
+                      <button
+                        key={method}
+                        type="button"
+                        onClick={() => setPaymentMethod(method)}
+                        className={`px-2.5 py-1 rounded-lg font-bold border transition cursor-pointer ${
+                          paymentMethod === method
+                            ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {method === "UPI" ? "📱 UPI" : method === "CASH" ? "💵 Cash" : "🏦 Bank"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Unpaid Subtle Note */}
+              {paymentChoice === "UNPAID" && (
+                <div className="py-1 px-2 text-[11px] text-slate-500 font-medium text-center">
+                  ⏳ பூஜை முடிந்த பிறகு முழு தட்சணை தொகை வசூலிக்கப்படும் (No payment collected yet)
                 </div>
               )}
             </div>
