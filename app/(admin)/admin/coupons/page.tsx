@@ -20,6 +20,8 @@ import {
   ToggleLeft,
   ToggleRight,
   Crown,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { retryCloudSync } from "@/lib/supabase/sync";
 import { useAuth } from "@/components/providers/AuthContext";
@@ -34,6 +36,7 @@ export default function CouponsAdminPage() {
   const [coupons, setCoupons] = useState<Coupon[]>(() => [...db.coupons]);
   const [toast, setToast] = useState("");
   const [toastError, setToastError] = useState("");
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
 
   // New coupon form
   const [newCode, setNewCode] = useState("");
@@ -226,15 +229,34 @@ export default function CouponsAdminPage() {
             </span>
           </div>
         ) : (
-          /* Create New Coupon Form */
-          <div className="bg-white rounded-3xl border border-amber-200/80 shadow-sm p-5 sm:p-6">
-            <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-5">
-              <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-200 text-amber-700 flex items-center justify-center">
-                <Plus className="w-4 h-4" />
+          /* Create New Coupon Form - Collapsible for mobile screen efficiency */
+          <div className="bg-white rounded-3xl border border-amber-200/80 shadow-sm p-4 sm:p-6 transition">
+            <div
+              onClick={() => setIsCreateFormOpen(!isCreateFormOpen)}
+              className="flex items-center justify-between cursor-pointer gap-2 select-none"
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-amber-500/15 border border-amber-200 text-amber-700 flex items-center justify-center">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">Create New Coupon Code</h2>
+                  <p className="text-[10.5px] text-slate-500">
+                    {isCreateFormOpen ? "Fill details to create promo code" : "Click to expand & create new code"}
+                  </p>
+                </div>
               </div>
-              <h2 className="text-sm font-bold text-slate-900">Create New Coupon Code</h2>
+              <button
+                type="button"
+                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              >
+                <span>{isCreateFormOpen ? "Close Form" : "+ Create Code"}</span>
+                {isCreateFormOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              </button>
             </div>
-            <form onSubmit={handleCreate} className="space-y-4 text-xs">
+
+            {isCreateFormOpen && (
+              <form onSubmit={handleCreate} className="space-y-4 text-xs mt-4 pt-4 border-t border-slate-100 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-slate-700 font-bold block mb-1">Coupon Code *</label>
@@ -342,6 +364,7 @@ export default function CouponsAdminPage() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         )}
 

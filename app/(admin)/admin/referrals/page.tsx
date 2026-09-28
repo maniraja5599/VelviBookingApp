@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import { db } from "@/lib/db/store";
-import { Gift, Clock, CheckCircle, Hourglass, Users, Search, ArrowUpRight } from "lucide-react";
+import { Gift, Clock, CheckCircle, Hourglass, Users, Search, ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminReferralsPage() {
   const [filter, setFilter] = useState<"ALL" | "SIGNUP_ONLY" | "PAID">("ALL");
   const [search, setSearch] = useState("");
+  const [expandedReferralId, setExpandedReferralId] = useState<string | null>(null);
   const referrals = db.referrals;
 
   const totalInvites = referrals.length;
@@ -131,7 +132,7 @@ export default function AdminReferralsPage() {
       </div>
 
       {/* Mobile Card View (< 640px) */}
-      <div className="sm:hidden space-y-3">
+      <div className="sm:hidden space-y-2.5">
         {filteredReferrals.length === 0 ? (
           <div className="p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
             No referrals found matching &quot;{search}&quot;.
@@ -139,24 +140,40 @@ export default function AdminReferralsPage() {
         ) : (
           filteredReferrals.map((r) => {
             const isPaid = r.status === "REWARDED";
+            const isExpanded = expandedReferralId === r.id;
             return (
               <div
                 key={r.id}
-                className="p-4 bg-white rounded-2xl border border-amber-200/80 space-y-2.5 text-xs shadow-2xs"
+                className="p-3.5 bg-white rounded-2xl border border-amber-200/80 space-y-2.5 text-xs shadow-2xs transition"
               >
-                <div className="flex items-center justify-between">
-                  <div>
+                <div
+                  onClick={() => setExpandedReferralId(isExpanded ? null : r.id)}
+                  className="flex items-center justify-between cursor-pointer gap-2"
+                >
+                  <div className="min-w-0 flex-1">
                     <span className="text-[10px] text-slate-500 block uppercase font-medium">Referrer → Referee</span>
-                    <div className="font-extrabold text-slate-900 text-sm">
+                    <div className="font-extrabold text-slate-900 text-sm truncate">
                       {r.referrerName} <span className="text-amber-600">→</span> {r.refereeName}
                     </div>
                   </div>
-                  <span className="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px]">
-                    {r.referralCode}
-                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px]">
+                      {r.referralCode}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Toggle details"
+                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                    >
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div
+                  onClick={() => setExpandedReferralId(isExpanded ? null : r.id)}
+                  className="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer"
+                >
                   <span
                     className={`text-[9.5px] px-2 py-0.5 rounded-full font-bold inline-flex items-center gap-1 ${
                       isPaid
@@ -169,13 +186,43 @@ export default function AdminReferralsPage() {
                   </span>
 
                   <span className={`font-bold text-[10.5px] ${isPaid ? "text-emerald-800" : "text-slate-500"}`}>
-                    {isPaid ? "+30 Days to Both" : "Pending"}
+                    {isPaid ? "+30 Days Awarded" : "Pending"}
                   </span>
                 </div>
 
-                <div className="text-[10px] text-slate-500 text-right font-mono">
-                  Joined: {new Date(r.createdAt).toLocaleDateString("en-IN")}
-                </div>
+                {/* Collapsible Referral Details */}
+                {isExpanded && (
+                  <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/70 space-y-2 text-[11px] animate-in fade-in duration-150">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Referrer ID</span>
+                        <span className="font-mono text-slate-700 text-[10px] truncate block">{r.referrerUserId}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Referee ID</span>
+                        <span className="font-mono text-slate-700 text-[10px] truncate block">{r.refereeUserId}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-1 border-t border-amber-200/50 space-y-1">
+                      <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Registration Date</span>
+                      <div className="font-mono text-slate-800 text-[10.5px]">
+                        {new Date(r.createdAt).toLocaleString("en-IN", {
+                          dateStyle: "full",
+                          timeStyle: "medium",
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setExpandedReferralId(isExpanded ? null : r.id)}
+                  className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer"
+                >
+                  {isExpanded ? "Hide Details" : "View Referral Details"}
+                </button>
               </div>
             );
           })

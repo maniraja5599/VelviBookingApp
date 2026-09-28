@@ -10,6 +10,12 @@ import {
   X,
   RotateCcw,
   ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Phone,
+  Mail,
+  Building,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -20,6 +26,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("ALL");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
   // Modal actions
   const [adjustmentType, setAdjustmentType] = useState<
@@ -187,7 +194,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Mobile Card View (< 640px) */}
-      <div className="sm:hidden space-y-3">
+      <div className="sm:hidden space-y-2.5">
         {users.length === 0 ? (
           <div className="p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
             No users found matching &quot;{search}&quot;
@@ -196,6 +203,7 @@ export default function AdminUsersPage() {
           users.map((u) => {
             const biz = businesses.find((b) => b.ownerId === u.id) || businesses[0];
             const sub = subscriptions.find((s) => s.businessId === biz?.id) || subscriptions[0];
+            const isExpanded = expandedUserId === u.id;
             const validUntil = new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",
@@ -205,39 +213,110 @@ export default function AdminUsersPage() {
             return (
               <div
                 key={u.id}
-                className="p-4 bg-white rounded-2xl border border-amber-200/80 space-y-3 text-xs shadow-2xs"
+                className="p-3.5 bg-white rounded-2xl border border-amber-200/80 space-y-2.5 text-xs shadow-2xs transition"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-900">{u.name}</h4>
-                    <div className="text-[11px] text-amber-800 font-medium">{biz?.name || "Independent Consultant / Priest"}</div>
-                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">{u.email}</div>
+                <div
+                  onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
+                  className="flex items-start justify-between cursor-pointer gap-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h4 className="font-extrabold text-sm text-slate-900 truncate">{u.name}</h4>
+                      <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded font-medium">
+                        {sub?.planName || "Pro"}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-amber-900 font-medium truncate mt-0.5">
+                      {biz?.name || "Independent Consultant / Priest"}
+                    </div>
                   </div>
-                  <span
-                    className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                      sub.status === "ACTIVE"
-                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                        : sub.status === "TRIAL"
-                        ? "bg-amber-50 text-amber-800 border border-amber-200"
-                        : "bg-rose-50 text-rose-800 border border-rose-200"
-                    }`}
-                  >
-                    {sub.status === "ACTIVE" ? "Active" : sub.status === "TRIAL" ? "Trial" : "Expired"}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span
+                      className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                        sub.status === "ACTIVE"
+                          ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                          : sub.status === "TRIAL"
+                          ? "bg-amber-50 text-amber-800 border border-amber-200"
+                          : "bg-rose-50 text-rose-800 border border-rose-200"
+                      }`}
+                    >
+                      {sub.status === "ACTIVE" ? "Active" : sub.status === "TRIAL" ? "Trial" : "Expired"}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Toggle details"
+                      className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                    >
+                      {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
+                  className="flex items-center justify-between text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer"
+                >
+                  <span className="text-slate-600 font-mono flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-slate-400" />
+                    {u.mobile}
+                  </span>
+                  <span className="text-amber-900 font-mono font-bold flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-amber-700" />
+                    {validUntil}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                  <span className="text-slate-600 font-mono">{u.mobile}</span>
-                  <span className="text-amber-900 font-mono font-bold">Valid Until: {validUntil}</span>
-                </div>
+                {/* Collapsible Full Tenant Details */}
+                {isExpanded && (
+                  <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/70 space-y-2 text-[11px] animate-in fade-in duration-150">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Email</span>
+                        <span className="font-mono text-slate-900 truncate block">{u.email}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">User ID</span>
+                        <span className="font-mono text-slate-600 text-[10px] truncate block">{u.id}</span>
+                      </div>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSelectedUser(u)}
-                  className="w-full py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl font-bold text-xs transition cursor-pointer active:scale-95"
-                >
-                  Adjust Validity
-                </button>
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-200/50">
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Last Login City</span>
+                        <span className="text-slate-800 font-medium">
+                          {u.lastLoginCity ? `${u.lastLoginCity}, ${u.lastLoginCountry || "IN"}` : "Namakkal, India"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Last Known IP</span>
+                        <span className="font-mono text-amber-800 font-semibold">{u.lastLoginIp || "127.0.0.1"}</span>
+                      </div>
+                    </div>
+
+                    {u.createdAt && (
+                      <div className="pt-1 border-t border-amber-200/50 text-[10px] text-slate-500">
+                        Joined: {new Date(u.createdAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedUserId(isExpanded ? null : u.id)}
+                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer"
+                  >
+                    {isExpanded ? "Hide Details" : "View Details"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedUser(u)}
+                    className="flex-1 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl font-bold text-xs transition cursor-pointer active:scale-95"
+                  >
+                    Adjust Validity
+                  </button>
+                </div>
               </div>
             );
           })

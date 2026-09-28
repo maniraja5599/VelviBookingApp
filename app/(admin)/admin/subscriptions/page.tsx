@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { db } from "@/lib/db/store";
-import { Sparkles, Clock, CheckCircle, Search, Calendar, ArrowUpRight } from "lucide-react";
+import { Sparkles, Clock, CheckCircle, Search, Calendar, ArrowUpRight, ChevronDown, ChevronUp, UserCheck, Shield } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminSubscriptionsPage() {
   const [search, setSearch] = useState("");
+  const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
   const subscriptions = db.subscriptions;
   const businesses = db.businesses;
 
@@ -106,10 +107,11 @@ export default function AdminSubscriptionsPage() {
       </div>
 
       {/* Mobile Card View (< 640px) */}
-      <div className="sm:hidden space-y-3">
+      <div className="sm:hidden space-y-2.5">
         {filtered.map((sub) => {
           const biz = businesses.find((b) => b.id === sub.businessId) || businesses[0];
           const user = db.users.find((u) => u.id === biz?.ownerId);
+          const isExpanded = expandedSubId === sub.id;
           const expiryFormatted = sub.currentPeriodEnd
             ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
                 day: "numeric",
@@ -121,34 +123,88 @@ export default function AdminSubscriptionsPage() {
           return (
             <div
               key={sub.id}
-              className="p-4 bg-white rounded-2xl border border-amber-200/80 space-y-2.5 text-xs shadow-2xs"
+              className="p-3.5 bg-white rounded-2xl border border-amber-200/80 space-y-2.5 text-xs shadow-2xs transition"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-extrabold text-sm text-slate-900">{biz?.name || "Independent Service"}</h4>
-                  <div className="text-[11px] text-slate-500">{user?.name || "Priest"}</div>
+              <div
+                onClick={() => setExpandedSubId(isExpanded ? null : sub.id)}
+                className="flex items-start justify-between cursor-pointer gap-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-extrabold text-sm text-slate-900 truncate">{biz?.name || "Independent Service"}</h4>
+                  <div className="text-[11px] text-amber-800 font-medium truncate mt-0.5">{user?.name || "Priest"}</div>
                 </div>
-                <span
-                  className={`text-[9.5px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                    sub.status === "ACTIVE"
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                      : "bg-amber-50 text-amber-800 border border-amber-200"
-                  }`}
-                >
-                  {sub.status === "ACTIVE" ? "Active" : sub.status}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span
+                    className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                      sub.status === "ACTIVE"
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        : "bg-amber-50 text-amber-800 border border-amber-200"
+                    }`}
+                  >
+                    {sub.status === "ACTIVE" ? "Active" : sub.status}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Toggle details"
+                    className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                  >
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-amber-700" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+              <div
+                onClick={() => setExpandedSubId(isExpanded ? null : sub.id)}
+                className="grid grid-cols-2 gap-2 text-[11px] bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer"
+              >
                 <div>
-                  <span className="text-[9.5px] text-slate-500 block uppercase font-medium">Plan &amp; Billing Cycle</span>
+                  <span className="text-[9.5px] text-slate-500 block uppercase font-medium">Plan</span>
                   <span className="font-bold text-amber-800">{sub.planName} ({sub.billingCycle})</span>
                 </div>
                 <div>
-                  <span className="text-[9.5px] text-slate-500 block uppercase font-medium">Period Expiry</span>
+                  <span className="text-[9.5px] text-slate-500 block uppercase font-medium">Expiry</span>
                   <span className="font-bold text-slate-900 font-mono">{expiryFormatted}</span>
                 </div>
               </div>
+
+              {/* Collapsible Subscription Full Metadata */}
+              {isExpanded && (
+                <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/70 space-y-2 text-[11px] animate-in fade-in duration-150">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Subscription ID</span>
+                      <span className="font-mono text-slate-700 text-[10px] truncate block">{sub.id}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Business ID</span>
+                      <span className="font-mono text-slate-700 text-[10px] truncate block">{sub.businessId}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-200/50">
+                    <div>
+                      <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Period Start</span>
+                      <span className="font-mono text-slate-700">
+                        {new Date(sub.currentPeriodStart).toLocaleDateString("en-IN")}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Auto Renewal</span>
+                      <span className="font-bold text-emerald-800">
+                        {sub.status === "ACTIVE" ? "Active (UPI/Gateway)" : "Manual"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setExpandedSubId(isExpanded ? null : sub.id)}
+                className="w-full py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer"
+              >
+                {isExpanded ? "Hide Ledger Details" : "View Full Details"}
+              </button>
             </div>
           );
         })}

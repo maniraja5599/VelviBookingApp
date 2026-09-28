@@ -20,6 +20,12 @@ import {
   ClipboardList,
   LayoutDashboard,
   ExternalLink,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Smartphone,
+  Monitor,
 } from "lucide-react";
 import Link from "next/link";
 import { formatCleanLocation } from "@/lib/utils/location";
@@ -123,6 +129,8 @@ export default function SuperAdminDashboardPage() {
   const [modalReason, setModalReason] = useState<string>("Developer promotional extension");
   const [isConfirmingValidity, setIsConfirmingValidity] = useState<boolean>(false);
   const [customTargetDate, setCustomTargetDate] = useState<string>("");
+  const [selectedLoginLog, setSelectedLoginLog] = useState<any | null>(null);
+  const [showAllLogins, setShowAllLogins] = useState<boolean>(false);
 
   const computeNewExpiryDate = (
     baseDateStr: string | undefined,
@@ -548,7 +556,7 @@ export default function SuperAdminDashboardPage() {
                 No expiring subscriptions found.
               </div>
             ) : (
-              upcomingExpiries.map((metric) => {
+              upcomingExpiries.slice(0, 5).map((metric) => {
                 const sub = metric.subscription;
                 const expiryFormatted = sub?.currentPeriodEnd
                   ? new Date(sub.currentPeriodEnd).toLocaleDateString("en-IN", {
@@ -640,46 +648,49 @@ export default function SuperAdminDashboardPage() {
       </div>
 
       {/* ─── Recent Logins ───────────────────────────────────────────────────── */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-3.5 shadow-sm">
+      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-amber-200/80 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0">
-              <Globe className="w-4 h-4" />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 shrink-0">
+              <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-extrabold text-sm text-slate-900 truncate">
-                Live Logins & Telemetry
+              <h3 className="font-extrabold text-xs sm:text-sm text-slate-900 truncate">
+                Live Logins &amp; Telemetry
               </h3>
-              <p className="text-[10.5px] text-slate-500 truncate">
-                Click any session for detailed IP, origin & device info
+              <p className="text-[10px] sm:text-[10.5px] text-slate-500 truncate">
+                Click any session to view complete IP, device &amp; telemetry
               </p>
             </div>
           </div>
-          <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full font-bold shrink-0">
-            Latest 10
+          <span className="text-[9.5px] sm:text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full font-bold shrink-0">
+            {showAllLogins ? "All Logins" : "Latest 10"}
           </span>
         </div>
 
         <div className="max-h-96 overflow-y-auto pr-1 space-y-2">
-          {(
-            (db.auditLogs || []).filter(
+          {(() => {
+            const allAuditLogs = (db.auditLogs || []).filter(
               (a) =>
                 a.action.includes("LOGIN") ||
                 a.targetType === "AUTH_SESSION" ||
                 a.action.includes("GOOGLE") ||
                 a.action.includes("DEMO")
-            ).length > 0
-              ? (db.auditLogs || []).filter(
-                  (a) =>
-                    a.action.includes("LOGIN") ||
-                    a.targetType === "AUTH_SESSION" ||
-                    a.action.includes("GOOGLE") ||
-                    a.action.includes("DEMO")
-                )
-              : db.auditLogs || []
-          )
-            .slice(0, 10)
-            .map((log) => {
+            );
+            const logsToDisplay = (allAuditLogs.length > 0 ? allAuditLogs : db.auditLogs || []).slice(
+              0,
+              showAllLogins ? 30 : 10
+            );
+
+            if (logsToDisplay.length === 0) {
+              return (
+                <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 text-xs font-medium">
+                  No login telemetry events recorded yet.
+                </div>
+              );
+            }
+
+            return logsToDisplay.map((log) => {
               const isDemo = log.action === "DEMO_LOGIN" || log.actorName.includes("Ravi");
               const displayIp = log.ipAddress || "Local / Direct";
               const displayLocation = log.city
@@ -696,38 +707,42 @@ export default function SuperAdminDashboardPage() {
               return (
                 <div
                   key={log.id}
-                  className="p-3 sm:p-3.5 bg-slate-50 hover:bg-white hover:border-amber-300 rounded-2xl border border-slate-200 space-y-2 text-xs cursor-default transition shadow-sm group"
+                  onClick={() => setSelectedLoginLog(log)}
+                  className="p-3 bg-slate-50 hover:bg-amber-50/50 hover:border-amber-300 rounded-2xl border border-slate-200 space-y-1.5 text-xs cursor-pointer transition shadow-2xs group active:scale-[0.99]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
-                      <span className="font-extrabold text-slate-900 truncate text-xs group-hover:text-amber-800 transition-colors">
+                      <span className="font-extrabold text-slate-900 truncate text-xs group-hover:text-amber-900 transition-colors">
                         {log.actorName}
                       </span>
                     </div>
-                    <span
-                      className={`text-[9px] px-2 py-0.5 rounded-full font-black uppercase shrink-0 border ${
-                        isDemo
-                          ? "bg-indigo-100 text-indigo-700 border-indigo-200"
-                          : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                      }`}
-                    >
-                      {isDemo ? "Demo Login" : log.action.replace("_", " ")}
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase border ${
+                          isDemo
+                            ? "bg-indigo-100 text-indigo-700 border-indigo-200"
+                            : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                        }`}
+                      >
+                        {isDemo ? "Demo" : log.action.replace("_", " ")}
+                      </span>
+                      <Eye className="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-700 transition-colors" />
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between text-[10.5px] text-slate-500 gap-2">
-                    <span className="flex items-center gap-1.5 font-mono text-amber-800/90 truncate max-w-[150px]">
+                    <span className="flex items-center gap-1 font-mono text-amber-800/90 truncate max-w-[140px]">
                       <Globe className="w-3 h-3 text-amber-700 shrink-0" />
                       {displayIp}
                     </span>
-                    <span className="flex items-center gap-1.5 text-slate-700 truncate max-w-[160px]">
+                    <span className="flex items-center gap-1 text-slate-700 truncate max-w-[150px]">
                       <MapPin className="w-3 h-3 text-emerald-500 shrink-0" />
                       {displayLocation}
                     </span>
                   </div>
 
-                  <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between border-t border-slate-100 pt-1.5 gap-2">
+                  <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between border-t border-slate-100 pt-1 gap-2">
                     <span className="truncate text-amber-800 font-sans">
                       Source: {visitSource}
                     </span>
@@ -740,8 +755,28 @@ export default function SuperAdminDashboardPage() {
                   </div>
                 </div>
               );
-            })}
+            });
+          })()}
         </div>
+
+        {/* Show More / Show Less Toggle Button */}
+        <button
+          type="button"
+          onClick={() => setShowAllLogins(!showAllLogins)}
+          className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer"
+        >
+          {showAllLogins ? (
+            <>
+              <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+              <span>Show Less (Top 10)</span>
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              <span>Show More History</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* ─── Validity Adjustment Modal ────────────────────────────────────────── */}
@@ -944,6 +979,97 @@ export default function SuperAdminDashboardPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Login Telemetry Details Modal ────────────────────────────────────── */}
+      {selectedLoginLog && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 border border-amber-300 shadow-2xl my-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm text-slate-900">
+                    Session Telemetry Details
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 font-mono">
+                    ID: {selectedLoginLog.id}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLoginLog(null)}
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="p-3 bg-amber-50/60 rounded-2xl border border-amber-200/80 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-slate-500 uppercase font-semibold">User / Actor</div>
+                  <div className="font-extrabold text-slate-900 text-sm">{selectedLoginLog.actorName}</div>
+                </div>
+                <span className="text-[9.5px] px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                  {selectedLoginLog.action}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">IP Address</span>
+                  <span className="font-mono font-bold text-amber-800 text-xs">
+                    {selectedLoginLog.ipAddress || "127.0.0.1"}
+                  </span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Geographic City</span>
+                  <span className="font-bold text-slate-800 text-xs truncate block">
+                    {formatCleanLocation(selectedLoginLog.city, selectedLoginLog.country)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Authentication Channel</span>
+                <div className="font-medium text-slate-700">
+                  {selectedLoginLog.newValue?.source || (selectedLoginLog.action.includes("GOOGLE") ? "Google OAuth 2.0" : "Direct PWA App")}
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 font-mono text-[11px]">
+                <div className="text-[9.5px] text-slate-500 uppercase font-sans font-semibold">Logged Timestamp</div>
+                <div className="text-slate-800">
+                  {new Date(selectedLoginLog.createdAt).toLocaleString("en-IN", {
+                    dateStyle: "full",
+                    timeStyle: "medium",
+                  })}
+                </div>
+              </div>
+
+              {selectedLoginLog.reason && (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1 text-slate-600">
+                  <span className="text-[9.5px] text-slate-500 uppercase block font-semibold">Notes / Reason</span>
+                  <p className="italic">{selectedLoginLog.reason}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedLoginLog(null)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                Close Telemetry
+              </button>
+            </div>
           </div>
         </div>
       )}
