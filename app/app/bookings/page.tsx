@@ -889,6 +889,7 @@ export default function BookingsListPage() {
   const todayStr = useMemo(() => getTodayStr(), []);
   const [showRecentChanges, setShowRecentChanges] = useState(false);
   const [recentChangesTab, setRecentChangesTab] = useState<"completed" | "activity">("completed");
+  const [sortBy, setSortBy] = useState<"date" | "recent">("date");
 
   const businessId = currentBusiness?.id || (currentUser?.id === "u-ravi-iyer-01" ? "biz-venkateswara-01" : currentUser?.id ? `biz-${currentUser.id}` : "");
   const [dbVersion, setDbVersion] = useState(0);
@@ -1001,6 +1002,9 @@ export default function BookingsListPage() {
   // Group bookings by Month into a chronological timeline
   const monthGroups = useMemo(() => {
     const sorted = [...filteredBookings].sort((a, b) => {
+      if (sortBy === "recent") {
+        return (b.createdAt || b.id).localeCompare(a.createdAt || a.id);
+      }
       return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime);
     });
 
@@ -1041,7 +1045,7 @@ export default function BookingsListPage() {
     });
 
     return Array.from(groupsMap.values());
-  }, [filteredBookings]);
+  }, [filteredBookings, sortBy]);
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200 max-w-full">
@@ -1060,15 +1064,15 @@ export default function BookingsListPage() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Recent Button */}
+          {/* Activity Button */}
           <button
             type="button"
             onClick={() => setShowRecentChanges(true)}
             className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
-            title="Recent Changes & Completed Bookings"
+            title="Activity & Completed Bookings"
           >
             <History className="w-3.5 h-3.5 text-amber-700" />
-            <span>Recent</span>
+            <span>Activity</span>
           </button>
 
           <Link
@@ -1102,38 +1106,70 @@ export default function BookingsListPage() {
         )}
       </div>
 
+      {/* Status Filter Tabs & Compact Sort Toggle */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        {/* Status Filter Tabs */}
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 no-scrollbar text-xs font-bold">
+          {[
+            { id: "PENDING", label: "PENDING", count: pendingCount },
+            { id: "ALL", label: "ALL", count: allBookings.length },
+            { id: "CONFIRMED", label: "CONFIRMED", count: confirmedCount },
+            { id: "COMPLETED", label: "COMPLETED", count: completedCount },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setFilter(tab.id)}
+              className={`px-3 py-1 rounded-xl whitespace-nowrap transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
+                filter === tab.id
+                  ? "bg-slate-900 text-white shadow-2xs"
+                  : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              <span>{tab.label} ({tab.count})</span>
+              {tab.id === "PENDING" && overdueCount > 0 && (
+                <span
+                  className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full shadow-2xs ${
+                    filter === "PENDING"
+                      ? "bg-amber-400 text-slate-950"
+                      : "bg-amber-100 text-amber-900 border border-amber-300"
+                  }`}
+                >
+                  {overdueCount} overdue
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
 
-      {/* Status Filter Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-bold">
-        {[
-          { id: "PENDING", label: "PENDING", count: pendingCount },
-          { id: "ALL", label: "ALL", count: allBookings.length },
-          { id: "CONFIRMED", label: "CONFIRMED", count: confirmedCount },
-          { id: "COMPLETED", label: "COMPLETED", count: completedCount },
-        ].map((tab) => (
+        {/* Compact Sort Option (Date wise vs Recent) */}
+        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200/80 text-[10px] font-extrabold shrink-0">
           <button
-            key={tab.id}
-            onClick={() => setFilter(tab.id)}
-            className={`px-3 py-1 rounded-xl whitespace-nowrap transition shrink-0 flex items-center gap-1.5 cursor-pointer ${
-              filter === tab.id
-                ? "bg-slate-900 text-white shadow-2xs"
-                : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
+            type="button"
+            onClick={() => setSortBy("date")}
+            className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
+              sortBy === "date"
+                ? "bg-white text-slate-900 shadow-2xs font-black"
+                : "text-slate-500 hover:text-slate-800"
             }`}
+            title="Sort by Pooja Date"
           >
-            <span>{tab.label} ({tab.count})</span>
-            {tab.id === "PENDING" && overdueCount > 0 && (
-              <span
-                className={`text-[9.5px] font-black px-1.5 py-0.2 rounded-full shadow-2xs ${
-                  filter === "PENDING"
-                    ? "bg-amber-400 text-slate-950"
-                    : "bg-amber-100 text-amber-900 border border-amber-300"
-                }`}
-              >
-                {overdueCount} overdue
-              </span>
-            )}
+            <Calendar className="w-2.5 h-2.5 text-amber-700" />
+            <span>Date</span>
           </button>
-        ))}
+          <button
+            type="button"
+            onClick={() => setSortBy("recent")}
+            className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer ${
+              sortBy === "recent"
+                ? "bg-white text-slate-900 shadow-2xs font-black"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+            title="Sort by Recently Booked"
+          >
+            <Sparkles className="w-2.5 h-2.5 text-emerald-700" />
+            <span>Recent</span>
+          </button>
+        </div>
       </div>
 
 

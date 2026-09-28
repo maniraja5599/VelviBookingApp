@@ -1157,6 +1157,8 @@ export class VelviDatabaseStore {
     advanceAmount: number;
     updatedBy: string;
     reason?: string;
+    date?: string;
+    method?: "CASH" | "UPI" | "BANK_TRANSFER" | "CHEQUE" | "OTHER" | string;
   }): { success: boolean; booking?: Booking; error?: string } {
     const booking = this.bookings.find((b) => b.id === params.bookingId);
     if (!booking) return { success: false, error: "Booking not found" };
@@ -1182,6 +1184,35 @@ export class VelviDatabaseStore {
       booking.paymentStatus = "PARTIALLY_PAID";
     } else {
       booking.paymentStatus = "PENDING";
+    }
+
+    // Keep payment records synchronized with date and method
+    const payDate = params.date || new Date().toISOString().split("T")[0];
+    const payMethod = (params.method as any) || "UPI";
+
+    if (params.advanceAmount > 0) {
+      if (!booking.paymentRecords || booking.paymentRecords.length === 0) {
+        booking.paymentRecords = [
+          {
+            id: `pay-${Date.now()}`,
+            bookingId: booking.id,
+            amount: params.advanceAmount,
+            date: payDate,
+            method: payMethod,
+            recordedBy: params.updatedBy,
+            remark: params.reason || "Payment recorded",
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      } else {
+        const last = booking.paymentRecords[booking.paymentRecords.length - 1];
+        last.amount = params.advanceAmount;
+        last.date = payDate;
+        last.method = payMethod;
+        if (params.reason) last.remark = params.reason;
+      }
+    } else if (params.advanceAmount === 0 && booking.paymentRecords) {
+      booking.paymentRecords = [];
     }
 
     booking.updatedAt = new Date().toISOString();

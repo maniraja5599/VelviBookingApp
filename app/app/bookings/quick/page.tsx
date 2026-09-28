@@ -771,7 +771,7 @@ function QuickBookingContent() {
 
               {/* Devotee Search Bar */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Search className="w-3 h-3 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   id="devotee-search-input"
                   type="text"
@@ -919,7 +919,7 @@ function QuickBookingContent() {
 
               {/* Ceremony Search Input */}
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Search className="w-3 h-3 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search ceremony / பூஜை தேட..."
@@ -1693,22 +1693,12 @@ function QuickBookingContent() {
                 </button>
               </div>
 
-              {/* If other priest, show quick pick + Instant Add Input */}
+              {/* If other priest, show existing priest chips */}
               {priestType === "other" && (
-                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5 animate-in fade-in">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10.5px] font-bold text-slate-600 uppercase tracking-wider block">
-                      குருக்களைத் தேர்வு செய்க (Select Performing Priest):
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddPriest(true)}
-                      className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>Add Priest</span>
-                    </button>
-                  </div>
+                <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 animate-in fade-in">
+                  <span className="text-[10.5px] font-bold text-slate-600 uppercase tracking-wider block">
+                    குருக்களைத் தேர்வு செய்க (Select Performing Priest):
+                  </span>
 
                   {members.length > 0 ? (
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -1735,28 +1725,6 @@ function QuickBookingContent() {
                       வேறு குருக்கள் இல்லை. மேலே உள்ள &apos;+ Add&apos; பொத்தானைக் கிளிக் செய்து புதிய குருக்களைச் சேர்க்கவும்.
                     </div>
                   )}
-
-                  {/* Instant Priest Name Input */}
-                  <div className="space-y-1 pt-1 border-t border-slate-200/70">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      அல்லது புதிய குருக்கள் பெயர் (Or Type Name):
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        id="custom-priest-input"
-                        type="text"
-                        placeholder="குருக்கள் பெயர் (e.g. Anandha Sharma)..."
-                        value={customPriestName}
-                        onChange={(e) => setCustomPriestName(e.target.value)}
-                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
-                      />
-                      {customPriestName.trim() && (
-                        <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2.5 py-1.5 rounded-xl border border-emerald-300 shrink-0">
-                          Assigned ✓
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
               )}
             </div>

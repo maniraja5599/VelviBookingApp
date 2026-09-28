@@ -320,25 +320,25 @@ export function PoojaSlipModal({ booking, business, onClose }: PoojaSlipModalPro
             id="pooja-slip-card"
             className="p-4 sm:p-6 space-y-4 bg-[#faf8f5] text-slate-900"
           >
-          {/* Sacred Brand Header (Kutty Smart Logo) */}
-          <div className="text-center pb-3 border-b-2 border-dashed border-amber-200/90 space-y-1">
+          {/* Sacred Brand Header (Kutty Smart Logo & Company Name) */}
+          <div className="text-center pb-2.5 border-b-2 border-dashed border-amber-200/90 space-y-0.5">
             <div className="flex items-center justify-center gap-1.5">
               <VelviLogo size="xs" variant="icon" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-900 bg-emerald-100/80 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-900 bg-emerald-100/80 px-1.5 py-0.2 rounded-md border border-emerald-200">
                 VELVI
               </span>
             </div>
-            <h2 className="font-black text-base sm:text-lg text-emerald-950 tracking-tight mt-0.5">
+            <h2 className="font-extrabold text-xs sm:text-sm text-emerald-950 tracking-tight">
               {business?.name || "வேள்வி வேத பவன பூஜை சேவைகள்"}
             </h2>
-            <p className="text-[11px] text-slate-600 font-semibold flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+            <p className="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-2 flex-wrap">
               <span className="flex items-center gap-1">
-                <Phone className="w-3 h-3 text-emerald-700" />
+                <Phone className="w-2.5 h-2.5 text-emerald-700" />
                 {contactPhone}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-emerald-700" />
+                <MapPin className="w-2.5 h-2.5 text-emerald-700" />
                 {business?.address || "தமிழ்நாடு, இந்தியா"}
               </span>
             </p>

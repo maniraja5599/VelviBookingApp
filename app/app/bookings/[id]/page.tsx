@@ -42,6 +42,8 @@ import {
   Copy,
   X,
   Send,
+  RotateCcw,
+  Plus,
 } from "lucide-react";
 
 export default function BookingDetailPage() {
@@ -107,6 +109,16 @@ export default function BookingDetailPage() {
   const [showEditPaymentModal, setShowEditPaymentModal] = useState(false);
   const [editTotalAmount, setEditTotalAmount] = useState<number>(booking.totalAmount || 0);
   const [editAdvanceAmount, setEditAdvanceAmount] = useState<number>(booking.advanceAmount || 0);
+  const [editPaymentStatus, setEditPaymentStatus] = useState<"UNPAID" | "ADVANCE" | "FULL">(() => {
+    if (booking.paymentStatus === "PAID") return "FULL";
+    if (booking.advanceAmount && booking.advanceAmount > 0) return "ADVANCE";
+    return "UNPAID";
+  });
+  const [editPaymentMethod, setEditPaymentMethod] = useState<"UPI" | "CASH" | "BANK_TRANSFER">("UPI");
+  const [editPaymentDate, setEditPaymentDate] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  });
   const [editPaymentReason, setEditPaymentReason] = useState<string>("Payment adjustment");
   const [paymentError, setPaymentError] = useState<string>("");
   const [showItemsShareModal, setShowItemsShareModal] = useState(false);
@@ -194,7 +206,16 @@ export default function BookingDetailPage() {
     e.preventDefault();
     setPaymentError("");
 
-    if (editTotalAmount < 0 || editAdvanceAmount < 0) {
+    let finalAdvance = 0;
+    if (editPaymentStatus === "FULL") {
+      finalAdvance = editTotalAmount;
+    } else if (editPaymentStatus === "ADVANCE") {
+      finalAdvance = Math.min(editTotalAmount, Math.max(0, editAdvanceAmount));
+    } else {
+      finalAdvance = 0;
+    }
+
+    if (editTotalAmount < 0 || finalAdvance < 0) {
       setPaymentError("Amounts cannot be negative.");
       return;
     }
@@ -202,9 +223,11 @@ export default function BookingDetailPage() {
     const res = db.updateBookingPayment({
       bookingId: booking.id,
       totalAmount: editTotalAmount,
-      advanceAmount: editAdvanceAmount,
+      advanceAmount: finalAdvance,
       updatedBy: currentUser?.name || "Ravi Iyer",
       reason: editPaymentReason,
+      date: editPaymentDate,
+      method: editPaymentMethod,
     });
 
     if (res.success && res.booking) {
@@ -461,7 +484,7 @@ export default function BookingDetailPage() {
           <div className="flex items-start justify-between relative z-10">
             <div>
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-300/90 block">
-                Pooja Ceremony (ஹோமம் / பூஜை)
+                Pooja Ceremony
               </span>
               <h2 className="text-xl font-black text-white mt-0.5 leading-tight">
                 {booking.poojaEnglishName || booking.poojaTamilName}
@@ -506,7 +529,7 @@ export default function BookingDetailPage() {
         <div className="p-4 space-y-2.5 bg-white">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-emerald-700" /> Devotee & Venue (பக்தர் & இடம்)
+              <User className="w-3.5 h-3.5 text-emerald-700" /> Devotee & Venue
             </span>
 
             <div className="flex items-center gap-1.5">
@@ -558,11 +581,11 @@ export default function BookingDetailPage() {
                 <IndianRupee className="w-3.5 h-3.5" />
               </div>
               <h4 className="text-xs font-black text-slate-900">
-                Payment & Dakshina Summary (கட்டண விவரம்)
+                Payment
               </h4>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <span
                 className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold border ${
                   booking.paymentStatus === "PAID"
@@ -570,31 +593,32 @@ export default function BookingDetailPage() {
                     : "bg-slate-100 text-slate-800 border-slate-300"
                 }`}
               >
-                {booking.paymentStatus === "PAID" ? "Full Paid ✓" : "Advance Pending"}
+                {booking.paymentStatus === "PAID" ? "Full Paid ✓" : "Pending"}
               </span>
 
               <button
+                type="button"
                 onClick={() => {
                   setEditTotalAmount(booking.totalAmount);
                   setEditAdvanceAmount(booking.advanceAmount);
+                  setEditPaymentStatus(booking.paymentStatus === "PAID" ? "FULL" : booking.advanceAmount > 0 ? "ADVANCE" : "UNPAID");
                   setPaymentError("");
                   setShowEditPaymentModal(true);
                 }}
-                className="text-[11px] font-bold text-slate-600 hover:text-slate-900 underline flex items-center gap-0.5"
-                title="Edit Payment Amounts"
+                className="p-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg transition shadow-2xs cursor-pointer active:scale-95"
+                title="Edit Payment"
               >
-                <Edit className="w-3 h-3 text-slate-600" />
-                <span>Edit</span>
+                <Edit className="w-3.5 h-3.5 text-slate-700" />
               </button>
 
               {booking.advanceAmount > 0 && (
                 <button
+                  type="button"
                   onClick={() => setShowResetPaymentModal(true)}
-                  className="text-[11px] font-bold text-rose-800 hover:text-rose-950 underline flex items-center gap-0.5 ml-1"
-                  title="Reset or Delete Collected Payment"
+                  className="p-1.5 bg-white hover:bg-rose-50 text-rose-700 border border-rose-200 rounded-lg transition shadow-2xs cursor-pointer active:scale-95"
+                  title="Reset Payment"
                 >
-                  <Trash2 className="w-3 h-3 text-rose-600" />
-                  <span>Reset Payment</span>
+                  <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
                 </button>
               )}
             </div>
@@ -638,10 +662,10 @@ export default function BookingDetailPage() {
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between">
                 <span className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider block">
-                  கட்டண வரவு பதிவுகள் ({paymentRecordsList.length}):
+                  Payment History ({paymentRecordsList.length}):
                 </span>
                 <span className="text-[10px] text-slate-400 font-semibold">
-                  Payment History &amp; Remarks
+                  History &amp; Remarks
                 </span>
               </div>
               <div className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-2xs">
@@ -691,87 +715,95 @@ export default function BookingDetailPage() {
           )}
         </div>
 
-        {/* 4. PERFORMING PRIEST ASSIGNMENT (Inline Self vs Other Toggle & Add Priest) */}
+        {/* 4. PERFORMING PRIEST ASSIGNMENT */}
         <div className="p-4 space-y-3 bg-white">
           <div className="flex items-center justify-between">
             <span className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <span>Performing Priest (செய்து வைக்கும் குருக்கள்)</span>
+              <span>Performing Priest</span>
             </span>
             <span className="text-[10px] font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
-              {isSelf ? "🪔 தலைமை குருக்கள் (Self)" : `👤 ${booking.assignedIyerName || "Other"}`}
+              {isSelf ? "🪔 Self" : `👤 ${booking.assignedIyerName || "Other"}`}
             </span>
           </div>
 
-          {/* Toggle: Self vs Other */}
+          {/* Clean Segmented Pill: Self vs Other */}
           <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold border border-slate-200/80">
             <button
               type="button"
               onClick={handleRevertToSelf}
-              className={`py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer text-xs ${
                 isSelf
                   ? "bg-emerald-800 text-white shadow-2xs font-extrabold"
                   : "text-slate-600 hover:text-slate-900 font-semibold"
               }`}
             >
-              <span>🪔 தலைமை குருக்கள் (Self)</span>
+              <span>🪔 Self ({currentUser?.name || "Mani Raja"})</span>
             </button>
             <button
               type="button"
               onClick={() => {
                 setShowPriestPicker(true);
+                if (isSelf && otherMembers.length > 0) {
+                  handleAssignPriest(otherMembers[0].id, otherMembers[0].name);
+                }
               }}
-              className={`py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-2 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer text-xs ${
                 !isSelf
-                  ? "bg-slate-900 text-white shadow-2xs font-extrabold"
+                  ? "bg-emerald-800 text-white shadow-2xs font-extrabold"
                   : "text-slate-600 hover:text-slate-900 font-semibold"
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>Other Guru (மற்ற குருக்கள்)</span>
+              <span>👥 Other Priest</span>
             </button>
           </div>
 
-          {/* Priest Selection Chips & Inline Add Priest Form */}
+          {/* Other Priest Selection: Clean Chips + Inline Add Button */}
           {(!isSelf || showPriestPicker) && (
-            <div className="space-y-2 pt-1 border-t border-slate-100 animate-in fade-in">
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 animate-in fade-in">
               <div className="flex items-center justify-between">
-                <span className="text-[10.5px] font-bold text-slate-500">
-                  குருக்களைத் தேர்ந்தெடுக்கவும்:
+                <span className="text-[10.5px] font-bold text-slate-600 uppercase tracking-wider">
+                  Select Priest:
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowAddPriestInline(!showAddPriestInline)}
-                  className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-0.5 cursor-pointer"
+                  className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer"
                 >
-                  {showAddPriestInline ? "✕ Close" : "+ Add Priest"}
+                  <Plus className="w-3 h-3" />
+                  <span>{showAddPriestInline ? "Close" : "Add Priest"}</span>
                 </button>
               </div>
 
               {/* Inline Add Priest Form */}
               {showAddPriestInline && (
-                <div className="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-2">
-                  <input
-                    type="text"
-                    value={quickNewPriestName}
-                    onChange={(e) => setQuickNewPriestName(e.target.value)}
-                    placeholder="குருக்கள் பெயர் (e.g. Vignesh Dikshithar)"
-                    className="w-full px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-emerald-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleQuickAddNewPriest}
-                    className="w-full py-1.5 bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-2xs cursor-pointer hover:bg-emerald-900 transition"
-                  >
-                    Save &amp; Assign Priest ✓
-                  </button>
+                <div className="p-2.5 bg-emerald-50/80 rounded-xl border border-emerald-200 space-y-2">
+                  <span className="text-[10.5px] font-bold text-emerald-950 block">New Priest:</span>
+                  <div className="flex gap-1.5">
+                    <input
+                      type="text"
+                      value={quickNewPriestName}
+                      onChange={(e) => setQuickNewPriestName(e.target.value)}
+                      placeholder="Priest Name (e.g. Vignesh Dikshithar)..."
+                      className="flex-1 px-3 py-1.5 bg-white rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-emerald-600 shadow-2xs"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleQuickAddNewPriest}
+                      className="px-3.5 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer active:scale-95 shrink-0"
+                    >
+                      Save ✓
+                    </button>
+                  </div>
                 </div>
               )}
 
               {/* Existing Priest Chips */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                 {otherMembers.length === 0 && !showAddPriestInline ? (
                   <p className="text-xs text-slate-400 italic">
-                    மற்ற குருக்கள் பதிவு செய்யப்படவில்லை. "+ Add Priest" கிளிக் செய்து சேர்க்கவும்.
+                    No other priests added yet. Click "+ Add Priest" to add one.
                   </p>
                 ) : (
                   otherMembers.map((m) => {
@@ -781,14 +813,14 @@ export default function BookingDetailPage() {
                         key={m.id}
                         type="button"
                         onClick={() => handleAssignPriest(m.id, m.name)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition border cursor-pointer active:scale-95 ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer active:scale-95 ${
                           isCurrent
-                            ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
-                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                            ? "bg-emerald-800 text-white border-emerald-800 font-black shadow-2xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
                         }`}
                       >
-                        <span>👤 {m.name}</span>
-                        {isCurrent && <span className="ml-1 text-emerald-400">✓</span>}
+                        <span>{m.name}</span>
+                        {isCurrent && <span className="ml-1 text-amber-300">✓</span>}
                       </button>
                     );
                   })
@@ -803,7 +835,7 @@ export default function BookingDetailPage() {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-[10px] font-black text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
               <CheckSquare className="w-3.5 h-3.5 text-emerald-700" />
-              <span>சாமக்கிரி பொருட்கள் செக்-லிஸ்ட் ({booking.items?.length || 0})</span>
+              <span>Samagri Checklist ({booking.items?.length || 0})</span>
             </span>
 
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -817,10 +849,10 @@ export default function BookingDetailPage() {
                 type="button"
                 onClick={() => setShowPoojaSlipModal(true)}
                 className="text-[11px] font-bold text-emerald-800 bg-white hover:bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
-                title="Save Samagri List Image"
+                title="View & Save Samagri List Image Slip"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Save Image 📸</span>
+                <span>View Image Slip 📸</span>
               </button>
               <button
                 type="button"
@@ -845,9 +877,9 @@ export default function BookingDetailPage() {
                     <span className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-950 font-black text-[10.5px] flex items-center justify-center shrink-0 border border-emerald-200">
                       {idx + 1}
                     </span>
-                    <span className="text-base shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200/70 flex items-center justify-center text-sm shrink-0 shadow-2xs">
                       {getItemIcon(item, item.category)}
-                    </span>
+                    </div>
                     <div className="min-w-0 flex-1">
                       <span className="font-black text-slate-900 truncate block">
                         {item.itemTamilName || item.itemEnglishName}
@@ -1012,21 +1044,34 @@ export default function BookingDetailPage() {
         currentUserName={currentUser?.name || "Priest"}
       />
 
-      {/* 2. Controlled Edit Payment Modal (With Math Integrity) */}
+      {/* 2. Controlled Edit Payment Modal (Matching New Booking Step 2 Method & UI) */}
       {showEditPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <form
             onSubmit={handleConfirmEditPayment}
-            className="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 shadow-2xl border border-velvi-gold/30"
+            className="bg-white rounded-3xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-2xl border border-slate-200"
           >
-            <div>
-              <h3 className="font-bold text-base text-velvi-brownDark flex items-center gap-1.5">
-                <IndianRupee className="w-4 h-4 text-velvi-gold" />
-                <span>Edit Fee & Advance</span>
-              </h3>
-              <p className="text-[11px] text-velvi-brown/70 mt-0.5">
-                Safely update the total ceremony fee and recorded advance amount.
-              </p>
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-950 flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <IndianRupee className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm sm:text-base text-slate-900">
+                    Edit Payment
+                  </h3>
+                  <p className="text-[10.5px] text-slate-500 font-medium">
+                    Update dakshina fee &amp; payment status
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditPaymentModal(false)}
+                className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-xs cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
 
             {paymentError && (
@@ -1036,87 +1081,179 @@ export default function BookingDetailPage() {
               </div>
             )}
 
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-velvi-brown block mb-1">
-                  Total Pooja Fee (₹)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={editTotalAmount}
-                  onChange={(e) => setEditTotalAmount(Number(e.target.value))}
-                  className="w-full bg-velvi-cream/40 border border-velvi-gold/30 rounded-xl px-3 py-2 text-sm font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                />
+            {/* Total Dakshina Amount (Matching New Booking with Steppers) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>Total Dakshina (தட்சிணைத் தொகை):</span>
+                <span className="text-[10.5px] text-slate-400 font-normal">Direct Manual Input</span>
               </div>
-
-              <div>
-                <label className="font-bold text-velvi-brown block mb-1">
-                  Advance Received (₹)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={editAdvanceAmount}
-                  onChange={(e) => setEditAdvanceAmount(Number(e.target.value))}
-                  className="w-full bg-velvi-cream/40 border border-velvi-gold/30 rounded-xl px-3 py-2 text-sm font-bold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
-                />
-              </div>
-
-              {/* Live Preview Card */}
-              <div className="bg-velvi-cream/50 p-3 rounded-xl border border-velvi-gold/20 space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-velvi-brown/70">Calculated Balance:</span>
-                  <span className="font-extrabold text-sm text-velvi-brownDark">
-                    ₹{derivedBalance.toLocaleString("en-IN")}
-                  </span>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="50"
+                    required
+                    value={editTotalAmount}
+                    onChange={(e) => setEditTotalAmount(Math.max(0, Number(e.target.value)))}
+                    className="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl font-black text-slate-900 text-base focus:outline-none focus:border-emerald-600 shadow-inner"
+                  />
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-velvi-brown/70">New Payment Status:</span>
-                  <span
-                    className={`font-bold px-2 py-0.2 rounded-full text-[10px] ${
-                      derivedStatus === "PAID"
-                        ? "bg-green-100 text-green-800"
-                        : derivedStatus === "PARTIALLY_PAID"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
+                {/* Steppers */}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEditTotalAmount((v) => Math.max(0, v - 500))}
+                    className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold cursor-pointer"
                   >
-                    {derivedStatus === "PAID" ? "PAID" : derivedStatus === "PARTIALLY_PAID" ? "PARTIALLY PAID" : "PENDING"}
+                    -500
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditTotalAmount((v) => v + 500)}
+                    className="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold cursor-pointer"
+                  >
+                    +500
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Status Segmented Control (3 Options matching New Booking) */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-xs font-bold text-slate-700 block">Payment Status:</span>
+              <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setEditPaymentStatus("UNPAID")}
+                  className={`py-2 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
+                    editPaymentStatus === "UNPAID"
+                      ? "bg-amber-800 text-white font-black shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 font-semibold"
+                  }`}
+                >
+                  <span>⏳ Pending</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditPaymentStatus("ADVANCE");
+                    if (editAdvanceAmount <= 0) {
+                      setEditAdvanceAmount(Math.round(editTotalAmount * 0.4 / 100) * 100 || 1000);
+                    }
+                  }}
+                  className={`py-2 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
+                    editPaymentStatus === "ADVANCE"
+                      ? "bg-slate-900 text-white font-black shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 font-semibold"
+                  }`}
+                >
+                  <span>🪙 Advance</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditPaymentStatus("FULL")}
+                  className={`py-2 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 text-[11px] ${
+                    editPaymentStatus === "FULL"
+                      ? "bg-emerald-800 text-white font-black shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900 font-semibold"
+                  }`}
+                >
+                  <span>✅ Full Paid</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Advance amount row if status === 'ADVANCE' */}
+            {editPaymentStatus === "ADVANCE" && (
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-2xl space-y-2 animate-in fade-in">
+                <div className="flex items-center justify-between text-xs font-bold text-amber-950">
+                  <span>Advance Received:</span>
+                  <span className="text-[11px] font-black text-amber-900">
+                    Balance Due: ₹{Math.max(0, editTotalAmount - editAdvanceAmount).toLocaleString("en-IN")}
                   </span>
                 </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={editTotalAmount}
+                    value={editAdvanceAmount}
+                    onChange={(e) => setEditAdvanceAmount(Math.max(0, Number(e.target.value)))}
+                    className="w-full pl-8 pr-3 py-2 bg-white border border-amber-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-amber-600 shadow-2xs"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Payment Mode Selector */}
+            {editPaymentStatus !== "UNPAID" && (
+              <div className="space-y-1.5">
+                <span className="text-xs font-bold text-slate-700 block">Payment Mode:</span>
+                <div className="grid grid-cols-3 gap-1.5 text-xs font-bold">
+                  {(["UPI", "CASH", "BANK_TRANSFER"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setEditPaymentMethod(mode)}
+                      className={`py-1.5 px-2 rounded-xl border transition cursor-pointer text-[11px] font-bold ${
+                        editPaymentMethod === mode
+                          ? "bg-emerald-800 text-white border-emerald-800 shadow-2xs"
+                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      {mode === "UPI" ? "📱 UPI" : mode === "CASH" ? "💵 Cash" : "🏦 Bank"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Payment Date & Reason */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  Payment Date (தேதி):
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={editPaymentDate}
+                  onChange={(e) => setEditPaymentDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
               </div>
 
               <div>
-                <label className="font-bold text-velvi-brown block mb-1">
-                  Reason for Change *
+                <label className="font-bold text-slate-700 block mb-1">
+                  Remark / Reason:
                 </label>
                 <input
                   type="text"
-                  required
                   value={editPaymentReason}
                   onChange={(e) => setEditPaymentReason(e.target.value)}
-                  placeholder="e.g. Discount offered, balance received in cash"
-                  className="w-full bg-velvi-cream/30 border border-velvi-gold/20 rounded-xl px-3 py-2 text-xs font-semibold text-velvi-brownDark focus:outline-none focus:border-velvi-gold"
+                  placeholder="e.g. Paid in full"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
                 />
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {/* Action Buttons */}
+            <div className="flex gap-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setShowEditPaymentModal(false)}
-                className="flex-1 py-2 rounded-xl text-xs font-bold text-velvi-brown bg-velvi-cream hover:bg-velvi-creamDark"
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2 rounded-xl text-xs font-bold text-white bg-velvi-brown hover:bg-velvi-brownLight shadow-sm"
+                className="flex-1 py-2.5 rounded-xl text-xs font-black text-white bg-emerald-800 hover:bg-emerald-900 shadow-md transition cursor-pointer active:scale-95"
               >
-                Confirm Payment
+                Save Payment ✓
               </button>
             </div>
           </form>

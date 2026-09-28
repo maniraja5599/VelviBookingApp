@@ -95,6 +95,18 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
   }, [subscription?.currentPeriodEnd]);
 
+  // Formatted date string (e.g. "25 Nov") for elegant validity display
+  const expiryFormatted = React.useMemo(() => {
+    if (!subscription?.currentPeriodEnd) return null;
+    try {
+      const d = new Date(subscription.currentPeriodEnd);
+      if (isNaN(d.getTime())) return null;
+      return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+    } catch {
+      return null;
+    }
+  }, [subscription?.currentPeriodEnd]);
+
   const isExpired = subscription?.status === "EXPIRED" || (daysToExpiry !== null && daysToExpiry <= 0);
   const isExpiringSoon = !isExpired && daysToExpiry !== null && daysToExpiry <= 5;
 
@@ -499,10 +511,17 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   </div>
                 )}
 
-                {/* Display Name */}
-                <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[95px] sm:max-w-[130px] text-left">
-                  {displayName}
-                </span>
+                {/* Display Name and Validity with Date */}
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[85px] sm:max-w-[125px] leading-tight">
+                    {displayName}
+                  </span>
+                  {daysToExpiry !== null && expiryFormatted && (
+                    <span className="text-[8.5px] font-bold text-emerald-800 font-mono tracking-tight leading-none mt-0.5 truncate max-w-[85px] sm:max-w-[125px]">
+                      {daysToExpiry}d • {expiryFormatted}
+                    </span>
+                  )}
+                </div>
 
                 <ChevronRight
                   className={`w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0 ${
@@ -569,10 +588,10 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                           <span className="text-amber-600 text-xs">👑</span>
                           <span>Velvi Pro Active</span>
                         </div>
-                        <div className="flex items-center gap-1 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0 group-hover:border-emerald-500">
+                        <div className="flex items-center gap-1 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0 group-hover:border-emerald-500 whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                           <span>
-                            {daysToExpiry !== null ? `${daysToExpiry} நாட்கள்` : "Active"}
+                            {daysToExpiry !== null ? `${daysToExpiry} நாட்கள் • ${expiryFormatted}` : "Active"}
                           </span>
                           <span className="text-emerald-700 text-[10px] ml-0.5 group-hover:translate-x-0.5 transition-transform">→</span>
                         </div>
