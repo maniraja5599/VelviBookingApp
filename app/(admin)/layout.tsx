@@ -56,10 +56,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
     "239924321651-f69j4bdmp648o08hg4n31jf46i7re4rj.apps.googleusercontent.com";
 
-  // ── Session persistence check (10-minute window) ────────────────────────────
+  // ── Session persistence & auto-unlock if already logged in as Super Admin ──
   React.useEffect(() => {
     setIsMounted(true);
     if (typeof window !== "undefined") {
+      const userEmail = currentUser?.email?.trim().toLowerCase();
+      const isAlreadySuperAdmin = userEmail === "manirajankg@gmail.com" || currentUser?.role === "SUPER_ADMIN";
+
+      if (isAlreadySuperAdmin) {
+        // Automatically grant and persist admin session without prompting again!
+        sessionStorage.setItem("velvi_super_admin_verified", "true");
+        sessionStorage.setItem("velvi_super_admin_login_at", Date.now().toString());
+        setAdminSessionVerified(true);
+        return;
+      }
+
       const verified = sessionStorage.getItem("velvi_super_admin_verified") === "true";
       const loginAt = Number(sessionStorage.getItem("velvi_super_admin_login_at") || 0);
       const THIRTY_MINUTES_MS = 30 * 60 * 1000;
@@ -71,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         setAdminSessionVerified(verified);
       }
     }
-  }, []);
+  }, [currentUser]);
 
   // ── 30-minute session countdown ──────────────────────────────────────────────
   React.useEffect(() => {
@@ -385,7 +396,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 required
                 value={adminEmailInput}
                 onChange={(e) => { setAdminEmailInput(e.target.value); setLoginError(""); }}
-                placeholder="manirajankg@gmail.com"
+                placeholder="Enter administrator email..."
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-2 focus:ring-amber-100 rounded-xl text-slate-900 text-xs font-mono focus:outline-none transition"
               />
             </div>

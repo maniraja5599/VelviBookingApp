@@ -35,11 +35,19 @@ export default function LoginPage() {
   const [step, setStep] = useState<"login" | "mobile_setup">("login");
   const [googleUser, setGoogleUser] = useState<GoogleUserPayload | null>(null);
 
-  // If user is already authenticated (especially manirajankg@gmail.com / Super Admin), redirect directly into /app
+  // If user is already authenticated (especially manirajankg@gmail.com / Super Admin), redirect directly into /app or /admin
   useEffect(() => {
     if (currentUser) {
       const email = (currentUser.email || "").trim().toLowerCase();
       if (email === "manirajankg@gmail.com" || currentUser.role === "SUPER_ADMIN") {
+        if (typeof window !== "undefined") {
+          const sp = new URLSearchParams(window.location.search);
+          const nextUrl = sp.get("next");
+          if (nextUrl) {
+            router.push(nextUrl);
+            return;
+          }
+        }
         router.push("/app");
         return;
       }
@@ -194,9 +202,15 @@ export default function LoginPage() {
       targetEmail === "admin@velvi.app" ||
       user.role === "SUPER_ADMIN";
 
-    // Direct entry into /app for Super Admin / manirajankg@gmail.com
+    // Direct entry into /app or /admin for Super Admin / manirajankg@gmail.com
     if (isSuperAdmin) {
       if (typeof window !== "undefined") {
+        const sp = new URLSearchParams(window.location.search);
+        const nextUrl = sp.get("next");
+        if (nextUrl) {
+          window.location.href = nextUrl;
+          return;
+        }
         window.location.href = "/app";
       } else {
         router.push("/app");
