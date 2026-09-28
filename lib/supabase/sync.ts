@@ -1572,24 +1572,10 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
         };
         const subIdx = db.subscriptions.findIndex((s) => s.businessId === mappedSub.businessId);
         if (subIdx >= 0) {
-          const existingSub = db.subscriptions[subIdx];
-          const existingTime = existingSub.currentPeriodEnd ? new Date(existingSub.currentPeriodEnd).getTime() : 0;
-          const cloudTime = mappedSub.currentPeriodEnd ? new Date(mappedSub.currentPeriodEnd).getTime() : 0;
-          const bestPeriodEnd = Math.max(existingTime, cloudTime) > 0
-            ? new Date(Math.max(existingTime, cloudTime)).toISOString()
-            : (mappedSub.currentPeriodEnd || existingSub.currentPeriodEnd);
-          const bestStatus = (Math.max(existingTime, cloudTime) > Date.now() || existingSub.status === "ACTIVE" || mappedSub.status === "ACTIVE")
-            ? "ACTIVE"
-            : mappedSub.status;
           db.subscriptions[subIdx] = {
-            ...existingSub,
+            ...db.subscriptions[subIdx],
             ...mappedSub,
-            currentPeriodEnd: bestPeriodEnd,
-            status: bestStatus,
           };
-          if (existingTime > cloudTime) {
-            pushSubscriptionToCloud(db.subscriptions[subIdx]).catch(() => {});
-          }
         } else {
           db.subscriptions.push(mappedSub);
         }

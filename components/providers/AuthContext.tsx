@@ -113,24 +113,6 @@ function getInitialAuthState(): {
     if (!sub && biz) {
       if (user.id === "u-ravi-iyer-01") {
         sub = db.subscriptions[0] || null;
-      } else if (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
-        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01" || s.businessId === "biz-super-admin-01") || {
-          id: `sub-${biz.id}`,
-          businessId: biz.id,
-          planName: "Velvi Lifetime Pro",
-          planCode: "VELVI_PRO",
-          status: "ACTIVE",
-          trialStart: "2026-01-01T00:00:00Z",
-          trialEnd: "2035-12-31T23:59:59Z",
-          currentPeriodStart: "2026-01-01T00:00:00Z",
-          currentPeriodEnd: "2035-12-31T23:59:59Z",
-          billingCycle: "YEARLY",
-          autoRenew: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        db.subscriptions.push(sub);
-        db.saveToLocalStorage();
       } else {
         const now = new Date();
         const end = new Date(Date.now() + 30 * 86400000);
@@ -235,24 +217,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!sub && biz) {
       if (user.id === "u-ravi-iyer-01") {
         sub = db.subscriptions[0];
-      } else if (user.role === "SUPER_ADMIN" || user.email?.trim().toLowerCase() === "manirajankg@gmail.com") {
-        sub = db.subscriptions.find((s) => s.id === "sub-super-admin-01" || s.businessId === "biz-super-admin-01") || {
-          id: `sub-${biz.id}`,
-          businessId: biz.id,
-          planName: "Velvi Lifetime Pro",
-          planCode: "VELVI_PRO",
-          status: "ACTIVE",
-          trialStart: "2026-01-01T00:00:00Z",
-          trialEnd: "2035-12-31T23:59:59Z",
-          currentPeriodStart: "2026-01-01T00:00:00Z",
-          currentPeriodEnd: "2035-12-31T23:59:59Z",
-          billingCycle: "YEARLY",
-          autoRenew: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        db.subscriptions.push(sub);
-        db.saveToLocalStorage();
       } else {
         const now = new Date();
         const end = new Date(Date.now() + 30 * 86400000);

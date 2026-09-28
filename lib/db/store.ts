@@ -2160,18 +2160,6 @@ export class VelviDatabaseStore {
         if (Array.isArray(state.subscriptions) && state.subscriptions.length > 0) {
           this.subscriptions = state.subscriptions;
         }
-        // Pin Super Admin Lifetime Pro subscription so validity is always rock-solid
-        const saSub = this.subscriptions.find((s) => s.businessId === "biz-super-admin-01" || s.id === "sub-super-admin-01");
-        if (saSub) {
-          saSub.status = "ACTIVE";
-          saSub.planCode = "VELVI_PRO";
-          saSub.planName = "Velvi Lifetime Pro";
-          if (!saSub.currentPeriodEnd || new Date(saSub.currentPeriodEnd).getFullYear() < 2030) {
-            saSub.currentPeriodEnd = "2035-12-31T23:59:59Z";
-          }
-        } else {
-          this.subscriptions.push(structuredClone(SEED_SUPER_ADMIN_SUBSCRIPTION));
-        }
         if (Array.isArray(state.customers)) this.customers = state.customers;
         if (Array.isArray(state.bookings)) this.bookings = state.bookings;
         if (Array.isArray(state.poojas)) {

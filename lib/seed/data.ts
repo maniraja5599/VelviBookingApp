@@ -85,17 +85,17 @@ export const SEED_SUPER_ADMIN_BUSINESS: Business = {
 export const SEED_SUPER_ADMIN_SUBSCRIPTION: Subscription = {
   id: "sub-super-admin-01",
   businessId: "biz-super-admin-01",
-  planName: "Velvi Lifetime Pro",
+  planName: "Velvi Pro",
   planCode: "VELVI_PRO",
   status: "ACTIVE",
-  trialStart: "2026-01-01T00:00:00Z",
-  trialEnd: "2030-12-31T23:59:59Z",
-  currentPeriodStart: "2026-01-01T00:00:00Z",
-  currentPeriodEnd: "2030-12-31T23:59:59Z",
-  billingCycle: "YEARLY",
+  trialStart: "2026-09-28T00:00:00Z",
+  trialEnd: "2026-10-28T23:59:59Z",
+  currentPeriodStart: "2026-09-28T00:00:00Z",
+  currentPeriodEnd: "2026-10-28T23:59:59Z",
+  billingCycle: "MONTHLY",
   autoRenew: true,
-  createdAt: "2026-01-01T00:00:00Z",
-  updatedAt: "2026-01-01T00:00:00Z",
+  createdAt: "2026-09-28T00:00:00Z",
+  updatedAt: "2026-09-28T00:00:00Z",
 };
 
 export const SEED_MEMBERS: BusinessMember[] = [
