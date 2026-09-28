@@ -14,33 +14,25 @@ import {
   getChandrashtamamNakshatras,
 } from "@/lib/calendar/panchangamCalculations";
 import {
-  CalendarDays,
   Clock,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
   Share2,
   CalendarCheck,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 
 interface DailyPanchangamWidgetProps {
   initialDate?: string;
   onDateSelect?: (dateStr: string) => void;
   className?: string;
-  collapsible?: boolean;
 }
 
 export function DailyPanchangamWidget({
   initialDate,
   onDateSelect,
   className = "",
-  collapsible = true,
 }: DailyPanchangamWidgetProps) {
   const todayStr = getLocalDateString();
   const [currentDateStr, setCurrentDateStr] = useState<string>(initialDate || todayStr);
-  const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   // Sync if initialDate prop changes
   React.useEffect(() => {
@@ -54,22 +46,6 @@ export function DailyPanchangamWidget({
     if (onDateSelect) {
       onDateSelect(newDateStr);
     }
-  };
-
-  const handlePrevDay = () => {
-    const d = new Date(currentDateStr);
-    d.setDate(d.getDate() - 1);
-    changeDate(getLocalDateString(d));
-  };
-
-  const handleNextDay = () => {
-    const d = new Date(currentDateStr);
-    d.setDate(d.getDate() + 1);
-    changeDate(getLocalDateString(d));
-  };
-
-  const handleToday = () => {
-    changeDate(todayStr);
   };
 
   const info: TamilDateInfo = React.useMemo(
@@ -125,120 +101,10 @@ export function DailyPanchangamWidget({
 
   return (
     <div
-      className={`bg-white rounded-3xl border-2 border-amber-300/80 shadow-[0_12px_35px_rgba(217,119,6,0.1)] overflow-hidden transition-all ${className}`}
+      className={`bg-white rounded-3xl border border-amber-200/90 shadow-2xs overflow-hidden transition-all ${className}`}
     >
-      {/* Sacred Top Banner (Gold Gradient) */}
-      <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-950 text-white p-3.5 sm:p-4 space-y-2.5 relative overflow-hidden">
-        <div className="absolute -right-4 -bottom-4 opacity-10 text-7xl pointer-events-none select-none">
-          🕉️
-        </div>
-
-        <div className="flex items-center justify-between gap-2 relative z-10">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-amber-500/30 border border-amber-400/40 flex items-center justify-center text-base shadow-inner">
-              🪔
-            </span>
-            <div>
-              <span className="text-[10px] uppercase tracking-wider font-extrabold text-amber-300 block leading-tight">
-                வேள்வி பஞ்சாங்கம் • Sacred Daily Almanac
-              </span>
-              <h3 className="text-xs sm:text-sm font-black tracking-tight text-white flex items-center gap-1.5 mt-0.5">
-                <span>{info.formattedTamilFull}</span>
-              </h3>
-            </div>
-          </div>
-
-          {/* Quick Date Switcher */}
-          <div className="flex items-center gap-1 bg-black/30 rounded-xl p-1 border border-white/10 shrink-0">
-            <button
-              type="button"
-              onClick={handlePrevDay}
-              className="p-1 hover:bg-white/20 text-white rounded-lg transition active:scale-95 cursor-pointer"
-              title="முந்தைய நாள்"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={handleToday}
-              className={`px-2 py-0.5 rounded-lg text-[10.5px] font-black transition cursor-pointer active:scale-95 ${
-                isToday
-                  ? "bg-amber-400 text-slate-950 shadow-2xs"
-                  : "text-amber-200 hover:bg-white/15"
-              }`}
-            >
-              இன்று
-            </button>
-            <button
-              type="button"
-              onClick={handleNextDay}
-              className="p-1 hover:bg-white/20 text-white rounded-lg transition active:scale-95 cursor-pointer"
-              title="அடுத்த நாள்"
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-
-            {collapsible && (
-              <button
-                type="button"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="p-1 text-amber-300 hover:bg-white/20 rounded-lg ml-0.5 transition cursor-pointer"
-                title={isExpanded ? "சுருக்குக" : "விரிவாக்குக"}
-              >
-                {isExpanded ? (
-                  <ChevronUp className="w-3.5 h-3.5" />
-                ) : (
-                  <ChevronDown className="w-3.5 h-3.5" />
-                )}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Tamil Solar Month & Muhurtham Status Strip */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl px-3 py-1.5 border border-white/15 flex items-center justify-between text-xs font-bold text-amber-100 flex-wrap gap-2 relative z-10">
-          <div className="flex items-center gap-1.5 text-[11px]">
-            <span className="text-amber-300">☀️</span>
-            <span>{info.tamilYear} வருடம்</span>
-            <span className="text-white/40">•</span>
-            <strong className="text-white font-black">
-              {info.tamilMonth} {info.tamilDay} ({info.dayOfWeekTa})
-            </strong>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {info.isMuhurtham && (
-              <span className="text-[10px] font-extrabold bg-emerald-900/80 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-500/40 flex items-center gap-1">
-                <span>💍</span>
-                <span>சுப முகூர்த்தம்</span>
-              </span>
-            )}
-            {info.isPournami && (
-              <span className="text-[10px] font-extrabold bg-amber-400/90 text-amber-950 px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1">
-                <span>🌕</span>
-                <span>பௌர்ணமி</span>
-              </span>
-            )}
-            {info.isAmavasai && (
-              <span className="text-[10px] font-extrabold bg-slate-900 text-slate-100 px-2 py-0.5 rounded-full border border-slate-700 flex items-center gap-1">
-                <span>🌑</span>
-                <span>அமாவாசை</span>
-              </span>
-            )}
-            {info.isKarinaal && (
-              <span className="text-[10px] font-extrabold bg-rose-900/80 text-rose-200 px-2 py-0.5 rounded-full border border-rose-500/40 flex items-center gap-1">
-                <span>⚠️</span>
-                <span>கரிநாள்</span>
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Collapsible Content */}
-      {isExpanded && (
-        <div className="p-3.5 sm:p-4 space-y-3.5 animate-in fade-in duration-150">
-          {/* 4 Pillars Grid (Thithi, Nakshatram, Yogam, Chandrashtamam) */}
+      <div className="p-3.5 sm:p-4 space-y-3.5">
+        {/* 4 Pillars Grid (Thithi, Nakshatram, Yogam, Chandrashtamam) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Thithi */}
             <div className="p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-0.5">
@@ -457,7 +323,6 @@ export function DailyPanchangamWidget({
             </Link>
           </div>
         </div>
-      )}
     </div>
   );
 }

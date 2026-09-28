@@ -535,7 +535,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
               {/* Profile Dropdown Menu */}
               {isProfileMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
+                <div className="absolute right-0 top-full mt-2 w-[300px] sm:w-[325px] bg-white rounded-3xl shadow-2xl border border-amber-200/90 py-2.5 px-3 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2.5">
                   {/* 1. User Info Header - ALWAYS AT THE VERY TOP */}
                   <div className="p-3 bg-gradient-to-br from-amber-50/90 to-amber-100/40 rounded-2xl border border-amber-200/70">
                     <div className="flex items-center gap-2.5">
@@ -579,24 +579,30 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                       </div>
                     </div>
 
-                    {/* Integrated Velvi Pro Active status row - Clicking navigates to Subscription page */}
+                    {/* Integrated Velvi Pro Active status row - Perfectly aligned 2-row card */}
                     {db.isUnlimitedBookings(businessId) ? (
                       <Link
                         href="/app/subscription?tab=validity"
                         onClick={() => setIsProfileMenuOpen(false)}
-                        className="mt-2.5 pt-2 border-t border-amber-200/80 flex items-center justify-between text-xs hover:bg-amber-100/60 p-1 -mx-1 rounded-xl transition group cursor-pointer"
+                        className="mt-2.5 pt-2 border-t border-amber-200/80 block bg-white/70 hover:bg-white p-2.5 rounded-xl transition group border border-amber-200/60 shadow-2xs cursor-pointer"
                         title="செல்லுபடியாகும் காலம் & சந்தா விவரங்கள் (Subscription & Validity Details)"
                       >
-                        <div className="flex items-center gap-1.5 font-black text-[11.5px] text-slate-900 tracking-tight group-hover:text-amber-950">
-                          <span className="text-amber-600 text-xs">👑</span>
-                          <span>Velvi Pro Active</span>
-                        </div>
-                        <div className="flex items-center gap-1 bg-white/95 px-2.5 py-0.5 rounded-full border border-emerald-300 text-emerald-950 font-black text-[10px] shadow-2xs shrink-0 group-hover:border-emerald-500 whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span>
-                            {daysToExpiry !== null ? `${daysToExpiry} நாட்கள் • ${expiryFormatted}` : "Active"}
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 font-black text-xs text-slate-900 tracking-tight group-hover:text-amber-950">
+                            <span className="text-amber-600 text-xs">👑</span>
+                            <span>Velvi Pro Active</span>
+                          </div>
+                          <span className="text-[10px] font-extrabold text-emerald-900 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>{daysToExpiry !== null ? `${daysToExpiry} நாட்கள்` : "Active"}</span>
                           </span>
-                          <span className="text-emerald-700 text-[10px] ml-0.5 group-hover:translate-x-0.5 transition-transform">→</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10.5px] text-slate-600 font-semibold mt-1.5 pt-1.5 border-t border-amber-100">
+                          <span className="text-slate-500 font-medium">செல்லுபடி (Valid until):</span>
+                          <span className="font-extrabold text-emerald-950 font-mono flex items-center gap-1">
+                            <span>{expiryFormatted}</span>
+                            <span className="text-emerald-700 text-[10px] group-hover:translate-x-0.5 transition-transform">→</span>
+                          </span>
                         </div>
                       </Link>
                     ) : isExpired ? (
