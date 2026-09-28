@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { getTamilDate, getLocalDateString } from "@/lib/calendar/tamil";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/utils/phone";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -55,6 +56,13 @@ export default function EditBookingPage() {
     setError("");
     setIsSaving(true);
 
+    if (customerMobile.trim() && !isValidIndianMobile(customerMobile.trim())) {
+      setError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (எண் 6-9 இல் தொடங்க வேண்டும்).");
+      setIsSaving(false);
+      return;
+    }
+
+    const cleanMobile = customerMobile.trim() ? normalizeIndianMobile(customerMobile.trim()) : "";
     const selectedIyer = members.find((m) => m.id === assignedIyerId);
 
     const res = db.updateBooking({
@@ -62,7 +70,7 @@ export default function EditBookingPage() {
       updatedBy: currentUser?.name || "Ravi Iyer",
       updates: {
         customerName,
-        customerMobile,
+        customerMobile: cleanMobile,
         location,
         poojaId,
         poojaEnglishName: selectedPooja?.englishName || booking.poojaEnglishName,

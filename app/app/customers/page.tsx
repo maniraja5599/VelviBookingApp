@@ -10,6 +10,7 @@ import {
   normalizeIndianMobile,
   cleanPastedIndianMobile,
   inspectIndianMobile,
+  isValidIndianMobile,
 } from "@/lib/utils/phone";
 import {
   Search,
@@ -157,11 +158,16 @@ export default function CustomersPage() {
       setPriestError("Priest Name is required.");
       return;
     }
+    if (newPriestMobile.trim() && !isValidIndianMobile(newPriestMobile.trim())) {
+      setPriestError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (எண் 6-9 இல் தொடங்க வேண்டும்).");
+      return;
+    }
+
     setPriestError("");
     db.createMember({
       businessId,
       name: newPriestName.trim(),
-      mobile: newPriestMobile.trim(),
+      mobile: newPriestMobile.trim() ? normalizeIndianMobile(newPriestMobile.trim()) : "",
       role: "IYER",
       specialization: newPriestSpec.trim() || "Assistant Priest",
     });
@@ -217,12 +223,11 @@ export default function CustomersPage() {
 
     let normalizedMobile = "";
     if (mobile.trim()) {
-      const cleanDigits = mobile.replace(/\D/g, "");
-      if (cleanDigits.length !== 10) {
-        setFormError("Please enter a valid 10-digit mobile number or leave blank.");
+      if (!isValidIndianMobile(mobile.trim())) {
+        setFormError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (எண் 6, 7, 8 அல்லது 9-ல் தொடங்க வேண்டும்).");
         return;
       }
-      normalizedMobile = normalizeIndianMobile(cleanDigits);
+      normalizedMobile = normalizeIndianMobile(mobile.trim());
 
       // Duplicate check within business
       if (customers.some((c) => c.mobile && normalizeIndianMobile(c.mobile) === normalizedMobile)) {

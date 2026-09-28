@@ -35,7 +35,7 @@ import Link from "next/link";
 import { getTamilDate, getLocalDateString, formatTime12H } from "@/lib/calendar/tamil";
 import { formatBookingConfirmationWhatsAppMessage, formatUnitShort } from "@/lib/whatsapp/formatter";
 import { getPoojaIcon } from "@/lib/poojas/icons";
-import { normalizeIndianMobile } from "@/lib/utils/phone";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/utils/phone";
 
 function convert12HTo24H(time12H: string): string {
   if (!time12H) return "07:45";
@@ -156,7 +156,14 @@ function QuickBookingContent() {
       return;
     }
 
-    const cleanMobile = newCustMobile.trim() ? normalizeIndianMobile(newCustMobile.trim()) : "";
+    let cleanMobile = "";
+    if (newCustMobile.trim()) {
+      if (!isValidIndianMobile(newCustMobile.trim())) {
+        alert("சரியான 10 இலக்க இந்திய மொபைல் எண்ணை உள்ளிடவும் (Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9).");
+        return;
+      }
+      cleanMobile = normalizeIndianMobile(newCustMobile.trim());
+    }
 
     // Duplicate Check
     if (cleanMobile) {

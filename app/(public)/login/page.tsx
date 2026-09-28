@@ -325,7 +325,12 @@ export default function LoginPage() {
     }
 
     if (mobileNumber.length !== 10) {
-      setError("Please enter a valid 10-digit Indian mobile number.");
+      setError("Please enter a valid 10-digit Indian mobile number (10 இலக்க மொபைல் எண் தேவை).");
+      return;
+    }
+
+    if (!/^[6-9]/.test(mobileNumber)) {
+      setError("Indian mobile number must start with 6, 7, 8, or 9 (எண் 6, 7, 8 அல்லது 9-ல் தொடங்க வேண்டும்).");
       return;
     }
 

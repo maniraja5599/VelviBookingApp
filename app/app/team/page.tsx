@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
 import { BusinessMember } from "@/lib/types";
-import { normalizeIndianMobile } from "@/lib/utils/phone";
+import { normalizeIndianMobile, isValidIndianMobile } from "@/lib/utils/phone";
 import { Plus, UserCheck, Phone, MessageCircle, MoreVertical, X, Sparkles, Check, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
@@ -29,11 +29,22 @@ export default function TeamPage() {
   const [specialization, setSpecialization] = useState("");
   const [workingHours, setWorkingHours] = useState("06:00 - 20:00");
 
+  const [formError, setFormError] = useState("");
+
   const handleAddIyer = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !mobile.trim()) return;
+    setFormError("");
+    if (!name.trim()) {
+      setFormError("Iyer name is required.");
+      return;
+    }
 
-    const normalizedMobile = normalizeIndianMobile(mobile);
+    if (!mobile.trim() || !isValidIndianMobile(mobile.trim())) {
+      setFormError("Please enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9 (எண் 6-9 இல் தொடங்க வேண்டும்).");
+      return;
+    }
+
+    const normalizedMobile = normalizeIndianMobile(mobile.trim());
     const newMember: BusinessMember = {
       id: `m-${Date.now()}`,
       businessId,
@@ -156,6 +167,12 @@ export default function TeamPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
+            {formError && (
+              <div className="p-2.5 bg-rose-50 text-rose-700 text-xs font-bold rounded-xl border border-rose-200">
+                {formError}
+              </div>
+            )}
 
             <form onSubmit={handleAddIyer} className="space-y-3">
               <div>
