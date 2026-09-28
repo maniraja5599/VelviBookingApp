@@ -105,6 +105,17 @@ export default function SettingsHubPage() {
     return () => window.removeEventListener("velvi:db-change", updateCounts);
   }, [businessId]);
 
+  // Inspect URL params to open specific modals (e.g. from Global Search)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const modal = params.get("modal");
+      if (modal === "trash") setShowTrashModal(true);
+      if (modal === "cleardemo" || modal === "reset") setShowClearDemoModal(true);
+      if (modal === "categories") setShowCategoryModal(true);
+    }
+  }, []);
+
   // Restore deleted record
   const handleRestoreItem = (id: string) => {
     const result = db.restoreDeletedItem(id);
@@ -231,7 +242,7 @@ export default function SettingsHubPage() {
           iconBg: "bg-rose-100/90 border border-rose-200",
           iconColor: "text-rose-700",
           badge: recentlyDeleted.length > 0 ? `${recentlyDeleted.length} in trash` : undefined,
-          keywords: "trash restore recycle bin delete undo recover change log history",
+          keywords: "trash restore recycle bin delete undo recover change log history reset",
         },
         {
           href: "/app/data-backup",
@@ -241,21 +252,17 @@ export default function SettingsHubPage() {
           iconBg: "bg-cyan-100/90 border border-cyan-200",
           iconColor: "text-cyan-800",
           badge: "☁️ Live Cloud",
-          keywords: "backup export excel csv import restore cloud data மேகக்கணி நேரலை தரவு சேமிப்பு",
+          keywords: "backup export excel csv import restore cloud data reset reload மேகக்கணி நேரலை தரவு சேமிப்பு",
         },
-        ...(currentUser?.id === "u-ravi-iyer-01" || businessId === "biz-venkateswara-01"
-          ? [
-              {
-                onClick: () => setShowClearDemoModal(true),
-                label: "Clear Demo Data",
-                desc: "மாதிரி முன்பதிவுகள் & பக்தர்களை நீக்கி புதிய கணக்கை தொடங்கவும்",
-                icon: Sparkles,
-                iconBg: "bg-red-100/90 border border-red-200",
-                iconColor: "text-red-700",
-                keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு",
-              },
-            ]
-          : []),
+        {
+          onClick: () => setShowClearDemoModal(true),
+          label: "Clear Demo Data (மாதிரி தரவு நீக்கு & Reset)",
+          desc: "Reset sample demo bookings & devotees to start fresh with a clean account",
+          icon: Sparkles,
+          iconBg: "bg-red-100/90 border border-red-200",
+          iconColor: "text-red-700",
+          keywords: "clear demo sample data wipe test bookings customers மாதிரி நீக்கு reset reset data fresh start restart",
+        },
       ],
     },
     {
