@@ -47,6 +47,10 @@ export default function LoginPage() {
         router.push("/app/calendar");
         return;
       }
+      // If user is logged in with Google but hasn't completed mobile setup, open step 2
+      setFullName(currentUser.name || "");
+      setMobileNumber(currentUser.mobile ? currentUser.mobile.replace(/\D/g, "").slice(-10) : "");
+      setStep("mobile_setup");
     }
   }, [currentUser, router]);
 

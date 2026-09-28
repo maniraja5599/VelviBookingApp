@@ -1345,6 +1345,18 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
                 showWatermark: cb.show_watermark ?? true,
                 createdAt: cb.created_at,
               };
+
+              // Auto-heal missing iyerName from owner user
+              if (!mappedBiz.iyerName && mappedBiz.ownerId) {
+                const owner = db.users.find((u) => u.id === mappedBiz.ownerId);
+                if (owner?.name) {
+                  mappedBiz.iyerName = owner.name;
+                  pushBusinessToCloud(mappedBiz).catch(() => {});
+                } else if (mappedBiz.name) {
+                  mappedBiz.iyerName = mappedBiz.name;
+                }
+              }
+
               const bIdx = db.businesses.findIndex((b) => b.id === mappedBiz.id);
               if (bIdx >= 0) {
                 db.businesses[bIdx] = { ...db.businesses[bIdx], ...mappedBiz };
@@ -1537,6 +1549,18 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
           showWatermark: cb.show_watermark ?? true,
           createdAt: cb.created_at,
         };
+
+        // Auto-heal missing iyerName from owner user
+        if (!mappedBiz.iyerName && mappedBiz.ownerId) {
+          const owner = db.users.find((u) => u.id === mappedBiz.ownerId);
+          if (owner?.name) {
+            mappedBiz.iyerName = owner.name;
+            pushBusinessToCloud(mappedBiz).catch(() => {});
+          } else if (mappedBiz.name) {
+            mappedBiz.iyerName = mappedBiz.name;
+          }
+        }
+
         const bIdx = db.businesses.findIndex((b) => b.id === mappedBiz.id);
         if (bIdx >= 0) {
           db.businesses[bIdx] = { ...db.businesses[bIdx], ...mappedBiz };

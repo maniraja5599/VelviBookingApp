@@ -2156,6 +2156,17 @@ export class VelviDatabaseStore {
         }
         if (Array.isArray(state.businesses) && state.businesses.length > 0) {
           this.businesses = state.businesses;
+          // Auto-heal missing iyerName from owner user record
+          this.businesses.forEach((b) => {
+            if (!b.iyerName && b.ownerId) {
+              const owner = this.users.find((u) => u.id === b.ownerId);
+              if (owner?.name) {
+                b.iyerName = owner.name;
+              } else if (b.name) {
+                b.iyerName = b.name;
+              }
+            }
+          });
         }
         if (Array.isArray(state.subscriptions) && state.subscriptions.length > 0) {
           this.subscriptions = state.subscriptions;

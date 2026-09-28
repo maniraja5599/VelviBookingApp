@@ -28,6 +28,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }, 1200);
       return () => clearTimeout(fallbackTimer);
     }
+
+    // Enforce mobile setup: non-super admin users who have not completed mobile setup must finish it
+    if (!isLoading && currentUser) {
+      const isSuperAdmin =
+        currentUser.role === "SUPER_ADMIN" ||
+        currentUser.email?.trim().toLowerCase() === "manirajankg@gmail.com";
+      const isMobileValid = currentUser.mobile && currentUser.mobile.length >= 10 && currentUser.mobileVerified;
+      if (!isSuperAdmin && !isMobileValid) {
+        router.replace("/login");
+      }
+    }
   }, [isLoading, currentUser, router]);
 
   // First time app open: Default landing page is Calendar (/app/calendar)
