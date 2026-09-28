@@ -52,38 +52,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, router]);
 
-  // Scroll listener saving position for current page ("return antha page pona athe place la irukanum")
+  // Always ensure clean scroll-to-top on route navigation so pages always start cleanly at the top
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout | null = null;
-    const handleScroll = () => {
-      if (typeof window !== "undefined" && pathname) {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-          sessionStorage.setItem(`velvi_scroll_${pathname}`, window.scrollY.toString());
-        }, 150);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [pathname]);
-
-  // Restore scroll position when returning to page
-  useEffect(() => {
-    if (typeof window !== "undefined" && pathname) {
-      const saved = sessionStorage.getItem(`velvi_scroll_${pathname}`);
-      if (saved) {
-        const top = parseInt(saved, 10);
-        if (!isNaN(top) && top > 0) {
-          const timer = setTimeout(() => {
-            window.scrollTo({ top, behavior: "instant" });
-          }, 70);
-          return () => clearTimeout(timer);
-        }
-      }
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     }
   }, [pathname]);
 
