@@ -976,6 +976,18 @@ export default function BookingsListPage() {
     () => allBookings.filter((b) => b.status !== "COMPLETED" && b.status !== "CANCELLED" && b.date < todayStr).length,
     [allBookings, todayStr]
   );
+  const totalDakshinaSum = useMemo(
+    () => allBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0),
+    [allBookings]
+  );
+  const totalDueSum = useMemo(
+    () => allBookings.filter((b) => b.status !== "COMPLETED" && b.status !== "CANCELLED").reduce((sum, b) => sum + (b.balanceAmount || 0), 0),
+    [allBookings]
+  );
+  const upcomingCount = useMemo(
+    () => allBookings.filter((b) => b.status !== "COMPLETED" && b.status !== "CANCELLED" && b.date >= todayStr).length,
+    [allBookings, todayStr]
+  );
 
   const hasSampleBookings = useMemo(
     () => allBookings.some((b) => b.isSample || b.id.startsWith("b-sample-") || b.id.startsWith("b-82")),
@@ -1049,46 +1061,95 @@ export default function BookingsListPage() {
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200 max-w-full">
-      {/* Header & Quick Actions */}
-      <div className="flex items-center justify-between gap-3 flex-wrap bg-white/60 p-2.5 sm:p-3 rounded-2xl border border-amber-200/50 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-amber-600/20 flex items-center justify-center border border-amber-300/80 shadow-2xs shrink-0">
-            <Calendar className="w-4 h-4 text-amber-900" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                Pooja Bookings
-              </h2>
-              <span className="text-[10px] font-extrabold bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shrink-0 shadow-2xs">
-                {filteredBookings.length} Bookings
-              </span>
+      {/* Option 3: Modern Minimalist Sacred Executive Header */}
+      <div className="space-y-3">
+        {/* Top Title & Capsule Actions Row */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400/25 via-amber-500/15 to-amber-600/25 border border-amber-300/80 flex items-center justify-center shadow-2xs shrink-0">
+              <span className="text-lg select-none">🪔</span>
             </div>
-            <p className="text-[11px] text-slate-500 font-medium">
-              முன்பதிவு அட்டவணை &amp; தட்சணை விபரம் ({monthGroups.length} மாதங்கள்)
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  Bookings
+                </h1>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span className="text-xs font-black text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2 py-0.5 rounded-full">
+                  {allBookings.length}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium">
+                பூஜை முன்பதிவுகள் &amp; தட்சணை நிர்வாகம்
+              </p>
+            </div>
+          </div>
+
+          {/* Integrated Capsule Controls (Activity + New) */}
+          <div className="flex items-center bg-white p-1 rounded-2xl border border-slate-200 shadow-2xs shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowRecentChanges(true)}
+              className="px-3 py-1.5 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition active:scale-95 cursor-pointer"
+              title="Activity & History"
+            >
+              <History className="w-3.5 h-3.5 text-slate-500" />
+              <span>Activity</span>
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-0.5" />
+            <Link
+              href="/app/bookings/new"
+              className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-2xs hover:shadow-xs active:scale-95 transition"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>+ New</span>
+            </Link>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Activity Button */}
-          <button
-            type="button"
-            onClick={() => setShowRecentChanges(true)}
-            className="px-3 py-1.5 bg-white hover:bg-amber-50/60 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200/90 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
-            title="Activity & Completed Bookings"
-          >
-            <History className="w-3.5 h-3.5 text-amber-700" />
-            <span>Activity</span>
-          </button>
+        {/* 3 Floating Summary Metric Cards (Option 3 Signature Feature) */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Total Dakshina */}
+          <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-amber-300/70 transition">
+            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+              <span className="text-amber-600 font-black">₹</span>
+              <span className="truncate">Total Dakshina</span>
+            </div>
+            <div className="text-sm sm:text-base font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹{totalDakshinaSum >= 100000 ? `${(totalDakshinaSum / 1000).toFixed(1)}k` : totalDakshinaSum.toLocaleString("en-IN")}
+            </div>
+            <span className="text-[9.5px] text-slate-400 font-semibold block truncate">
+              {allBookings.length} பூஜைகள்
+            </span>
+          </div>
 
-          <Link
-            href="/app/bookings/new"
-            className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5 text-amber-300 stroke-[3]" />
-            <span>Book</span>
-          </Link>
+          {/* Due Amount */}
+          <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-rose-300/70 transition">
+            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+              <span className="text-rose-600 font-black">⏳</span>
+              <span className="truncate">Due Balance</span>
+            </div>
+            <div className={`text-sm sm:text-base font-black tracking-tight mt-0.5 truncate ${totalDueSum > 0 ? "text-rose-700" : "text-emerald-700"}`}>
+              ₹{totalDueSum.toLocaleString("en-IN")}
+            </div>
+            <span className="text-[9.5px] text-slate-400 font-semibold block truncate">
+              {pendingCount} நிலுவையில்
+            </span>
+          </div>
+
+          {/* Upcoming */}
+          <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-emerald-300/70 transition">
+            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-slate-500">
+              <span className="text-emerald-600 font-black">📅</span>
+              <span className="truncate">Upcoming</span>
+            </div>
+            <div className="text-sm sm:text-base font-black text-emerald-800 tracking-tight mt-0.5 truncate">
+              {upcomingCount}
+            </div>
+            <span className="text-[9.5px] text-slate-400 font-semibold block truncate">
+              {overdueCount > 0 ? `${overdueCount} overdue` : "அடுத்த நாட்கள்"}
+            </span>
+          </div>
         </div>
       </div>
 
