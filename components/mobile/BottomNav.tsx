@@ -72,7 +72,7 @@ export const BottomNav: React.FC = React.memo(() => {
       className="fixed bottom-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] md:shadow-[0_-2px_16px_rgba(0,0,0,0.05)] transition-all duration-150 select-none touch-manipulation"
     >
       {/* Responsive layout: 5 equal columns on mobile, elegant centered row on desktop */}
-      <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-1 sm:px-3 md:px-6 h-15 md:h-15 flex items-center justify-between">
+      <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-1 sm:px-3 md:px-6 h-[68px] md:h-16 flex items-center justify-between">
         {navItems.map((item) => {
           const currentPath = optimisticPath || pathname;
           const isActive =
@@ -91,14 +91,14 @@ export const BottomNav: React.FC = React.memo(() => {
             >
               {/* Desktop layout: Slim horizontal pill (Icon + Label side by side) */}
               <div
-                className={`hidden md:flex items-center gap-2.5 px-4 lg:px-5 py-2 rounded-xl transition-all duration-150 ${
+                className={`hidden md:flex items-center gap-2.5 px-4 lg:px-5 py-2.5 rounded-xl transition-all duration-150 ${
                   isActive
                     ? "bg-gradient-to-r from-emerald-950 via-[#0d3b1e] to-emerald-900 text-amber-300 shadow-sm ring-1 ring-amber-400/30"
                     : "text-slate-600 hover:text-slate-950 hover:bg-slate-100/90"
                 }`}
               >
                 <Icon
-                  className={`w-4.5 h-4.5 transition-colors ${
+                  className={`w-5 h-5 transition-colors ${
                     isActive
                       ? "text-amber-400 stroke-[2.4]"
                       : "text-slate-600 group-hover:text-slate-950 stroke-[1.9]"
@@ -113,17 +113,17 @@ export const BottomNav: React.FC = React.memo(() => {
                 </span>
               </div>
 
-              {/* Mobile layout: Perfectly centered vertical stack inside white bar */}
-              <div className="md:hidden flex flex-col items-center justify-center w-full py-0.5">
+              {/* Mobile layout: Perfectly centered vertical stack inside spacious white bar */}
+              <div className="md:hidden flex flex-col items-center justify-center w-full py-1">
                 <div
-                  className={`flex items-center justify-center px-3 py-1 rounded-xl transition-all duration-150 ${
+                  className={`flex items-center justify-center px-3.5 py-1.5 rounded-xl transition-all duration-150 ${
                     isActive
                       ? "bg-gradient-to-r from-emerald-950 via-[#0d3b1e] to-emerald-900 shadow-2xs ring-1 ring-amber-400/30"
                       : "text-slate-500 group-active:bg-slate-100"
                   }`}
                 >
                   <Icon
-                    className={`w-5 h-5 transition-colors ${
+                    className={`w-[22px] h-[22px] transition-colors ${
                       isActive
                         ? "text-amber-400 stroke-[2.3]"
                         : "text-slate-600 group-hover:text-slate-900 stroke-[1.85]"
@@ -131,10 +131,10 @@ export const BottomNav: React.FC = React.memo(() => {
                   />
                 </div>
                 <span
-                  className={`text-[10px] sm:text-[10.5px] mt-0.5 tracking-tight truncate max-w-[64px] transition-colors leading-tight ${
+                  className={`text-[10.5px] sm:text-[11px] mt-0.5 tracking-tight truncate max-w-[68px] transition-colors leading-tight ${
                     isActive
                       ? "font-extrabold text-emerald-950"
-                      : "font-medium text-slate-500 group-hover:text-slate-800"
+                      : "font-semibold text-slate-500 group-hover:text-slate-800"
                   }`}
                 >
                   {item.label}

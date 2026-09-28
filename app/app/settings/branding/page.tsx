@@ -48,6 +48,9 @@ export default function BrandingSettingsPage() {
   );
   const [logoUrl, setLogoUrl] = useState<string>(isInitialGoogleLogo ? "" : business.logoUrl || "");
   const [showWatermark, setShowWatermark] = useState(business.showWatermark ?? true);
+  const [startingBillNumber, setStartingBillNumber] = useState<string>(() => {
+    return String(currentBusiness?.startingBillNumber ?? business.startingBillNumber ?? 1);
+  });
 
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -82,6 +85,9 @@ export default function BrandingSettingsPage() {
       );
       setLogoUrl(isGoogleLogo ? "" : currentBusiness.logoUrl || "");
       setShowWatermark(currentBusiness.showWatermark ?? true);
+      if (typeof currentBusiness.startingBillNumber === "number") {
+        setStartingBillNumber(String(currentBusiness.startingBillNumber));
+      }
     }
   }, [currentBusiness, currentUser]);
 
@@ -144,6 +150,9 @@ export default function BrandingSettingsPage() {
     e.preventDefault();
     const finalWhatsapp = hasSeparateWhatsapp && whatsapp.trim() ? whatsapp.trim() : phone.trim();
 
+    const parsedStartNum = parseInt(startingBillNumber, 10);
+    const finalStartNum = isNaN(parsedStartNum) || parsedStartNum < 1 ? 1 : parsedStartNum;
+
     const updates = {
       name: name.trim(),
       serviceName: serviceName.trim(),
@@ -153,6 +162,7 @@ export default function BrandingSettingsPage() {
       address: address.trim(),
       logoUrl: logoUrl.trim(),
       showWatermark,
+      startingBillNumber: finalStartNum,
     };
 
     updateBusiness(updates);
@@ -474,6 +484,43 @@ export default function BrandingSettingsPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* 6.1 STARTING BILL NUMBER SEQUENCE */}
+        <div className="bg-white p-4 rounded-3xl border border-velvi-gold/30 shadow-sm space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 flex items-center justify-center font-black text-sm shadow-2xs">
+                #
+              </div>
+              <div>
+                <h4 className="font-bold text-xs text-velvi-brownDark">
+                  Starting Bill Number (தொடக்க ரசீது எண்)
+                </h4>
+                <p className="text-[11px] text-velvi-brown/60">
+                  முன்பதிவு எண் வரிசை தொடங்கும் எண் (Current sequence: #{startingBillNumber || 1})
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 pt-1">
+            <div className="relative flex-1 max-w-[140px]">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-amber-700 text-xs">#</span>
+              <input
+                type="number"
+                min={1}
+                max={999999}
+                value={startingBillNumber}
+                onChange={(e) => setStartingBillNumber(e.target.value)}
+                className="w-full pl-7 pr-3 py-2 rounded-xl border border-velvi-gold/30 text-slate-900 font-black text-xs bg-velvi-cream/20 focus:bg-white focus:border-velvi-gold focus:outline-none transition shadow-2xs"
+                placeholder="1"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 font-medium">
+              New bookings will increment from this start number (e.g. #{startingBillNumber || 1}, #{(parseInt(startingBillNumber, 10) || 1) + 1}...).
+            </p>
           </div>
         </div>
 

@@ -88,25 +88,6 @@ export default function SettingsHubPage() {
   const [recentlyDeleted, setRecentlyDeleted] = useState(db.getRecentlyDeleted());
   const [auditLogs, setAuditLogs] = useState(db.auditLogs || []);
 
-  const currentBizObj = businessId ? db.getBusiness(businessId) : undefined;
-  const [startingBillInput, setStartingBillInput] = useState<string>(
-    String(currentBizObj?.startingBillNumber ?? currentBusiness?.startingBillNumber ?? 1)
-  );
-
-  const handleSaveStartingBillNumber = () => {
-    const num = parseInt(startingBillInput, 10);
-    if (isNaN(num) || num < 1) {
-      setToastMessage("தயவுசெய்து சரியான தொடக்க எண்ணை உள்ளிடவும் (Must be 1 or higher)");
-      setTimeout(() => setToastMessage(null), 3000);
-      return;
-    }
-    if (businessId) {
-      db.updateBusiness(businessId, { startingBillNumber: num });
-      setToastMessage(`தொடக்க ரசீது எண் #${num} ஆக மாற்றப்பட்டது (Starting sequence saved)!`);
-      setTimeout(() => setToastMessage(null), 4000);
-    }
-  };
-
   useEffect(() => {
     const updateCounts = () => {
       setCounts({
@@ -116,10 +97,6 @@ export default function SettingsHubPage() {
       });
       setRecentlyDeleted(db.getRecentlyDeleted());
       setAuditLogs([...(db.auditLogs || [])].reverse().slice(0, 25));
-      const b = businessId ? db.getBusiness(businessId) : undefined;
-      if (b && typeof b.startingBillNumber === "number") {
-        setStartingBillInput(String(b.startingBillNumber));
-      }
       setDataVersion((v) => v + 1);
     };
 
@@ -170,13 +147,13 @@ export default function SettingsHubPage() {
         {
           href: "/app/settings/branding",
           label: "Business Profile & Branding",
-          desc: currentBusiness?.name || "Logo, vadhyar name, service title & receipt watermark",
+          desc: "Logo, vadhyar name, starting bill # & receipt watermark",
           icon: Building2,
           iconBg: "bg-blue-100/90 border border-blue-200",
           iconColor: "text-blue-700",
           badge: currentBusiness?.logoUrl ? "Custom Logo" : "Default Logo",
           highlight: true,
-          keywords: "profile branding vadhyar name logo watermark business",
+          keywords: "profile branding vadhyar name logo watermark business starting bill number sequence தொடக்க ரசீது எண்",
         },
         {
           href: "/app/poojas",
@@ -606,48 +583,6 @@ export default function SettingsHubPage() {
       {/* ========================================================================= */}
       <PwaInstallBanner mode="button" />
 
-      {/* ========================================================================= */}
-      {/* 3.1 STARTING BILL NUMBER SEQUENCE SETTINGS CARD                           */}
-      {/* ========================================================================= */}
-      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-900 border border-amber-200 flex items-center justify-center font-black text-sm shadow-2xs">
-              #
-            </div>
-            <div>
-              <h4 className="font-bold text-xs sm:text-[13px] text-slate-900">
-                Starting Bill Number (தொடக்க ரசீது எண்)
-              </h4>
-              <p className="text-[11px] text-slate-500 font-medium">
-                முன்பதிவு எண் வரிசை தொடங்கும் எண் (Current start: #{startingBillInput || 1})
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pt-0.5">
-          <div className="relative flex-1 max-w-[160px]">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-amber-700 text-xs">#</span>
-            <input
-              type="number"
-              min={1}
-              max={999999}
-              value={startingBillInput}
-              onChange={(e) => setStartingBillInput(e.target.value)}
-              className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 text-slate-900 font-black text-xs bg-slate-50 focus:bg-white focus:border-amber-400 focus:outline-none transition"
-              placeholder="1"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleSaveStartingBillNumber}
-            className="px-3.5 py-2 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold transition shadow-2xs active:scale-95 cursor-pointer"
-          >
-            Save Sequence ✓
-          </button>
-        </div>
-      </div>
 
       {/* ========================================================================= */}
       {/* 4. CATEGORIZED SETTINGS GROUPS (With Live Counts & Search Matches)        */}
