@@ -1050,25 +1050,32 @@ export default function BookingsListPage() {
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200 max-w-full">
       {/* Header & Quick Actions */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-1.5">
-            <div className="w-7 h-7 rounded-xl bg-amber-100/80 flex items-center justify-center border border-amber-300/70 shadow-2xs">
-              <Calendar className="w-4 h-4 text-amber-900" />
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-white/60 p-2.5 sm:p-3 rounded-2xl border border-amber-200/50 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-amber-600/20 flex items-center justify-center border border-amber-300/80 shadow-2xs shrink-0">
+            <Calendar className="w-4 h-4 text-amber-900" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Pooja Bookings
+              </h2>
+              <span className="text-[10px] font-extrabold bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shrink-0 shadow-2xs">
+                {filteredBookings.length} Bookings
+              </span>
             </div>
-            <span>Pooja Bookings</span>
-          </h2>
-          <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-            {filteredBookings.length} Bookings • {monthGroups.length} Months
-          </p>
+            <p className="text-[11px] text-slate-500 font-medium">
+              முன்பதிவு அட்டவணை &amp; தட்சணை விபரம் ({monthGroups.length} மாதங்கள்)
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Activity Button */}
           <button
             type="button"
             onClick={() => setShowRecentChanges(true)}
-            className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
+            className="px-3 py-1.5 bg-white hover:bg-amber-50/60 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200/90 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
             title="Activity & Completed Bookings"
           >
             <History className="w-3.5 h-3.5 text-amber-700" />
@@ -1077,9 +1084,9 @@ export default function BookingsListPage() {
 
           <Link
             href="/app/bookings/new"
-            className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-900 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-2xs hover:shadow-xs active:scale-95 transition"
+            className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
+            <Plus className="w-3.5 h-3.5 text-amber-300 stroke-[3]" />
             <span>Book</span>
           </Link>
         </div>

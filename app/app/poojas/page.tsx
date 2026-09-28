@@ -1964,25 +1964,33 @@ function PoojasCatalogueContent() {
         /* NORMAL POOJA CATALOGUE LIST VIEW */
         <div className="space-y-4">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-                <div className="w-7 h-7 rounded-xl bg-amber-50 flex items-center justify-center border border-amber-200/60">
-                  <Flame className="w-4 h-4 text-amber-600" />
+          <div className="flex items-center justify-between gap-3 flex-wrap bg-white/60 p-2.5 sm:p-3 rounded-2xl border border-amber-200/50 shadow-2xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500/20 via-amber-400/10 to-amber-600/20 flex items-center justify-center border border-amber-300/80 shadow-2xs shrink-0">
+                <Flame className="w-4 h-4 text-amber-700" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    {t("pooja") || "Pooja & Homam Services"}
+                  </h2>
+                  <span className="text-[10px] font-extrabold bg-amber-100/90 text-amber-900 border border-amber-300/80 px-2 py-0.5 rounded-full shrink-0 shadow-2xs">
+                    {filteredPoojas.length} Poojas
+                  </span>
                 </div>
-                <span>{t("pooja") || "Pooja & Homam Services"}</span>
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {filteredPoojas.length} வேத சடங்குகள் &amp; பொருட்கள் பட்டியல்
-              </p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  வேத சடங்குகள் &amp; சாமான்கள் பட்டியல் (Checklist Catalog)
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={openCreateModal}
-                className="px-3.5 py-2 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:shadow-md transition active:scale-95 cursor-pointer"
+                className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-800 to-emerald-950 hover:from-emerald-700 hover:to-emerald-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
               >
-                <Plus className="w-4 h-4 text-amber-300 stroke-[3]" />
+                <Plus className="w-3.5 h-3.5 text-amber-300 stroke-[3]" />
                 <span>Add Pooja</span>
               </button>
             </div>
