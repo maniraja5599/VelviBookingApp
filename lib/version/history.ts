@@ -19,13 +19,41 @@ export interface VersionRelease {
   changes: VersionChange[];
 }
 
-export const APP_VERSION = "2.5.4";
+export const APP_VERSION = "2.5.5";
 export const RELEASE_CHANNEL = "Production Stable";
-export const BUILD_DATE = "26 Sep 2026, 03:38 PM IST";
+export const BUILD_DATE = "28 Sep 2026, 08:05 PM IST";
 export const APP_NAME = "Velvi";
 export const APP_TAGLINE = "Pooja • Homam • Seva Management";
 
 export const VERSION_HISTORY: VersionRelease[] = [
+  {
+    version: "2.5.5",
+    releaseDate: "28 Sep 2026",
+    releaseTime: "08:05 PM IST",
+    title: "Offline-to-Online Timestamp Delta Sync, Auto-Healing Iyer Name & Conflict Guard",
+    summary:
+      "Introduced intelligent delta sync with last-synced timestamp tracking, automatic high-watermark online reconnect synchronization, auto-healing business priest names, and strict mobile setup enforcement.",
+    isCurrent: true,
+    tag: "Enhancement",
+    changes: [
+      {
+        category: "Architecture",
+        description: "Implemented high-watermark Delta Sync with Last Synced Timestamp (`velvi_last_synced_at_{bizId}`) ensuring only records modified while offline are pushed upon reconnecting.",
+      },
+      {
+        category: "Fix",
+        description: "Added timestamp comparison conflict guard preventing newer offline local edits from being overwritten by older cloud records.",
+      },
+      {
+        category: "Feature",
+        description: "Attached automatic window 'online' event listener that triggers instantaneous delta synchronization whenever network connectivity restores.",
+      },
+      {
+        category: "Security",
+        description: "Auto-healed missing priest names in business profiles and strictly enforced mobile setup so non-admin users complete onboarding.",
+      },
+    ],
+  },
   {
     version: "2.5.4",
     releaseDate: "26 Sep 2026",
@@ -33,7 +61,7 @@ export const VERSION_HISTORY: VersionRelease[] = [
     title: "Minimal Smart Daily Panchangam Ribbon, Overdue Dues Filter, and Super Admin Coupon Management",
     summary:
       "Delivered a smart minimal Panchangam ribbon with streamlined typography and English action button, upgraded the pending dues alert banner to strictly target completed/overdue ceremonies in simple English, and enabled full Super Admin coupon editing with mobile-optimized console navigation.",
-    isCurrent: true,
+    isCurrent: false,
     tag: "Enhancement",
     changes: [
       {

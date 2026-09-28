@@ -4,6 +4,32 @@ import { Booking, Customer, Pooja, Business, User, Subscription, Coupon } from "
 
 let isSyncing = false;
 let realtimeSubscription: any = null;
+let isOnlineListenerAttached = false;
+
+const SYNC_TIMESTAMP_PREFIX = "velvi_last_synced_at_";
+
+/**
+ * Returns the recorded last successful sync timestamp ISO string for this business.
+ */
+export function getLastSyncTime(businessId: string): string | null {
+  if (typeof window === "undefined" || !businessId) return null;
+  try {
+    return localStorage.getItem(`${SYNC_TIMESTAMP_PREFIX}${businessId}`) || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Persists the latest successful sync timestamp for this business.
+ */
+export function setLastSyncTime(businessId: string, timestamp?: string): void {
+  if (typeof window === "undefined" || !businessId) return;
+  try {
+    const ts = timestamp || new Date().toISOString();
+    localStorage.setItem(`${SYNC_TIMESTAMP_PREFIX}${businessId}`, ts);
+  } catch {}
+}
 
 /**
  * Pushes a user profile up to Supabase.
@@ -595,11 +621,14 @@ export async function clearCloudBusinessData(businessId: string): Promise<boolea
 }
 
 /**
- * Pushes all local entities (business, user, customers, poojas, bookings) for a business up to Supabase.
+ * Pushes local entities (business, user, customers, poojas, bookings) for a business up to Supabase.
+ * If sinceTimestamp is provided, ONLY records modified (updatedAt >= sinceTimestamp) are pushed (Delta Push).
  */
-export async function pushAllToCloud(businessId: string): Promise<boolean> {
+export async function pushAllToCloud(businessId: string, sinceTimestamp?: string | null): Promise<boolean> {
   const supabase = getSupabaseClient();
   if (!supabase || !businessId) return false;
+
+  const cutoff = sinceTimestamp ? new Date(sinceTimestamp).getTime() : 0;
 
   try {
     // 1. Business & User Profile
@@ -608,8 +637,14 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
       await pushBusinessToCloud(biz);
     }
 
-    // 2. Batch upsert customers for this business
-    const customers = db.customers.filter((c) => c.businessId === businessId);
+    // 2. Batch upsert customers for this business (filter by delta if cutoff given)
+    let customers = db.customers.filter((c) => c.businessId === businessId);
+    if (cutoff > 0) {
+      customers = customers.filter((c) => {
+        const t = c.updatedAt ? new Date(c.updatedAt).getTime() : (c.createdAt ? new Date(c.createdAt).getTime() : 0);
+        return t >= cutoff;
+      });
+    }
     if (customers.length > 0) {
       const custPayload = customers.map((c) => ({
         id: c.id,
@@ -623,15 +658,21 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
         gothram: c.gothram || null,
         nakshatram: c.nakshatram || null,
         rasi: c.rasi || null,
-        updated_at: new Date().toISOString(),
+        updated_at: c.updatedAt || new Date().toISOString(),
       }));
       await supabase.from("customers").upsert(custPayload);
     }
 
-    // 3. Batch upsert poojas for this business
-    const poojas = db.poojas.filter(
+    // 3. Batch upsert poojas for this business (filter by delta if cutoff given)
+    let poojas = db.poojas.filter(
       (p) => p.businessId === businessId && !isLegacyObsoletePooja(p)
     );
+    if (cutoff > 0) {
+      poojas = poojas.filter((p) => {
+        const t = p.createdAt ? new Date(p.createdAt).getTime() : 0;
+        return t >= cutoff;
+      });
+    }
     if (poojas.length > 0) {
       const poojaPayload = poojas.map((p) => ({
         id: p.id,
@@ -649,8 +690,14 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
       await supabase.from("poojas").upsert(poojaPayload);
     }
 
-    // 4. Batch upsert bookings for this business
-    const bookings = db.bookings.filter((b) => b.businessId === businessId);
+    // 4. Batch upsert bookings for this business (filter by delta if cutoff given)
+    let bookings = db.bookings.filter((b) => b.businessId === businessId);
+    if (cutoff > 0) {
+      bookings = bookings.filter((b) => {
+        const t = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        return t >= cutoff;
+      });
+    }
     if (bookings.length > 0) {
       const bookingPayload = bookings.map((b) => {
         const validPaymentStatus = ["PAID", "PARTIALLY_PAID", "PENDING"].includes(
@@ -699,7 +746,7 @@ export async function pushAllToCloud(businessId: string): Promise<boolean> {
           cancelled_at: b.cancelledAt || null,
           created_by: b.createdBy || b.assignedIyerName || "Priest",
           created_at: b.createdAt || new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          updated_at: b.updatedAt || new Date().toISOString(),
         };
       });
       await supabase.from("bookings").upsert(bookingPayload);
@@ -764,7 +811,13 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
         };
         const idx = db.customers.findIndex((item) => item.id === mappedCust.id);
         if (idx >= 0) {
-          db.customers[idx] = { ...db.customers[idx], ...mappedCust };
+          const localCust = db.customers[idx];
+          const localTime = localCust.updatedAt ? new Date(localCust.updatedAt).getTime() : 0;
+          const cloudTime = mappedCust.updatedAt ? new Date(mappedCust.updatedAt).getTime() : 0;
+          if (localTime > cloudTime) {
+            return;
+          }
+          db.customers[idx] = { ...localCust, ...mappedCust };
         } else {
           db.customers.push(mappedCust);
         }
@@ -861,16 +914,25 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
         updatedAt: b.updated_at,
       }));
 
-      // Upsert / merge cloud bookings into local store
+      // Upsert / merge cloud bookings into local store with Timestamp Conflict Protection
       mapped.forEach((cb) => {
         const idx = db.bookings.findIndex((b) => b.id === cb.id);
         if (idx >= 0) {
+          const localBooking = db.bookings[idx];
+          const localTime = localBooking.updatedAt ? new Date(localBooking.updatedAt).getTime() : 0;
+          const cloudTime = cb.updatedAt ? new Date(cb.updatedAt).getTime() : 0;
+
+          // If local has newer un-synced edits than cloud, DO NOT overwrite with older cloud data!
+          if (localTime > cloudTime) {
+            return;
+          }
+
           db.bookings[idx] = {
-            ...db.bookings[idx],
+            ...localBooking,
             ...cb,
             paymentRecords: (cb.paymentRecords && cb.paymentRecords.length > 0)
               ? cb.paymentRecords
-              : (db.bookings[idx].paymentRecords || []),
+              : (localBooking.paymentRecords || []),
           };
         } else {
           db.bookings.push(cb);
@@ -905,9 +967,13 @@ export async function pullFromCloud(businessId: string): Promise<boolean> {
 }
 
 /**
- * Performs full bidirectional cloud synchronization (Pulls Cloud -> Local first, then Pushes Local -> Cloud).
+ * Performs bidirectional cloud synchronization.
+ * If deltaOnly is true, only local changes made since the last recorded sync time are pushed to cloud.
  */
-export async function syncAll(businessId: string): Promise<{ ok: boolean; message?: string; count?: number }> {
+export async function syncAll(
+  businessId: string,
+  deltaOnly: boolean = false
+): Promise<{ ok: boolean; message?: string; count?: number }> {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     const error = "இணைய இணைப்பு இல்லை (Offline)";
     if (typeof window !== "undefined") {
@@ -928,11 +994,18 @@ export async function syncAll(businessId: string): Promise<{ ok: boolean; messag
   }
 
   try {
-    // 1. Pull remote records FIRST so multi-device updates appear immediately
+    const previousSyncTime = getLastSyncTime(businessId);
+
+    // 1. Pull remote records FIRST with timestamp conflict guard
     await pullFromCloud(businessId);
 
-    // 2. Push any local changes up to Supabase Cloud
-    await pushAllToCloud(businessId);
+    // 2. Push local changes up to Supabase Cloud
+    // If deltaOnly, push only items modified since previousSyncTime; otherwise push all
+    await pushAllToCloud(businessId, deltaOnly ? previousSyncTime : null);
+
+    // 3. Mark current timestamp as the high-watermark last sync time
+    const nowIso = new Date().toISOString();
+    setLastSyncTime(businessId, nowIso);
 
     const count = db.getBookings(businessId).length;
 
@@ -941,8 +1014,9 @@ export async function syncAll(businessId: string): Promise<{ ok: boolean; messag
         new CustomEvent("velvi:sync-state", {
           detail: {
             state: "synced",
-            lastSyncedAt: new Date().toISOString(),
+            lastSyncedAt: nowIso,
             bookingsCount: count,
+            deltaOnly,
           },
         })
       );
@@ -1066,6 +1140,18 @@ export async function initCloudSync(businessId: string) {
       });
   } catch (subErr) {
     console.warn("[CloudSync] Realtime subscribe notice:", subErr);
+  }
+
+  // 3. Attach window 'online' listener: When device transitions from offline -> online,
+  // execute automatic Delta Sync pushing ONLY changes made since previous sync time!
+  if (typeof window !== "undefined" && !isOnlineListenerAttached) {
+    isOnlineListenerAttached = true;
+    window.addEventListener("online", () => {
+      console.log("[CloudSync] Device reconnected to internet! Triggering Delta Sync...");
+      syncAll(businessId, true).catch((e) => {
+        console.warn("[CloudSync] Automatic reconnect delta sync notice:", e);
+      });
+    });
   }
 }
 
@@ -1446,7 +1532,12 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
               };
               const bkIdx = db.bookings.findIndex((bk) => bk.id === mappedBooking.id);
               if (bkIdx >= 0) {
-                db.bookings[bkIdx] = { ...db.bookings[bkIdx], ...mappedBooking };
+                const localBooking = db.bookings[bkIdx];
+                const localTime = localBooking.updatedAt ? new Date(localBooking.updatedAt).getTime() : 0;
+                const cloudTime = mappedBooking.updatedAt ? new Date(mappedBooking.updatedAt).getTime() : 0;
+                if (localTime <= cloudTime) {
+                  db.bookings[bkIdx] = { ...localBooking, ...mappedBooking };
+                }
               } else {
                 db.bookings.push(mappedBooking);
               }
@@ -1649,7 +1740,12 @@ export async function syncSuperAdminDirectoryFromCloud(): Promise<{
         };
         const bkIdx = db.bookings.findIndex((bk) => bk.id === mappedBooking.id);
         if (bkIdx >= 0) {
-          db.bookings[bkIdx] = { ...db.bookings[bkIdx], ...mappedBooking };
+          const localBooking = db.bookings[bkIdx];
+          const localTime = localBooking.updatedAt ? new Date(localBooking.updatedAt).getTime() : 0;
+          const cloudTime = mappedBooking.updatedAt ? new Date(mappedBooking.updatedAt).getTime() : 0;
+          if (localTime <= cloudTime) {
+            db.bookings[bkIdx] = { ...localBooking, ...mappedBooking };
+          }
         } else {
           db.bookings.push(mappedBooking);
         }
