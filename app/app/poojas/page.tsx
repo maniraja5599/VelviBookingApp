@@ -1995,7 +1995,7 @@ function PoojasCatalogueContent() {
                   className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1 shadow-2xs hover:shadow-xs active:scale-95 transition cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                  <span>+ Add Pooja</span>
+                  <span>Add Pooja</span>
                 </button>
               </div>
             </div>
