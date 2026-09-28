@@ -32,17 +32,9 @@ export function DailyPanchangamWidget({
   className = "",
 }: DailyPanchangamWidgetProps) {
   const todayStr = getLocalDateString();
-  const [currentDateStr, setCurrentDateStr] = useState<string>(initialDate || todayStr);
-
-  // Sync if initialDate prop changes
-  React.useEffect(() => {
-    if (initialDate && initialDate !== currentDateStr) {
-      setCurrentDateStr(initialDate);
-    }
-  }, [initialDate]);
+  const currentDateStr = initialDate || todayStr;
 
   const changeDate = (newDateStr: string) => {
-    setCurrentDateStr(newDateStr);
     if (onDateSelect) {
       onDateSelect(newDateStr);
     }
@@ -104,7 +96,129 @@ export function DailyPanchangamWidget({
       className={`bg-white rounded-3xl border border-amber-200/90 shadow-2xs overflow-hidden transition-all ${className}`}
     >
       <div className="p-3.5 sm:p-4 space-y-3.5">
-        {/* 4 Pillars Grid (Thithi, Nakshatram, Yogam, Chandrashtamam) */}
+        {/* 1. Auspicious Timings & Periods Grid (நேரக் கணக்குகள் - Instant View at top) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between pb-0.5">
+            <h4 className="text-[11.5px] font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-amber-700" />
+              <span>நேரக் கணக்குகள் (Timings)</span>
+            </h4>
+            <div className="flex items-center gap-1.5 text-[10.5px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 shadow-2xs">
+              <span>{info.formattedTamilFull}</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {/* Nalla Neram */}
+            <div className="p-2.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                  <span>நல்ல நேரம்</span>
+                </span>
+                <span className="text-[9.5px] font-extrabold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
+                  சுபம்
+                </span>
+              </div>
+              <div className="space-y-0.5 text-xs font-bold text-slate-800">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-[11px]">காலை:</span>
+                  <span className="font-extrabold text-emerald-950 text-[11.5px]">
+                    {formatTimeRangeTo12H(info.nallaNeramMorning, true)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-[11px]">மாலை:</span>
+                  <span className="font-extrabold text-emerald-950 text-[11.5px]">
+                    {formatTimeRangeTo12H(info.nallaNeramEvening, true)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Gowri Nalla Neram */}
+            <div className="p-2.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>கௌரி நல்ல நேரம்</span>
+                </span>
+                <span className="text-[9.5px] font-extrabold bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-full">
+                  விசேஷம்
+                </span>
+              </div>
+              <div className="space-y-0.5 text-xs font-bold text-slate-800">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-[11px]">காலை:</span>
+                  <span className="font-extrabold text-amber-950 text-[11.5px]">
+                    {formatTimeRangeTo12H(info.gowriNallaNeramMorning, true)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-medium text-[11px]">மாலை/இரவு:</span>
+                  <span className="font-extrabold text-amber-950 text-[11.5px]">
+                    {formatTimeRangeTo12H(info.gowriNallaNeramEvening, true)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Raghu Kaalam & Emagandam */}
+            <div className="p-2.5 bg-rose-50/60 rounded-2xl border border-rose-200/70 space-y-1 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-rose-800 flex items-center gap-1 text-[11px]">
+                  <span>⛔</span>
+                  <span>ராகு காலம்</span>
+                </span>
+                <span className="font-black text-slate-900 font-mono text-[11px]">
+                  {formatTimeRangeTo12H(info.rahuKalam, true)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-rose-100">
+                <span className="font-bold text-rose-800 flex items-center gap-1 text-[11px]">
+                  <span>⚠️</span>
+                  <span>எமகண்டம்</span>
+                </span>
+                <span className="font-black text-slate-900 font-mono text-[11px]">
+                  {formatTimeRangeTo12H(info.yamagandam, true)}
+                </span>
+              </div>
+            </div>
+
+            {/* Kuligai & Sooriyodhayam */}
+            <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
+                  <span>⌛</span>
+                  <span>குளிகை காலம்</span>
+                </span>
+                <span className="font-black text-slate-900 font-mono text-[11px]">
+                  {formatTimeRangeTo12H(info.kuligai, true)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pt-1 border-t border-slate-100">
+                <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
+                  <span>🌅</span>
+                  <span>சூரியோதயம்</span>
+                </span>
+                <span className="font-black text-slate-900 font-mono text-[11px]">
+                  காலை 06:05 AM
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. 4 Pillars Grid (Thithi, Nakshatram, Yogam, Chandrashtamam) Below Timings */}
+        <div className="space-y-1.5 pt-1 border-t border-slate-100">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+              <span>பஞ்சாங்க விவரங்கள் (Panchangam Details)</span>
+            </h4>
+            <span className="text-[10px] text-slate-400 font-semibold">{info.tamilMonth} {info.tamilDay}</span>
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {/* Thithi */}
             <div className="p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-2xl space-y-0.5">
@@ -174,117 +288,7 @@ export function DailyPanchangamWidget({
               </span>
             </div>
           </div>
-
-          {/* Auspicious Timings & Periods Grid */}
-          <div className="space-y-2">
-            <h4 className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-700" />
-                <span>நேரக் கணக்குகள் (Timings)</span>
-              </span>
-              <span className="text-[9.5px] text-slate-400 font-normal">IST +5:30</span>
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {/* Nalla Neram */}
-              <div className="p-2.5 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                    <span>நல்ல நேரம்</span>
-                  </span>
-                  <span className="text-[9.5px] font-extrabold bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full">
-                    சுபம்
-                  </span>
-                </div>
-                <div className="space-y-0.5 text-xs font-bold text-slate-800">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-[11px]">காலை:</span>
-                    <span className="font-extrabold text-emerald-950 text-[11.5px]">
-                      {formatTimeRangeTo12H(info.nallaNeramMorning, true)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-[11px]">மாலை:</span>
-                    <span className="font-extrabold text-emerald-950 text-[11.5px]">
-                      {formatTimeRangeTo12H(info.nallaNeramEvening, true)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gowri Nalla Neram */}
-              <div className="p-2.5 bg-amber-50/70 rounded-2xl border border-amber-200/80 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span>கௌரி நல்ல நேரம்</span>
-                  </span>
-                  <span className="text-[9.5px] font-extrabold bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded-full">
-                    விசேஷம்
-                  </span>
-                </div>
-                <div className="space-y-0.5 text-xs font-bold text-slate-800">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-[11px]">காலை:</span>
-                    <span className="font-extrabold text-amber-950 text-[11.5px]">
-                      {formatTimeRangeTo12H(info.gowriNallaNeramMorning, true)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 font-medium text-[11px]">மாலை/இரவு:</span>
-                    <span className="font-extrabold text-amber-950 text-[11.5px]">
-                      {formatTimeRangeTo12H(info.gowriNallaNeramEvening, true)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Raghu Kaalam & Emagandam */}
-              <div className="p-2.5 bg-rose-50/60 rounded-2xl border border-rose-200/70 space-y-1 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-rose-800 flex items-center gap-1 text-[11px]">
-                    <span>⛔</span>
-                    <span>ராகு காலம்</span>
-                  </span>
-                  <span className="font-black text-slate-900 font-mono text-[11px]">
-                    {formatTimeRangeTo12H(info.rahuKalam, true)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t border-rose-100">
-                  <span className="font-bold text-rose-800 flex items-center gap-1 text-[11px]">
-                    <span>⚠️</span>
-                    <span>எமகண்டம்</span>
-                  </span>
-                  <span className="font-black text-slate-900 font-mono text-[11px]">
-                    {formatTimeRangeTo12H(info.yamagandam, true)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Kuligai & Sooriyodhayam */}
-              <div className="p-2.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-1 text-xs">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                    <span>⌛</span>
-                    <span>குளிகை காலம்</span>
-                  </span>
-                  <span className="font-black text-slate-900 font-mono text-[11px]">
-                    {formatTimeRangeTo12H(info.kuligai, true)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                  <span className="font-bold text-slate-600 flex items-center gap-1 text-[11px]">
-                    <span>🌅</span>
-                    <span>சூரியோதயம்</span>
-                  </span>
-                  <span className="font-black text-slate-900 font-mono text-[11px]">
-                    காலை 06:05 AM
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+        </div>
 
           {/* Festival / Special Day Notice Banner (if any) */}
           {info.festivalName && (
