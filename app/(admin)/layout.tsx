@@ -26,6 +26,9 @@ import {
   EyeOff,
   Clock,
   Globe,
+  Tag,
+  Palette,
+  Code2,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
@@ -481,12 +484,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // ---------------------------------------------------------------------------
   const navItems = [
     { href: "/admin", label: "Dashboard", subLabel: "Executive Overview", icon: LayoutDashboard },
-    { href: "/admin/traffic", label: "Web Traffic & Visitors", subLabel: "Live Geo Telemetry", icon: Globe },
     { href: "/admin/users", label: "Users & Validity", subLabel: "Tenant Accounts", icon: Users },
+    { href: "/admin/coupons", label: "Coupons & Promos", subLabel: "Discount Codes", icon: Tag },
     { href: "/admin/subscriptions", label: "Subscriptions", subLabel: "Plans & Validity", icon: Sparkles },
     { href: "/admin/payments", label: "Cashfree Payments", subLabel: "Gateway Ledger", icon: CreditCard },
     { href: "/admin/referrals", label: "Referrals & Rewards", subLabel: "Affiliate Ledger", icon: Gift },
+    { href: "/admin/traffic", label: "Web Traffic", subLabel: "Live Geo Telemetry", icon: Globe },
     { href: "/admin/audit-logs", label: "Audit Logs", subLabel: "Security History", icon: History },
+    { href: "/admin/branding", label: "Platform Branding", subLabel: "Brand & Metadata", icon: Palette },
+    { href: "/admin/dev", label: "Developer Specs", subLabel: "Tech Architecture", icon: Code2 },
   ];
 
   return (
