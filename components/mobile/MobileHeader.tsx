@@ -532,11 +532,11 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
                 {/* Display Name and Today's Panchangam (Option 1: Tithi • Nakshatra) */}
                 <div className="flex flex-col text-left min-w-0">
-                  <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[85px] sm:max-w-[125px] leading-tight">
+                  <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[105px] sm:max-w-[140px] leading-tight">
                     {displayName}
                   </span>
-                  <span className="text-[8.5px] font-bold text-amber-900 flex items-center gap-0.5 leading-none mt-0.5 truncate max-w-[110px] sm:max-w-[145px]">
-                    <span className="text-[8px] text-amber-700">🪔</span>
+                  <span className="text-[9px] font-bold text-amber-900 flex items-center gap-1 leading-none mt-0.5 truncate max-w-[130px] sm:max-w-[160px]">
+                    <span className="text-[8px] text-amber-600">🪔</span>
                     <span className="truncate">{todayPanchangam}</span>
                   </span>
                 </div>
