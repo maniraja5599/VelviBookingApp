@@ -62,8 +62,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (typeof window !== "undefined") {
       const verified = sessionStorage.getItem("velvi_super_admin_verified") === "true";
       const loginAt = Number(sessionStorage.getItem("velvi_super_admin_login_at") || 0);
-      const TEN_MINUTES_MS = 10 * 60 * 1000;
-      if (verified && loginAt && Date.now() - loginAt > TEN_MINUTES_MS) {
+      const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+      if (verified && loginAt && Date.now() - loginAt > THIRTY_MINUTES_MS) {
         sessionStorage.removeItem("velvi_super_admin_verified");
         sessionStorage.removeItem("velvi_super_admin_login_at");
         setAdminSessionVerified(false);
@@ -73,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  // ── 10-minute session countdown ──────────────────────────────────────────────
+  // ── 30-minute session countdown ──────────────────────────────────────────────
   React.useEffect(() => {
     if (!adminSessionVerified) {
       setSecondsRemaining(null);
@@ -83,13 +83,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       if (typeof window === "undefined") return;
       const loginAt = Number(sessionStorage.getItem("velvi_super_admin_login_at") || 0);
       if (!loginAt) return;
-      const remaining = 10 * 60 * 1000 - (Date.now() - loginAt);
+      const remaining = 30 * 60 * 1000 - (Date.now() - loginAt);
       if (remaining <= 0) {
         sessionStorage.removeItem("velvi_super_admin_verified");
         sessionStorage.removeItem("velvi_super_admin_login_at");
         setAdminSessionVerified(false);
         setSecondsRemaining(null);
-        setLoginError("Session expired (10 minutes). Please sign in again.");
+        setLoginError("Session expired (30 minutes). Please sign in again.");
       } else {
         setSecondsRemaining(Math.ceil(remaining / 1000));
       }
@@ -109,7 +109,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     sessionStorage.setItem("velvi_super_admin_verified", "true");
     sessionStorage.setItem("velvi_super_admin_login_at", Date.now().toString());
     setAdminSessionVerified(true);
-    setSecondsRemaining(600);
+    setSecondsRemaining(1800);
   };
 
   // ── Google OAuth callback (hash token from redirect) ────────────────────────
@@ -459,32 +459,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Left: Logo + title */}
         <div className="flex items-center gap-2.5 min-w-0">
           <VelviLogo size="xs" showTagline={false} />
-          <div className="min-w-0">
-            <div className="text-xs font-extrabold text-slate-900 truncate leading-tight">
-              Super Admin
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              {isSuperAdmin ? (
-                <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-amber-100 text-amber-900 border border-amber-300">
-                  👑 Super Admin
-                </span>
-              ) : (
-                <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-blue-100 text-blue-900 border border-blue-300">
-                  ✏️ Admin
-                </span>
-              )}
-            </div>
+          <div className="text-xs font-extrabold text-slate-900 truncate leading-tight">
+            Super Admin Console
           </div>
         </div>
 
-        {/* Right: Timer + SignOut + Menu + App link */}
+        {/* Right: SignOut + Menu + App link */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {secondsRemaining !== null && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 font-mono text-[10px] font-bold">
-              <Clock className="w-3 h-3 text-amber-700" style={{ animation: "spin 12s linear infinite" }} />
-              {Math.floor(secondsRemaining / 60)}:{String(secondsRemaining % 60).padStart(2, "0")}
-            </span>
-          )}
           <button
             type="button"
             onClick={handleAdminSignOut}

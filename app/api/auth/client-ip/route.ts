@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
   if (isLoopback) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       const res = await fetch("https://api.ipify.org?format=json", { signal: controller.signal });
       clearTimeout(timeoutId);
       if (res.ok) {
@@ -24,7 +24,19 @@ export async function GET(req: NextRequest) {
         if (data?.ip) ip = data.ip;
       }
     } catch {
-      ip = "127.0.0.1";
+      // try fallback
+      try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 2000);
+        const res2 = await fetch("https://api.ipapi.is/?q=json", { signal: controller2.signal });
+        clearTimeout(timeoutId2);
+        if (res2.ok) {
+          const data2 = await res2.json();
+          if (data2?.ip) ip = data2.ip;
+        }
+      } catch {
+        ip = "127.0.0.1";
+      }
     }
   }
 
@@ -46,7 +58,7 @@ export async function GET(req: NextRequest) {
   if ((!city || !country) && ip && ip !== "127.0.0.1") {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1200);
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,city,country,regionName`, {
         signal: controller.signal,
       });
