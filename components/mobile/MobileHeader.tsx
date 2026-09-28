@@ -95,13 +95,16 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
   }, [subscription?.currentPeriodEnd]);
 
-  // Formatted date string (e.g. "25 Nov") for elegant validity display
+  // Formatted date string with short 2-digit year (e.g. "25 Nov '26") for compact profile validity display
   const expiryFormatted = React.useMemo(() => {
     if (!subscription?.currentPeriodEnd) return null;
     try {
       const d = new Date(subscription.currentPeriodEnd);
       if (isNaN(d.getTime())) return null;
-      return d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+      const day = d.getDate();
+      const month = d.toLocaleDateString("en-IN", { month: "short" });
+      const shortYear = String(d.getFullYear()).slice(-2);
+      return `${day} ${month} '${shortYear}`;
     } catch {
       return null;
     }
@@ -517,7 +520,7 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                     {displayName}
                   </span>
                   {daysToExpiry !== null && expiryFormatted && (
-                    <span className="text-[8.5px] font-bold text-emerald-800 font-mono tracking-tight leading-none mt-0.5 truncate max-w-[85px] sm:max-w-[125px]">
+                    <span className="text-[8.5px] font-bold text-emerald-800 font-mono tracking-tight leading-none mt-0.5 truncate max-w-[105px] sm:max-w-[140px]">
                       {daysToExpiry}d • {expiryFormatted}
                     </span>
                   )}
