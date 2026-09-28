@@ -74,6 +74,20 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
     return `${today.getDate()} ${months[today.getMonth()]} • ${tamilInfo.tamilMonth} ${tamilInfo.tamilDay}`;
   }, []);
 
+  // Option 1: Sacred Panchangam for Profile Header (Tithi • Nakshatra in Tamil)
+  const todayPanchangam = React.useMemo(() => {
+    try {
+      const today = new Date();
+      const dStr = today.toISOString().split("T")[0];
+      const info = getTamilDate(dStr);
+      const tithiClean = (info.tithiNameTa || info.tithiTa || "சுப திதி").split("(")[0].trim();
+      const naksClean = (info.nakshatraNameTa || info.nakshatra || "சுப நட்சத்திரம்").trim();
+      return `${tithiClean} • ${naksClean}`;
+    } catch {
+      return "சுப திதி • நன்னாள்";
+    }
+  }, []);
+
   const businessId =
     currentBusiness?.id ||
     (currentUser?.id === "u-ravi-iyer-01"
@@ -362,7 +376,9 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-[0_3px_14px_rgba(0,0,0,0.06)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
+      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-xl border-b border-amber-200/60 shadow-[0_4px_20px_rgba(217,119,6,0.06),0_1px_3px_rgba(0,0,0,0.04)] px-2.5 sm:px-4 py-2 sm:py-2.5 transition-all">
+        {/* Subtle Sacred Gold Accent Top Hairline */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-emerald-500 to-amber-500 opacity-80" />
         <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Brand Logo & Title */}
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
@@ -514,16 +530,15 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   </div>
                 )}
 
-                {/* Display Name and Validity with Date */}
+                {/* Display Name and Today's Panchangam (Option 1: Tithi • Nakshatra) */}
                 <div className="flex flex-col text-left min-w-0">
                   <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[85px] sm:max-w-[125px] leading-tight">
                     {displayName}
                   </span>
-                  {daysToExpiry !== null && expiryFormatted && (
-                    <span className="text-[8.5px] font-bold text-emerald-800 font-mono tracking-tight leading-none mt-0.5 truncate max-w-[105px] sm:max-w-[140px]">
-                      {daysToExpiry}d • {expiryFormatted}
-                    </span>
-                  )}
+                  <span className="text-[8.5px] font-bold text-amber-900 flex items-center gap-0.5 leading-none mt-0.5 truncate max-w-[110px] sm:max-w-[145px]">
+                    <span className="text-[8px] text-amber-700">🪔</span>
+                    <span className="truncate">{todayPanchangam}</span>
+                  </span>
                 </div>
 
                 <ChevronRight

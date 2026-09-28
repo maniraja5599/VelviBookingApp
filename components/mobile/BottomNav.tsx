@@ -69,8 +69,10 @@ export const BottomNav: React.FC = React.memo(() => {
   return (
     <nav
       aria-label="Main Navigation"
-      className="fixed bottom-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] md:shadow-[0_-2px_16px_rgba(0,0,0,0.05)] transition-all duration-150 select-none touch-manipulation"
+      className="fixed bottom-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur-xl border-t border-amber-200/70 shadow-[0_-6px_24px_rgba(217,119,6,0.06),0_-1px_3px_rgba(0,0,0,0.04)] transition-all duration-150 select-none touch-manipulation"
     >
+      {/* Subtle Sacred Gold Accent Top Hairline */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-emerald-500 to-amber-500 opacity-80" />
       {/* Responsive layout: 5 equal columns on mobile, elegant centered row on desktop */}
       <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-1 sm:px-3 md:px-6 h-[68px] md:h-16 flex items-center justify-between">
         {navItems.map((item) => {
