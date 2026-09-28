@@ -72,7 +72,7 @@ export const BottomNav: React.FC = React.memo(() => {
       className="fixed bottom-0 left-0 right-0 w-full z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] md:shadow-[0_-2px_16px_rgba(0,0,0,0.05)] transition-all duration-150 select-none touch-manipulation"
     >
       {/* Responsive layout: 5 equal columns on mobile, elegant centered row on desktop */}
-      <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-1 sm:px-3 md:px-6 h-14 sm:h-14 md:h-15 flex items-center justify-between">
+      <div className="w-full max-w-4xl lg:max-w-5xl mx-auto px-1 sm:px-3 md:px-6 h-16 md:h-15 flex items-center justify-between pb-[max(0.2rem,env(safe-area-inset-bottom))] md:pb-0">
         {navItems.map((item) => {
           const currentPath = optimisticPath || pathname;
           const isActive =
@@ -113,28 +113,28 @@ export const BottomNav: React.FC = React.memo(() => {
                 </span>
               </div>
 
-              {/* Mobile layout: Compact vertical stack with dedicated non-overlapping tap box */}
+              {/* Mobile layout: Comfortable vertical stack with generous non-overlapping tap box */}
               <div className="md:hidden flex flex-col items-center justify-center w-full py-1">
                 <div
-                  className={`flex items-center justify-center px-3.5 py-1 rounded-xl transition-all duration-150 ${
+                  className={`flex items-center justify-center px-4 py-1.5 rounded-2xl transition-all duration-150 ${
                     isActive
                       ? "bg-gradient-to-r from-emerald-950 via-[#0d3b1e] to-emerald-900 shadow-sm ring-1 ring-amber-400/30"
                       : "text-slate-500 group-active:bg-slate-100"
                   }`}
                 >
                   <Icon
-                    className={`w-5 h-5 transition-colors ${
+                    className={`w-5.5 h-5.5 transition-colors ${
                       isActive
-                        ? "text-amber-400 stroke-[2.3]"
+                        ? "text-amber-400 stroke-[2.4]"
                         : "text-slate-600 group-hover:text-slate-900 stroke-[1.85]"
                     }`}
                   />
                 </div>
                 <span
-                  className={`text-[10.5px] mt-0.5 tracking-tight truncate max-w-[64px] transition-colors leading-tight ${
+                  className={`text-[11px] mt-0.5 tracking-tight truncate max-w-[68px] transition-colors leading-tight ${
                     isActive
                       ? "font-extrabold text-emerald-950"
-                      : "font-medium text-slate-500 group-hover:text-slate-800"
+                      : "font-semibold text-slate-500 group-hover:text-slate-800"
                   }`}
                 >
                   {item.label}

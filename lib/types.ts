@@ -30,6 +30,7 @@ export interface Business {
   whatsapp?: string;
   address?: string;
   showWatermark: boolean;
+  startingBillNumber?: number;
   createdAt: string;
 }
 

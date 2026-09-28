@@ -276,18 +276,53 @@ export default function BookingDetailPage() {
     }
   };
 
-  const handleRevertToSelf = () => {
-    const ownerMember = members.find((m) => m.role === "OWNER");
-    if (!ownerMember) return;
-    const res = db.reassignBooking({
+  const [showPriestPicker, setShowPriestPicker] = useState(false);
+  const [showAddPriestInline, setShowAddPriestInline] = useState(false);
+  const [quickNewPriestName, setQuickNewPriestName] = useState("");
+
+  const otherMembers = members.filter((m) => m.id !== ownerMember?.id);
+
+  const handleAssignPriest = (memberId: string, memberName: string) => {
+    db.reassignBooking({
       bookingId: booking.id,
-      newIyerId: ownerMember.id,
+      newIyerId: memberId,
+      reassignedBy: currentUser?.name || "Ravi Iyer",
+      reason: `Assigned to ${memberName}`,
+    });
+    booking.assignedIyerId = memberId;
+    booking.assignedIyerName = memberName;
+    setShowPriestPicker(false);
+    setShowAddPriestInline(false);
+    router.refresh();
+  };
+
+  const handleQuickAddNewPriest = () => {
+    const trimmed = quickNewPriestName.trim();
+    if (!trimmed) return;
+    const newMember = db.createMember({
+      businessId,
+      name: trimmed,
+      mobile: "",
+      role: "IYER",
+    });
+    handleAssignPriest(newMember.id, newMember.name);
+    setQuickNewPriestName("");
+    setShowAddPriestInline(false);
+  };
+
+  const handleRevertToSelf = () => {
+    const owner = members.find((m) => m.role === "OWNER") || members[0];
+    if (!owner) return;
+    db.reassignBooking({
+      bookingId: booking.id,
+      newIyerId: owner.id,
       reassignedBy: currentUser?.name || "Ravi Iyer",
       reason: "Perform myself (Taking back to attend personally)",
     });
-    if (res.success) {
-      router.refresh();
-    }
+    booking.assignedIyerId = owner.id;
+    booking.assignedIyerName = currentUser?.name || owner.name || "Ravi Iyer";
+    setShowPriestPicker(false);
+    router.refresh();
   };
 
   // Derived balance & status for Payment Edit Preview
@@ -656,63 +691,111 @@ export default function BookingDetailPage() {
           )}
         </div>
 
-        {/* 4. PERFORMING PRIEST ASSIGNMENT */}
-        <div className="p-4 space-y-2.5 bg-white">
+        {/* 4. PERFORMING PRIEST ASSIGNMENT (Inline Self vs Other Toggle & Add Priest) */}
+        <div className="p-4 space-y-3 bg-white">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
-              Performing Priest (செய்து வைக்கும் குருக்கள்)
+            <span className="text-[10.5px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <span>Performing Priest (செய்து வைக்கும் குருக்கள்)</span>
             </span>
-            {isSelf ? (
-              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                <span>🪔</span> தலைமை குருக்கள் (Self)
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold bg-blue-50 text-blue-800 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
-                <Users className="w-3 h-3" /> Delegated Team Member
-              </span>
-            )}
+            <span className="text-[10px] font-bold bg-amber-50 text-amber-900 px-2 py-0.5 rounded-full border border-amber-200">
+              {isSelf ? "🪔 தலைமை குருக்கள் (Self)" : `👤 ${booking.assignedIyerName || "Other"}`}
+            </span>
           </div>
 
-          <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-base font-bold shadow-2xs shrink-0 ${
-                  isSelf ? "bg-emerald-800 text-white" : "bg-blue-600 text-white"
-                }`}
-              >
-                {isSelf ? "🪔" : "👤"}
-              </div>
-              <div className="min-w-0">
-                <div className="font-black text-xs text-slate-900 truncate">
-                  {booking.assignedIyerName || (isSelf ? (currentUser?.name || "Ravi Iyer") : "Unassigned")}
-                </div>
-                <p className="text-[10.5px] text-slate-500">
-                  {isSelf
-                    ? "நீங்கள் நேரடியாக சென்று செய்து வைக்கிறீர்கள் (Self Performed)"
-                    : "வேறு குருக்களுக்கு ஒப்படைக்கப்பட்டுள்ளது (Delegated)"}
-                </p>
-              </div>
-            </div>
+          {/* Toggle: Self vs Other */}
+          <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs font-bold border border-slate-200/80">
+            <button
+              type="button"
+              onClick={handleRevertToSelf}
+              className={`py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                isSelf
+                  ? "bg-emerald-800 text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 font-semibold"
+              }`}
+            >
+              <span>🪔 தலைமை குருக்கள் (Self)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPriestPicker(true);
+              }}
+              className={`py-1.5 rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                !isSelf
+                  ? "bg-slate-900 text-white shadow-2xs font-extrabold"
+                  : "text-slate-600 hover:text-slate-900 font-semibold"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Other Guru (மற்ற குருக்கள்)</span>
+            </button>
+          </div>
 
-            <div className="shrink-0">
-              {isSelf ? (
-                <Link
-                  href={`/app/bookings/${booking.id}/assign`}
-                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 rounded-lg text-xs font-bold flex items-center gap-1 transition shadow-2xs"
-                >
-                  <UserCheck className="w-3.5 h-3.5 text-emerald-700" />
-                  <span>Delegate</span>
-                </Link>
-              ) : (
+          {/* Priest Selection Chips & Inline Add Priest Form */}
+          {(!isSelf || showPriestPicker) && (
+            <div className="space-y-2 pt-1 border-t border-slate-100 animate-in fade-in">
+              <div className="flex items-center justify-between">
+                <span className="text-[10.5px] font-bold text-slate-500">
+                  குருக்களைத் தேர்ந்தெடுக்கவும்:
+                </span>
                 <button
-                  onClick={handleRevertToSelf}
-                  className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                  type="button"
+                  onClick={() => setShowAddPriestInline(!showAddPriestInline)}
+                  className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-0.5 cursor-pointer"
                 >
-                  <span>🪔 Take Back</span>
+                  {showAddPriestInline ? "✕ Close" : "+ Add Priest"}
                 </button>
+              </div>
+
+              {/* Inline Add Priest Form */}
+              {showAddPriestInline && (
+                <div className="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-2">
+                  <input
+                    type="text"
+                    value={quickNewPriestName}
+                    onChange={(e) => setQuickNewPriestName(e.target.value)}
+                    placeholder="குருக்கள் பெயர் (e.g. Vignesh Dikshithar)"
+                    className="w-full px-3 py-1.5 bg-white rounded-lg border border-slate-200 text-xs font-semibold focus:outline-none focus:border-emerald-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleQuickAddNewPriest}
+                    className="w-full py-1.5 bg-emerald-800 text-white text-xs font-bold rounded-lg shadow-2xs cursor-pointer hover:bg-emerald-900 transition"
+                  >
+                    Save &amp; Assign Priest ✓
+                  </button>
+                </div>
               )}
+
+              {/* Existing Priest Chips */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {otherMembers.length === 0 && !showAddPriestInline ? (
+                  <p className="text-xs text-slate-400 italic">
+                    மற்ற குருக்கள் பதிவு செய்யப்படவில்லை. "+ Add Priest" கிளிக் செய்து சேர்க்கவும்.
+                  </p>
+                ) : (
+                  otherMembers.map((m) => {
+                    const isCurrent = booking.assignedIyerName === m.name;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => handleAssignPriest(m.id, m.name)}
+                        className={`px-2.5 py-1 rounded-xl text-xs font-bold transition border cursor-pointer active:scale-95 ${
+                          isCurrent
+                            ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span>👤 {m.name}</span>
+                        {isCurrent && <span className="ml-1 text-emerald-400">✓</span>}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* 5. POOJA ITEMS & SAMAGRI CHECKLIST (Checklist Format 1, 2, 3.. One-Line) */}
@@ -733,18 +816,20 @@ export default function BookingDetailPage() {
               <button
                 type="button"
                 onClick={() => setShowPoojaSlipModal(true)}
-                className="text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-2 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
-                title="Pooja Slip & Samagri"
+                className="text-[11px] font-bold text-emerald-800 bg-white hover:bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                title="Save Samagri List Image"
               >
-                <span>📜 Pooja Slip</span>
+                <ImageIcon className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Save Image 📸</span>
               </button>
               <button
                 type="button"
-                onClick={() => setShowItemsShareModal(true)}
-                className="text-[11px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                onClick={handleWhatsAppShare}
+                className="text-[11px] font-bold text-slate-800 bg-emerald-100/80 hover:bg-emerald-200/80 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                title="Share WhatsApp Message"
               >
-                <Share2 className="w-3 h-3 text-emerald-600" />
-                <span>Share List</span>
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-800" />
+                <span>WhatsApp Share</span>
               </button>
             </div>
           </div>

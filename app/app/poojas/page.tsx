@@ -34,6 +34,7 @@ import {
   TrendingUp,
   BarChart3,
   Calendar,
+  GripVertical,
 } from "lucide-react";
 import Link from "next/link";
 import { SamagriCategory } from "@/lib/types";
@@ -864,6 +865,16 @@ function PoojasCatalogueContent() {
   const [deletingPooja, setDeletingPooja] = useState<Pooja | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
 
+  const [customOrder, setCustomOrder] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("velvi_pooja_order_" + businessId);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
+
   const filteredPoojas = poojas
     .filter((p) => !isLegacyObsoletePooja(p))
     .filter(
@@ -872,6 +883,54 @@ function PoojasCatalogueContent() {
         (p.tamilName && p.tamilName.includes(searchQuery)) ||
         (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+  // Sorted poojas following custom manual drag / reorder
+  const sortedPoojas = useMemo(() => {
+    if (!customOrder || customOrder.length === 0) return filteredPoojas;
+    const map = new Map<string, number>();
+    customOrder.forEach((id, idx) => map.set(id, idx));
+    return [...filteredPoojas].sort((a, b) => {
+      const idxA = map.has(a.id) ? map.get(a.id)! : 999;
+      const idxB = map.has(b.id) ? map.get(b.id)! : 999;
+      return idxA - idxB;
+    });
+  }, [filteredPoojas, customOrder]);
+
+  const saveNewPoojaOrder = (newOrderIds: string[]) => {
+    setCustomOrder(newOrderIds);
+    try {
+      localStorage.setItem("velvi_pooja_order_" + businessId, JSON.stringify(newOrderIds));
+      window.dispatchEvent(new Event("velvi:pooja-order-change"));
+    } catch {}
+  };
+
+  const movePooja = (poojaId: string, direction: "up" | "down") => {
+    const list = [...sortedPoojas];
+    const idx = list.findIndex((p) => p.id === poojaId);
+    if (idx === -1) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= list.length) return;
+
+    const [moved] = list.splice(idx, 1);
+    list.splice(targetIdx, 0, moved);
+
+    const newOrderIds = list.map((p) => p.id);
+    saveNewPoojaOrder(newOrderIds);
+  };
+
+  const handleDropReorder = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    const list = [...sortedPoojas];
+    const sourceIdx = list.findIndex((p) => p.id === sourceId);
+    const targetIdx = list.findIndex((p) => p.id === targetId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const [moved] = list.splice(sourceIdx, 1);
+    list.splice(targetIdx, 0, moved);
+
+    const newOrderIds = list.map((p) => p.id);
+    saveNewPoojaOrder(newOrderIds);
+  };
 
   // Booking statistics per pooja and top performed pooja
   const poojaBookingStats = useMemo(() => {
@@ -1982,9 +2041,19 @@ function PoojasCatalogueContent() {
             />
           </div>
 
+          {/* Tip Banner for Custom Pooja Order */}
+          <div className="bg-amber-50/80 border border-amber-200/90 rounded-2xl p-2.5 sm:p-3 text-xs text-amber-950 flex items-center justify-between gap-2 shadow-2xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+              <div className="text-[11px] sm:text-xs leading-relaxed">
+                <span className="font-extrabold text-amber-950">💡 வரிசைமுறை டிப்ஸ்:</span> இங்கு நீங்கள் பூஜைகளை வரிசைப்படுத்தும் முறை (Reorder), புதிய முன்பதிவு (New Booking) பக்கத்திலும் அதே வரிசையில் தோன்றும்.
+              </div>
+            </div>
+          </div>
+
           {/* Poojas List */}
           <div className="space-y-2">
-            {filteredPoojas.length === 0 ? (
+            {sortedPoojas.length === 0 ? (
               <div className="bg-white rounded-3xl p-8 text-center border border-dashed border-slate-200 shadow-2xs">
                 <Flame className="w-8 h-8 text-amber-500 mx-auto mb-2" />
                 <h4 className="font-bold text-sm text-slate-800">No Pooja or Homam found</h4>
@@ -1993,7 +2062,7 @@ function PoojasCatalogueContent() {
                 </p>
               </div>
             ) : (
-              filteredPoojas.map((p) => {
+              sortedPoojas.map((p, pIdx) => {
                 const stats = poojaBookingStats[p.id] || { count: 0, completedCount: 0, totalDakshina: 0 };
                 const isTop = topPerformedPooja?.pooja.id === p.id && stats.count > 0;
                 const itemCount = p.items?.length || 0;
@@ -2002,14 +2071,39 @@ function PoojasCatalogueContent() {
                   <div
                     key={p.id}
                     onClick={() => setSelectedPooja(p)}
+                    draggable={!searchQuery}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("text/plain", p.id);
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const sourceId = e.dataTransfer.getData("text/plain");
+                      if (sourceId && sourceId !== p.id) {
+                        handleDropReorder(sourceId, p.id);
+                      }
+                    }}
                     className={`bg-white rounded-2xl p-2.5 sm:p-3 border shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center justify-between gap-2.5 group relative ${
                       isTop
                         ? "border-amber-400/90 ring-1 ring-amber-300/40 shadow-amber-500/5 hover:border-amber-500"
                         : "border-slate-200/90 hover:border-emerald-300"
                     }`}
                   >
-                    {/* Left: Pooja Icon Avatar + Names + Clean Simple Metrics */}
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    {/* Reorder drag handle & Left Content */}
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {!searchQuery && (
+                        <div
+                          className="hidden sm:flex items-center text-slate-300 hover:text-slate-500 cursor-grab active:cursor-grabbing shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Drag to reorder"
+                        >
+                          <GripVertical className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+
+                      {/* Pooja Icon Avatar */}
                       <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-50 via-amber-100/60 to-orange-50 text-slate-800 flex items-center justify-center shrink-0 border border-amber-200/80 shadow-2xs group-hover:scale-105 transition-all">
                         <span className="text-lg sm:text-xl select-none leading-none">
                           {getPoojaIcon(p)}
@@ -2063,6 +2157,30 @@ function PoojasCatalogueContent() {
                           கட்டணம்
                         </div>
                       </div>
+
+                      {/* Quick Move Up / Down Buttons */}
+                      {!searchQuery && (
+                        <div className="flex flex-col gap-0.5 ml-0.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            disabled={pIdx === 0}
+                            onClick={() => movePooja(p.id, "up")}
+                            className="p-0.5 text-slate-400 hover:text-slate-800 disabled:opacity-20 hover:bg-slate-100 rounded transition cursor-pointer"
+                            title="Move Up"
+                          >
+                            <ChevronUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pIdx === sortedPoojas.length - 1}
+                            onClick={() => movePooja(p.id, "down")}
+                            className="p-0.5 text-slate-400 hover:text-slate-800 disabled:opacity-20 hover:bg-slate-100 rounded transition cursor-pointer"
+                            title="Move Down"
+                          >
+                            <ChevronDown className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
 
                       {/* Quick Action buttons */}
                       <div className="flex items-center gap-0.5 ml-1" onClick={(e) => e.stopPropagation()}>

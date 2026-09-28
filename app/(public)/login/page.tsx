@@ -50,6 +50,18 @@ export default function LoginPage() {
     }
   }, [currentUser, router]);
 
+  // Capture incoming referral promo code from affiliate / invite link
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const refCode = sp.get("ref");
+      if (refCode) {
+        localStorage.setItem("velvi_referral_code", refCode.trim());
+      }
+    } catch {}
+  }, []);
+
   // Profile setup state
   const [fullName, setFullName] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");

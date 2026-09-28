@@ -783,6 +783,19 @@ export class VelviDatabaseStore {
     return businessPoojas;
   }
 
+  public getBusiness(businessId: string): Business | undefined {
+    return this.businesses.find((b) => b.id === businessId);
+  }
+
+  public updateBusiness(businessId: string, updates: Partial<Business>): Business | undefined {
+    const biz = this.businesses.find((b) => b.id === businessId);
+    if (!biz) return undefined;
+    Object.assign(biz, updates);
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    return biz;
+  }
+
   public getMembers(businessId: string): BusinessMember[] {
     return this.members.filter((m) => m.businessId === businessId);
   }
@@ -1765,7 +1778,16 @@ export class VelviDatabaseStore {
       }
     }
 
-    const bNum = (8248 + this.bookings.length + 1).toString();
+    // Custom sequential booking number per business starting from 1 (or user configured startingBillNumber)
+    const biz = this.getBusiness(params.businessId);
+    const startNum =
+      biz && typeof biz.startingBillNumber === "number" && biz.startingBillNumber > 0
+        ? biz.startingBillNumber
+        : 1;
+    const existingBizBookings = this.bookings.filter((b) => b.businessId === params.businessId);
+    const nextSeq = startNum + existingBizBookings.length;
+    const bNum = nextSeq.toString();
+
     const newBookingId = `b-${Date.now()}-${this.bookings.length + 1}-${Math.random().toString(36).substring(2, 7)}`;
     const paymentRecords: BookingPaymentRecord[] = [];
     if (params.advanceAmount > 0) {

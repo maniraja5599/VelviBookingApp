@@ -71,7 +71,24 @@ function QuickBookingContent() {
 
   useEffect(() => {
     setCustomers(db.getCustomers(businessId));
-    setPoojas(db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p)));
+    const rawPoojas = db.getPoojas(businessId).filter((p) => !isLegacyObsoletePooja(p));
+    let ordered = rawPoojas;
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("velvi_pooja_order_" + businessId);
+        if (saved) {
+          const orderIds: string[] = JSON.parse(saved);
+          const map = new Map<string, number>();
+          orderIds.forEach((id, idx) => map.set(id, idx));
+          ordered = [...rawPoojas].sort((a, b) => {
+            const idxA = map.has(a.id) ? map.get(a.id)! : 999;
+            const idxB = map.has(b.id) ? map.get(b.id)! : 999;
+            return idxA - idxB;
+          });
+        }
+      } catch {}
+    }
+    setPoojas(ordered);
     setAllMembers(db.getMembers(businessId));
     setExistingBookings(db.getBookings(businessId));
   }, [businessId]);
@@ -268,7 +285,8 @@ function QuickBookingContent() {
   nextMuhurthamDate.setDate(nextMuhurthamDate.getDate() + 5);
   const nextMuhurthamStr = getLocalDateString(nextMuhurthamDate);
 
-  const [date, setDate] = useState<string>(searchParams.get("date") || todayStr);
+  const urlDate = searchParams.get("date");
+  const [date, setDate] = useState<string>(urlDate || todayStr);
   const [time, setTime] = useState<string>(searchParams.get("time") || "07:45 AM");
 
   const tamilInfo = useMemo(() => getTamilDate(date), [date]);
@@ -285,10 +303,35 @@ function QuickBookingContent() {
       const isTomorrow = i === 1;
       const tInfo = getTamilDate(dateStr);
       const isMuhurtham = tInfo.isMuhurtham;
-      list.push({ dateStr, dayName, isToday, isTomorrow, isMuhurtham });
+      list.push({ dateStr, dayName, isToday, isTomorrow, isMuhurtham, isCustomPicked: false });
     }
     return list;
   }, []);
+
+  // Guarantee that whatever date was selected (e.g. double clicked in calendar) is prominently visible in the strip
+  const displayedDates = useMemo(() => {
+    if (!date) return upcomingDates;
+    const inUpcoming = upcomingDates.some((d) => d.dateStr === date);
+    if (!inUpcoming) {
+      const d = new Date(date + "T00:00:00");
+      if (!isNaN(d.getTime())) {
+        const dayName = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+        const tInfo = getTamilDate(date);
+        return [
+          {
+            dateStr: date,
+            dayName,
+            isToday: date === todayStr,
+            isTomorrow: false,
+            isMuhurtham: tInfo.isMuhurtham,
+            isCustomPicked: true,
+          },
+          ...upcomingDates,
+        ];
+      }
+    }
+    return upcomingDates;
+  }, [upcomingDates, date, todayStr]);
 
   // ---------------------------------------------------------------------------
   // 4. Venue / Location State
@@ -988,9 +1031,13 @@ function QuickBookingContent() {
                   </h2>
                 </div>
 
-                {/* Tamil Month Badge + Quick Date Picker Icon Button */}
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] font-black text-amber-950 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300">
+                {/* English Date Badge + Tamil Month Badge + Quick Date Picker Icon Button */}
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <span className="text-[11px] font-black text-emerald-950 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                    📅 {new Date(date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
+
+                  <span className="text-[10.5px] font-black text-amber-950 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">
                     {tamilInfo.tamilMonth} {tamilInfo.tamilDay}
                   </span>
 
@@ -1017,7 +1064,7 @@ function QuickBookingContent() {
 
               {/* Compact Horizontally Scrollable Date Strip + Date Picker Pill */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
-                {upcomingDates.map((item) => {
+                {displayedDates.map((item) => {
                   const isSel = date === item.dateStr;
                   return (
                     <button
@@ -1031,6 +1078,15 @@ function QuickBookingContent() {
                       }`}
                     >
                       <span>{item.dayName}</span>
+                      {item.isCustomPicked && (
+                        <span
+                          className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                            isSel ? "bg-emerald-950 text-amber-300" : "bg-amber-100 text-amber-900"
+                          }`}
+                        >
+                          தேர்வு ✓
+                        </span>
+                      )}
                       {item.isToday && (
                         <span
                           className={`text-[9px] px-1 py-0.2 rounded font-semibold ${

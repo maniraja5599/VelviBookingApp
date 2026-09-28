@@ -29,7 +29,10 @@ export default function ReferralsPage() {
   const [filterTab, setFilterTab] = useState<"ALL" | "SIGNUP_ONLY" | "PAID">("ALL");
 
   const referralCode = currentUser?.referralCode || "VELVI-RAVI123";
-  const referralLink = `https://velvi.app/signup?ref=${referralCode}`;
+  const referralLink =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/login?ref=${referralCode}`
+      : `https://velvi.date/login?ref=${referralCode}`;
 
   const referrals = db.referrals.filter(
     (r) => r.referrerUserId === currentUser?.id || r.referrerBusinessId === currentBusiness?.id

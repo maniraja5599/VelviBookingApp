@@ -910,18 +910,18 @@ export default function HomeDashboardPage() {
 
   return (
     <div className="space-y-3 pb-8 animate-in fade-in duration-200">
-      {/* 0. High-Impact Pending Dakshina Dues Alert Banner (Only for overdue ceremony dates or completed bookings) */}
+      {/* 0. Soft & Clean Pending Dakshina Dues Alert Banner (Only for overdue ceremony dates or completed bookings) */}
       {overdueDueTotal > 0 && overdueDueBookings.length > 0 && (
-        <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-rose-950 text-white rounded-2xl p-3 border border-rose-700/80 shadow-xs flex items-center justify-between gap-3 text-xs animate-in fade-in">
+        <div className="bg-gradient-to-r from-amber-950 via-[#261505] to-amber-900 text-amber-100 rounded-2xl p-3 border border-amber-600/40 shadow-xs flex items-center justify-between gap-3 text-xs animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-rose-500/30 text-rose-200 flex items-center justify-center shrink-0 border border-rose-400/40 animate-pulse">
-              <AlertCircle className="w-4 h-4 text-rose-300" />
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 border border-amber-400/30">
+              <AlertCircle className="w-4 h-4 text-amber-300" />
             </div>
             <div className="min-w-0">
-              <div className="font-black text-white text-xs sm:text-[13px] truncate">
+              <div className="font-extrabold text-amber-100 text-xs sm:text-[13px] truncate">
                 ₹{overdueDueTotal.toLocaleString("en-IN")} Pending Dues ({overdueDueBookings.length} {overdueDueBookings.length === 1 ? "Booking" : "Bookings"})
               </div>
-              <p className="text-[10.5px] sm:text-[11px] text-rose-200/90 truncate">
+              <p className="text-[10.5px] sm:text-[11px] text-amber-200/80 truncate">
                 Payment pending for completed poojas. Follow up to collect.
               </p>
             </div>
@@ -933,7 +933,7 @@ export default function HomeDashboardPage() {
               setPaymentFilter("PENDING");
               setPendingDueSubTab("OVERDUE");
             }}
-            className="px-2.5 py-1.5 bg-white text-rose-950 hover:bg-rose-50 rounded-xl text-[11px] font-black shrink-0 transition shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
+            className="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-[11px] font-black shrink-0 transition shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
           >
             <span>Collect Dues</span>
             <ArrowRight className="w-3 h-3" />
@@ -1638,13 +1638,13 @@ export default function HomeDashboardPage() {
                 onClick={() => setPaymentFilter("PENDING")}
                 className={`flex-1 py-1.5 rounded-lg transition text-center flex items-center justify-center gap-1 ${
                   paymentFilter === "PENDING"
-                    ? "bg-rose-900 text-white shadow-2xs font-black"
-                    : "text-rose-800 hover:text-rose-950 font-bold"
+                    ? "bg-amber-400 text-slate-950 shadow-2xs font-extrabold"
+                    : "text-amber-900 hover:text-slate-900 font-bold"
                 }`}
               >
                 <span>Pending Dues ({allPendingDueBookings.length})</span>
                 {overdueDueBookings.length > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse shrink-0" />
+                  <span className="w-2 h-2 rounded-full bg-amber-600 shrink-0" />
                 )}
               </button>
 
@@ -1666,14 +1666,14 @@ export default function HomeDashboardPage() {
               <div className="space-y-2">
                 {/* Overdue Alert Banner if completed poojas have unpaid dues */}
                 {overdueDueBookings.length > 0 && (
-                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 flex items-center justify-between text-xs gap-2">
+                  <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/90 text-amber-950 flex items-center justify-between text-xs gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
                       <div className="min-w-0">
-                        <span className="font-black text-rose-900 block truncate">
-                          🚨 Overdue: {overdueDueBookings.length} Completed {overdueDueBookings.length === 1 ? "Pooja" : "Poojas"} Due
+                        <span className="font-extrabold text-amber-950 block truncate">
+                          Overdue: {overdueDueBookings.length} Completed {overdueDueBookings.length === 1 ? "Pooja" : "Poojas"} Due
                         </span>
-                        <span className="text-[10px] text-rose-700 font-semibold block truncate">
+                        <span className="text-[10px] text-amber-800 font-medium block truncate">
                           ₹{overdueDueTotal.toLocaleString("en-IN")} pending collection for finished ceremonies
                         </span>
                       </div>
@@ -1681,7 +1681,7 @@ export default function HomeDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setPendingDueSubTab("OVERDUE")}
-                      className="px-2 py-1 bg-rose-800 hover:bg-rose-900 text-white text-[10px] font-extrabold rounded-lg shrink-0 transition"
+                      className="px-2 py-1 bg-amber-200 hover:bg-amber-300 text-amber-950 text-[10px] font-extrabold rounded-lg shrink-0 transition"
                     >
                       View Overdue
                     </button>
@@ -1694,21 +1694,21 @@ export default function HomeDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setPendingDueSubTab("OVERDUE")}
-                      className={`px-2.5 py-1 rounded-xl font-black transition flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-xl font-bold transition flex items-center gap-1 ${
                         pendingDueSubTab === "OVERDUE"
-                          ? "bg-rose-800 text-white shadow-2xs"
-                          : "bg-white text-rose-800 border border-rose-200 hover:bg-rose-50"
+                          ? "bg-amber-500 text-slate-950 shadow-2xs font-black"
+                          : "bg-white text-amber-900 border border-amber-200/80 hover:bg-amber-50"
                       }`}
                     >
-                      <span>🚨 Overdue ({overdueDueBookings.length})</span>
+                      <span>Overdue ({overdueDueBookings.length})</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setPendingDueSubTab("UPCOMING")}
-                      className={`px-2.5 py-1 rounded-xl font-black transition flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-xl font-bold transition flex items-center gap-1 ${
                         pendingDueSubTab === "UPCOMING"
-                          ? "bg-amber-800 text-white shadow-2xs"
-                          : "bg-white text-amber-800 border border-amber-200 hover:bg-amber-50"
+                          ? "bg-slate-900 text-white shadow-2xs font-black"
+                          : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       <span>⏳ Upcoming ({upcomingDueBookings.length})</span>
