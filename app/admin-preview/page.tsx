@@ -73,6 +73,43 @@ export default function AdminDesignPreviewPage() {
               </div>
             </div>
           ))}
+        {/* Mobile View Showcase */}
+        <div className="text-center space-y-2 border-t border-amber-200/80 pt-8">
+          <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
+            Mobile Screen View (ஸ்மார்ட்போன் பார்வை)
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900">
+            மொபைல் திரையில் இந்த டிசைன்கள் எப்படி இருக்கும்?
+          </h2>
+          <p className="text-sm text-slate-600 max-w-xl mx-auto">
+            ஸ்மார்ட்போனில் நேவிகேஷன், கார்டுகள் மற்றும் மெனு கீழ்கண்டவாறு மிக நேர்த்தியாக அமையும்:
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-3xl p-4 border-2 border-amber-200/80 shadow-lg space-y-3">
+            <h3 className="font-black text-base text-slate-900">Concept 1: Sacred Command Mobile</h3>
+            <p className="text-xs text-slate-600">கீழே மிதக்கும் Floating Dock, கிடைமட்ட ஸ்க்ரோல் KPI கார்டுகள் மற்றும் விரைவு வேலிடிட்டி பட்டன்கள்.</p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <img src="/mobile_admin_1.jpg" alt="Mobile Concept 1" className="w-full h-auto object-cover" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-4 border-2 border-amber-200/80 shadow-lg space-y-3">
+            <h3 className="font-black text-base text-slate-900">Concept 2: Glass Island Mobile</h3>
+            <p className="text-xs text-slate-600">மிதக்கும் கிளாஸ் பில் மெனு, டோனட் சார்ட், மினிமல் கார்டுகள் மற்றும் ஸ்விட்ச் டாகில்கள்.</p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <img src="/mobile_admin_2.jpg" alt="Mobile Concept 2" className="w-full h-auto object-cover" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-4 border-2 border-amber-200/80 shadow-lg space-y-3">
+            <h3 className="font-black text-base text-slate-900">Concept 4: Cyber Dark Mobile</h3>
+            <p className="text-xs text-slate-600">டீப் பிளாக் டார்க் மோட், ஒளிரும் தங்க மற்றும் நியான் எமரால்டு நிறக் குறியீடுகள்.</p>
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <img src="/mobile_admin_4.jpg" alt="Mobile Concept 4" className="w-full h-auto object-cover" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
