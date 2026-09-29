@@ -505,11 +505,11 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
 
             {/* Profile Dropdown Container (Isolated ref so search never triggers profile) */}
             <div className="relative" ref={menuRef}>
-              {/* Profile Button - Clean, Elegant (No cloud icon, no persistent dot) */}
+              {/* Profile Button - Clean, Elegant (Comfortable height & touch target) */}
               <button
                 type="button"
                 onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                className={`flex items-center gap-1.5 px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl transition active:scale-95 border shrink-0 ${
+                className={`flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-2xl transition active:scale-95 border shrink-0 ${
                   isProfileMenuOpen
                     ? "bg-amber-100/90 border-amber-400 text-amber-950 shadow-xs"
                     : "bg-slate-50 hover:bg-slate-100/90 border-slate-200 text-slate-900 shadow-2xs"
@@ -522,21 +522,21 @@ export const MobileHeader: React.FC<{ title?: string; subtitle?: string; backUrl
                   <img
                     src={currentUser.avatarUrl}
                     alt={displayName}
-                    className="w-5 h-5 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
+                    className="w-6 h-6 rounded-full object-cover shrink-0 shadow-2xs ring-1 ring-amber-400/60"
                   />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
-                    <User className="w-3 h-3 text-amber-300 stroke-[2.5]" />
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 flex items-center justify-center shrink-0 shadow-2xs ring-1 ring-amber-400/50">
+                    <User className="w-3.5 h-3.5 text-amber-300 stroke-[2.5]" />
                   </div>
                 )}
 
                 {/* Display Name and Today's Panchangam (Option 1: Tithi • Nakshatra) */}
                 <div className="flex flex-col text-left min-w-0">
-                  <span className="text-[11px] font-extrabold truncate text-slate-900 max-w-[105px] sm:max-w-[140px] leading-tight">
+                  <span className="text-[11.5px] font-extrabold truncate text-slate-900 max-w-[110px] sm:max-w-[145px] leading-tight">
                     {displayName}
                   </span>
-                  <span className="text-[9px] font-bold text-amber-900 flex items-center gap-1 leading-none mt-0.5 truncate max-w-[130px] sm:max-w-[160px]">
-                    <span className="text-[8px] text-amber-600">🪔</span>
+                  <span className="text-[9.5px] font-bold text-amber-900 flex items-center gap-1 leading-none mt-0.5 truncate max-w-[130px] sm:max-w-[160px]">
+                    <span className="text-[8.5px] text-amber-600">🪔</span>
                     <span className="truncate">{todayPanchangam}</span>
                   </span>
                 </div>

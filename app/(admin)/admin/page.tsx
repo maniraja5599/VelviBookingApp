@@ -321,56 +321,6 @@ export default function SuperAdminDashboardPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
-      {/* ─── Header ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-amber-200/80 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
-        <div className="absolute -top-16 -right-16 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-400/8 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-1.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-[11px] font-extrabold text-amber-900">
-              <Shield className="w-3.5 h-3.5 text-amber-700" />
-              Super Administrator
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
-            </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10.5px] font-mono font-bold text-emerald-800">
-              <Globe className="w-3 h-3" />
-              velvi.date • Live
-            </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[10.5px] font-mono font-bold text-blue-800">
-              <CreditCard className="w-3 h-3" />
-              Cashfree Gateway
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            Platform Console
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Admin:{" "}
-            <span className="font-mono font-bold text-emerald-800">manirajankg@gmail.com</span>
-          </p>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-2 flex-wrap self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleCloudSync}
-            disabled={isCloudSyncing}
-            className="px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95"
-          >
-            <RotateCcw className={`w-3.5 h-3.5 text-emerald-700 ${isCloudSyncing ? "animate-spin" : ""}`} />
-            <span>{isCloudSyncing ? "Syncing..." : "Cloud Sync"}</span>
-          </button>
-          <Link
-            href="/app"
-            className="px-3.5 py-2.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl shadow-sm transition flex items-center gap-2 active:scale-95"
-          >
-            <span>Open App</span>
-            <ArrowUpRight className="w-3.5 h-3.5 text-amber-700" />
-          </Link>
-        </div>
-      </div>
-
       {/* ─── Toasts ──────────────────────────────────────────────────────────── */}
       {actionSuccess && (
         <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 p-3.5 rounded-2xl text-xs flex items-center justify-between gap-3 shadow-sm animate-in fade-in">
@@ -403,40 +353,38 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
-      {/* ─── 4 Pastel Soft-Glow KPI Cards (Concept 2 Modern Minimalist Glass) ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* ─── 4 Pastel Soft-Glow KPI Cards (Compact & Neat) ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {/* Total Tenants */}
-        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-sky-200/90 shadow-[0_4px_20px_rgba(56,189,248,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-sky-400/10 rounded-full blur-xl group-hover:bg-sky-400/20 transition-all pointer-events-none" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-600">Total Tenants</span>
-            <div className="w-8 h-8 rounded-2xl bg-sky-50 border border-sky-200/80 flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform shadow-2xs">
-              <Users className="w-4 h-4" />
+        <div className="bg-white/95 backdrop-blur-xl p-3 sm:p-3.5 rounded-2xl border border-sky-200/90 shadow-2xs hover:shadow-xs transition-all group relative overflow-hidden">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-600">Total Tenants</span>
+            <div className="w-7 h-7 rounded-xl bg-sky-50 border border-sky-200/80 flex items-center justify-center text-sky-600 group-hover:scale-105 transition-transform shadow-2xs">
+              <Users className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             {realUsersCount}
           </div>
-          <div className="mt-2 text-[10.5px] text-sky-700 font-semibold truncate flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-sky-400" />
+          <div className="mt-1 text-[10px] text-sky-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
             <span>{demoDirectoryMetrics.length} demo sandboxed</span>
           </div>
         </div>
 
         {/* Active Paid Subs */}
-        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-emerald-200/90 shadow-[0_4px_20px_rgba(16,185,129,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-400/10 rounded-full blur-xl group-hover:bg-emerald-400/20 transition-all pointer-events-none" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-600">Active Subs</span>
-            <div className="w-8 h-8 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-2xs">
-              <CheckCircle className="w-4 h-4" />
+        <div className="bg-white/95 backdrop-blur-xl p-3 sm:p-3.5 rounded-2xl border border-emerald-200/90 shadow-2xs hover:shadow-xs transition-all group relative overflow-hidden">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-600">Active Subs</span>
+            <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 group-hover:scale-105 transition-transform shadow-2xs">
+              <CheckCircle className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tight">
+          <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-emerald-700 tracking-tight">
             {realPaidCount}
           </div>
-          <div className="mt-2 text-[10.5px] text-emerald-700 font-semibold truncate flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="mt-1 text-[10px] text-emerald-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>
               {realUsersCount > 0
                 ? `${Math.round((realPaidCount / realUsersCount) * 100)}% conversion`
@@ -446,37 +394,35 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         {/* Monthly Volume */}
-        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-[0_4px_20px_rgba(245,158,11,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-400/10 rounded-full blur-xl group-hover:bg-amber-400/20 transition-all pointer-events-none" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-600">Monthly Volume</span>
-            <div className="w-8 h-8 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform shadow-2xs">
-              <DollarSign className="w-4 h-4" />
+        <div className="bg-white/95 backdrop-blur-xl p-3 sm:p-3.5 rounded-2xl border border-amber-200/90 shadow-2xs hover:shadow-xs transition-all group relative overflow-hidden">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-600">Monthly Volume</span>
+            <div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 group-hover:scale-105 transition-transform shadow-2xs">
+              <DollarSign className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-amber-700 tracking-tight">
+          <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
             ₹{realPlatformEarnings.toLocaleString("en-IN")}
           </div>
-          <div className="mt-2 text-[10.5px] text-amber-800 font-semibold truncate flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
+          <div className="mt-1 text-[10px] text-amber-800 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             <span>Gross Dakshina volume</span>
           </div>
         </div>
 
         {/* Platform Health / Bookings */}
-        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-purple-200/90 shadow-[0_4px_20px_rgba(168,85,247,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-purple-400/10 rounded-full blur-xl group-hover:bg-purple-400/20 transition-all pointer-events-none" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-600">Total Bookings</span>
-            <div className="w-8 h-8 rounded-2xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-700 group-hover:scale-110 transition-transform shadow-2xs">
-              <Activity className="w-4 h-4" />
+        <div className="bg-white/95 backdrop-blur-xl p-3 sm:p-3.5 rounded-2xl border border-purple-200/90 shadow-2xs hover:shadow-xs transition-all group relative overflow-hidden">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-600">Total Bookings</span>
+            <div className="w-7 h-7 rounded-xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-700 group-hover:scale-105 transition-transform shadow-2xs">
+              <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-purple-700 tracking-tight">
+          <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-purple-700 tracking-tight">
             {realBookingsCount}
           </div>
-          <div className="mt-2 text-[10.5px] text-purple-700 font-semibold truncate flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-purple-400" />
+          <div className="mt-1 text-[10px] text-purple-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
             <span>99.9% uptime • Cashfree Live</span>
           </div>
         </div>

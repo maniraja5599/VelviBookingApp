@@ -26,6 +26,7 @@ import {
   Tag,
   Palette,
   Code2,
+  DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthContext";
 import { db } from "@/lib/db/store";
@@ -452,6 +453,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard },
     { href: "/admin/users", label: "Tenants", icon: Users },
+    { href: "/admin/earnings", label: "Earnings", icon: DollarSign },
     { href: "/admin/subscriptions", label: "Subs", icon: Sparkles },
     { href: "/admin/payments", label: "Ledger", icon: CreditCard },
     { href: "/admin/coupons", label: "Coupons", icon: Tag },
@@ -573,6 +575,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {[
             { href: "/admin", label: "Overview", icon: LayoutDashboard },
             { href: "/admin/users", label: "Tenants", icon: Users },
+            { href: "/admin/earnings", label: "Earnings", icon: DollarSign },
             { href: "/admin/subscriptions", label: "Subs", icon: Sparkles },
             { href: "/admin/payments", label: "Ledger", icon: CreditCard },
             { href: "/app", label: "App", icon: ArrowLeft },
