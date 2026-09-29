@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { db } from "@/lib/db/store";
-import { User } from "@/lib/types";
+import { User, UserDirectoryMetric } from "@/lib/types";
 import {
   Search,
   Shield,
@@ -16,6 +16,8 @@ import {
   Phone,
   Mail,
   Building,
+  Activity,
+  DollarSign,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -62,6 +64,11 @@ export default function AdminUsersPage() {
   const rawUsers = db.users;
   const businesses = db.businesses;
   const subscriptions = db.subscriptions;
+
+  // Live metrics map for bookings count and earnings per user
+  const directoryMetrics = useMemo(() => {
+    return db.getAllUsersDirectoryMetrics();
+  }, [rawUsers, businesses, subscriptions]);
 
   const users = rawUsers.filter((u) => {
     const isSuper =
@@ -266,6 +273,31 @@ export default function AdminUsersPage() {
                   </span>
                 </div>
 
+                {/* Tenant Bookings & Earnings summary pills */}
+                {(() => {
+                  const m = directoryMetrics.find((dm) => dm.user.id === u.id);
+                  const bCount = m ? m.bookingCount : 0;
+                  const earn = m ? m.totalEarnings : 0;
+                  return (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="bg-purple-50/70 border border-purple-200/80 rounded-xl p-2 flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <div>
+                          <span className="text-[9px] text-purple-700 font-bold uppercase tracking-wider block">Bookings</span>
+                          <span className="text-xs font-black text-purple-950">{bCount} fulfilled</span>
+                        </div>
+                      </div>
+                      <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2 flex items-center gap-2">
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <div>
+                          <span className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider block">Earnings</span>
+                          <span className="text-xs font-black text-emerald-950 font-mono">₹{earn.toLocaleString("en-IN")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Collapsible Full Tenant Details */}
                 {isExpanded && (
                   <div className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/70 space-y-2 text-[11px] animate-in fade-in duration-150">
@@ -326,12 +358,14 @@ export default function AdminUsersPage() {
       {/* Desktop Table View (>= 640px) */}
       <div className="hidden sm:block bg-white rounded-3xl border border-amber-200/80 overflow-hidden shadow-2xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700 min-w-[700px]">
+          <table className="w-full text-left text-xs text-slate-700 min-w-[850px]">
             <thead className="bg-amber-50/80 text-slate-700 uppercase text-[10px] tracking-wider border-b border-amber-200">
               <tr>
                 <th className="p-4">User / Tenant</th>
                 <th className="p-4">Business / Organization</th>
                 <th className="p-4">Phone Number</th>
+                <th className="p-4 text-center">Bookings</th>
+                <th className="p-4 text-right">Dakshina Earnings</th>
                 <th className="p-4">Subscription Status</th>
                 <th className="p-4">Validity Expiry</th>
                 <th className="p-4 text-right">Actions</th>
@@ -346,6 +380,9 @@ export default function AdminUsersPage() {
                   month: "short",
                   year: "numeric",
                 });
+                const metric = directoryMetrics.find((dm) => dm.user.id === u.id);
+                const bookingCount = metric ? metric.bookingCount : 0;
+                const totalEarnings = metric ? metric.totalEarnings : 0;
 
                 return (
                   <tr key={u.id} className="hover:bg-amber-50/30 transition">
@@ -355,6 +392,17 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="p-4 text-slate-700">{biz?.name || "Independent Consultant / Priest"}</td>
                     <td className="p-4 text-slate-700 font-mono">{u.mobile}</td>
+                    <td className="p-4 text-center">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-900 font-bold text-xs">
+                        <Activity className="w-3 h-3 text-purple-600" />
+                        <span>{bookingCount}</span>
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      <span className="font-mono font-black text-sm text-emerald-800">
+                        ₹{totalEarnings.toLocaleString("en-IN")}
+                      </span>
+                    </td>
                     <td className="p-4">
                       <span
                         className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
@@ -372,7 +420,7 @@ export default function AdminUsersPage() {
                     <td className="p-4 text-right">
                       <button
                         onClick={() => setSelectedUser(u)}
-                        className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl font-bold text-xs shadow-2xs transition active:scale-95 cursor-pointer"
+                        className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 rounded-xl font-bold text-xs shadow-2xs transition active:scale-95 cursor-pointer whitespace-nowrap"
                       >
                         Adjust Validity
                       </button>

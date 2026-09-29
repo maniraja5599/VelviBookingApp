@@ -684,6 +684,17 @@ export default function SuperAdminDashboardPage() {
                         {metric.business?.name || "Service Profile"} •{" "}
                         {sub?.planName || "Pro"}
                       </p>
+                      {/* Tenant Bookings & Earnings Pills */}
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 border border-purple-200 text-[10px] font-bold text-purple-800">
+                          <Activity className="w-3 h-3 text-purple-600" />
+                          <span>{metric.bookingCount} Bookings</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800 font-mono">
+                          <DollarSign className="w-3 h-3 text-emerald-600" />
+                          <span>₹{metric.totalEarnings.toLocaleString("en-IN")} Earned</span>
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
                       <span className="text-[10px] text-amber-800 font-bold font-mono bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg">
@@ -720,6 +731,73 @@ export default function SuperAdminDashboardPage() {
             View Full User Directory →
           </Link>
         </div>
+
+      {/* ─── Tenant Performance & Earnings Ledger ────────────────────────────── */}
+      <div className="bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              <h3 className="font-extrabold text-sm text-slate-900">Tenant Booking Volume &amp; Earnings</h3>
+            </div>
+            <p className="text-[10.5px] text-slate-500 mt-1">
+              Detailed breakdown of pooja bookings fulfilled and dakshina earnings generated per user
+            </p>
+          </div>
+          <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full self-start sm:self-auto shadow-2xs">
+            {realDirectoryMetrics.length} Active Tenants
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {realDirectoryMetrics.map((metric) => (
+            <div
+              key={metric.user.id}
+              className="p-4 bg-slate-50/70 hover:bg-amber-50/40 border border-slate-200 hover:border-amber-300 rounded-2xl transition shadow-2xs space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h4 className="font-extrabold text-sm text-slate-900 truncate">{metric.user.name}</h4>
+                  <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                    {metric.business?.name || "Service Profile"}
+                  </p>
+                </div>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200 shrink-0">
+                  {metric.subscription?.planName || "Pro"}
+                </span>
+              </div>
+
+              {/* Bookings & Earnings Numbers */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/80">
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70">
+                  <span className="text-[9.5px] text-slate-500 uppercase tracking-wider block font-bold">Total Bookings</span>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-lg font-black text-purple-800">{metric.bookingCount}</span>
+                    <span className="text-[10px] text-slate-500 font-medium">poojas</span>
+                  </div>
+                </div>
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200/70">
+                  <span className="text-[9.5px] text-slate-500 uppercase tracking-wider block font-bold">Earnings (₹)</span>
+                  <div className="flex items-baseline gap-0.5 mt-0.5">
+                    <span className="text-lg font-black text-emerald-800 font-mono">
+                      ₹{metric.totalEarnings.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[10.5px] text-slate-500 pt-1">
+                <span>{metric.user.mobile}</span>
+                <span className="font-mono text-emerald-700 font-bold">
+                  {metric.completedBookingsCount} Completed
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* ─── Quick Action Links ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
