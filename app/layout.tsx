@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     "வேத புரோகிதர்",
     "கணபதி ஹோமம்",
     "கிரஹப்பிரவேசம் வாத்தியார்",
+    "நவகிரக ஹோமம் சாமக்ரி பட்டியல்",
+    "சஷ்டியப்தபூர்த்தி வாத்தியார்",
+    "சுதர்சன ஹோமம் புரோகிதர்",
+    "தமிழ் முகூர்த்த நாட்கள் 2026",
+    "நல்ல நேரம் கௌரி பஞ்சாங்கம்",
     // Tanglish Keywords
     "Velvi",
     "Velvi app",
@@ -42,6 +47,9 @@ export const metadata: Metadata = {
     "Grihapravesam vadhyar",
     "Muhurtham date calendar",
     "Vedic priest software",
+    "Tamil Vadhyar in Chennai",
+    "Tamil Vadhyar in Coimbatore",
+    "Tamil Vadhyar in Bangalore",
     // English Keywords
     "Pooja management software",
     "Priest booking CRM",
@@ -183,7 +191,7 @@ const jsonLdSchema = {
         "@type": "ContactPoint",
         "contactType": "customer support",
         "email": "support@velvi.date",
-        "telephone": "+91-9159036301",
+        "telephone": "+91-8300030123",
         "availableLanguage": ["Tamil", "English"]
       }
     },
@@ -193,7 +201,7 @@ const jsonLdSchema = {
       "name": "Velvi — Vedic Services & Vadhyar Software",
       "alternateName": "வேள்வி வாத்தியார் சேவைகள்",
       "url": "https://velvi.date",
-      "telephone": "+91-9159036301",
+      "telephone": "+91-8300030123",
       "email": "support@velvi.date",
       "priceRange": "₹₹",
       "address": {
@@ -225,12 +233,34 @@ const jsonLdSchema = {
       "alternateName": "வேள்வி வாத்தியார் செயலி",
       "operatingSystem": "Web, iOS, Android, PWA",
       "applicationCategory": "BusinessApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "INR",
-        "category": "30-Day Free Trial Available"
-      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "30-Day Free Trial",
+          "price": "0",
+          "priceCurrency": "INR",
+          "category": "FreeTrial",
+          "description": "30 days full unlimited access to Velvi sacred management"
+        },
+        {
+          "@type": "Offer",
+          "name": "Velvi Pro Monthly",
+          "price": "499",
+          "priceCurrency": "INR",
+          "priceValidUntil": "2030-12-31",
+          "availability": "https://schema.org/InStock",
+          "url": "https://velvi.date/pricing"
+        },
+        {
+          "@type": "Offer",
+          "name": "Velvi Pro Annual",
+          "price": "4999",
+          "priceCurrency": "INR",
+          "priceValidUntil": "2030-12-31",
+          "availability": "https://schema.org/InStock",
+          "url": "https://velvi.date/pricing"
+        }
+      ],
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.9",
