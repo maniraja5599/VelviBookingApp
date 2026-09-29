@@ -638,37 +638,6 @@ export default function SubscriptionPage() {
             <span>Referral Rewards (+30 Days per invite)</span>
           </div>
         </div>
-
-        {/* Extend Action Button */}
-        {isFreeRedemption ? (
-          <button
-            type="button"
-            onClick={handleStartPayment}
-            disabled={isProcessing}
-            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer disabled:opacity-60"
-          >
-            <Gift className="w-4 h-4" />
-            <span>
-              {isProcessing
-                ? "Processing..."
-                : `🎁 Redeem Free Velvi Pro (+${totalDaysToAdd} Days)`}
-            </span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={handleStartPayment}
-            disabled={isProcessing}
-            className="w-full py-3 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer disabled:opacity-60"
-          >
-            <Sparkles className="w-4 h-4 text-velvi-goldLight" />
-            <span>
-              {isProcessing
-                ? "Processing..."
-                : `Extend Validity • ₹${payableAmount} (+${totalDaysToAdd} Days)`}
-            </span>
-          </button>
-        )}
       </div>
 
       {/* Plan Pricing Options */}
@@ -871,6 +840,39 @@ export default function SubscriptionPage() {
               </div>
             )}
           </div>
+        )}
+      </div>
+
+      {/* Primary Extend Validity Action Button - Positioned cleanly below Promo Coupon Code */}
+      <div className="pt-1">
+        {isFreeRedemption ? (
+          <button
+            type="button"
+            onClick={handleStartPayment}
+            disabled={isProcessing}
+            className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-2xl font-black text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer disabled:opacity-60"
+          >
+            <Gift className="w-4 h-4" />
+            <span>
+              {isProcessing
+                ? "Processing..."
+                : `🎁 Redeem Free Velvi Pro (+${totalDaysToAdd} Days)`}
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleStartPayment}
+            disabled={isProcessing}
+            className="w-full py-3.5 bg-velvi-brown hover:bg-velvi-brownLight text-white rounded-2xl font-black text-xs shadow-md flex items-center justify-center gap-2 transition active:scale-98 cursor-pointer disabled:opacity-60"
+          >
+            <Sparkles className="w-4 h-4 text-velvi-goldLight" />
+            <span>
+              {isProcessing
+                ? "Processing..."
+                : `Extend Validity • ₹${payableAmount} (+${totalDaysToAdd} Days)`}
+            </span>
+          </button>
         )}
       </div>
       </>

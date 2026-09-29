@@ -52,7 +52,9 @@ export default function LoginPage() {
         return;
       }
       if (currentUser.mobile && currentUser.mobile.length >= 10 && currentUser.mobileVerified) {
-        router.push("/app/calendar");
+        const lastRoute = typeof window !== "undefined" ? localStorage.getItem("velvi_last_active_route") : null;
+        const targetRoute = lastRoute && lastRoute.startsWith("/app") ? lastRoute : "/app";
+        router.push(targetRoute);
         return;
       }
       // If user is logged in with Google but hasn't completed mobile setup, open step 2
@@ -312,7 +314,7 @@ export default function LoginPage() {
     setError("");
     try {
       await loginDemo();
-      router.push("/app/calendar");
+      router.push("/app");
     } catch (err: any) {
       setError(err?.message || "Demo login failed. Please try again.");
     } finally {
@@ -363,7 +365,9 @@ export default function LoginPage() {
         whatsapp: normalizedMobile,
       });
 
-      router.push("/app/calendar");
+      const lastRoute = typeof window !== "undefined" ? localStorage.getItem("velvi_last_active_route") : null;
+      const targetRoute = lastRoute && lastRoute.startsWith("/app") ? lastRoute : "/app";
+      router.push(targetRoute);
     } catch (err: any) {
       setError(err?.message || "Failed to save profile. Please try again.");
     } finally {

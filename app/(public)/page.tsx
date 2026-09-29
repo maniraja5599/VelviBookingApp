@@ -15,14 +15,18 @@ export default function PublicLandingPage() {
     if (isLoading) return;
 
     if (currentUser) {
-      router.replace("/app/calendar");
+      const lastRoute = typeof window !== "undefined" ? localStorage.getItem("velvi_last_active_route") : null;
+      const targetRoute = lastRoute && lastRoute.startsWith("/app") ? lastRoute : "/app";
+      router.replace(targetRoute);
     } else {
       router.replace("/login");
     }
 
     const fallbackTimer = setTimeout(() => {
       if (typeof window !== "undefined") {
-        window.location.href = currentUser ? "/app/calendar" : "/login";
+        const lastRoute = localStorage.getItem("velvi_last_active_route");
+        const targetRoute = lastRoute && lastRoute.startsWith("/app") ? lastRoute : "/app";
+        window.location.href = currentUser ? targetRoute : "/login";
       }
     }, 1500);
     return () => clearTimeout(fallbackTimer);
@@ -36,7 +40,9 @@ export default function PublicLandingPage() {
             try {
               var uid = localStorage.getItem("velvi_active_user_id");
               if (uid && uid !== "LOGGED_OUT") {
-                window.location.replace("/app/calendar");
+                var lastRoute = localStorage.getItem("velvi_last_active_route");
+                var target = lastRoute && lastRoute.indexOf("/app") === 0 ? lastRoute : "/app";
+                window.location.replace(target);
               } else {
                 window.location.replace("/login");
               }

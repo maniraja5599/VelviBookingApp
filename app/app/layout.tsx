@@ -41,16 +41,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, currentUser, router]);
 
-  // First time app open: Default landing page is Calendar (/app/calendar)
+  // Save last active in-app page so users can resume where they left off
   useEffect(() => {
-    if (typeof window !== "undefined" && pathname === "/app") {
-      const hasLanded = sessionStorage.getItem("velvi_session_landed");
-      if (!hasLanded) {
-        sessionStorage.setItem("velvi_session_landed", "true");
-        router.replace("/app/calendar");
-      }
+    if (typeof window !== "undefined" && pathname && pathname.startsWith("/app")) {
+      try {
+        localStorage.setItem("velvi_last_active_route", pathname);
+      } catch {}
     }
-  }, [pathname, router]);
+  }, [pathname]);
 
   // Always ensure clean scroll-to-top on route navigation so pages always start cleanly at the top
   useEffect(() => {
