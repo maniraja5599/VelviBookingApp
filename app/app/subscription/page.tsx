@@ -118,13 +118,26 @@ export default function SubscriptionPage() {
     year: "numeric",
   });
 
-  // Calculate base & coupon-adjusted validity
+  // Calculate base, tax & coupon-adjusted validity
+  const platformSettings = db.platformSettings;
+  const monthlyOriginal = platformSettings?.monthlyOriginalPrice ?? 999;
+  const monthlyDiscountPercent = platformSettings?.monthlyDiscountPercent ?? 50;
+  const monthlyPrice = Math.round(monthlyOriginal * (1 - monthlyDiscountPercent / 100));
+
+  const yearlyOriginal = platformSettings?.yearlyOriginalPrice ?? 9999;
+  const yearlyDiscountPercent = platformSettings?.yearlyDiscountPercent ?? 50;
+  const yearlyPrice = Math.round(yearlyOriginal * (1 - yearlyDiscountPercent / 100));
+
+  const taxPercent = platformSettings?.taxPercent ?? 18;
+
   const baseRenewalDate = isCurrentlyActive ? endDate : now;
   const baseCycleDays = selectedCycle === "MONTHLY" ? 30 : 365;
-  const baseCycleAmount = selectedCycle === "MONTHLY" ? 499 : 4999;
+  const baseCycleAmount = selectedCycle === "MONTHLY" ? monthlyPrice : yearlyPrice;
   const bonusDays = couponDiscountInfo?.bonusDays || 0;
   const totalDaysToAdd = baseCycleDays + bonusDays;
-  const payableAmount = couponDiscountInfo ? couponDiscountInfo.finalAmount : baseCycleAmount;
+  const netPayable = couponDiscountInfo ? couponDiscountInfo.finalAmount : baseCycleAmount;
+  const taxAmount = netPayable > 0 ? Math.round(netPayable * (taxPercent / 100)) : 0;
+  const payableAmount = netPayable + taxAmount;
   const isFreeRedemption = appliedCoupon !== null && payableAmount === 0;
 
   const projectedDateObj = new Date(baseRenewalDate.getTime() + totalDaysToAdd * 24 * 60 * 60 * 1000);
@@ -674,9 +687,15 @@ export default function SubscriptionPage() {
                 : "bg-velvi-cream/20 border-velvi-gold/20"
             }`}
           >
+            <span className="absolute -top-2 right-2 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
+              {monthlyDiscountPercent}% OFF
+            </span>
             <div className="text-[10px] font-bold text-velvi-brown/60 uppercase">Monthly</div>
-            <div className="text-base font-extrabold text-velvi-brownDark mt-0.5">₹499</div>
-            <div className="text-[10px] text-velvi-brown/70">Per month billed</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs font-bold text-slate-400 line-through">₹{monthlyOriginal}</span>
+              <span className="text-base font-black text-velvi-brownDark">₹{monthlyPrice}</span>
+            </div>
+            <div className="text-[9.5px] text-amber-900/80 font-medium">+ {taxPercent}% GST</div>
             <div className="text-[10px] font-semibold text-emerald-800 mt-1 pt-1 border-t border-velvi-gold/20">
               +30 Days Pro
             </div>
@@ -691,12 +710,15 @@ export default function SubscriptionPage() {
                 : "bg-velvi-cream/20 border-velvi-gold/20"
             }`}
           >
-            <span className="absolute -top-2 right-2 bg-velvi-gold text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full shadow-sm">
-              Save ₹989
+            <span className="absolute -top-2 right-2 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
+              {yearlyDiscountPercent}% OFF
             </span>
             <div className="text-[10px] font-bold text-velvi-brown/60 uppercase">Annual</div>
-            <div className="text-base font-extrabold text-velvi-brownDark mt-0.5">₹4,999</div>
-            <div className="text-[10px] text-velvi-sacredGreen font-semibold">17% Savings</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs font-bold text-slate-400 line-through">₹{yearlyOriginal.toLocaleString("en-IN")}</span>
+              <span className="text-base font-black text-velvi-brownDark">₹{yearlyPrice.toLocaleString("en-IN")}</span>
+            </div>
+            <div className="text-[9.5px] text-amber-900/80 font-medium">+ {taxPercent}% GST</div>
             <div className="text-[10px] font-semibold text-emerald-800 mt-1 pt-1 border-t border-velvi-gold/20">
               +365 Days Pro
             </div>
@@ -1049,6 +1071,11 @@ export default function SubscriptionPage() {
                 </span>
               </div>
 
+              <div className="flex justify-between">
+                <span className="text-velvi-brown/60">Base Price:</span>
+                <span className="font-semibold text-velvi-brownDark">₹{baseCycleAmount}</span>
+              </div>
+
               {appliedCoupon && (
                 <div className="flex justify-between text-emerald-800">
                   <span>Coupon ({appliedCoupon.code}):</span>
@@ -1056,8 +1083,15 @@ export default function SubscriptionPage() {
                 </div>
               )}
 
+              {taxAmount > 0 && (
+                <div className="flex justify-between text-slate-600">
+                  <span>GST / Tax ({taxPercent}%):</span>
+                  <span className="font-semibold text-slate-800">+₹{taxAmount}</span>
+                </div>
+              )}
+
               <div className="flex justify-between pt-1 border-t border-velvi-gold/20">
-                <span className="text-velvi-brown/60">Total Payable:</span>
+                <span className="text-velvi-brown/80 font-bold">Total Payable:</span>
                 <span className="font-extrabold text-base text-velvi-brownDark">
                   ₹{payableAmount}
                 </span>

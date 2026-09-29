@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Check, Sparkles, Shield, Clock, ArrowRight, Zap } from "lucide-react";
 import { VelviLogo } from "@/components/ui/VelviLogo";
 import { ComplianceFooter } from "@/components/ui/ComplianceFooter";
+import { db } from "@/lib/db/store";
 
 export default function PublicPricingPage() {
   return (
@@ -48,123 +49,158 @@ export default function PublicPricingPage() {
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
-          {/* Monthly Plan */}
-          <div className="bg-white rounded-3xl p-6 border border-amber-200/90 shadow-sm space-y-5 flex flex-col justify-between hover:border-amber-300 transition">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                  Monthly Membership
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full">
-                  Flexible
-                </span>
+        {(() => {
+          const s = db.platformSettings;
+          const monthlyOriginal = s?.monthlyOriginalPrice ?? 999;
+          const monthlyDisc = s?.monthlyDiscountPercent ?? 50;
+          const monthlyDiscounted = Math.round(monthlyOriginal * (1 - monthlyDisc / 100));
+
+          const yearlyOriginal = s?.yearlyOriginalPrice ?? 9999;
+          const yearlyDisc = s?.yearlyDiscountPercent ?? 50;
+          const yearlyDiscounted = Math.round(yearlyOriginal * (1 - yearlyDisc / 100));
+
+          const taxRate = s?.taxPercent ?? 18;
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+              {/* Monthly Plan */}
+              <div className="bg-white rounded-3xl p-6 border border-amber-200/90 shadow-sm space-y-5 flex flex-col justify-between hover:border-amber-300 transition">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                      Monthly Membership
+                    </span>
+                    <span className="text-[10px] font-black px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300">
+                      {monthlyDisc}% OFF
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-400 line-through">
+                        ₹{monthlyOriginal.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        Limited Offer
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-3xl font-black text-slate-900">
+                        ₹{monthlyDiscounted.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-xs text-slate-500 font-semibold">/ month</span>
+                    </div>
+                    <p className="text-[11px] text-amber-900/80 font-medium mt-1">
+                      + {taxRate}% GST applicable at checkout • Instant activation
+                    </p>
+                  </div>
+
+                  <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Unlimited Pooja &amp; Homam Bookings</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Dual Tamil + English Panchangam Calendar</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Devotee Records &amp; PDF Slips</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Samagri Checklists &amp; WhatsApp Sharing</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Assistant Iyer &amp; Team Dakshina Settlements</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Excel Data Export &amp; Import</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href="/login"
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold text-xs rounded-2xl text-center transition block active:scale-98"
+                >
+                  Choose Monthly Plan
+                </Link>
               </div>
 
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900">₹499</span>
-                  <span className="text-xs text-slate-500 font-semibold">/ month</span>
+              {/* Annual Plan (Featured) */}
+              <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/50 rounded-3xl p-6 border-2 border-amber-400 shadow-md space-y-5 flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-600 to-emerald-700 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-xs">
+                  {yearlyDisc}% OFF • BEST VALUE
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Billed monthly • GST included • Instant activation
-                </p>
-              </div>
 
-              <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs text-slate-700">
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Unlimited Pooja &amp; Homam Bookings</span>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-extrabold uppercase tracking-wider text-amber-900">
+                      Annual Membership
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full">
+                      Save ₹{(yearlyOriginal - yearlyDiscounted).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-slate-400 line-through">
+                        ₹{yearlyOriginal.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        {yearlyDisc}% Special
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-3xl font-black text-slate-900">
+                        ₹{yearlyDiscounted.toLocaleString("en-IN")}
+                      </span>
+                      <span className="text-xs text-slate-500 font-semibold">/ year</span>
+                    </div>
+                    <p className="text-[11px] text-amber-900 font-semibold mt-1">
+                      Equivalent to ₹{Math.round(yearlyDiscounted / 12)}/month • + {taxRate}% GST at checkout
+                    </p>
+                  </div>
+
+                  <div className="space-y-2.5 pt-2 border-t border-amber-200/60 text-xs text-slate-700">
+                    <div className="flex items-center gap-2 font-medium">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>All Monthly Plan Features Included</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Custom Temple / Business Logo Watermark</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Priority WhatsApp Support (+91-8300030123)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Automated Daily Supabase Cloud Backup</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>Zero Lost Days Renewal Protection</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Dual Tamil + English Panchangam Calendar</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Devotee Records &amp; PDF Slips</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Samagri Checklists &amp; WhatsApp Sharing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Assistant Iyer &amp; Team Dakshina Settlements</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Excel Data Export &amp; Import</span>
-                </div>
+
+                <Link
+                  href="/login"
+                  className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-white font-extrabold text-xs rounded-2xl text-center shadow-sm transition block active:scale-98"
+                >
+                  Get Annual Plan &amp; Save
+                </Link>
               </div>
             </div>
-
-            <Link
-              href="/login"
-              className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold text-xs rounded-2xl text-center transition block active:scale-98"
-            >
-              Choose Monthly Plan
-            </Link>
-          </div>
-
-          {/* Annual Plan (Featured) */}
-          <div className="bg-gradient-to-br from-amber-50/90 via-white to-amber-100/50 rounded-3xl p-6 border-2 border-amber-400 shadow-md space-y-5 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-gradient-to-l from-amber-600 to-amber-700 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-xs">
-              BEST VALUE • SAVE 17%
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-extrabold uppercase tracking-wider text-amber-900">
-                  Annual Membership
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full">
-                  Save ₹989
-                </span>
-              </div>
-
-              <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-slate-900">₹4,999</span>
-                  <span className="text-xs text-slate-500 font-semibold">/ year</span>
-                </div>
-                <p className="text-[11px] text-amber-900 font-semibold mt-0.5">
-                  Equivalent to ₹416/month • 12 months full access
-                </p>
-              </div>
-
-              <div className="space-y-2.5 pt-2 border-t border-amber-200/60 text-xs text-slate-700">
-                <div className="flex items-center gap-2 font-medium">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>All Monthly Plan Features Included</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Custom Temple / Business Logo Watermark</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Priority WhatsApp Support (+91-8300030123)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Automated Daily Supabase Cloud Backup</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Zero Lost Days Renewal Protection</span>
-                </div>
-              </div>
-            </div>
-
-            <Link
-              href="/login"
-              className="w-full py-3 bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-white font-extrabold text-xs rounded-2xl text-center shadow-sm transition block active:scale-98"
-            >
-              Get Annual Plan &amp; Save
-            </Link>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Payment Methods Banner */}
         <div className="bg-white p-5 rounded-3xl border border-amber-200/80 shadow-xs max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">

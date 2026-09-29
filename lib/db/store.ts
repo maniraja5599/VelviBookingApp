@@ -68,6 +68,11 @@ export interface PlatformSettings {
   announcementActive: boolean;
   announcementMessage: string;
   maintenanceMode: boolean;
+  monthlyOriginalPrice?: number;
+  monthlyDiscountPercent?: number;
+  yearlyOriginalPrice?: number;
+  yearlyDiscountPercent?: number;
+  taxPercent?: number;
 }
 
 export const DEFAULT_SAMAGRI_CATEGORIES: SamagriCategory[] = [
@@ -305,6 +310,11 @@ export class VelviDatabaseStore {
     announcementActive: true,
     announcementMessage: "System operational. All bookings and reminders running on schedule.",
     maintenanceMode: false,
+    monthlyOriginalPrice: 999,
+    monthlyDiscountPercent: 50,
+    yearlyOriginalPrice: 9999,
+    yearlyDiscountPercent: 50,
+    taxPercent: 18,
   };
 
   public coupons: Coupon[] = structuredClone(DEFAULT_COUPONS);
@@ -1622,6 +1632,11 @@ export class VelviDatabaseStore {
       newValue: updates,
       createdAt: new Date().toISOString(),
     });
+    this.saveToLocalStorage();
+    this.notifyListeners();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("velvi:db-change"));
+    }
     return this.platformSettings;
   }
 
@@ -2114,6 +2129,7 @@ export class VelviDatabaseStore {
         webTrafficLogs: this.webTrafficLogs,
         samagriCategories: this.samagriCategories,
         recentlyDeleted: this.recentlyDeleted,
+        platformSettings: this.platformSettings,
       };
       localStorage.setItem("velvi_db_state_v2", JSON.stringify(state));
       localStorage.setItem("velvi_coupons_v2", JSON.stringify(this.coupons));
@@ -2268,6 +2284,12 @@ export class VelviDatabaseStore {
               this.samagriCategories[idx].labelEn = defCat.labelEn;
             }
           });
+        }
+        if (state.platformSettings && typeof state.platformSettings === "object") {
+          this.platformSettings = {
+            ...this.platformSettings,
+            ...state.platformSettings,
+          };
         }
         if (localStorage.getItem("velvi_demo_data_cleared") === "true") {
           const seedBookingIds = new Set(SEED_BOOKINGS.map((b) => b.id));
@@ -3006,7 +3028,15 @@ export class VelviDatabaseStore {
     finalAmount: number;
     bonusDays: number;
   } {
-    const baseAmount = cycle === "MONTHLY" ? 499 : 4999;
+    const monthlyPrice = Math.round(
+      (this.platformSettings?.monthlyOriginalPrice ?? 999) *
+      (1 - (this.platformSettings?.monthlyDiscountPercent ?? 50) / 100)
+    );
+    const yearlyPrice = Math.round(
+      (this.platformSettings?.yearlyOriginalPrice ?? 9999) *
+      (1 - (this.platformSettings?.yearlyDiscountPercent ?? 50) / 100)
+    );
+    const baseAmount = cycle === "MONTHLY" ? monthlyPrice : yearlyPrice;
     const cleanCode = (rawCode || "").trim().toUpperCase();
     if (!cleanCode) {
       return {

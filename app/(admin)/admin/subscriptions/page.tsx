@@ -2,12 +2,58 @@
 
 import React, { useState } from "react";
 import { db } from "@/lib/db/store";
-import { Sparkles, Clock, CheckCircle, Search, Calendar, ArrowUpRight, ChevronDown, ChevronUp, UserCheck, Shield } from "lucide-react";
+import {
+  Sparkles,
+  Clock,
+  CheckCircle,
+  Search,
+  Calendar,
+  ArrowUpRight,
+  ChevronDown,
+  ChevronUp,
+  UserCheck,
+  Shield,
+  IndianRupee,
+  Percent,
+  Save,
+  Tag,
+  Receipt,
+} from "lucide-react";
 import Link from "next/link";
+import { retryCloudSync } from "@/lib/supabase/sync";
 
 export default function AdminSubscriptionsPage() {
   const [search, setSearch] = useState("");
   const [expandedSubId, setExpandedSubId] = useState<string | null>(null);
+
+  // Pricing & Tax Settings State
+  const initialSettings = db.platformSettings;
+  const [monthlyOriginal, setMonthlyOriginal] = useState(initialSettings?.monthlyOriginalPrice ?? 999);
+  const [monthlyDiscount, setMonthlyDiscount] = useState(initialSettings?.monthlyDiscountPercent ?? 50);
+  const [yearlyOriginal, setYearlyOriginal] = useState(initialSettings?.yearlyOriginalPrice ?? 9999);
+  const [yearlyDiscount, setYearlyDiscount] = useState(initialSettings?.yearlyDiscountPercent ?? 50);
+  const [taxPercent, setTaxPercent] = useState(initialSettings?.taxPercent ?? 18);
+  const [pricingToast, setPricingToast] = useState("");
+
+  const calculatedMonthly = Math.round(monthlyOriginal * (1 - monthlyDiscount / 100));
+  const calculatedYearly = Math.round(yearlyOriginal * (1 - yearlyDiscount / 100));
+
+  const handleSavePricing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    db.updatePlatformSettings({
+      monthlyOriginalPrice: Number(monthlyOriginal) || 999,
+      monthlyDiscountPercent: Number(monthlyDiscount) || 0,
+      yearlyOriginalPrice: Number(yearlyOriginal) || 9999,
+      yearlyDiscountPercent: Number(yearlyDiscount) || 0,
+      taxPercent: Number(taxPercent) || 18,
+    });
+    try {
+      await retryCloudSync("biz-super-admin-01");
+    } catch {}
+    setPricingToast("Plan Pricing & Tax Settings saved successfully!");
+    setTimeout(() => setPricingToast(""), 3500);
+  };
+
   const subscriptions = db.subscriptions;
   const businesses = db.businesses;
 
@@ -29,6 +75,14 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200">
+      {/* Toast */}
+      {pricingToast && (
+        <div className="fixed top-4 right-4 z-50 px-4 py-3 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-2xl shadow-lg text-xs font-bold flex items-center gap-2 animate-in slide-in-from-top-2">
+          <CheckCircle className="w-4 h-4 text-emerald-600" />
+          <span>{pricingToast}</span>
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-white border border-amber-200/90 rounded-3xl p-5 sm:p-7 text-slate-900 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden">
         <div className="space-y-1.5 relative z-10">
@@ -40,7 +94,7 @@ export default function AdminSubscriptionsPage() {
             Subscription Management &amp; Ledger
           </h1>
           <p className="text-xs sm:text-sm text-slate-600">
-            Plan tiers, renewal cycles, and tenant subscription status overview
+            Plan tiers, direct pricing controls, renewal cycles, and tenant subscription status overview
           </p>
         </div>
 
@@ -53,6 +107,140 @@ export default function AdminSubscriptionsPage() {
             <ArrowUpRight className="w-3.5 h-3.5 text-amber-700" />
           </Link>
         </div>
+      </div>
+
+      {/* Super Admin Direct Plan Pricing & Tax Configuration Card */}
+      <div className="bg-white rounded-3xl border border-amber-300 shadow-sm p-5 sm:p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-200 text-amber-700 flex items-center justify-center">
+              <IndianRupee className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900">Platform Plan Pricing &amp; 18% Tax Settings</h2>
+              <p className="text-[11px] text-slate-500">
+                Directly configure base prices, discount percentages, and GST applied during checkout
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full">
+            Live Config
+          </span>
+        </div>
+
+        <form onSubmit={handleSavePricing} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            {/* Monthly Base Price */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-slate-700 font-bold block text-[11px]">Monthly Price (₹)</label>
+              <div className="relative">
+                <span className="absolute left-2.5 top-2 font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={monthlyOriginal}
+                  onChange={(e) => setMonthlyOriginal(Number(e.target.value))}
+                  className="w-full pl-6 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-400"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 block">Default: ₹999</span>
+            </div>
+
+            {/* Monthly Discount % */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-slate-700 font-bold block text-[11px]">Monthly Discount (%)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  required
+                  value={monthlyDiscount}
+                  onChange={(e) => setMonthlyDiscount(Number(e.target.value))}
+                  className="w-full pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-400"
+                />
+                <span className="absolute right-2.5 top-2 font-bold text-slate-400">%</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 block">
+                Offer: ₹{calculatedMonthly}/mo ({monthlyDiscount}% OFF)
+              </span>
+            </div>
+
+            {/* Yearly Base Price */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-slate-700 font-bold block text-[11px]">Yearly Price (₹)</label>
+              <div className="relative">
+                <span className="absolute left-2.5 top-2 font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={yearlyOriginal}
+                  onChange={(e) => setYearlyOriginal(Number(e.target.value))}
+                  className="w-full pl-6 pr-2.5 py-1.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-400"
+                />
+              </div>
+              <span className="text-[10px] text-slate-400 block">Default: ₹9,999</span>
+            </div>
+
+            {/* Yearly Discount % */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-slate-700 font-bold block text-[11px]">Yearly Discount (%)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  required
+                  value={yearlyDiscount}
+                  onChange={(e) => setYearlyDiscount(Number(e.target.value))}
+                  className="w-full pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-400"
+                />
+                <span className="absolute right-2.5 top-2 font-bold text-slate-400">%</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 block">
+                Offer: ₹{calculatedYearly}/yr ({yearlyDiscount}% OFF)
+              </span>
+            </div>
+
+            {/* Tax / GST % */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-1.5">
+              <label className="text-slate-700 font-bold block text-[11px]">GST / Tax Rate (%)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  required
+                  value={taxPercent}
+                  onChange={(e) => setTaxPercent(Number(e.target.value))}
+                  className="w-full pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-amber-400"
+                />
+                <span className="absolute right-2.5 top-2 font-bold text-slate-400">%</span>
+              </div>
+              <span className="text-[10px] text-slate-500 block">
+                Monthly GST: +₹{(calculatedMonthly * (taxPercent / 100)).toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+            <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <Receipt className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+              <span>
+                Checkout totals: Monthly <strong>₹{(calculatedMonthly * (1 + taxPercent / 100)).toFixed(2)}</strong> (Net ₹{calculatedMonthly} + {taxPercent}% GST) • Annual <strong>₹{(calculatedYearly * (1 + taxPercent / 100)).toFixed(2)}</strong> (Net ₹{calculatedYearly} + {taxPercent}% GST)
+              </span>
+            </div>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow transition flex items-center gap-2 cursor-pointer active:scale-95 shrink-0"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Pricing Settings</span>
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* KPI Counters */}
