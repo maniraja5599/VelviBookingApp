@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Activity,
-  DollarSign,
+  IndianRupee,
   Globe,
   MapPin,
   RotateCcw,
@@ -398,7 +398,7 @@ export default function SuperAdminDashboardPage() {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] sm:text-xs font-bold text-slate-600">Monthly Volume</span>
             <div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 group-hover:scale-105 transition-transform shadow-2xs">
-              <DollarSign className="w-3.5 h-3.5" />
+              <IndianRupee className="w-3.5 h-3.5" />
             </div>
           </div>
           <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
@@ -637,7 +637,7 @@ export default function SuperAdminDashboardPage() {
                           <span>{metric.bookingCount} Bookings</span>
                         </span>
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-800 font-mono">
-                          <DollarSign className="w-3 h-3 text-emerald-600" />
+                          <IndianRupee className="w-3 h-3 text-emerald-600" />
                           <span>₹{metric.totalEarnings.toLocaleString("en-IN")} Earned</span>
                         </span>
                       </div>
@@ -684,7 +684,7 @@ export default function SuperAdminDashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                <DollarSign className="w-4 h-4" />
+                <IndianRupee className="w-4 h-4" />
               </div>
               <h3 className="font-extrabold text-sm text-slate-900">Tenant Booking Volume &amp; Earnings</h3>
             </div>

@@ -17,7 +17,7 @@ import {
   Mail,
   Building,
   Activity,
-  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -288,7 +288,7 @@ export default function AdminUsersPage() {
                         </div>
                       </div>
                       <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-2 flex items-center gap-2">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <IndianRupee className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <div>
                           <span className="text-[9px] text-emerald-700 font-bold uppercase tracking-wider block">Earnings</span>
                           <span className="text-xs font-black text-emerald-950 font-mono">₹{earn.toLocaleString("en-IN")}</span>

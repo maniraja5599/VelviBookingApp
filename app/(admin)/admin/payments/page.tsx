@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { db } from "@/lib/db/store";
-import { CreditCard, CheckCircle, ShieldCheck, Search, DollarSign, ArrowUpRight, Globe, ChevronDown, ChevronUp } from "lucide-react";
+import { CreditCard, CheckCircle, ShieldCheck, Search, IndianRupee, ArrowUpRight, Globe, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminPaymentsPage() {
@@ -58,7 +58,7 @@ export default function AdminPaymentsPage() {
         <div className="bg-white p-4 rounded-3xl border border-amber-200/80 shadow-2xs space-y-1">
           <div className="text-xs font-semibold text-slate-600 flex items-center justify-between">
             <span>Total Volume</span>
-            <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
+            <IndianRupee className="w-3.5 h-3.5 text-emerald-700" />
           </div>
           <div className="text-2xl font-black text-emerald-800">₹{totalAmount.toLocaleString("en-IN")}</div>
           <div className="text-[10.5px] text-emerald-700 font-medium">Processed Collections</div>

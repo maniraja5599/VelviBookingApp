@@ -5,7 +5,7 @@ import Link from "next/link";
 import { db } from "@/lib/db/store";
 import { Booking, UserDirectoryMetric } from "@/lib/types";
 import {
-  DollarSign,
+  IndianRupee,
   TrendingUp,
   CreditCard,
   Search,
@@ -145,7 +145,7 @@ export default function AdminEarningsPage() {
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-[11px] font-extrabold text-amber-900">
-              <DollarSign className="w-3.5 h-3.5 text-amber-700" />
+              <IndianRupee className="w-3.5 h-3.5 text-amber-700" />
               Platform Bookings &amp; Earnings
             </span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10.5px] font-mono font-bold text-emerald-800">
@@ -183,7 +183,7 @@ export default function AdminEarningsPage() {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] sm:text-xs font-bold text-slate-600">Total Dakshina</span>
             <div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 group-hover:scale-105 transition-transform shadow-2xs">
-              <DollarSign className="w-3.5 h-3.5" />
+              <IndianRupee className="w-3.5 h-3.5" />
             </div>
           </div>
           <div suppressHydrationWarning className="text-xl sm:text-2xl font-black text-amber-700 tracking-tight">
