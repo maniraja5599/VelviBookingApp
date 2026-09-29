@@ -73,6 +73,8 @@ export default function AdminDesignPreviewPage() {
               </div>
             </div>
           ))}
+        </div>
+
         {/* Mobile View Showcase */}
         <div className="text-center space-y-2 border-t border-amber-200/80 pt-8">
           <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full border border-emerald-300">
