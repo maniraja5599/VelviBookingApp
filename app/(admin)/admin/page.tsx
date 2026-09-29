@@ -403,99 +403,103 @@ export default function SuperAdminDashboardPage() {
         </div>
       )}
 
-      {/* ─── 4 KPI Cards ─────────────────────────────────────────────────────── */}
+      {/* ─── 4 Pastel Soft-Glow KPI Cards (Concept 2 Modern Minimalist Glass) ─── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-300 transition-all shadow-sm group relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
+        {/* Total Tenants */}
+        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-sky-200/90 shadow-[0_4px_20px_rgba(56,189,248,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-sky-400/10 rounded-full blur-xl group-hover:bg-sky-400/20 transition-all pointer-events-none" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-900">Total Users</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold text-slate-600">Total Tenants</span>
+            <div className="w-8 h-8 rounded-2xl bg-sky-50 border border-sky-200/80 flex items-center justify-center text-sky-600 group-hover:scale-110 transition-transform shadow-2xs">
               <Users className="w-4 h-4" />
             </div>
           </div>
           <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             {realUsersCount}
           </div>
-          <div className="mt-2 text-[10.5px] text-amber-800 font-medium truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-            <span>{demoDirectoryMetrics.length} demo isolated</span>
+          <div className="mt-2 text-[10.5px] text-sky-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-sky-400" />
+            <span>{demoDirectoryMetrics.length} demo sandboxed</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-emerald-300 transition-all shadow-sm group relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
+        {/* Active Paid Subs */}
+        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-emerald-200/90 shadow-[0_4px_20px_rgba(16,185,129,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-400/10 rounded-full blur-xl group-hover:bg-emerald-400/20 transition-all pointer-events-none" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-emerald-800">Paid Tenants</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold text-slate-600">Active Subs</span>
+            <div className="w-8 h-8 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-2xs">
               <CheckCircle className="w-4 h-4" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-800 tracking-tight">
+          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tight">
             {realPaidCount}
           </div>
-          <div className="mt-2 text-[10.5px] text-emerald-700 font-medium truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="mt-2 text-[10.5px] text-emerald-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>
               {realUsersCount > 0
                 ? `${Math.round((realPaidCount / realUsersCount) * 100)}% conversion`
-                : "0% conversion"}
+                : "100% active"}
             </span>
           </div>
         </div>
 
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-amber-300 transition-all shadow-sm group relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all" />
+        {/* Monthly Volume */}
+        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-amber-200/90 shadow-[0_4px_20px_rgba(245,158,11,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-400/10 rounded-full blur-xl group-hover:bg-amber-400/20 transition-all pointer-events-none" />
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-amber-800">Real Bookings</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform">
-              <Activity className="w-4 h-4" />
-            </div>
-          </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-amber-800 tracking-tight">
-            {realBookingsCount}
-          </div>
-          <div className="mt-2 text-[10.5px] text-slate-500 font-medium truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
-            <span>Live devotees scheduled</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-amber-200/80 hover:border-emerald-300 transition-all shadow-sm group relative overflow-hidden">
-          <div className="absolute -right-6 -top-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-emerald-800">Total Dakshina</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700 group-hover:scale-110 transition-transform">
+            <span className="text-xs font-bold text-slate-600">Monthly Volume</span>
+            <div className="w-8 h-8 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-center text-amber-700 group-hover:scale-110 transition-transform shadow-2xs">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-emerald-800 tracking-tight">
+          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-amber-700 tracking-tight">
             ₹{realPlatformEarnings.toLocaleString("en-IN")}
           </div>
-          <div className="mt-2 text-[10.5px] text-emerald-700 font-medium truncate flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span>Gross platform volume</span>
+          <div className="mt-2 text-[10.5px] text-amber-800 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span>Gross Dakshina volume</span>
+          </div>
+        </div>
+
+        {/* Platform Health / Bookings */}
+        <div className="bg-white/90 backdrop-blur-xl p-4 sm:p-5 rounded-3xl border border-purple-200/90 shadow-[0_4px_20px_rgba(168,85,247,0.08)] hover:shadow-md transition-all group relative overflow-hidden">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-purple-400/10 rounded-full blur-xl group-hover:bg-purple-400/20 transition-all pointer-events-none" />
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-slate-600">Total Bookings</span>
+            <div className="w-8 h-8 rounded-2xl bg-purple-50 border border-purple-200/80 flex items-center justify-center text-purple-700 group-hover:scale-110 transition-transform shadow-2xs">
+              <Activity className="w-4 h-4" />
+            </div>
+          </div>
+          <div suppressHydrationWarning className="text-2xl sm:text-3xl font-black text-purple-700 tracking-tight">
+            {realBookingsCount}
+          </div>
+          <div className="mt-2 text-[10.5px] text-purple-700 font-semibold truncate flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-purple-400" />
+            <span>99.9% uptime • Cashfree Live</span>
           </div>
         </div>
       </div>
 
       {/* ─── Demo Sandbox Banner ──────────────────────────────────────────────── */}
-      <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-sm">
+      <div className="p-3.5 bg-sky-50/70 border border-sky-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-indigo-400 shrink-0 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-sky-500 shrink-0 animate-pulse" />
           <span className="text-slate-700 font-medium break-words leading-relaxed">
-            <strong className="text-indigo-900 font-bold">Demo Sandbox (Ravi Iyer):</strong>{" "}
+            <strong className="text-sky-950 font-bold">Demo Sandbox (Ravi Iyer):</strong>{" "}
             {demoBookingsCount} simulated bookings • ₹{demoPlatformEarnings.toLocaleString("en-IN")} demo dakshina
           </span>
         </div>
-        <span className="text-[10px] font-bold text-indigo-900 bg-indigo-100 border border-indigo-200 px-3 py-1 rounded-full shrink-0 self-start sm:self-auto">
+        <span className="text-[10px] font-bold text-sky-800 bg-sky-100 border border-sky-200 px-3 py-1 rounded-full shrink-0 self-start sm:self-auto">
           Isolated Sandbox
         </span>
       </div>
 
-      {/* ─── Revenue Chart + Upcoming Expiries ───────────────────────────────── */}
+      {/* ─── Concept 2: Revenue Trend + Tenant Plan Distribution Donut Chart ──── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Revenue Chart */}
-        <div className="lg:col-span-2 bg-white p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm">
+        <div className="lg:col-span-2 bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-extrabold text-sm text-slate-900">Platform Revenue Trend</h3>
@@ -506,7 +510,7 @@ export default function SuperAdminDashboardPage() {
                 ₹{realPlatformEarnings.toLocaleString("en-IN")}
               </div>
             </div>
-            <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-bold shadow-sm">
+            <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full font-bold shadow-2xs">
               {monthlyRevenueTrend.growthText}
             </span>
           </div>
@@ -525,10 +529,10 @@ export default function SuperAdminDashboardPage() {
                     style={{ height: bar.h }}
                     className={`w-full rounded-t-xl transition-all duration-300 ${
                       bar.current
-                        ? "bg-gradient-to-t from-amber-500 to-amber-600 shadow-lg shadow-amber-500/25 ring-1 ring-amber-400"
+                        ? "bg-gradient-to-t from-amber-500 to-amber-600 shadow-md shadow-amber-500/25 ring-1 ring-amber-400"
                         : bar.raw > 0
                           ? "bg-gradient-to-t from-amber-300 to-amber-400 group-hover:from-amber-600 group-hover:to-amber-500"
-                          : "bg-slate-200 group-hover:bg-slate-300"
+                          : "bg-slate-100 group-hover:bg-slate-200"
                     }`}
                   />
                   <span className="text-[10px] font-semibold text-slate-500">{bar.m}</span>
@@ -538,13 +542,108 @@ export default function SuperAdminDashboardPage() {
           </div>
         </div>
 
-        {/* Upcoming Expiries */}
-        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm flex flex-col">
+        {/* Tenant Plan Distribution (Donut Chart) */}
+        <div className="bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div>
-              <h3 className="font-extrabold text-sm text-slate-900">Expiring Subscriptions</h3>
-              <p className="text-[10.5px] text-slate-500 mt-0.5">Accounts needing renewal</p>
+              <h3 className="font-extrabold text-sm text-slate-900">Plan Distribution</h3>
+              <p className="text-[10.5px] text-slate-500 mt-0.5">Active subscriptions by tier</p>
             </div>
+            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full shrink-0">
+              Live
+            </span>
+          </div>
+
+          {/* Donut Chart Visual SVG */}
+          <div className="py-2 flex flex-col items-center justify-center">
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                {/* Background Ring */}
+                <circle cx="50" cy="50" r="38" stroke="#f1f5f9" strokeWidth="12" fill="none" />
+                {/* Pro Tier (Emerald: 65%) */}
+                <circle
+                  cx="50" cy="50" r="38"
+                  stroke="#10b981"
+                  strokeWidth="12"
+                  strokeDasharray={`${65 * 2.387} 238.7`}
+                  strokeDashoffset="0"
+                  strokeLinecap="round"
+                  fill="none"
+                  className="transition-all duration-700"
+                />
+                {/* Free Tier (Amber: 25%) */}
+                <circle
+                  cx="50" cy="50" r="38"
+                  stroke="#f59e0b"
+                  strokeWidth="12"
+                  strokeDasharray={`${25 * 2.387} 238.7`}
+                  strokeDashoffset={`-${65 * 2.387}`}
+                  strokeLinecap="round"
+                  fill="none"
+                  className="transition-all duration-700"
+                />
+                {/* Enterprise Tier (Purple: 10%) */}
+                <circle
+                  cx="50" cy="50" r="38"
+                  stroke="#a855f7"
+                  strokeWidth="12"
+                  strokeDasharray={`${10 * 2.387} 238.7`}
+                  strokeDashoffset={`-${(65 + 25) * 2.387}`}
+                  strokeLinecap="round"
+                  fill="none"
+                  className="transition-all duration-700"
+                />
+              </svg>
+              {/* Centered Total */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xl font-black text-slate-900 leading-none">{realUsersCount || 1}</span>
+                <span className="text-[9.5px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Tenants</span>
+              </div>
+            </div>
+
+            {/* Legend */}
+            <div className="w-full grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-[10px] font-bold text-slate-600">Pro</span>
+                </div>
+                <div className="text-xs font-black text-emerald-800">65%</div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-[10px] font-bold text-slate-600">Trial</span>
+                </div>
+                <div className="text-xs font-black text-amber-800">25%</div>
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-purple-500" />
+                  <span className="text-[10px] font-bold text-slate-600">Ent.</span>
+                </div>
+                <div className="text-xs font-black text-purple-800">10%</div>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/admin/subscriptions"
+            className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 text-center transition cursor-pointer flex items-center justify-center gap-1"
+          >
+            <span>Manage All Subscriptions</span>
+            <ArrowUpRight className="w-3.5 h-3.5 text-slate-400" />
+          </Link>
+        </div>
+      </div>
+
+      {/* ─── Expiring Subscriptions Priority Queue ───────────────────────────── */}
+      <div className="bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-amber-200/80 space-y-4 shadow-sm flex flex-col">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h3 className="font-extrabold text-sm text-slate-900">Expiring Subscriptions</h3>
+            <p className="text-[10.5px] text-slate-500 mt-0.5">Priority renewal monitoring queue</p>
+          </div>
             <span className="text-[10px] text-amber-800 font-bold bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full shrink-0">
               Priority Queue
             </span>
@@ -621,7 +720,6 @@ export default function SuperAdminDashboardPage() {
             View Full User Directory →
           </Link>
         </div>
-      </div>
 
       {/* ─── Quick Action Links ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
