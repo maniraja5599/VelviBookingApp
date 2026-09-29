@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { db } from "@/lib/db/store";
-import { Booking } from "@/lib/types";
+import { Booking, UserDirectoryMetric } from "@/lib/types";
 import {
   DollarSign,
   TrendingUp,
@@ -27,20 +27,36 @@ import {
   ChevronRight,
   Layers,
   Receipt,
-  UserCheck,
+  Users,
+  Activity,
+  Award,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 export default function AdminEarningsPage() {
+  const [activeViewTab, setActiveViewTab] = useState<"USERS" | "BOOKINGS">("USERS");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "PARTIALLY_PAID" | "PENDING">("ALL");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedUserFilter, setSelectedUserFilter] = useState<string | null>(null);
 
-  // Retrieve bookings and users
+  // Retrieve raw data
   const bookings = db.bookings || [];
   const businesses = db.businesses || [];
-  const users = db.users || [];
+  const rawUsers = db.users || [];
 
-  // Metrics calculations
+  // Metrics calculations for users
+  const directoryMetrics: UserDirectoryMetric[] = useMemo(() => {
+    return db.getAllUsersDirectoryMetrics();
+  }, [rawUsers, businesses, bookings]);
+
+  // Exclude demo accounts for clean calculation unless requested
+  const realUserMetrics = useMemo(() => {
+    return directoryMetrics.filter((m) => !m.isDemo);
+  }, [directoryMetrics]);
+
+  // Overall platform metrics
   const totalVolume = useMemo(() => {
     return bookings.reduce((sum, b) => sum + (Number(b.totalAmount) || 0), 0);
   }, [bookings]);
@@ -65,12 +81,30 @@ export default function AdminEarningsPage() {
     return bookings.filter((b) => b.paymentStatus === "PENDING").length;
   }, [bookings]);
 
-  // Filtered bookings
+  // Filtered Userwise Metrics
+  const filteredUserMetrics = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return directoryMetrics.filter((m) => {
+      const matchQuery =
+        !q ||
+        m.user.name?.toLowerCase().includes(q) ||
+        m.user.email?.toLowerCase().includes(q) ||
+        m.user.mobile?.includes(q) ||
+        m.business?.name?.toLowerCase().includes(q);
+      return matchQuery;
+    });
+  }, [directoryMetrics, search]);
+
+  // Filtered Bookings List
   const filteredBookings = useMemo(() => {
     const q = search.trim().toLowerCase();
     return bookings.filter((b) => {
       const matchStatus =
         statusFilter === "ALL" ? true : b.paymentStatus === statusFilter;
+
+      const matchUser = selectedUserFilter
+        ? b.businessId === selectedUserFilter || b.assignedIyerId === selectedUserFilter
+        : true;
 
       const customerName = b.customerName?.toLowerCase() || "";
       const devoteePhone = b.customerMobile?.toLowerCase() || "";
@@ -88,14 +122,14 @@ export default function AdminEarningsPage() {
         bookingNo.includes(q) ||
         priestName.includes(q);
 
-      return matchStatus && matchQuery;
+      return matchStatus && matchUser && matchQuery;
     });
-  }, [bookings, search, statusFilter]);
+  }, [bookings, search, statusFilter, selectedUserFilter]);
 
   // Helper to get Business & Owner info
   const getBusinessInfo = (businessId: string) => {
     const biz = businesses.find((b) => b.id === businessId);
-    const owner = users.find((u) => u.id === biz?.ownerId);
+    const owner = rawUsers.find((u) => u.id === biz?.ownerId);
     return {
       bizName: biz?.name || "Independent Priest",
       ownerName: owner?.name || biz?.iyerName || "Priest Account",
@@ -115,15 +149,19 @@ export default function AdminEarningsPage() {
               Platform Bookings &amp; Earnings
             </span>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10.5px] font-mono font-bold text-emerald-800">
+              <Users className="w-3 h-3" />
+              {realUserMetrics.length} Real Tenants
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 border border-purple-200 text-[10.5px] font-mono font-bold text-purple-800">
               <Receipt className="w-3 h-3" />
               {bookings.length} Total Bookings
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-            Dakshina &amp; Booking Revenue
+            Tenant Bookings &amp; Dakshina Earnings
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Tenant booking transactions, advance collections, Dakshina breakdowns, and devotee receipts
+            User-wise booking counts, total Dakshina generated, individual transactions, and collection status
           </p>
         </div>
 
@@ -209,16 +247,63 @@ export default function AdminEarningsPage() {
         </div>
       </div>
 
-      {/* ── Filters & Search Controls ── */}
+      {/* ── View Switcher: User-wise Earnings vs Detailed Bookings ── */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
+          <button
+            type="button"
+            onClick={() => setActiveViewTab("USERS")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+              activeViewTab === "USERS"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-amber-600" />
+            <span>User-wise Bookings &amp; Earnings ({filteredUserMetrics.length})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveViewTab("BOOKINGS")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+              activeViewTab === "BOOKINGS"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Receipt className="w-3.5 h-3.5 text-emerald-600" />
+            <span>All Bookings Ledger ({filteredBookings.length})</span>
+          </button>
+        </div>
+
+        {/* Selected User Filter Badge (if any) */}
+        {selectedUserFilter && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-xl text-xs font-bold text-amber-900">
+            <span>Filtered by User: {selectedUserFilter}</span>
+            <button
+              onClick={() => setSelectedUserFilter(null)}
+              className="text-amber-700 hover:text-rose-700 font-bold ml-1 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Search Bar ── */}
       <div className="bg-white rounded-2xl border border-amber-200/80 p-3 sm:p-4 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* Search */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search devotee, ceremony, phone, booking #..."
+            placeholder={
+              activeViewTab === "USERS"
+                ? "Search user by name, email, mobile, or business..."
+                : "Search devotee, ceremony, phone, booking #..."
+            }
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-400 focus:bg-white transition"
           />
           {search && (
@@ -231,174 +316,309 @@ export default function AdminEarningsPage() {
           )}
         </div>
 
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          <button
-            onClick={() => setStatusFilter("ALL")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              statusFilter === "ALL"
-                ? "bg-amber-500 text-slate-950 shadow-2xs"
-                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            All ({bookings.length})
-          </button>
-          <button
-            onClick={() => setStatusFilter("PAID")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              statusFilter === "PAID"
-                ? "bg-emerald-600 text-white shadow-2xs"
-                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            Full Paid ({paidCount})
-          </button>
-          <button
-            onClick={() => setStatusFilter("PARTIALLY_PAID")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              statusFilter === "PARTIALLY_PAID"
-                ? "bg-blue-600 text-white shadow-2xs"
-                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            Advance ({partialCount})
-          </button>
-          <button
-            onClick={() => setStatusFilter("PENDING")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-              statusFilter === "PENDING"
-                ? "bg-rose-600 text-white shadow-2xs"
-                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            Pending ({pendingCount})
-          </button>
-        </div>
-      </div>
-
-      {/* ── Bookings & Earnings Table / Cards ── */}
-      <div className="bg-white rounded-3xl border border-amber-200/80 shadow-2xs overflow-hidden">
-        <div className="px-4 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-amber-700" />
-            <h3 className="font-extrabold text-sm text-slate-900">
-              Booking Revenue Records ({filteredBookings.length})
-            </h3>
-          </div>
-          <span className="text-[11px] text-slate-400 font-medium">Click any row for full breakdown</span>
-        </div>
-
-        {filteredBookings.length === 0 ? (
-          <div className="py-12 px-4 text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center">
-              <Search className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-bold text-slate-800">No booking records found</p>
-            <p className="text-xs text-slate-500">Try adjusting your search terms or filters</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {filteredBookings.map((b) => {
-              const bizInfo = getBusinessInfo(b.businessId);
-              const isPaid = b.paymentStatus === "PAID";
-              const isPartial = b.paymentStatus === "PARTIALLY_PAID";
-              const isPending = b.paymentStatus === "PENDING";
-
-              return (
-                <div
-                  key={b.id}
-                  onClick={() => setSelectedBooking(b)}
-                  className="p-3.5 sm:p-4 hover:bg-amber-50/40 transition-colors cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  {/* Left: Devotee & Ceremony */}
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-50 to-amber-100/80 border border-amber-200 text-amber-800 flex items-center justify-center font-black text-sm shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
-                      <Flame className="w-5 h-5 text-amber-600" />
-                    </div>
-
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-black text-slate-900 text-sm hover:text-amber-800 transition">
-                          {b.customerName || "Devotee"}
-                        </span>
-                        <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
-                          #{b.bookingNumber}
-                        </span>
-                        {b.isSample && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                            Demo
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-xs font-semibold text-amber-900 truncate">
-                        {b.poojaTamilName || b.poojaEnglishName || "Pooja Ceremony"}
-                      </p>
-
-                      <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium flex-wrap">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          {b.date}
-                        </span>
-                        {b.customerMobile && (
-                          <span className="flex items-center gap-1 font-mono">
-                            <Phone className="w-3 h-3 text-slate-400" />
-                            {b.customerMobile}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1 text-slate-600">
-                          <Building2 className="w-3 h-3 text-slate-400" />
-                          {bizInfo.bizName}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right: Amounts & Payment Badge */}
-                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                    <div className="text-left sm:text-right">
-                      <div className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                        ₹{Number(b.totalAmount || 0).toLocaleString("en-IN")}
-                      </div>
-                      <div className="text-[10.5px] font-medium text-slate-500">
-                        {isPaid && (
-                          <span className="text-emerald-700 font-bold">100% Received</span>
-                        )}
-                        {isPartial && (
-                          <span className="text-blue-700 font-bold">
-                            Adv: ₹{Number(b.advanceAmount || 0).toLocaleString("en-IN")} • Bal: ₹{Number(b.balanceAmount || 0).toLocaleString("en-IN")}
-                          </span>
-                        )}
-                        {isPending && (
-                          <span className="text-rose-600 font-bold">Awaiting Dakshina</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
-                          isPaid
-                            ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                            : isPartial
-                            ? "bg-blue-50 text-blue-800 border-blue-300"
-                            : "bg-rose-50 text-rose-800 border-rose-300"
-                        }`}
-                      >
-                        {isPaid ? "Full Paid" : isPartial ? "Advance" : "Pending"}
-                      </span>
-
-                      <div className="w-7 h-7 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-amber-800 group-hover:bg-amber-100/60 transition shadow-2xs">
-                        <ChevronRight className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        {/* Status Filter (Only in Bookings view) */}
+        {activeViewTab === "BOOKINGS" && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <button
+              onClick={() => setStatusFilter("ALL")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                statusFilter === "ALL"
+                  ? "bg-amber-500 text-slate-950 shadow-2xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              All ({bookings.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter("PAID")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                statusFilter === "PAID"
+                  ? "bg-emerald-600 text-white shadow-2xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              Full Paid ({paidCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter("PARTIALLY_PAID")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                statusFilter === "PARTIALLY_PAID"
+                  ? "bg-blue-600 text-white shadow-2xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              Advance ({partialCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter("PENDING")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                statusFilter === "PENDING"
+                  ? "bg-rose-600 text-white shadow-2xs"
+                  : "bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              Pending ({pendingCount})
+            </button>
           </div>
         )}
       </div>
+
+      {/* ── VIEW 1: USER-WISE EARNINGS & BOOKINGS ── */}
+      {activeViewTab === "USERS" && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-3xl border border-amber-200/80 shadow-2xs overflow-hidden">
+            <div className="px-4 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-700" />
+                <h3 className="font-extrabold text-sm text-slate-900">
+                  User Performance &amp; Dakshina Generated ({filteredUserMetrics.length})
+                </h3>
+              </div>
+              <span className="text-[11px] text-slate-400 font-medium">
+                Click user to filter their individual bookings
+              </span>
+            </div>
+
+            {filteredUserMetrics.length === 0 ? (
+              <div className="py-12 px-4 text-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center">
+                  <Search className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-bold text-slate-800">No users found</p>
+                <p className="text-xs text-slate-500">Try adjusting your search criteria</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {filteredUserMetrics.map((metric) => {
+                  const isFiltered =
+                    selectedUserFilter === metric.business?.id ||
+                    selectedUserFilter === metric.user.id;
+
+                  return (
+                    <div
+                      key={metric.user.id}
+                      className={`p-4 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                        isFiltered
+                          ? "bg-amber-50/70 border-l-4 border-l-amber-500"
+                          : "hover:bg-slate-50/80"
+                      }`}
+                    >
+                      {/* Left: User Info */}
+                      <div className="flex items-start gap-3.5 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0 shadow-2xs">
+                          {metric.user.name?.charAt(0) || "U"}
+                        </div>
+
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-extrabold text-slate-900 text-sm">
+                              {metric.user.name}
+                            </h4>
+                            {metric.isSuperAdmin && (
+                              <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                                Super Admin
+                              </span>
+                            )}
+                            {metric.isDemo && (
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                Demo Sandbox
+                              </span>
+                            )}
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                              {metric.subscription?.planName || "Pro Plan"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[11px] text-slate-500 flex-wrap">
+                            <span className="font-semibold text-slate-700">
+                              {metric.business?.name || "Independent Temple / Priest"}
+                            </span>
+                            {metric.user.mobile && (
+                              <span className="flex items-center gap-1 font-mono">
+                                <Phone className="w-3 h-3 text-slate-400" />
+                                {metric.user.mobile}
+                              </span>
+                            )}
+                            <span className="text-slate-400 font-mono text-[10.5px]">
+                              {metric.user.email}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right: Booking Count & Earnings Metric Pills */}
+                      <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                        <div className="flex items-center gap-2.5">
+                          {/* Bookings Count Pill */}
+                          <div className="bg-purple-50/80 border border-purple-200 px-3.5 py-2 rounded-2xl text-center min-w-[95px]">
+                            <span className="text-[9.5px] font-bold text-purple-700 uppercase tracking-wider block">
+                              Bookings
+                            </span>
+                            <span className="text-base font-black text-purple-900">
+                              {metric.bookingCount}{" "}
+                              <span className="text-[10px] font-normal text-purple-700">poojas</span>
+                            </span>
+                          </div>
+
+                          {/* Earnings Pill */}
+                          <div className="bg-emerald-50/80 border border-emerald-200 px-3.5 py-2 rounded-2xl text-center min-w-[110px]">
+                            <span className="text-[9.5px] font-bold text-emerald-700 uppercase tracking-wider block">
+                              Total Dakshina
+                            </span>
+                            <span className="text-base font-black text-emerald-800 font-mono">
+                              ₹{metric.totalEarnings.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Filter Bookings Action Button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const targetId = metric.business?.id || metric.user.id;
+                            setSelectedUserFilter(targetId);
+                            setActiveViewTab("BOOKINGS");
+                          }}
+                          className="px-3 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 text-xs font-bold rounded-xl transition flex items-center gap-1 active:scale-95 cursor-pointer shadow-2xs whitespace-nowrap"
+                        >
+                          <span>View Bookings</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── VIEW 2: ALL BOOKINGS LEDGER ── */}
+      {activeViewTab === "BOOKINGS" && (
+        <div className="bg-white rounded-3xl border border-amber-200/80 shadow-2xs overflow-hidden">
+          <div className="px-4 sm:px-6 py-3.5 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-amber-700" />
+              <h3 className="font-extrabold text-sm text-slate-900">
+                Booking Revenue Records ({filteredBookings.length})
+              </h3>
+            </div>
+            <span className="text-[11px] text-slate-400 font-medium">Click any row for full breakdown</span>
+          </div>
+
+          {filteredBookings.length === 0 ? (
+            <div className="py-12 px-4 text-center space-y-2">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 mx-auto flex items-center justify-center">
+                <Search className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-bold text-slate-800">No booking records found</p>
+              <p className="text-xs text-slate-500">Try adjusting your search terms or filters</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {filteredBookings.map((b) => {
+                const bizInfo = getBusinessInfo(b.businessId);
+                const isPaid = b.paymentStatus === "PAID";
+                const isPartial = b.paymentStatus === "PARTIALLY_PAID";
+                const isPending = b.paymentStatus === "PENDING";
+
+                return (
+                  <div
+                    key={b.id}
+                    onClick={() => setSelectedBooking(b)}
+                    className="p-3.5 sm:p-4 hover:bg-amber-50/40 transition-colors cursor-pointer group flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    {/* Left: Devotee & Ceremony */}
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-50 to-amber-100/80 border border-amber-200 text-amber-800 flex items-center justify-center font-black text-sm shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                        <Flame className="w-5 h-5 text-amber-600" />
+                      </div>
+
+                      <div className="min-w-0 space-y-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-black text-slate-900 text-sm hover:text-amber-800 transition">
+                            {b.customerName || "Devotee"}
+                          </span>
+                          <span className="font-mono text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold border border-slate-200">
+                            #{b.bookingNumber}
+                          </span>
+                          {b.isSample && (
+                            <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                              Demo
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs font-semibold text-amber-900 truncate">
+                          {b.poojaTamilName || b.poojaEnglishName || "Pooja Ceremony"}
+                        </p>
+
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {b.date}
+                          </span>
+                          {b.customerMobile && (
+                            <span className="flex items-center gap-1 font-mono">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              {b.customerMobile}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1 text-slate-700 font-semibold">
+                            <Building2 className="w-3 h-3 text-amber-600" />
+                            {bizInfo.bizName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Amounts & Payment Badge */}
+                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                      <div className="text-left sm:text-right">
+                        <div className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                          ₹{Number(b.totalAmount || 0).toLocaleString("en-IN")}
+                        </div>
+                        <div className="text-[10.5px] font-medium text-slate-500">
+                          {isPaid && (
+                            <span className="text-emerald-700 font-bold">100% Received</span>
+                          )}
+                          {isPartial && (
+                            <span className="text-blue-700 font-bold">
+                              Adv: ₹{Number(b.advanceAmount || 0).toLocaleString("en-IN")} • Bal: ₹{Number(b.balanceAmount || 0).toLocaleString("en-IN")}
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="text-rose-600 font-bold">Awaiting Dakshina</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
+                            isPaid
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                              : isPartial
+                              ? "bg-blue-50 text-blue-800 border-blue-300"
+                              : "bg-rose-50 text-rose-800 border-rose-300"
+                          }`}
+                        >
+                          {isPaid ? "Full Paid" : isPartial ? "Advance" : "Pending"}
+                        </span>
+
+                        <div className="w-7 h-7 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-amber-800 group-hover:bg-amber-100/60 transition shadow-2xs">
+                          <ChevronRight className="w-4 h-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Detailed Modal when clicking a Booking row ── */}
       {selectedBooking && (
